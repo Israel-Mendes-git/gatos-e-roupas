@@ -232,6 +232,89 @@ const CR_PEITO: Array = [
 	"...ssss..",
 ]
 
+# Vira-lata: tronco, coxa e peito fundo (P = mancha, V = peito claro) (origem x = -16, y = -24)
+const VL_CORPO: Array = [
+	"..............................",
+	"....................oooo......",
+	"...................ollllo.....",
+	"........ooooooooooolbbbblo....",
+	".....ooolllllllllllbbbbbblo...",
+	"....olllPPPPPPPPbbbbbbbbbblo..",
+	"...olbbbbPPPPPPbbbbbbbbbbbbo..",
+	"..olbbbbbbbPPbbbbbbbbbbbbbbo..",
+	"..obbbbbbbbbbbbbbbbbbbbbbbbo..",
+	"..obbbbbbbbbbbbbbbbbbbbbbbbo..",
+	"..obbbbbbbbbbbbbbbbbbbbbbbbo..",
+	"..obbbbbbbbbbbbbbbbbbbVVbbbo..",
+	"..obbbbbbbbaaaaaabbbbVVVVbbo..",
+	"..oabbbbbbaaaaaaaabbVVVVVVao..",
+	"..oaabbbbaaooooooaabVVVVVVao..",
+	"...oaaaaaao......oaaVVVVVVo...",
+	"....oaaaao........oaVVVVVo....",
+	".....oooo..........oaVVVo.....",
+	"....................oooo......",
+	"..............................",
+]
+const VL_CORPO_X := -16
+const VL_CORPO_Y := -24
+# Texugo: corpo roliço grisalho com o rabo (origem x = -19, y = -23)
+const TX_CORPO: Array = [
+	"................................",
+	"................................",
+	"............oooooooooooo........",
+	"..........oollbllllblllloo......",
+	"........oolllbllllbllllblloo....",
+	".......ollllbbbbbbbbblablllbo...",
+	"......olllbabbbblbbbbbbbabbllo..",
+	"......olbbblbabbbbbbbblbbbablo..",
+	"...ooolbbbbbbbbablbbbbbbbbbblbo.",
+	"..obllbbbbbblbbbbabbbbblbbbbbbo.",
+	"..olllalbbbbbbbbbblabbbbbbbbblo.",
+	"..oaaaababbbblbbbbbbbabblbbbbao.",
+	"..oaaaaalbabbbbbbbblbbbabbbbaao.",
+	"...oooaaaabbablbbbbbbbbbblaaao..",
+	"......oaaaaabbabbbbblbbbaaaaao..",
+	".......oaaaaaaaaaaaaaaaaaaaao...",
+	"........ooaaaaaaaaaaaaaaaaoo....",
+	"..........ooaaaaaaaaaaaaoo......",
+	"............oooooooooooo........",
+	"................................",
+	"................................",
+]
+const TX_CORPO_X := -19
+const TX_CORPO_Y := -23
+# Coruja: corpo alto de penas (origem x = -11, y = -28)
+const CR_CORPO: Array = [
+	"......................",
+	"........oooooo........",
+	"......oolllllloo......",
+	".....ollbbbbbbllo.....",
+	"....olbbabbabbaalo....",
+	"....olbbbbbbbbbaao....",
+	"...olbbbbbbbbbbbaao...",
+	"...olabbabbabbabaao...",
+	"..olbbbbbbbbbbbbbaao..",
+	"..olbbbbbbbbbbbbbaao..",
+	"..olbabbabbabbabbaao..",
+	"..olbbbbbbbbbbbbbaao..",
+	"..olbbbbbbbbbbbbbaao..",
+	"..olbabbabbabbabbaao..",
+	"..olbbbbbbbbbbbbbaao..",
+	"..olbbbbbbbbbbbbbaao..",
+	"..olbabbabbabbabbaao..",
+	"..olbbbbbbbbbbbbbaao..",
+	"...olbbbbbbbbbbbaao...",
+	"...olabbabbabbabaao...",
+	"....olbbbbbbbbbaao....",
+	"....olaabbbbbbaaao....",
+	".....olaaaaaaaaao.....",
+	"......ooaaaaaaoo......",
+	"........oooooo........",
+	"......................",
+]
+const CR_CORPO_X := -11
+const CR_CORPO_Y := -28
+
 # ---------------------------------------------------------------------------------------------
 
 ## Pose comum a `desenhar` e `desloc`: quadro do passo e força do golpe (0..1).
@@ -277,7 +360,7 @@ static func _anc(ct: int, p: Dictionary, parado: bool) -> Array[Vector2]:
 		9:
 			var L9: int = [0, 1, 0, 1][fr] if p["and"] else 0
 			var hx9: int = roundi(4.0 * sn)
-			a = [Vector2(13 + hx9, -19 - L9), Vector2(-2, -12 - L9), Vector2(26 + hx9, -12 - L9), Vector2(-12, -16 - L9),
+			a = [Vector2(13 + hx9, -19 - L9), Vector2(-2, -12 - L9), Vector2(23 + hx9, -12 - L9), Vector2(-12, -16 - L9),
 				Vector2(7 + hx9 / 2, -12 - L9), Vector2(0, 0), Vector2(14 + hx9, -14 - L9)]
 	return a
 
@@ -619,7 +702,7 @@ static func _coruja(k: BichoPxB._K, p: Dictionary) -> void:
 		k.r(x - 2, ty - 2, 5, 1, CR_BICO_S)
 		k.r(x - 1, ty - 1, 1, 1, CR_O)
 	# corpo alto e redondo, barriga arredondada, peito claro com penugem em V
-	k.vol(0.0, -15.0 - L, 9.5, 12.0, CR_B, CR_L, CR_A, CR_O)
+	k.spr(CR_CORPO_X, CR_CORPO_Y - L, CR_CORPO, {"o": CR_O, "a": CR_A, "b": CR_B, "l": CR_L})
 	k.spr(0, -23 - L, CR_PEITO, {"v": CR_V, "s": CR_VS, "m": CR_M})
 	k.r(-1, -10 - L, 1, 3, CR_A)
 	# asa de perto: dobrada no corpo (com sombra por baixo) ou aberta
@@ -668,11 +751,7 @@ static func _vira_lata(k: BichoPxB._K, p: Dictionary, parado: bool) -> void:
 	# orelha de pé (a outra é a caída), atrás da cabeça
 	k.lin(float(11 + hx), -27.0 - L + hy, float(12 + hx), -33.0 - L + hy, 2.0, VL_A, VL_O)
 	# tronco fino na cintura, coxa grossa atrás e peito fundo na frente
-	k.vol(-3.0, -15.0 - L, 10.5, 6.2, VL_B, VL_L, VL_A, VL_O)
-	k.vol(-9.0, -13.0 - L, 5.5, 7.0, VL_B, VL_L, VL_A, VL_O)
-	k.vol(6.0, -14.0 - L, 6.5, 8.8 + ofeg * 0.6, VL_B, VL_L, VL_A, VL_O)
-	k.fill(-4.0, -19.0 - L, 4.0, 2.6, VL_P)
-	k.fill(7.0, -9.0 - L, 3.0, 3.6, VL_V)
+	k.spr(VL_CORPO_X, VL_CORPO_Y - L + ofeg, VL_CORPO, {"o": VL_O, "a": VL_A, "b": VL_B, "l": VL_L, "P": VL_P, "V": VL_V})
 	# patas de perto: a traseira tem o jarrete dobrado
 	_perna(k, -7, -8 - L, la, 3, VL_B, VL_O)
 	k.r(-11, -7 - L - la, 2, 1, VL_A)
@@ -735,13 +814,8 @@ static func _texugo(k: BichoPxB._K, p: Dictionary) -> void:
 	_perna(k, -9, -7 - L, lb, 3, TX_K, TX_O)
 	_perna(k, 7, -7 - L, la, 3, TX_K, TX_O)
 	# rabo curto
-	k.vol(-14.5, -12.0 - L, 2.8, 2.8, TX_B, TX_L, TX_A, TX_O)
 	# corpo roliço de ombros altos, pelo grisalho
-	k.vol(-1.0, -12.5 - L, 13.0, 9.0, TX_B, TX_L, TX_A, TX_O)
-	for x in range(-10, 11, 3):
-		k.r(x, -17 - L + (x % 2 + 2) % 2, 1, 1, TX_WS)
-		k.r(x + 1, -14 - L, 1, 1, TX_L)
-		k.r(x - 1, -10 - L, 1, 1, TX_A)
+	k.spr(TX_CORPO_X, TX_CORPO_Y - L, TX_CORPO, {"o": TX_O, "a": TX_A, "b": TX_B, "l": TX_L})
 	_perna(k, -5, -7 - L, la, 3, TX_A, TX_O)
 	_perna(k, 3, -7 - L, lb, 3, TX_A, TX_O)
 	# garras claras nas patas da frente
@@ -752,13 +826,13 @@ static func _texugo(k: BichoPxB._K, p: Dictionary) -> void:
 	var y0: int = -19 - L + hy
 	k.vol(float(x0 + 4), float(y0 + 1), 1.8, 1.8, TX_K, TX_KL, TX_O, TX_O)
 	k.r(x0 + 3, y0 - 1, 2, 1, TX_W)
-	k.spr(x0, y0, TX_CAB, {"o": TX_O, "k": TX_K, "K": TX_KL, "w": TX_W, "v": TX_WS, "n": TX_KL})
+	k.spr(x0, y0, _sem_cols(TX_CAB, 15, 3), {"o": TX_O, "k": TX_K, "K": TX_KL, "w": TX_W, "v": TX_WS, "n": TX_KL})
 	k.r(x0 + 9, y0 + 5, 3, 1, TX_OLHO)
-	k.r(x0 + 8, y0 + 4, 5, 1, TX_O)
+	k.r(x0 + 9, y0 + 4, 3, 1, TX_O)
 	if sn > 0.4:
-		k.r(x0 + 15, y0 + 9, 6, 2, Color("#7a1f2a"))
+		k.r(x0 + 13, y0 + 9, 5, 2, Color("#7a1f2a"))
+		k.r(x0 + 14, y0 + 9, 1, 1, TX_W)
 		k.r(x0 + 16, y0 + 9, 1, 1, TX_W)
-		k.r(x0 + 19, y0 + 9, 1, 1, TX_W)
 	# coroa torta
 	var cx0: int = x0 + 4
 	var cy0: int = y0 - 3

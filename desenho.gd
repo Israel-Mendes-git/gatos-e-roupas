@@ -1054,77 +1054,10 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		_adereco_tipo(c, tipo, alfa)
 	resetar(c)
 
-## Desenha um bitmap de texto (uma letra por pixel da grade do bicho, `GATO_K` unidades) com canto em (x, y) em pixels do bicho.
-static func _adereco_px(c: CanvasItem, x: float, y: float, linhas: Array, pal: Dictionary, alfa: float) -> void:
-	for j in linhas.size():
-		var l: String = linhas[j]
-		for i in l.length():
-			var ch: String = l[i]
-			if ch == "." or not pal.has(ch):
-				continue
-			var cor: Color = pal[ch]
-			cor.a *= alfa
-			c.draw_rect(Rect2((x + i) * GATO_K, (y + j) * GATO_K, GATO_K + 0.03, GATO_K + 0.03), cor)
-
-## Adereço em pixel que identifica os bichos de truque (aljava, bolsa de curativo, escudo, bomba): contorno, 2 tons e luz,
-## na mesma grade do corpo do bicho (pé em 0,0, olhando para +x; coordenadas em pixels do bicho).
-static func _adereco_tipo(c: CanvasItem, tipo: int, alfa: float) -> void:
-	match tipo:
-		Unidade.Tipo.ATIRADOR:
-			var q: Array = [
-				"..g.y..",
-				"..o.o..",
-				".ooooo.",
-				".oLBBo.",
-				".oLBDo.",
-				".oSSSo.",
-				".oBBDo.",
-				".oBBDo.",
-				"..oooo.",
-			]
-			_adereco_px(c, -8.0, -19.0, q, {"o": Color("#1a0f0a"), "L": Color("#c48a54"), "B": Color("#8c5a32"), "D": Color("#5e3a1f"), "S": Color("#d8c8a0"), "g": Color("#6fd05a"), "y": Color("#f6e27a")}, alfa)
-		Unidade.Tipo.CURANDEIRO:
-			var q: Array = [
-				"..ooo..",
-				".o...o.",
-				"ooooooo",
-				"oWWRWWo",
-				"oWWRWWo",
-				"oRRRRRo",
-				"oWWRWWo",
-				"oSSRSSo",
-				".ooooo.",
-			]
-			_adereco_px(c, -5.0, -19.0, q, {"o": Color("#2a1418"), "W": Color("#f6f4ea"), "S": Color("#c4c2c4"), "R": Color("#e0353d")}, alfa)
-		Unidade.Tipo.ESCUDEIRO:
-			var q: Array = [
-				".oooooo.",
-				"oLLBBBBo",
-				"oLBBBBBo",
-				"oLBYYBBo",
-				"oBBYYBBo",
-				"oBBBBBDo",
-				".oBBBDDo",
-				".oBBBDo.",
-				"..oBDo..",
-				"...oo...",
-			]
-			_adereco_px(c, 5.0, -16.0, q, {"o": Color("#14182c"), "L": Color("#bcd2ff"), "B": Color("#5c7fd0"), "D": Color("#3a55a0"), "Y": Color("#f4d24e")}, alfa)
-		Unidade.Tipo.BOMBA:
-			var pisca: bool = int(Time.get_ticks_msec() / 140) % 2 == 0
-			var q: Array = [
-				"......Y..",
-				".....oF..",
-				"....oFoo.",
-				"..ooKKKoo",
-				".oKLLKKKo",
-				"oKLKKKKKo",
-				"oKKKKKKDo",
-				"oKKKKKDDo",
-				".oKKKDDo.",
-				"..ooooo..",
-			]
-			_adereco_px(c, -5.0, -22.0, q, {"o": Color("#0a0a10"), "K": Color("#3a3a4a"), "L": Color("#8a8aa0"), "D": Color("#22222c"), "F": Color("#a07a4a"), "Y": Color("#fff08a") if pisca else Color("#ff6a2a")}, alfa)
+## Os adereços dos bichos de truque (aljava e arco, bolsa de curativo, escudo, bomba) agora são desenhados por BichoPxT,
+## presos às âncoras do corpo, junto com o bicho. Esta função ficou só para não quebrar quem a chama.
+static func _adereco_tipo(_c: CanvasItem, _tipo: int, _alfa: float) -> void:
+	pass
 
 # ------------------------------------------------------------------ gato (os heróis)
 const GATO_TEX: Array[Texture2D] = [preload("res://assets/gato_0.png"), preload("res://assets/gato_1.png"), preload("res://assets/gato_2.png")]

@@ -7,6 +7,7 @@ var nivel: int = 0
 var raridade: int = 0  # Pecas.Raridade: mais efeito e mais espaço para marcas
 var abates: int = 0   # histórico total
 var prog: int = 0     # abates desde o último nível
+var raridade_subiu: bool = false   # só durante Estado.reforcar_fantasia
 var nova: bool = false  # acabou de sair de um inimigo ou de ganhar marca na última luta
 var marcas: Array[int] = []  # Pecas.Marca; a morte do portador marca a peça para sempre
 

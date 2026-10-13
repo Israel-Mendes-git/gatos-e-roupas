@@ -12,17 +12,31 @@ extends RefCounted
 ## `carregando` = ladrão fugindo com blocos. `parado` = Raposa Ligeira sem fôlego.
 static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andando: bool, golpe: float, f: float, alfa: float, carregando: bool, filhote: bool, chefe_tipo: int, parte: bool, parado: bool) -> void:
 	var fam: int = chefe_tipo if chefe_tipo >= 0 else familia
+	var truque: bool = chefe_tipo < 0 and not parte and not filhote and _truque(tipo)
+	var tp: int = _tipo_corpo(tipo) if truque else tipo
 	if chefe_tipo >= 5:
 		BichoPxC.desenhar(c, familia, tipo, anim, andando, golpe, f, alfa, carregando, filhote, chefe_tipo, parte, parado)
 	elif fam <= 2:
-		BichoPxA.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando, filhote, chefe_tipo, parte, parado)
+		BichoPxA.desenhar(c, fam, tp, anim, andando, golpe, f, alfa, carregando, filhote, chefe_tipo, parte, parado)
 	else:
-		BichoPxB.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando, filhote, chefe_tipo, parte, parado)
+		BichoPxB.desenhar(c, fam, tp, anim, andando, golpe, f, alfa, carregando, filhote, chefe_tipo, parte, parado)
+	if truque:
+		BichoPxT.sobre(c, fam, tipo, anim, andando, golpe, f, alfa)
+
+## Bichos de truque (Atirador, Curandeiro, Escudeiro, Bomba): corpo da família mais roupa e adereço (BichoPxT).
+static func _truque(tipo: int) -> bool:
+	return tipo >= Unidade.Tipo.ATIRADOR and tipo <= Unidade.Tipo.BOMBA
+
+## Corpo-base de cada truque: o Escudeiro usa o corpo parrudo do Grandalhão, os outros o comum.
+static func _tipo_corpo(tipo: int) -> int:
+	return Unidade.Tipo.GIGANTE if tipo == Unidade.Tipo.ESCUDEIRO else Unidade.Tipo.COMUM
 
 ## Quanto o lugar `onde` (RoupaGato.Onde) se desloca, em pixels, em relação à planta parada, na pose atual
 ## (balanço do passo, cabeça que avança no golpe, chefe curvado). As roupas acompanham por aqui.
 static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parado: bool) -> Vector2:
 	var fam: int = chefe_tipo if chefe_tipo >= 0 else familia
+	if chefe_tipo < 0 and _truque(tipo):
+		tipo = _tipo_corpo(tipo)
 	if chefe_tipo >= 5:
 		return BichoPxC.desloc(onde, familia, tipo, anim, andando, golpe, chefe_tipo, parado)
 	if fam <= 2:

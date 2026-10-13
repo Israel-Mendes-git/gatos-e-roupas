@@ -4251,8 +4251,8 @@ func _montar_preparacao() -> void:
 		for gd in prep_previa:
 			var pr_d: int = int(gd["prio"])
 			if pr_d != Unidade.Tipo.COMUM and pr_d != Simulacao.PRIO_CHEFE:
-				m.dica("bicho_%d" % pr_d, "%s: %s Clique nele para o time bater primeiro." % [gd["nome"], str(gd["dica"]).to_lower().trim_suffix(".") + "."])
-		m.dica("prep", "Antes da onda: arraste os gatos, dê ordens e clique num bicho para marcar o alvo.", true)
+				m.dica("bicho_%d" % pr_d, "%s: %s" % [gd["nome"], str(gd["dica"]).to_lower()])
+		m.dica("prep", "Arraste os gatos, dê ordens e clique num bicho para marcar o alvo.", true)
 
 func _prep_rect(i: int) -> Rect2:
 	return Rect2(PREP_BT_X[i], PREP_BT_Y, PREP_BT_W, PREP_BT_H)
@@ -4640,7 +4640,7 @@ func _desenhar_prep() -> void:
 		var a: Unidade = sim.aliados[i]
 		var ea: float = ESC * a.escala()
 		var cp: Color = PREP_COR[a.postura]
-		var rot: String = "%d  %s" % [i + 1, Boneco.POSTURA_NOMES[a.postura]]
+		var rot: String = Boneco.POSTURA_NOMES[a.postura]
 		Desenho.texto(self, rot, Vector2(a.vx - 70.0, a.vy - (CORPO_ALT + 12.0) * ea), 14, cp.lightened(0.25), 140.0, 4)
 	# nomes das faixas e da prévia, numa régua logo acima do chão (por cima de tudo, para não sumirem atrás dos gatos)
 	var xs: Array[float] = [Balanco.POSTO_X0 - 30.0, (Balanco.LINHA_X[2] + Balanco.LINHA_X[1]) * 0.5, (Balanco.LINHA_X[1] + Balanco.LINHA_X[0]) * 0.5, Balanco.POSTO_X1 + 30.0]
@@ -4655,7 +4655,6 @@ func _desenhar_prep() -> void:
 	draw_rect(rv, Color(0.05, 0.03, 0.08, 0.78))
 	draw_rect(Rect2(rv.position.x, rv.end.y - 3.0, rv.size.x, 3.0), Color(1.0, 0.45, 0.4))
 	Desenho.texto(self, "Onda que vem", Vector2(rv.position.x, yr + 17.0), 15, Color(1.0, 0.75, 0.65), rv.size.x, 3)
-	draw_rect(Rect2(200.0, 80.0, 880.0, 50.0), Color(0.05, 0.03, 0.08, 0.72))
 	draw_rect(Rect2(198.0, 646.0, 148.0, 68.0), Color(0.05, 0.03, 0.08, 0.72))
 	# faixa de baixo: para quem vale a ordem, os três botões e "Começar"
 	var quem: String = "o time todo" if prep_sel == null else (prep_sel.boneco.nome if prep_sel.boneco != null else "o gato")
@@ -4664,12 +4663,12 @@ func _desenhar_prep() -> void:
 	var atual: int = _prep_postura_atual()
 	for i in 3:
 		var id: String = "o%d" % i
-		UIComum.botao(self, _prep_rect(i), Boneco.POSTURA_NOMES[i], PREP_COR[i], {"h": UIComum.anim_h(prep_anim, id), "p": UIComum.anim_p(prep_anim, id), "marcado": atual == i, "sub": "tecla " + PREP_TECLA[i], "tam": 20}, rel)
+		UIComum.botao(self, _prep_rect(i), Boneco.POSTURA_NOMES[i], PREP_COR[i], {"h": UIComum.anim_h(prep_anim, id), "p": UIComum.anim_p(prep_anim, id), "marcado": atual == i, "sub": PREP_TECLA[i], "tam": 20}, rel)
 	UIComum.botao(self, PREP_COMECAR, "Começar a onda", UIComum.B_VERDE, {"h": UIComum.anim_h(prep_anim, "ir"), "p": UIComum.anim_p(prep_anim, "ir"), "sub": "Espaço", "tam": 22, "foco": fposmod(rel, 1.6) < 0.8 and UIComum.anim_h(prep_anim, "ir") < 0.05}, rel)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var alvo_txt: String = "Alvo prioritário: nenhum (clique num bicho da onda que vem)"
+	var alvo_txt: String = ""
 	for gd2 in prep_previa:
 		if int(gd2["prio"]) == sim.prioridade:
-			alvo_txt = "Alvo prioritário: %s" % gd2["nome"]
-	Desenho.texto(self, "Preparação: arraste um gato para mudar o posto · clique nele para dar a ordem só a ele", Vector2(200.0, 100.0), 16, Color(1, 1, 1), 880.0, 4)
-	Desenho.texto(self, alvo_txt, Vector2(200.0, 122.0), 15, Color(1.0, 0.7, 0.6), 880.0, 4)
+			alvo_txt = "Alvo: %s" % gd2["nome"]
+	if alvo_txt != "":
+		Desenho.texto(self, alvo_txt, Vector2(851.0, Balanco.CHAO_Y0 - 40.0), 15, Color(1.0, 0.7, 0.6), 398.0, 4)

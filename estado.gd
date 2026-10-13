@@ -371,6 +371,28 @@ func fundir(base: Peca, outra: Peca) -> bool:
 	salvar()
 	return true
 
+## Troféus que custaria subir uma raridade em cada peça vestida que ainda pode subir.
+func custo_reforcar_fantasia(b: Boneco) -> int:
+	var total: int = 0
+	for p in b.pecas:
+		if p != null and p.raridade < Pecas.Raridade.LENDARIA:
+			total += Balanco.REFORCO_CUSTO[p.raridade]
+	return total
+
+## Sobe uma raridade em cada peça vestida, das mais baratas para as mais caras, enquanto houver troféus.
+## Devolve quantas subiram.
+func reforcar_fantasia(b: Boneco) -> int:
+	var n: int = 0
+	for rar in [Pecas.Raridade.COMUM, Pecas.Raridade.RARA]:
+		for p in b.pecas:
+			if p != null and not p.raridade_subiu and p.raridade == rar and pode_reforcar(p) and reforcar(p):
+				n += 1
+				p.raridade_subiu = true
+	for p in b.pecas:
+		if p != null:
+			p.raridade_subiu = false
+	return n
+
 func pode_reforcar(p: Peca) -> bool:
 	return p != null and p.raridade < Pecas.Raridade.LENDARIA and trofeus >= Balanco.REFORCO_CUSTO[p.raridade]
 
