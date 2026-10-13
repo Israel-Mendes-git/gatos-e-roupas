@@ -28,9 +28,11 @@ const ABA_TODAS := -1
 const ABA_NOVAS := 4
 const ABA_FANTASIAS := 5   # grade com as fantasias inteiras: um clique veste a fantasia no gato
 const FANT_COLS := 7
-const FANT_W := 100.0
-const FANT_H := 66.0
-const FANT_GAP := 5.0
+const FANT_W := 98.0
+const FANT_H := 102.0
+const FANT_GAP := 4.0
+const FANT_ESC := 0.78   # tamanho do gato dentro do cartão
+const FANT_LINHAS := 2   # linhas de cartões visíveis (são 3 no total: a roda do mouse e as setas rolam)
 # situação de cada peça de uma fantasia, em relação ao gato que vai vesti-la
 const FS_GATO := 0    # o próprio gato já veste
 const FS_GUARDA := 1  # parada no guarda-roupa
@@ -609,6 +611,8 @@ func _linhas_total() -> int:
 	return int(ceil(_visiveis().size() / float(TILE_COLS)))
 
 func _rolagem_max() -> int:
+	if aba == ABA_FANTASIAS:
+		return maxi(0, int(ceil(Pecas.CONJUNTO_PECAS.size() / float(FANT_COLS))) - FANT_LINHAS)
 	var n: int = int(ceil(_lista.size() / float(TILE_COLS)))
 	return maxi(0, n - TILE_LINHAS)
 
@@ -1071,7 +1075,10 @@ func _tile_em(p: Vector2) -> int:
 # ---- aba "Fantasias": a fantasia inteira com um clique
 ## Retângulo do cartão da fantasia c (grade de 7 colunas por 3 linhas).
 func rect_cartao_fant(c: int) -> Rect2:
-	return Rect2(PAINEL.position.x + 14 + (c % FANT_COLS) * (FANT_W + FANT_GAP), TILE_Y0 + (c / FANT_COLS) * (FANT_H + 4.0), FANT_W, FANT_H)
+	var lin: int = c / FANT_COLS - rolagem
+	if lin < 0 or lin >= FANT_LINHAS:
+		return Rect2()
+	return Rect2(PAINEL.position.x + 14 + (c % FANT_COLS) * (FANT_W + FANT_GAP), TILE_Y0 + lin * (FANT_H + FANT_GAP), FANT_W, FANT_H)
 
 ## Fantasia sob o ponto p (só vale na aba Fantasias); -1 se nenhuma.
 func _cartao_fant_em(p: Vector2) -> int:
@@ -1784,6 +1791,10 @@ func _tecla_guarda(k: InputEventKey) -> bool:
 		return true
 	if kc >= KEY_KP_1 and kc <= KEY_KP_5:
 		_selecionar(kc - KEY_KP_1)
+		return true
+	if aba == ABA_FANTASIAS and (kc == KEY_UP or kc == KEY_DOWN):
+		rolagem = clampi(rolagem + (-1 if kc == KEY_UP else 1), 0, _rolagem_max())
+		Som.tocar("aba", 1.2, 0.04, -8.0)
 		return true
 	var abas_l: Array[int] = _abas()
 	if kc == KEY_Q or kc == KEY_E or kc == KEY_TAB:
@@ -3356,6 +3367,8 @@ func _cartoes_fantasias() -> void:
 	var sob_c: int = _cartao_fant_em(mouse) if arrasto.is_empty() else -1
 	for c in Pecas.CONJUNTO_PECAS.size():
 		var r: Rect2 = rect_cartao_fant(c)
+		if r.size.x <= 0.0:
+			continue
 		var cor: Color = Pecas.CONJUNTO_COR[c]
 		var st: Dictionary = _situacao_fantasia(c, alvo, mapa)
 		var disp: int = int(st["gato"]) + int(st["guarda"])
@@ -3389,28 +3402,30 @@ func _cartoes_fantasias() -> void:
 		# nome na cor da fantasia
 		var nome: String = Pecas.CONJUNTO_NOME[c]
 		var cn: Color = cor.lightened(0.5) if (disp > 0 or em_uso) else cor.lightened(0.2).darkened(0.25)
-		Desenho.texto(self, nome, Vector2(r.position.x, r.position.y + 18), _tam_cabe(nome, [14, 13, 12, 11, 10], r.size.x - 8.0), cn, r.size.x)
-		# as 4 peças
-		var cel: float = 22.0
-		var x0: float = r.position.x + (r.size.x - cel * 4.0 - 3.0 * 2.0) * 0.5
+		Desenho.texto(self, nome, Vector2(r.position.x, r.position.y + 19), _tam_cabe(nome, [14, 13, 12, 11, 10], r.size.x - 8.0), cn, r.size.x)
+		# o gato escolhido vestindo a fantasia (peças que faltam: espaço vazio e fantasminha; sem nenhuma peça: silhueta escura)
+		var nenhuma: bool = int(st["gato"]) + int(st["guarda"]) + int(st["outro"]) == 0
+		var vestes: Array = [null, null, null, null]
 		for i in Pecas.SLOTS:
-			var cr := Rect2(x0 + i * (cel + 2.0), r.position.y + 24.0, cel, cel)
-			var tp: int = int(st["tipos"][i])
-			var q: Peca = st["pecas"][i]
-			var onde: int = int(st["onde"][i])
-			var cf: Color = COR_SLOT[Pecas.SLOT[tp]]
-			draw_rect(cr, cf.darkened(0.35))
-			Desenho.icone(self, tp, cr.get_center() + Vector2(0, 1), cel * 0.86, 0, 0.0, 0.0, [], q.raridade if q != null else 0)
-			match onde:
-				FS_GATO:
-					draw_rect(cr, Color(0.5, 1.0, 0.6, 0.85), false, 1.0)
-				FS_OUTRO:
-					draw_rect(cr, Color(0.1, 0.06, 0.05, 0.5))
-					draw_rect(cr, Color(1.0, 0.6, 0.25, 0.85), false, 1.0)
-				FS_NAO:
-					draw_rect(cr, Color(0.07, 0.04, 0.05, 0.88))
+			var tp0: int = int(st["tipos"][i])
+			var q0: Peca = st["pecas"][i]
+			if q0 != null:
+				vestes[Pecas.SLOT[tp0]] = q0
+			elif nenhuma:
+				vestes[Pecas.SLOT[tp0]] = Peca.new(tp0)
+		var pe := Vector2(r.get_center().x - 2.0, r.position.y + 75.0)
+		_ellipse_sombra(pe + Vector2(0, 2), 24.0, 4.5, Color(0, 0, 0, 0.35))
+		Desenho.boneco(self, pe, FANT_ESC, 1.0, 0, vestes, 0.0, 0.0, false, 0.0, 1.0, not nenhuma, -1, 0.0, 0, false, false, 0, false, -1, false, false, posmod(maxi(alvo, 0), Desenho.GATO_TEX.size()), false)
+		if nenhuma:
+			draw_rect(Rect2(r.position.x + 3, r.position.y + 22, r.size.x - 6, 58), Color(fundo.r, fundo.g, fundo.b, 0.84))
+		# quatro pontinhos: situação de cada peça (verde: já no gato; azul: guarda-roupa; laranja: outro gato; cinza: não tem)
+		for i in Pecas.SLOTS:
+			var cor_p: Color = [Color(0.45, 0.95, 0.55), Color(0.5, 0.75, 1.0), Color(1.0, 0.6, 0.25), Color(0.4, 0.4, 0.46)][int(st["onde"][i])]
+			var pr := Rect2(r.get_center().x - 21.0 + i * 11.0, r.position.y + 81.0, 9.0, 5.0)
+			draw_rect(pr.grow(1.0), Color(0, 0, 0, 0.6))
+			draw_rect(pr, cor_p)
 		# rodapé: N/4 e a situação
-		var yb: float = r.end.y - 8.0
+		var yb: float = r.end.y - 6.0
 		var cnt: String = "%d/%d" % [disp, Pecas.SLOTS]
 		var ccnt: Color = Color(0.75, 1.0, 0.8) if disp >= Pecas.SLOTS else (Color(1, 1, 1, 0.85) if disp > 0 else Color(1, 1, 1, 0.4))
 		Desenho.texto(self, cnt, Vector2(r.position.x + 9, yb), 13, ccnt)
@@ -3429,8 +3444,21 @@ func _cartoes_fantasias() -> void:
 			tag = "+%d em uso" % int(st["outro"])
 			ctag = Color(1.0, 0.7, 0.35, 0.85)
 		if tag != "":
-			var lt: float = fonte.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
-			Desenho.texto(self, tag, Vector2(r.end.x - 9.0 - lt, yb), 12, ctag)
+			var lt: float = fonte.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+			Desenho.texto(self, tag, Vector2(r.end.x - 7.0 - lt, yb), 11, ctag)
+
+func _barra_fantasias() -> void:
+	if _rolagem_max() <= 0:
+		return
+	var h: float = FANT_LINHAS * (FANT_H + FANT_GAP) - FANT_GAP
+	var trilho := Rect2(PAINEL.end.x - 30, TILE_Y0, 10, h)
+	draw_rect(trilho.grow(2.0), Color(0.07, 0.04, 0.05))
+	draw_rect(trilho, Color(0.2, 0.13, 0.12))
+	var total: int = int(ceil(Pecas.CONJUNTO_PECAS.size() / float(FANT_COLS)))
+	var alt: float = h * FANT_LINHAS / float(total)
+	var topo: float = (h - alt) * rolagem / float(maxi(1, total - FANT_LINHAS))
+	draw_rect(Rect2(trilho.position.x, trilho.position.y + topo, trilho.size.x, alt), Color(0.85, 0.65, 0.4))
+	draw_rect(Rect2(trilho.position.x, trilho.position.y + topo, 3, alt), Color(1.0, 0.88, 0.62))
 
 func _painel_guarda() -> void:
 	_atualizar_pares()
@@ -3460,6 +3488,7 @@ func _painel_guarda() -> void:
 		Desenho.texto(self, rot, ra.position + Vector2(0, ra.size.y - 8.0), _tam_cabe(rot, [13, 12, 11], ra.size.x - 8.0), ct, ra.size.x)
 	if aba == ABA_FANTASIAS:
 		_cartoes_fantasias()
+		_barra_fantasias()
 		if (arrasto.has("peca") and arrasto["origem"] != null) or arrasto.has("boneco"):
 			draw_rect(PAINEL.grow(-10), Color(1, 0.9, 0.5, 0.16 + 0.1 * sin(t * 8.0)))
 		return

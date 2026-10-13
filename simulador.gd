@@ -34,6 +34,8 @@ func _init() -> void:
 			tentativas.append(0)
 			venceram.append(0)
 			onda_derrota.append({})
+		var inv_casa: Array[int] = []      # ondas vencidas na invasão sem fim de um cômodo, por campanha que zerou tudo
+		var inv_fora: Array[int] = []      # idem, num lugar de fora
 		var nivel_fim: Array[float] = []
 		for a in Balanco.ATOS:
 			nivel_fim.append(0.0)
@@ -74,6 +76,9 @@ func _init() -> void:
 					nivel_fim[(fa - 1) / Fases.TOTAL] += soma_nv / maxf(1.0, e.bonecos.size())
 			if not travou:
 				completas += 1
+				# invasão sem fim com o time do fim do jogo: um cômodo e um lugar de fora, um por campanha
+				inv_casa.append(_jogar_invasao(pol, e, g % Fases.TOTAL + 1, false, 5000 + g))
+				inv_fora.append(_jogar_invasao(pol, e, (g + 2) % Fases.TOTAL + 1, true, 7000 + g))
 			var todas: Array = e.guarda.duplicate()
 			for b in e.bonecos:
 				for p in b.pecas:
@@ -97,7 +102,44 @@ func _init() -> void:
 			print("   ato %d fase %d %-8s de primeira %2d | venceram %2d | tentativas medias %.2f | derrotas (1a tentativa): %s" % [fa / Fases.TOTAL + 1, f + 1, Fases.NOME[f + (Fases.TOTAL if fa >= Fases.TOTAL else 0)], de_primeira[fa], venceram[fa], float(tentativas[fa]) / maxf(1.0, venceram[fa]), dist])
 			if f == Fases.TOTAL - 1:
 				print("      nivel medio dos gatos ao fim do ato %d: %.1f (entre as campanhas que chegaram)" % [fa / Fases.TOTAL + 1, nivel_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos)])
+		print("   invasao sem fim (time do fim do jogo): comodo %s | lugar de fora %s" % [_resumo_inv(inv_casa), _resumo_inv(inv_fora)])
 	quit()
+
+## Ondas de invasão vencidas até a torre cair (limite de 60).
+func _jogar_invasao(pol: String, e: Estado, f: int, fora: bool, semente: int) -> int:
+	e.iniciar_invasao(f, fora)
+	var vencidas: int = 0
+	while vencidas < 60:
+		_preparar(pol, e, false)
+		var sim := Simulacao.new()
+		sim.gerar_eventos = false
+		sim.iniciar(e, semente + vencidas * 17)
+		while not sim.terminada:
+			sim.passo(Balanco.DT)
+		if not sim.vitoria:
+			e.encerrar_derrota(sim)
+			break
+		e.encerrar_onda(sim)
+		vencidas += 1
+	if vencidas >= 60:
+		e.recolher()
+	return vencidas
+
+func _resumo_inv(v: Array[int]) -> String:
+	if v.is_empty():
+		return "sem dados"
+	var o: Array[int] = v.duplicate()
+	o.sort()
+	var soma: int = 0
+	var d10: int = 0
+	var d20: int = 0
+	for x in o:
+		soma += x
+		if x >= 10:
+			d10 += 1
+		if x >= 20:
+			d20 += 1
+	return "media %.1f, mediana %d, min %d, max %d, passam de 10: %d/%d, de 20: %d/%d" % [float(soma) / o.size(), o[o.size() / 2], o[0], o[o.size() - 1], d10, o.size(), d20, o.size()]
 
 func _jogar_fase(pol: String, e: Estado, semente: int) -> Dictionary:
 	var primeira: bool = true

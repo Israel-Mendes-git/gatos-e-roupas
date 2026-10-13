@@ -156,10 +156,10 @@ func iniciar_invasao(f: int, fora: bool = false) -> void:
 
 ## Multiplicadores a mais dos bichos (só crescem na invasão).
 func forca_vida() -> float:
-	return 1.0 + Balanco.INVASAO_VIDA_ONDA * (onda_invasao - 1) if invasao else 1.0
+	return (Balanco.INVASAO_FORA_VIDA if ato > 1 else 1.0) * (1.0 + Balanco.INVASAO_VIDA_ONDA * (onda_invasao - 1) + Balanco.INVASAO_VIDA_ONDA2 * (onda_invasao - 1) * (onda_invasao - 1)) if invasao else 1.0
 
 func forca_dano() -> float:
-	return 1.0 + Balanco.INVASAO_DANO_ONDA * (onda_invasao - 1) if invasao else 1.0
+	return (Balanco.INVASAO_FORA_DANO if ato > 1 else 1.0) * (1.0 + Balanco.INVASAO_DANO_ONDA * (onda_invasao - 1) + Balanco.INVASAO_DANO_ONDA2 * (onda_invasao - 1) * (onda_invasao - 1)) if invasao else 1.0
 
 func melhor_invasao() -> int:
 	var m: int = 0

@@ -1054,37 +1054,77 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		_adereco_tipo(c, tipo, alfa)
 	resetar(c)
 
-## Adereço em pixel que identifica os bichos de truque (aljava, bolsa de curativo, escudo, bomba).
-## Coordenadas locais do bicho (pé em 0,0, olhando para +x); cada "pixel" tem 3 unidades.
+## Desenha um bitmap de texto (uma letra por pixel da grade do bicho, `GATO_K` unidades) com canto em (x, y) em pixels do bicho.
+static func _adereco_px(c: CanvasItem, x: float, y: float, linhas: Array, pal: Dictionary, alfa: float) -> void:
+	for j in linhas.size():
+		var l: String = linhas[j]
+		for i in l.length():
+			var ch: String = l[i]
+			if ch == "." or not pal.has(ch):
+				continue
+			var cor: Color = pal[ch]
+			cor.a *= alfa
+			c.draw_rect(Rect2((x + i) * GATO_K, (y + j) * GATO_K, GATO_K + 0.03, GATO_K + 0.03), cor)
+
+## Adereço em pixel que identifica os bichos de truque (aljava, bolsa de curativo, escudo, bomba): contorno, 2 tons e luz,
+## na mesma grade do corpo do bicho (pé em 0,0, olhando para +x; coordenadas em pixels do bicho).
 static func _adereco_tipo(c: CanvasItem, tipo: int, alfa: float) -> void:
-	var escuro := Color(0.1, 0.07, 0.1, alfa)
 	match tipo:
 		Unidade.Tipo.ATIRADOR:
-			c.draw_rect(Rect2(-17, -53, 12, 21), escuro)
-			c.draw_rect(Rect2(-14, -50, 6, 15), Color(0.55, 0.36, 0.2, alfa))
-			c.draw_rect(Rect2(-14, -41, 6, 3), Color(0.4, 0.25, 0.14, alfa))
-			for k in 2:
-				c.draw_rect(Rect2(-14 + k * 3, -62, 3, 9), escuro)
-				c.draw_rect(Rect2(-14 + k * 3, -62, 3, 3), Color(0.5, 0.85, 0.4, alfa) if k == 0 else Color(0.95, 0.9, 0.5, alfa))
+			var q: Array = [
+				"..g.y..",
+				"..o.o..",
+				".ooooo.",
+				".oLBBo.",
+				".oLBDo.",
+				".oSSSo.",
+				".oBBDo.",
+				".oBBDo.",
+				"..oooo.",
+			]
+			_adereco_px(c, -8.0, -19.0, q, {"o": Color("#1a0f0a"), "L": Color("#c48a54"), "B": Color("#8c5a32"), "D": Color("#5e3a1f"), "S": Color("#d8c8a0"), "g": Color("#6fd05a"), "y": Color("#f6e27a")}, alfa)
 		Unidade.Tipo.CURANDEIRO:
-			c.draw_rect(Rect2(-14, -59, 21, 18), escuro)
-			c.draw_rect(Rect2(-11, -56, 15, 12), Color(0.96, 0.96, 0.92, alfa))
-			c.draw_rect(Rect2(-5, -56, 3, 12), Color(0.9, 0.22, 0.25, alfa))
-			c.draw_rect(Rect2(-11, -53, 15, 3), Color(0.9, 0.22, 0.25, alfa))
+			var q: Array = [
+				"..ooo..",
+				".o...o.",
+				"ooooooo",
+				"oWWRWWo",
+				"oWWRWWo",
+				"oRRRRRo",
+				"oWWRWWo",
+				"oSSRSSo",
+				".ooooo.",
+			]
+			_adereco_px(c, -5.0, -19.0, q, {"o": Color("#2a1418"), "W": Color("#f6f4ea"), "S": Color("#c4c2c4"), "R": Color("#e0353d")}, alfa)
 		Unidade.Tipo.ESCUDEIRO:
-			c.draw_rect(Rect2(19, -44, 15, 30), escuro)
-			c.draw_rect(Rect2(16, -38, 21, 18), escuro)
-			c.draw_rect(Rect2(22, -41, 9, 24), Color(0.45, 0.58, 0.85, alfa))
-			c.draw_rect(Rect2(19, -35, 15, 12), Color(0.45, 0.58, 0.85, alfa))
-			c.draw_rect(Rect2(22, -41, 3, 9), Color(0.75, 0.85, 1.0, alfa))
-			c.draw_rect(Rect2(25, -32, 3, 6), Color(0.95, 0.85, 0.4, alfa))
+			var q: Array = [
+				".oooooo.",
+				"oLLBBBBo",
+				"oLBBBBBo",
+				"oLBYYBBo",
+				"oBBYYBBo",
+				"oBBBBBDo",
+				".oBBBDDo",
+				".oBBBDo.",
+				"..oBDo..",
+				"...oo...",
+			]
+			_adereco_px(c, 5.0, -16.0, q, {"o": Color("#14182c"), "L": Color("#bcd2ff"), "B": Color("#5c7fd0"), "D": Color("#3a55a0"), "Y": Color("#f4d24e")}, alfa)
 		Unidade.Tipo.BOMBA:
 			var pisca: bool = int(Time.get_ticks_msec() / 140) % 2 == 0
-			c.draw_rect(Rect2(-11, -62, 18, 18), escuro)
-			c.draw_rect(Rect2(-14, -59, 24, 12), escuro)
-			c.draw_rect(Rect2(-8, -59, 6, 3), Color(0.5, 0.5, 0.58, alfa))
-			c.draw_rect(Rect2(-2, -68, 3, 6), Color(0.6, 0.45, 0.3, alfa))
-			c.draw_rect(Rect2(-2 if pisca else 1, -74, 3, 6), Color(1.0, 0.85, 0.3, alfa) if pisca else Color(1.0, 0.45, 0.2, alfa))
+			var q: Array = [
+				"......Y..",
+				".....oF..",
+				"....oFoo.",
+				"..ooKKKoo",
+				".oKLLKKKo",
+				"oKLKKKKKo",
+				"oKKKKKKDo",
+				"oKKKKKDDo",
+				".oKKKDDo.",
+				"..ooooo..",
+			]
+			_adereco_px(c, -5.0, -22.0, q, {"o": Color("#0a0a10"), "K": Color("#3a3a4a"), "L": Color("#8a8aa0"), "D": Color("#22222c"), "F": Color("#a07a4a"), "Y": Color("#fff08a") if pisca else Color("#ff6a2a")}, alfa)
 
 # ------------------------------------------------------------------ gato (os heróis)
 const GATO_TEX: Array[Texture2D] = [preload("res://assets/gato_0.png"), preload("res://assets/gato_1.png"), preload("res://assets/gato_2.png")]

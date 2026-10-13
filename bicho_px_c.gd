@@ -96,6 +96,142 @@ const CAPACETE: Array = [
 	".oooooooooooooo.",
 ]
 
+
+# --- bitmaps (letras: o = contorno, a = tom escuro, b = tom médio, c/l = luz, w = branco, v = branco na sombra, p/q = rosa, n = nariz, y = amarelo, e = olho)
+# Toupeira: corpo de 24 colunas por 16 linhas (tronco de veludo, sem a cabeça)
+const TP_CORPO: Array = [
+	"......oooooooooooo......",
+	"....ooabbbbbbbbbbboo....",
+	"...oabbbcccbbbbbbbbbo...",
+	"..oabbbcccccbbbbbbbbbo..",
+	".oabbbbccccbbbbbbbbbbbo.",
+	".oabbbbbbbbbbbbbbbbbbbo.",
+	"oaabbbbbbbbbbbbbbbbbbbbo",
+	"oaabbbbbbbbbbbbbbbbbbbbo",
+	"oaaabbbbbbbbbbbbbbbbbbbo",
+	"oaaabbbbbbbbbbbbbbbbbbao",
+	"oaaaabbbbbbbbbbbbbbbbaao",
+	".oaaaabbbbbbbbbbbbbbaaao",
+	".oaaaaabbbbbbbbbbbbaaaao",
+	"..oaaaaaaabbbbbbaaaaaao.",
+	"...ooaaaaaaaaaaaaaaaoo..",
+	".....oooooooooooooooo...",
+]
+# Toupeira: cabeça de 19 colunas por 12 linhas, focinho rosa comprido, dentes e olhinho
+const TP_CAB: Array = [
+	"....oooooooo.......",
+	"...oabbbbbbbo......",
+	"..oabbbbbbbbbo.....",
+	".oabbbbbbbbbbboo...",
+	".oabbbbbbbbbbbppoo.",
+	".oabbbbwebbbbbpppno",
+	".oabbbbbbbbbbppppqo",
+	"..oabbbbbbbbbppppoo",
+	"..oaabbbbbbbbbpqoo.",
+	"...oaabbbbbwwboo...",
+	"....ooaaaaaaaoo....",
+	"......ooooooo......",
+]
+# Gambá: corpo de 24 colunas por 11 linhas, listra branca no alto das costas
+const GA_CORPO: Array = [
+	"...oooooooooooooooooo...",
+	"..owwwwwwwwwwwwwwwwwwo..",
+	"..ovvvvvvvvvvvvvvvvvvo..",
+	".olllbbbbbbbbbbbbbbbbbo.",
+	"olbbbbbbbbbbbbbbbbbbbbao",
+	"obbbbbbbbbbbbbbbbbbbbbao",
+	"oabbbbbbbbbbbbbbbbbbbaao",
+	"oaabbbbbbbbbbbbbbbbbaaao",
+	".oaaabbbbbbbbbbbbbaaaao.",
+	"..oaaaaaaaaaaaaaaaaaao..",
+	"...oooooooooooooooooo...",
+]
+# Gambá: cabeça de 17 colunas por 11 linhas, focinho fino, listra branca da testa ao focinho, orelhas redondas
+const GA_CAB: Array = [
+	"..oo...oo........",
+	".opao.oaao.......",
+	".oaaoooaaoo......",
+	"oaabbwwwwaaoo....",
+	"oaabbbwwwwaaaoo..",
+	"oaaabbbwwwaaaaaoo",
+	"oaaaabbbwoyyaaaao",
+	"oaaaaabbbaaaaanno",
+	".oaaaaaaaaaaaoooo",
+	"..ooaaaaaaaaoo...",
+	"....oooooooo.....",
+]
+
+# Vira-lata: cabeça de lado (Q = orelha caída, v = focinho claro, k = nariz)
+const VL_CAB: Array = [
+	"....oooooooo............",
+	"...oabbbbbbbbo..........",
+	"..oabbbbbbbbbbo.........",
+	".oabbbbbbbbbbbboooooo...",
+	".oabbbbbbbbbbblvvvvvvoo.",
+	"oQabbbbbbbbbbbvvvvvvvkko",
+	"oQQabbbbbbbbbbvvvvvvvkko",
+	"oQQabbbbbbbbbbbvvvvvvoo.",
+	"oQQQabbbbbbbbbbaaaaaao..",
+	"oQQQabbbbbbbbbbbooooo...",
+	".oQQabbbbbbbbbbo........",
+	".oQQaabbbbbbbbo.........",
+	"..oQQoaaaaaaao..........",
+	"...ooo.ooooooo..........",
+]
+# Texugo: cabeça preta com duas listras brancas (K = luz, w/v = listra, n = nariz)
+const TX_CAB: Array = [
+	"....oooooooooo..........",
+	"..ooKkkkkkkkkkoo........",
+	".oKkkkwwwwwwkkkkooo.....",
+	"oKkkkkvvwwwwwwwwwwooo...",
+	"oKkkkkkkvvvvvvvvvwwwoo..",
+	"oKkkkkkkkkkkkkkkkkkkkko.",
+	"oKkkkkkkwwwwwwkkkkkkkkko",
+	"oKkkkkwwwwwwwwwkkkkkknno",
+	".okkkkkkvvvvvvkkkkkkkkoo",
+	".okkkkkkkkkkkkkkkkkoooo.",
+	"..ookkkkkkkkkkkkoo......",
+	"....ooooooooooo.........",
+]
+# Coruja: cabeça com orelhas de pena, disco facial claro, dois olhos amarelos (O = aro do olho, i = pupila) e bico
+const CR_CAB: Array = [
+	"..oo.......oo...........",
+	"..oao.....oao...........",
+	"..oabo...oabo...........",
+	"..oabbooooabbo..........",
+	".oabbbbbbbbbbbboo.......",
+	"oabbbvvvvvvvvvvvvo......",
+	"oabbvvvvvvvvvvvvvvo.....",
+	"oabbvvOyyOvvOyyOvvo.....",
+	"oabbvvyyiyvvyyiyvvvkko..",
+	"oabbvvyiiyvvyiiyvvkKko..",
+	"oabbbvvyyOvvyyOvvvvkKo..",
+	".oabbbvvvvvvvvvvvvvooo..",
+	".oaabbbvvsvsvsvvvvvo....",
+	"..oaabbbbbbbbbbbboo.....",
+	"....ooooooooooooo.......",
+]
+# Coruja: peito claro com penugem em V (m = marca, s = sombra)
+const CR_PEITO: Array = [
+	"..vvvvv..",
+	".vvvvvvv.",
+	"vvvvvvvvv",
+	"vvmvvvmvv",
+	"vvvmvmvvv",
+	"vvvvmvvvv",
+	"vvvvvvvvv",
+	"vvmvvvmvv",
+	"vvvmvmvvv",
+	"vvvvmvvvs",
+	"vvvvvvvvs",
+	"vvmvvvmvs",
+	"vvvmvmvss",
+	".vvvmvvss",
+	".vvvvvvs.",
+	"..vvvvs..",
+	"...ssss..",
+]
+
 # ---------------------------------------------------------------------------------------------
 
 ## Pose comum a `desenhar` e `desloc`: quadro do passo e força do golpe (0..1).
@@ -119,13 +255,13 @@ static func _anc(ct: int, p: Dictionary, parado: bool) -> Array[Vector2]:
 				return [Vector2(9, -14), Vector2(6, -9), Vector2(12, -9), Vector2(1, -9), Vector2(8, -9), Vector2(0, 0), Vector2(10, -9)]
 			var L: int = [0, 1, 0, 1][fr] if p["and"] else 0
 			var hx: int = roundi(4.0 * sn)
-			a = [Vector2(9 + hx, -25 - L), Vector2(-2, -11 - L), Vector2(18 + hx, -13 - L), Vector2(-11, -15 - L),
-				Vector2(5 + hx / 2, -12 - L), Vector2(0, 0), Vector2(13 + hx, -16 - L)]
+			a = [Vector2(10 + hx, -26 - L), Vector2(-2, -11 - L), Vector2(20 + hx, -13 - L), Vector2(-11, -15 - L),
+				Vector2(5 + hx / 2, -12 - L), Vector2(0, 0), Vector2(15 + hx, -17 - L)]
 		6:
 			var L6: int = [0, 1, 0, 1][fr] if p["and"] else 0
 			var hx6: int = roundi(4.0 * sn)
-			a = [Vector2(10 + hx6, -18 - L6), Vector2(-1, -11 - L6), Vector2(17 + hx6, -11 - L6), Vector2(-9, -14 - L6),
-				Vector2(5 + hx6 / 2, -12 - L6), Vector2(0, 0), Vector2(12 + hx6, -14 - L6)]
+			a = [Vector2(12 + hx6, -20 - L6), Vector2(-1, -12 - L6), Vector2(19 + hx6, -13 - L6), Vector2(-9, -15 - L6),
+				Vector2(6 + hx6 / 2, -12 - L6), Vector2(0, 0), Vector2(14 + hx6, -14 - L6)]
 		7:
 			var voa: bool = p["and"]
 			var L7: int = (5 + [0, 1, 0, -1][fr]) if voa else 0
@@ -136,13 +272,13 @@ static func _anc(ct: int, p: Dictionary, parado: bool) -> Array[Vector2]:
 			var L8: int = [0, 1, 0, 1][fr] if p["and"] else 0
 			var hx8: int = 1 if parado else roundi(4.0 * sn)
 			var hy8: int = 6 if parado else roundi(sn)
-			a = [Vector2(11 + hx8, -27 - L8 + hy8), Vector2(-1, -15 - L8), Vector2(22 + hx8, -17 - L8 + hy8), Vector2(-11, -19 - L8),
-				Vector2(6 + hx8 / 2, -17 - L8 + hy8 / 2), Vector2(0, 0), Vector2(15 + hx8, -21 - L8 + hy8)]
+			a = [Vector2(11 + hx8, -29 - L8 + hy8), Vector2(-1, -14 - L8), Vector2(24 + hx8, -22 - L8 + hy8), Vector2(-11, -19 - L8),
+				Vector2(8 + hx8 / 2, -19 - L8 + hy8 / 2), Vector2(0, 0), Vector2(12 + hx8, -24 - L8 + hy8)]
 		9:
 			var L9: int = [0, 1, 0, 1][fr] if p["and"] else 0
 			var hx9: int = roundi(4.0 * sn)
-			a = [Vector2(13 + hx9, -17 - L9), Vector2(-1, -10 - L9), Vector2(21 + hx9, -9 - L9), Vector2(-12, -14 - L9),
-				Vector2(6 + hx9 / 2, -11 - L9), Vector2(0, 0), Vector2(15 + hx9, -12 - L9)]
+			a = [Vector2(13 + hx9, -19 - L9), Vector2(-2, -12 - L9), Vector2(26 + hx9, -12 - L9), Vector2(-12, -16 - L9),
+				Vector2(7 + hx9 / 2, -12 - L9), Vector2(0, 0), Vector2(14 + hx9, -14 - L9)]
 	return a
 
 static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parado: bool) -> Vector2:
@@ -209,30 +345,24 @@ static func _toupeira(k: BichoPxB._K, p: Dictionary, anim: float, parado: bool) 
 	var L: int = [0, 1, 0, 1][fr] if p["and"] else 0
 	var hx: int = roundi(4.0 * sn)
 	var hy: int = roundi(sn)
+	var pal: Dictionary = {"o": TP_O, "a": TP_A, "b": TP_B, "c": TP_L, "p": TP_P, "q": TP_PS, "n": TP_PS, "w": Color("#ffffff"), "e": TP_O}
 	# pés de trás
 	var pe: int = [0, 2, 0, -2][fr] if p["and"] else 0
 	k.el(-9.0 + pe, -1.5, 2.5, 1.5, TP_PS, TP_O)
 	k.el(-2.0 - pe, -1.5, 2.5, 1.5, TP_P, TP_O)
-	# rabinho
-	k.r(-17, -9 - L, 3, 2, TP_O)
-	k.r(-16, -9 - L, 2, 1, TP_P)
 	# braço de trás (longe)
-	var bx: int = 2 + [0, 1, 2, 1][fr] if p["and"] else 2
+	var bx: int = 2 + ([0, 1, 2, 1][fr] if p["and"] else 0)
 	k.vol(float(bx), -7.0 - L, 3.0, 4.0, TP_A, TP_B, TP_O, TP_O)
 	k.lin(float(bx + 3), -6.0 - L, float(bx + 8), -5.0 - L, 1.0, GARRA_S, TP_O)
-	# corpo gordo
-	k.vol(-2.0, -11.0 - L, 13.0, 9.5, TP_B, TP_L, TP_A, TP_O)
-	# cabeça e focinho rosa
-	k.vol(9.0 + hx, -15.0 - L + hy, 6.0, 5.5, TP_B, TP_L, TP_A, TP_O)
-	k.el(16.0 + hx, -13.0 - L + hy, 3.5, 2.5, TP_P, TP_O)
-	k.r(18 + hx, -14 - L + hy, 2, 2, TP_PS)
-	k.r(14 + hx, -14 - L + hy, 2, 1, Color("#f3bcbc"))
-	# olhinho mal-encarado
-	k.r(11 + hx, -17 - L + hy, 3, 1, TP_O)
-	k.r(12 + hx, -16 - L + hy, 1, 2, TP_O)
+	# corpo gordo e cabeça, em bitmap
+	k.spr(-15, -17 - L, TP_CORPO, pal)
+	k.r(-17, -9 - L, 3, 2, TP_O)
+	k.r(-16, -9 - L, 2, 1, TP_P)
+	k.spr(3 + hx, -24 - L + hy, BichoPxB._est(TP_CAB, [10, 11], [3, 4]), pal)
+	k.r(10 + hx, -18 - L + hy, 4, 1, TP_O)      # sobrancelha mal-encarada
 	# capacete com lanterna e feixe de luz
-	var cx0: int = 1 + hx
-	var cy0: int = -26 - L + hy
+	var cx0: int = 2 + hx
+	var cy0: int = -28 - L + hy
 	k.spr(cx0, cy0, CAPACETE, PAL_CAP)
 	var lx: int = cx0 + 16
 	var ly: int = cy0 + 5
@@ -294,6 +424,14 @@ static func _banda(k: BichoPxB._K, cx: float, cy: float, rx: float, ry: float, x
 
 # ----------------------------------------------------- GAMBÁ FEDIDO -----------------------------------------------------
 
+## Tira `n` colunas de um bitmap a partir da coluna `de` (encurta o corpo sem refazer o desenho).
+static func _sem_cols(linhas: Array, de: int, n: int) -> Array:
+	var sai: Array = []
+	for l in linhas:
+		var t: String = l
+		sai.append(t.substr(0, de) + t.substr(de + n))
+	return sai
+
 static func _gamba(k: BichoPxB._K, p: Dictionary, anim: float) -> void:
 	var fr: int = p["fr"]
 	var sn: float = p["sn"]
@@ -303,7 +441,8 @@ static func _gamba(k: BichoPxB._K, p: Dictionary, anim: float) -> void:
 	var hy: int = roundi(sn)
 	var la: int = [0, 1, 0, 0][fr] if andando else 0
 	var lb: int = [0, 0, 0, 1][fr] if andando else 0
-	# pernas de longe (mais escuras) e de perto
+	var pal: Dictionary = {"o": GA_O, "a": GA_A, "b": GA_B, "l": GA_L, "w": GA_W, "v": GA_WS, "y": GA_OLHO, "n": GA_NARIZ, "p": GA_NARIZ}
+	# pernas de longe (mais escuras)
 	_perna(k, -7, -6 - L, lb, 2, GA_A, GA_O)
 	_perna(k, 5, -6 - L, la, 2, GA_A, GA_O)
 	# rabo enorme levantado, atrás do corpo
@@ -311,26 +450,17 @@ static func _gamba(k: BichoPxB._K, p: Dictionary, anim: float) -> void:
 	_rabo(k, -10, -10 - L, 24, sway)
 	_perna(k, -11, -6 - L, la, 2, GA_B, GA_O)
 	_perna(k, 1, -6 - L, lb, 2, GA_B, GA_O)
-	# corpo comprido com a listra branca nas costas
-	k.vol(-1.0, -11.0 - L, 12.5, 6.5, GA_B, GA_L, GA_A, GA_O)
-	_banda(k, -1.0, -11.0 - L, 12.5, 6.5, -11, 10, 1, 3, GA_W, GA_WS)
-	# cabeça pontuda de focinho fino
-	k.vol(10.0 + hx, -13.0 - L + hy, 5.0, 4.5, GA_B, GA_L, GA_A, GA_O)
-	k.el(15.0 + hx, -11.0 - L + hy, 3.0, 2.0, GA_B, GA_O)
-	k.r(17 + hx, -12 - L + hy, 2, 2, GA_NARIZ)
-	# orelha redonda
-	k.vol(8.0 + hx, -18.0 - L + hy, 1.8, 1.8, GA_B, GA_L, GA_A, GA_O)
-	k.r(8 + hx, -18 - L + hy, 1, 1, GA_NARIZ)
-	# listra branca fina da testa ao focinho
-	_banda(k, 10.0 + hx, -13.0 - L + hy, 5.0, 4.5, 9 + hx, 13 + hx, 1, 2, GA_W, GA_WS)
-	k.r(13 + hx, -12 - L + hy, 3, 1, GA_W)
-	# olho amarelo de cara fechada
-	k.r(11 + hx, -14 - L + hy, 3, 1, GA_O)
-	k.r(12 + hx, -13 - L + hy, 2, 1, GA_OLHO)
-	# bocão no golpe
+	# corpo comprido com a listra branca, e cabeça pontuda, em bitmap
+	k.spr(-11, -18 - L, _sem_cols(BichoPxB._est(GA_CORPO, [], [5, 6]), 7, 4), pal)
+	k.spr(4 + hx, -21 - L + hy, GA_CAB, pal)
+	k.r(10 + hx, -15 - L + hy, 3, 1, GA_O)        # sobrancelha pesada
+	k.r(12 + hx, -14 - L + hy, 1, 1, GA_O)        # pupila
 	if sn > 0.4:
-		k.r(14 + hx, -9 - L + hy, 4, 1, GA_NARIZ)
-		k.r(15 + hx, -8 - L + hy, 1, 1, GA_W)
+		k.r(14 + hx, -12 - L + hy, 4, 1, GA_NARIZ)
+		k.r(15 + hx, -11 - L + hy, 1, 1, GA_W)
+	else:
+		k.r(14 + hx, -12 - L + hy, 3, 1, GA_O)
+		k.r(16 + hx, -13 - L + hy, 1, 1, GA_W)    # dentinho de lado
 	_fedor(k, anim, L)
 
 ## Rabo-plumeiro: coluna de `alt` linhas que sobe da anca em (bx, by), larga no meio, com listra branca no centro.
@@ -488,48 +618,30 @@ static func _coruja(k: BichoPxB._K, p: Dictionary) -> void:
 		k.r(x - 2, ty - 2, 6, 2, CR_O)
 		k.r(x - 2, ty - 2, 5, 1, CR_BICO_S)
 		k.r(x - 1, ty - 1, 1, 1, CR_O)
-	# corpo alto e redondo, peito claro com pintas
+	# corpo alto e redondo, barriga arredondada, peito claro com penugem em V
 	k.vol(0.0, -15.0 - L, 9.5, 12.0, CR_B, CR_L, CR_A, CR_O)
-	k.fill(4.0, -14.0 - L, 4.3, 8.5, CR_V)
-	k.fill(4.0, -11.0 - L, 4.0, 5.0, CR_VS)
-	k.fill(4.0, -13.0 - L, 4.0, 6.5, CR_V)
-	for j in 5:
-		var px: int = 2 + (j % 2) * 2
-		k.r(px, -20 + j * 3 - L, 2, 1, CR_M)
-		k.r(px + 1, -19 + j * 3 - L, 1, 1, CR_M)
-	# asa de perto: dobrada no corpo ou aberta
+	k.spr(0, -23 - L, CR_PEITO, {"v": CR_V, "s": CR_VS, "m": CR_M})
+	k.r(-1, -10 - L, 1, 3, CR_A)
+	# asa de perto: dobrada no corpo (com sombra por baixo) ou aberta
 	if abre:
 		_asa(k, sx, sy, ang, 25.0, 12.0, CR_B, CR_L, CR_A)
 	else:
 		k.vol(-4.0, -13.0 - L, 5.0, 9.5, CR_B, CR_L, CR_A, CR_O)
 		for j in 3:
 			k.r(-7 + j * 2, -7 - L + (j % 2), 1, 3, CR_A)
-	# cabeça larga com orelhas de pena
-	var hcx: float = 3.0 + hx
-	var hcy: float = -27.0 - L + hy
-	k.lin(hcx - 4.0, hcy - 5.0, hcx - 5.0, hcy - 9.0, 1.0, CR_A, CR_O)
-	k.lin(hcx + 3.0, hcy - 5.0, hcx + 4.0, hcy - 9.0, 1.0, CR_A, CR_O)
-	k.vol(hcx, hcy, 8.5, 6.5, CR_B, CR_L, CR_A, CR_O)
-	# disco facial claro e olhos amarelos
-	k.el(hcx + 4.0, hcy + 0.5, 5.5, 5.0, CR_V, CR_O)
-	k.el(hcx + 1.0, hcy, 2.6, 2.6, CR_OLHO, CR_O)
-	k.el(hcx + 7.5, hcy, 2.0, 2.2, CR_OLHO, CR_O)
-	k.r(roundi(hcx) + 1, roundi(hcy) - 1, 2, 3, CR_O)
-	k.r(roundi(hcx) + 7, roundi(hcy) - 1, 2, 2, CR_O)
-	k.r(roundi(hcx), roundi(hcy) - 1, 1, 1, Color.WHITE)
-	k.r(roundi(hcx) + 7, roundi(hcy) - 1, 1, 1, Color.WHITE)
-	# sobrancelha pesada
-	k.r(roundi(hcx) - 2, roundi(hcy) - 4, 5, 1, CR_O)
-	k.r(roundi(hcx) + 3, roundi(hcy) - 4, 6, 1, CR_O)
-	k.r(roundi(hcx) + 3, roundi(hcy) - 3, 2, 1, CR_O)
-	# bico curvo
-	var bx: int = roundi(hcx) + 10
-	var by: int = roundi(hcy) + 1
-	k.r(bx - 1, by - 1, 5, 5, CR_O)
-	k.r(bx, by, 3, 2, CR_BICO)
-	k.r(bx + 1, by + 2, 1, 2, CR_BICO_S)
+		k.r(-8, -3 - L, 7, 1, CR_O)
+		k.r(-6, -2 - L, 4, 1, CR_A)
+	# cabeça em bitmap: orelhas de pena, disco facial, olhos e bico
+	var x0: int = -7 + hx
+	var y0: int = -34 - L + hy
+	k.spr(x0, y0, CR_CAB, {"o": CR_O, "a": CR_A, "b": CR_B, "v": CR_V, "s": CR_VS, "y": CR_OLHO, "O": CR_OLHO_S, "i": CR_O, "k": CR_BICO, "K": CR_BICO_S})
+	k.r(x0 + 7, y0 + 8, 1, 1, Color.WHITE)
+	k.r(x0 + 12, y0 + 8, 1, 1, Color.WHITE)
+	k.r(x0 + 5, y0 + 6, 4, 1, CR_O)                 # sobrancelha pesada
+	k.r(x0 + 11, y0 + 6, 5, 1, CR_O)
+	k.r(x0 + 9, y0 + 7, 1, 1, CR_O)
 	if sn > 0.4:
-		k.r(bx, by + 3, 3, 1, CR_BICO_S)
+		k.r(x0 + 19, y0 + 11, 3, 1, CR_BICO_S)
 
 # ------------------------------------------------- VIRA-LATA CHEFÃO -------------------------------------------------
 
@@ -545,41 +657,42 @@ static func _vira_lata(k: BichoPxB._K, p: Dictionary, parado: bool) -> void:
 	var la: int = [0, 2, 1, 0][fr] if andando else 0
 	var lb: int = [1, 0, 0, 2][fr] if andando else 0
 	# patas de longe (mais escuras)
-	_perna(k, -9, -9 - L, lb, 3, VL_A, VL_O)
-	_perna(k, 8, -9 - L, la, 3, VL_A, VL_O)
+	_perna(k, -9, -9 - L, lb, 2, VL_A, VL_O)
+	_perna(k, 9, -9 - L, la, 2, VL_A, VL_O)
 	# rabo curto levantado (caído quando sem fôlego)
 	var wag: int = [0, 1, 0, -1][fr] if andando else 0
 	if parado:
-		k.lin(-13.0, -15.0 - L, -17.0, -9.0, 2.0, VL_B, VL_O)
+		k.lin(-13.0, -14.0 - L, -17.0, -8.0, 2.0, VL_B, VL_O)
 	else:
-		k.lin(-13.0, -18.0 - L, float(-17 + wag), -25.0 - L, 2.0, VL_B, VL_O)
+		k.lin(-13.0, -17.0 - L, float(-17 + wag), -24.0 - L, 2.0, VL_B, VL_O)
 	# orelha de pé (a outra é a caída), atrás da cabeça
-	k.lin(float(9 + hx), -25.0 - L + hy, float(10 + hx), -31.0 - L + hy, 2.0, VL_A, VL_O)
-	# corpo grande e peitoral largo
-	k.vol(-2.0, -15.0 - L, 13.0, 8.5 + ofeg * 0.6, VL_B, VL_L, VL_A, VL_O)
-	k.vol(6.0, -14.0 - L, 7.0, 9.0 + ofeg * 0.6, VL_B, VL_L, VL_A, VL_O)
-	k.fill(-5.0, -19.0 - L, 5.0, 3.0, VL_P)
-	k.fill(9.0, -10.0 - L, 3.5, 4.0, VL_V)
-	k.r(-3, -13 - L, 2, 1, VL_A)
-	# patas de perto
-	_perna(k, -5, -9 - L, la, 3, VL_B, VL_O)
-	_perna(k, 4, -9 - L, lb, 3, VL_B, VL_O)
-	# cabeça, focinho e mancha no olho
-	var hcx: float = 12.0 + hx
-	var hcy: float = -21.0 - L + hy
-	k.vol(hcx, hcy, 6.5, 5.5, VL_B, VL_L, VL_A, VL_O)
-	k.vol(hcx + 6.5, hcy + 3.0, 4.6, 3.2, VL_L, VL_V, VL_B, VL_O)
-	k.r(roundi(hcx) + 10, roundi(hcy), 3, 2, VL_O)
-	k.fill(hcx + 3.0, hcy - 1.0, 2.6, 2.2, VL_P)
-	# olho mal-encarado, sobrancelha baixa e cicatriz
-	k.r(roundi(hcx) + 2, roundi(hcy) - 3, 5, 1, VL_O)
-	k.r(roundi(hcx) + 3, roundi(hcy) - 2, 2, 1, VL_O)
-	k.r(roundi(hcx) + 4, roundi(hcy) - 1, 2, 1, VL_V)
-	k.r(roundi(hcx) + 5, roundi(hcy) - 1, 1, 1, VL_O)
-	k.r(roundi(hcx) + 1, roundi(hcy) + 1, 1, 3, VL_V)
-	# boca: fechada com presa de fora; aberta no golpe e na ofegância
-	var by: int = roundi(hcy) + 5
-	var bx: int = roundi(hcx) + 4
+	k.lin(float(11 + hx), -27.0 - L + hy, float(12 + hx), -33.0 - L + hy, 2.0, VL_A, VL_O)
+	# tronco fino na cintura, coxa grossa atrás e peito fundo na frente
+	k.vol(-3.0, -15.0 - L, 10.5, 6.2, VL_B, VL_L, VL_A, VL_O)
+	k.vol(-9.0, -13.0 - L, 5.5, 7.0, VL_B, VL_L, VL_A, VL_O)
+	k.vol(6.0, -14.0 - L, 6.5, 8.8 + ofeg * 0.6, VL_B, VL_L, VL_A, VL_O)
+	k.fill(-4.0, -19.0 - L, 4.0, 2.6, VL_P)
+	k.fill(7.0, -9.0 - L, 3.0, 3.6, VL_V)
+	# patas de perto: a traseira tem o jarrete dobrado
+	_perna(k, -7, -8 - L, la, 3, VL_B, VL_O)
+	k.r(-11, -7 - L - la, 2, 1, VL_A)
+	_perna(k, 5, -9 - L, lb, 3, VL_B, VL_O)
+	# pescoço grosso
+	k.vol(10.0 + float(hx) * 0.5, -20.0 - L + float(hy) * 0.5, 4.5, 5.5, VL_B, VL_L, VL_A, VL_O)
+	# cabeça em bitmap (orelha caída, focinho claro, nariz), com olho, sobrancelha e cicatriz por cima
+	var x0: int = 3 + hx
+	var y0: int = -29 - L + hy
+	var hcx: float = float(x0) + 10.0
+	var hcy: float = float(y0) + 6.0
+	k.spr(x0, y0, VL_CAB, {"o": VL_O, "a": VL_A, "b": VL_B, "l": VL_L, "v": VL_L, "Q": VL_P, "k": VL_O})
+	k.r(x0 + 7, y0 + 4, 5, 3, VL_P)
+	k.r(x0 + 6, y0 + 4, 7, 1, VL_O)
+	k.r(x0 + 8, y0 + 5, 2, 1, VL_V)
+	k.r(x0 + 9, y0 + 5, 1, 1, VL_O)
+	k.r(x0 + 14, y0 + 5, 1, 3, VL_V)
+	k.r(x0 + 20, y0 + 5, 1, 1, VL_PREGO)
+	var by: int = y0 + 8
+	var bx: int = x0 + 13
 	if sn > 0.4 or parado:
 		k.r(bx, by, 9, 3, VL_O)
 		k.r(bx + 1, by, 7, 2, Color("#7a1f2a"))
@@ -594,11 +707,9 @@ static func _vira_lata(k: BichoPxB._K, p: Dictionary, parado: bool) -> void:
 		k.r(bx + 1, by + 1, 8, 1, VL_O)
 		k.r(bx + 6, by, 1, 1, VL_V)
 		k.r(bx + 6, by - 1, 1, 1, VL_V)
-	# orelha caída, pendurada na lateral da cabeça
-	k.vol(hcx - 4.5, hcy + 2.5, 2.8, 5.5, VL_P, VL_A, VL_PS, VL_O)
 	# coleira de espinhos no pescoço
-	var nx: float = 5.0 + float(hx) * 0.5
-	var ny: float = -22.0 - L + float(hy) * 0.5
+	var nx: float = 6.0 + float(hx) * 0.5
+	var ny: float = -21.0 - L + float(hy) * 0.5
 	k.lin(nx + 1.0, ny, nx - 1.0, ny + 6.0, 1.0, VL_COLEIRA, VL_O)
 	for i in 3:
 		var yy: int = roundi(ny) + i * 2 + 1
@@ -606,7 +717,6 @@ static func _vira_lata(k: BichoPxB._K, p: Dictionary, parado: bool) -> void:
 		k.r(xx, yy, 3, 1, VL_PREGO_S)
 		k.r(xx + 1, yy - 1, 1, 3, VL_PREGO)
 		k.r(xx + 3, yy, 1, 1, VL_PREGO)
-	# gota de suor quando sem fôlego
 	if parado:
 		k.r(roundi(hcx) - 2, roundi(hcy) - 9 + ofeg, 1, 2, Color("#9fd8ff"))
 
@@ -621,41 +731,37 @@ static func _texugo(k: BichoPxB._K, p: Dictionary) -> void:
 	var hy: int = roundi(sn)
 	var la: int = [0, 2, 1, 0][fr] if andando else 0
 	var lb: int = [1, 0, 0, 2][fr] if andando else 0
-	# pernas curtas e grossas, com garras compridas
-	_perna(k, -10, -6 - L, lb, 3, TX_K, TX_O)
-	_perna(k, 8, -6 - L, la, 3, TX_K, TX_O)
+	# pernas curtas e grossas
+	_perna(k, -9, -7 - L, lb, 3, TX_K, TX_O)
+	_perna(k, 7, -7 - L, la, 3, TX_K, TX_O)
 	# rabo curto
-	k.vol(-16.0, -11.0 - L, 3.0, 3.0, TX_B, TX_L, TX_A, TX_O)
-	# corpo largo e baixo, pelo grisalho
-	k.vol(-1.0, -10.0 - L, 15.0, 7.5, TX_B, TX_L, TX_A, TX_O)
-	for x in range(-12, 11, 4):
-		k.r(x, -15 - L + (x % 3 + 3) % 3, 1, 1, TX_WS)
-		k.r(x + 2, -13 - L, 1, 1, TX_L)
-	_perna(k, -6, -6 - L, la, 3, TX_A, TX_O)
-	_perna(k, 3, -6 - L, lb, 3, TX_A, TX_O)
+	k.vol(-14.5, -12.0 - L, 2.8, 2.8, TX_B, TX_L, TX_A, TX_O)
+	# corpo roliço de ombros altos, pelo grisalho
+	k.vol(-1.0, -12.5 - L, 13.0, 9.0, TX_B, TX_L, TX_A, TX_O)
+	for x in range(-10, 11, 3):
+		k.r(x, -17 - L + (x % 2 + 2) % 2, 1, 1, TX_WS)
+		k.r(x + 1, -14 - L, 1, 1, TX_L)
+		k.r(x - 1, -10 - L, 1, 1, TX_A)
+	_perna(k, -5, -7 - L, la, 3, TX_A, TX_O)
+	_perna(k, 3, -7 - L, lb, 3, TX_A, TX_O)
 	# garras claras nas patas da frente
 	k.r(6, -la - 1, 2, 1, TX_W)
 	k.r(5, -lb - 1, 2, 1, TX_W)
-	# cabeça baixa, preta com duas listras brancas
-	var hcx: float = 13.0 + hx
-	var hcy: float = -11.0 - L + hy
-	k.lin(hcx - 5.0, hcy - 5.0, hcx - 5.0, hcy - 6.0, 1.0, TX_K, TX_O)
-	k.vol(hcx, hcy, 8.0, 6.5, TX_K, TX_KL, TX_O, TX_O)
-	k.el(hcx + 7.0, hcy + 2.0, 3.8, 2.8, TX_K, TX_O)
-	_banda(k, hcx, hcy, 8.0, 6.5, roundi(hcx) - 5, roundi(hcx) + 8, 1, 3, TX_W, TX_WS)
-	_banda(k, hcx, hcy, 8.0, 6.5, roundi(hcx) - 2, roundi(hcx) + 9, 6, 2, TX_W, TX_WS)
-	k.r(roundi(hcx) + 10, roundi(hcy) + 1, 2, 2, TX_O)
-	k.r(roundi(hcx) + 10, roundi(hcy) + 1, 1, 1, TX_KL)
-	# olho amarelo entre as listras
-	k.r(roundi(hcx) + 3, roundi(hcy) - 1, 2, 1, TX_OLHO)
-	# bocão no golpe
+	# cabeça em bitmap, preta com duas listras brancas; orelha, olho e coroa por cima
+	var x0: int = 3 + hx
+	var y0: int = -19 - L + hy
+	k.vol(float(x0 + 4), float(y0 + 1), 1.8, 1.8, TX_K, TX_KL, TX_O, TX_O)
+	k.r(x0 + 3, y0 - 1, 2, 1, TX_W)
+	k.spr(x0, y0, TX_CAB, {"o": TX_O, "k": TX_K, "K": TX_KL, "w": TX_W, "v": TX_WS, "n": TX_KL})
+	k.r(x0 + 9, y0 + 5, 3, 1, TX_OLHO)
+	k.r(x0 + 8, y0 + 4, 5, 1, TX_O)
 	if sn > 0.4:
-		k.r(roundi(hcx) + 5, roundi(hcy) + 4, 6, 2, Color("#7a1f2a"))
-		k.r(roundi(hcx) + 6, roundi(hcy) + 4, 1, 1, TX_W)
-		k.r(roundi(hcx) + 9, roundi(hcy) + 4, 1, 1, TX_W)
+		k.r(x0 + 15, y0 + 9, 6, 2, Color("#7a1f2a"))
+		k.r(x0 + 16, y0 + 9, 1, 1, TX_W)
+		k.r(x0 + 19, y0 + 9, 1, 1, TX_W)
 	# coroa torta
-	var cx0: int = roundi(hcx) - 4
-	var cy0: int = roundi(hcy) - 10 - 1
+	var cx0: int = x0 + 4
+	var cy0: int = y0 - 3
 	for i in 9:
 		for j in COROA_BM.size():
 			var ch: String = COROA_BM[j][i]

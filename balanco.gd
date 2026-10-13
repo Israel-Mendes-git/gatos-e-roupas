@@ -240,15 +240,19 @@ const TEXUGO_COURO := 3.0           # armadura (x a escala de dano da onda): gol
 const TEXUGO_FURIA := 0.5           # abaixo desta fração da vida ataca em dobro
 
 # ---------- Invasão sem fim (depois de zerar) ----------
-const INVASAO_VIDA_ONDA := 0.16     # +vida dos bichos por onda de invasão vencida
-const INVASAO_DANO_ONDA := 0.07     # +dano dos bichos por onda de invasão vencida
+const INVASAO_VIDA_ONDA2 := 0.010    # ...e mais isto vezes o quadrado das ondas vencidas: time forte também encontra o teto
+const INVASAO_DANO_ONDA2 := 0.003
+const INVASAO_FORA_VIDA := 0.45        # a invasão num lugar de fora começa abaixo da força do segundo ato...
+const INVASAO_FORA_DANO := 0.6        # ...porque o time já entra nela no degrau mais alto
+const INVASAO_VIDA_ONDA := 0.22     # +vida dos bichos por onda de invasão vencida
+const INVASAO_DANO_ONDA := 0.10     # +dano dos bichos por onda de invasão vencida
 
 # ---------- Campanha e inimigos fantasiados ----------
 const PROG_POR_FASE := 3            # cada fase começa 3 ondas "à frente" da anterior em força
 # o guarda-roupa do jogador cresce depressa nas primeiras fases e depois estabiliza:
 # a força dos inimigos acompanha com um multiplicador por fase
-const FASE_VIDA: Array[float] = [0.75, 1.2, 3.4, 2.4, 1.7]
-const FASE_DANO: Array[float] = [0.8, 0.95, 1.65, 1.35, 1.05]
+const FASE_VIDA: Array[float] = [0.68, 1.2, 3.7, 2.62, 1.7]
+const FASE_DANO: Array[float] = [0.72, 0.95, 1.75, 1.38, 1.05]
 const INIMIGOS_POR_FASE := 1.0      # inimigos a mais por onda, por fase
 const ELITE_ONDA_MIN := 2           # primeira onda da fase com inimigo fantasiado
 const ELITE_ONDA_DOIS := 4          # a partir desta onda vêm dois (menos na onda do chefe)
@@ -331,8 +335,8 @@ const ATO_VIDA: Array[float] = [1.0, 1.3, 2.6]      # força dos bichos no prime
 const ATO_DANO: Array[float] = [1.0, 0.95, 1.3]
 const ATO_VIDA_DEGRAU := 0.10       # cada cômodo já vencido no ato deixa os que faltam mais fortes
 const ATO_DANO_DEGRAU := 0.05
-const ATO_COMODO_VIDA: Array[float] = [1.0, 0.8, 0.86, 1.0, 0.95]   # acerto por cômodo (chefe e família da casa pesam diferente)
-const ATO_COMODO_DANO: Array[float] = [1.0, 0.72, 0.84, 1.0, 0.95]
+const ATO_COMODO_VIDA: Array[float] = [1.1, 0.78, 0.97, 0.98, 0.89]   # acerto por cômodo (chefe e família da casa pesam diferente)
+const ATO_COMODO_DANO: Array[float] = [1.06, 0.7, 0.92, 0.98, 0.89]
 const ATO_FAMILIA_DA_CASA := 0.4    # fração dos bichos que ainda é da família do cômodo; o resto vem misturado
 const XP_ONDA_NOCAUTE := 1          # por onda vencida tendo caído
 const NOCAUTE_SAUDE := 0.25         # quem caiu volta na onda seguinte com esta fração da vida
