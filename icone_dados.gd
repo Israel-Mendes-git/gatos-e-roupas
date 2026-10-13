@@ -40,7 +40,7 @@ const CAIXA: Array[Rect2] = [
 	Rect2(-4, -2, 7, 6),  # 33 Cantil
 	Rect2(-2, -6, 5, 5),  # 34 Gancho
 	Rect2(-2, -1, 5, 5),  # 35 Amuleto
-	Rect2(-5, -4, 12, 13),  # 36 Boné de encanador
+	Rect2(-5, -4, 13, 12),  # 36 Boné de encanador
 	Rect2(-6, -3, 12, 6),  # 37 Macacão
 	Rect2(-3, -9, 11, 9),  # 38 Desentupidor
 	Rect2(-3, -3, 6, 6),  # 39 Cogumelo
@@ -67,7 +67,7 @@ const CAIXA: Array[Rect2] = [
 	Rect2(-8, 2, 13, 4),  # 60 Bandana ninja
 	Rect2(-8, -4, 13, 8),  # 61 Casco
 	Rect2(-1, -4, 8, 10),  # 62 Nunchaku
-	Rect2(0, -9, 9, 9),  # 63 Fatia de pizza
+	Rect2(0, -11, 12, 11),  # 63 Fatia de pizza
 	Rect2(-4, -4, 10, 5),  # 64 Topete de ouriço
 	Rect2(-6, -4, 12, 8),  # 65 Pelo azul
 	Rect2(-3, -9, 6, 5),  # 66 Luvas brancas

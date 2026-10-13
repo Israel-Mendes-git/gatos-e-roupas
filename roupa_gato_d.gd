@@ -31,7 +31,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 			var ang: float = deg_to_rad(42.0)
 			var eixo := Vector2(cos(ang), -sin(ang))
 			var perp := Vector2(sin(ang), cos(ang))
-			var comp: float = 8.5
+			var comp: float = 11.0
 			var cel: Dictionary = {}
 			for yy in range(-14, 2):
 				for xx in range(-2, 14):
@@ -40,9 +40,9 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 					var s: float = p.dot(perp)
 					if t >= 0.0 and t <= comp and absf(s) <= t * 0.5 + 0.3:
 						var tom: String = "y"
-						if t > comp - 2.2:
-							tom = "B" if t < comp - 1.1 else "b"
-						elif (absf(t - 3.8) < 1.3 and absf(s + 0.6) < 1.3) or (absf(t - 6.0) < 1.2 and absf(s - 1.6) < 1.2):
+						if t > comp - 2.8:
+							tom = "B" if t < comp - 1.4 else "b"
+						elif (absf(t - 4.6) < 1.4 and absf(s + 0.8) < 1.4) or (absf(t - 7.4) < 1.4 and absf(s - 2.0) < 1.4):
 							tom = "r"
 						cel[Vector2i(xx, yy)] = tom
 			for k in cel:

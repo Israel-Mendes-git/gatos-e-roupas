@@ -57,6 +57,8 @@ const GEMA := Color("#d03030")
 
 const PAL_C := {"o": CO_O, "a": CO_A, "b": CO_B, "c": CO_C, "d": CO_D, "e": OLHO, "p": PUPILA, "y": BICO, "z": BICO_S, "m": BOCA}
 const PAL_V := {"o": CV_O, "a": CV_A, "b": CV_B, "c": CV_C, "d": CV_O, "e": LEITE, "p": Color("#8c96a8"), "y": BICO_V, "z": BICO_VS, "m": BOCA}
+# Cabeça do Corvo Velho: penas grisalhas (claras) para destacar do corpo escuro, bico amarelo-osso e olho leitoso.
+const PAL_VC := {"o": CV_O, "a": Color("#5d6880"), "b": Color("#9aa4b6"), "c": Color("#d3d9e4"), "d": CV_O, "e": Color("#f6f1dc"), "p": Color("#555d73"), "y": Color("#f1e08e"), "z": Color("#b79a38"), "m": BOCA}
 const PAL_S := {"o": SP_O, "a": SP_A, "b": SP_B, "d": SP_D, "v": SP_V, "e": SP_OLHO, "p": PUPILA}
 const PAL_SL := {"o": SL_O, "a": SL_A, "b": SL_B, "d": SL_D, "v": SP_V, "e": SP_OLHO, "p": PUPILA}
 const PAL_SACO := {"o": SACO_O, "S": SACO, "s": Color("#d9b77c")}
@@ -406,7 +408,7 @@ static func desloc(onde: int, fam: int, tipo: int, anim: float, andando: bool, g
 			RoupaGato.Onde.PATAS: return Vector2(0.0, 0.0)
 			RoupaGato.Onde.ROSTO: return Vector2(-4.0, 3.0 - L - sr)
 		return Vector2.ZERO
-	var sd: float = float(_gs(tipo, chefe_tipo, {"L": 0})["nr"] + 1)   # quanto o corpo cresceu para cima
+	var sd: float = float(_gs(tipo, chefe_tipo, p)["nr"] + 1)   # quanto o corpo cresceu para cima
 	match onde:
 		RoupaGato.Onde.CABECA: return Vector2(-4.5, 6.0 - L - sd)
 		RoupaGato.Onde.CORPO: return Vector2(-0.5, 3.0 - L - sd * 0.5)
@@ -469,8 +471,16 @@ static func _corvo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int
 		al = [0, 0, 0, 1][fr]
 		bx = [-1, 0, 2, 0][fr]
 		bl = [0, 1, 0, 0][fr]
-	_perna(k, bx, bt + h - 1, -air - bl, grosso, bcor)
-	_perna(k, ax, bt + h - 1, -air - al, grosso, acor)
+	var salto: bool = tipo == Unidade.Tipo.SALTADOR and not velho and air > 0
+	if salto and air >= 2:
+		# subindo: patas recolhidas junto à barriga, dedos para trás
+		_perna(k, bx + 1, bt + h - 1, bt + h + 1, 1, bcor)
+		_perna(k, ax - 1, bt + h - 1, bt + h + 1, 1, acor)
+		k.r(bx - 1, bt + h + 1, 3, 1, bcor)
+		k.r(ax - 3, bt + h + 1, 3, 1, acor)
+	else:
+		_perna(k, bx, bt + h - 1, -air - bl, grosso, bcor)
+		_perna(k, ax, bt + h - 1, -air - al, grosso, acor)
 	# cauda curta em leque
 	var cauda: Array = CORVO_CAUDA
 	k.spr(-14, bt + 2 + (1 if big else 0), cauda, pal)
@@ -501,8 +511,13 @@ static func _corvo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int
 		k.r(-7, bt + 3, 2, 1, PELE)
 		k.r(2, bt + 3, 1, 1, PELE)
 	# asa batendo (Saltador no ar)
-	if p["bat"]:
-		k.spr(-8, bt - 6, CORVO_ASA, pal)
+	if salto:
+		if air >= 2:
+			# asas abertas: a de longe (escura) mais atrás e mais alta, a de perto sobre o dorso
+			k.spr(-12, bt - 8, CORVO_ASA, {"o": CO_O, "b": CO_A, "c": CO_B})
+			k.spr(-8, bt - 6, CORVO_ASA, pal)
+		else:
+			k.spr(-9, bt - 5, CORVO_ASA, pal)   # na queda: asa semiaberta frenando
 	# ladrão: saco nas costas
 	if tipo == Unidade.Tipo.LADRAO:
 		k.spr(-9, bt - 5, CORVO_SACO, PAL_SACO)
@@ -526,7 +541,7 @@ static func _corvo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int
 		cab = CORVO_CAB_V_AB if sn > 0.5 else CORVO_CAB_V
 	elif hc > 0:
 		cab = _est(cab, [3], [5] if hr > 0 else [])
-	k.spr(hx0, hy0, cab, pal)
+	k.spr(hx0, hy0, cab, PAL_VC if velho else pal)
 	var ex: int = hx0 + 5 + hc
 	var ey: int = hy0 + 2
 	if big:
@@ -571,8 +586,15 @@ static func _gs(tipo: int, chefe: int, p: Dictionary) -> Dictionary:
 	var rei: bool = chefe >= 0
 	var big: bool = tipo == Unidade.Tipo.GIGANTE
 	var sal: bool = tipo == Unidade.Tipo.SALTADOR
-	var nc: int = 8 if rei else (6 if big else 3)
-	var nr: int = 5 if rei else (4 if big else 3)
+	var nc: int = 8 if rei else (4 if big else 1)
+	var nr: int = 5 if rei else (8 if big else 6)   # sentado e alto: costas bem acima da barriga, olhos acima das costas
+	match BichoPx.pose_truque:
+		Unidade.Tipo.ESCUDEIRO:
+			nr = 4      # encolhido atrás do escudo: só os olhos espiam por cima
+			nc = 5
+		Unidade.Tipo.ATIRADOR:
+			if float(p.get("sn", 0.0)) > 0.0:
+				nr += 2   # ereto no golpe
 	var cort: int = 1 if sal else 0
 	var L: int = p["L"]
 	return {"nc": nc, "nr": nr, "cort": cort, "x0": -8 - nc, "y0": -13 - nr + cort - L, "boca": 8 + nr}
@@ -589,7 +611,7 @@ static func _sapo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int,
 	var sn: float = p["sn"]
 	var air: int = p["air"]
 	var L: int = p["L"]
-	var ext: bool = air >= 2 or sal
+	var ext: bool = air >= 2   # no ar subindo: pernas esticadas para trás; na queda (air 1) e no chão: dobradas
 	var cols: Array = []
 	for i in nc:
 		cols.append(2 + (i % 3))
@@ -597,18 +619,35 @@ static func _sapo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int,
 	for i in nr:
 		rows.append(6)
 	var corpo: Array = _est(SAPO_CORPO, cols, rows, [10] if sal else [])
+	var bomba: bool = BichoPx.pose_truque == Unidade.Tipo.BOMBA
 	var fundo: int = y0 + corpo.size()     # linha logo abaixo do corpo
 	# perna traseira: no ar ou de pernas longas, estica para baixo e para trás, em diagonal curta
 	if ext:
 		var hipx: int = x0 + 4
 		var hipy: int = fundo - 4
-		var fy: int = -1 if sal else fundo + 1
-		k.lin(float(hipx), float(hipy), float(hipx - 2), float(fy - 1), 2.0, SP_A, SP_O)
-		k.r(hipx - 4, fy, 4, 1, SP_O)
-		k.r(hipx - 3, fy - 1, 3, 1, SP_A)
-	k.spr(x0, y0, corpo, PAL_S)
+		if sal:
+			# salto: perna traseira toda esticada para trás, em diagonal, com o pé aberto na ponta
+			var fx2: int = hipx - 9
+			k.lin(float(hipx), float(hipy), float(fx2), float(fundo + 1), 2.0, SP_A, SP_O)
+			k.r(fx2 - 3, fundo + 1, 4, 2, SP_O)
+			k.r(fx2 - 2, fundo + 1, 3, 1, SP_B)
+		else:
+			var fy: int = fundo + 1
+			k.lin(float(hipx), float(hipy), float(hipx - 2), float(fy - 1), 2.0, SP_A, SP_O)
+			k.r(hipx - 4, fy, 4, 1, SP_O)
+			k.r(hipx - 3, fy - 1, 3, 1, SP_A)
+	if bomba:
+		# curvado para a frente: o alto do corpo (olhos) avança até 2 px sobre a base
+		for j in corpo.size():
+			var dx: int = clampi((corpo.size() - 1 - j) / 8, 0, 2)
+			k.spr(x0 + dx, y0 + j, [corpo[j]], PAL_S)
+	else:
+		k.spr(x0, y0, corpo, PAL_S)
 	if not ext:
-		var pata: Array = _est(SAPO_PATA, [], [3] if nr > 0 else [])
+		var prow: Array = []
+		for i in nr / 3:
+			prow.append(3)
+		var pata: Array = _est(SAPO_PATA, [], prow)
 		k.spr(x0 + 1, -pata.size() - L, pata, PAL_S)
 	# ladrão: saco nas costas
 	if tipo == Unidade.Tipo.LADRAO:
@@ -623,7 +662,10 @@ static func _sapo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int,
 		_sapo_pq(k.em(float(x0 + 10), float(y0 + 3)), pq, false)
 	# braço da frente
 	if ext:
-		k.lin(3.0, float(fundo - 4), 5.0, float(fundo - 2), 2.0, SP_A, SP_O)
+		if sal:
+			k.lin(2.0, float(fundo - 5), 8.0, float(fundo - 7), 2.0, SP_A, SP_O)   # braço estendido para a frente, no salto
+		else:
+			k.lin(3.0, float(fundo - 4), 5.0, float(fundo - 2), 2.0, SP_A, SP_O)
 	else:
 		k.spr(3, -5 - L, SAPO_BRACO, PAL_S)
 	# boca, língua e papo

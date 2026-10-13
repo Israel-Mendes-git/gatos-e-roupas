@@ -274,8 +274,12 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"ooooooo",
 			], cb, f)
 			# corrente curta e o segundo bastão pendurado, balançando: forma um L, não um estilingue
-			RoupaGato.r(c, 5, -1, 1, 1, cb["c"], f)
-			RoupaGato.r(c, 5 + sw, 0, 1, 1, cb["c"], f)
+			# corrente grossa (2 de largura, elos claros e escuros alternados) ligando os dois bastões
+			var elo := Color(0.96, 0.97, 1.0)
+			RoupaGato.r(c, 5, -1, 1, 1, elo, f)
+			RoupaGato.r(c, 6, -1, 1, 1, cb["o"], f)
+			RoupaGato.r(c, 5 + sw, 0, 1, 1, cb["o"], f)
+			RoupaGato.r(c, 6 + sw, 0, 1, 1, elo, f)
 			RoupaGato.sprite(c, 4.0 + sw, 1.0, [
 				"ooo",
 				"oMo",

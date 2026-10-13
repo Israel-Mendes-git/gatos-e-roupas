@@ -76,10 +76,11 @@ const _PAL_TUBARAO := {
 	"d": Color(0.32, 0.43, 0.57), "w": Color(0.97, 0.98, 1.0), "k": Color(0.08, 0.06, 0.1),
 	"r": Color(0.82, 0.18, 0.22), "s": Color(0.8, 0.86, 0.92),
 }
-## Boia: contorno vinho, r vermelho, R vermelho claro, w branco, s branco na sombra.
+## Boia: contorno marrom-escuro (recorta do pescoço e do corpo azul), r laranja de salva-vidas, R laranja claro,
+## w branco, s branco na sombra. Laranja é oposta ao cinza-azulado do tubarão: separa sem brigar com o kit.
 const _PAL_BOIA := {
-	"o": Color(0.09, 0.15, 0.25), "r": Color(0.3, 0.58, 0.88), "R": Color(0.6, 0.82, 1.0),
-	"w": Color(1, 1, 1), "s": Color(0.74, 0.8, 0.9), "d": Color(0.2, 0.38, 0.65),
+	"o": Color(0.33, 0.1, 0.02), "r": Color(1.0, 0.45, 0.08), "R": Color(1.0, 0.7, 0.3),
+	"w": Color(1, 1, 1), "s": Color(0.86, 0.8, 0.74), "d": Color(0.75, 0.28, 0.05),
 }
 
 ## Abelha: o contorno marrom-escuro, Y amarelo, H mel-claro/realce, h brilho, U amarelo na sombra, k listra preta,
@@ -183,14 +184,15 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 		Pecas.Tipo.CAPACETE_AZUL:
 			# capacete do robô azul: cúpula azul-escura, faixa central azul-clara em relevo, orelha redonda clara
 			# e viseira só na testa (a linha do olho e o focinho do gato ficam de fora)
+			# luz forte no topo (W), faixa central clara marcada (B entre A), sombra na base (d) e orelha com centro branco
 			return [[-5.5, -4.0, [
 				"....ooooo..",
-				"..oodaBBaoo",
-				".oddaBBaddo",
+				"..ooWBBaaoo",
+				".oWAaBBaddo",
+				"oAaaaBBaddo",
 				"oddddBBdddo",
-				"odddddddddo",
 				"oAAoooooooo",
-				"oAwAoddo...",
+				"oAWAoddo...",
 				"oAAAodd....",
 				".oooo......",
 			], _PAL_ROBO]]

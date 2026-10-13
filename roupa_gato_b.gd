@@ -192,12 +192,11 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"orrrWWWrro.",
 				"ooooooooDDo",
 			], {"o": Color(0.35, 0.04, 0.06), "r": Color(0.85, 0.12, 0.14), "D": Color(0.65, 0.08, 0.1), "W": Color(1, 1, 1)}, f)
-			RoupaGato.sprite(c, 0.5, 5.0, [
-				"kk..kk",
-				"kkkkkk",
-				"kKkkKk",
-				".kkkk.",
-			], {"k": Color(0.1, 0.05, 0.03), "K": Color(0.45, 0.28, 0.17)}, f)
+			RoupaGato.sprite(c, -0.5, 5.0, [
+				"kK....Kk",
+				"kkk..kkk",
+				".kk..kk.",
+			], {"k": Color(0.2, 0.1, 0.04), "K": Color(0.55, 0.36, 0.2)}, f)
 		Pecas.Tipo.MACACAO:
 			# macacão azul de alças sobre camisa vermelha, dois botões dourados (6 linhas, 11 de largura)
 			RoupaGato.sprite(c, -5.5, -3.0, [

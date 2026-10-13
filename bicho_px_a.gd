@@ -135,9 +135,9 @@ const _CH_TOPO: Array = [
 		"ommmmmmmmmmmmmmoo..",
 		"ommmmmmmmmmmmmmmmo.",
 		"ommkkkkkkkkkkkkkkko",
-		"ollkkkkkkkwwkkkkllo",
-		"olllkkkkkkkwkkklllo",
-		"ollllkkkkkkkkklllln",
+		"ollkGGGGllllGGGkllo",
+		"ollkGGGGlwklGGGkllo",
+		"ollllGGGlkklGGlllln",
 		"olllllllllllllllllo",
 	],
 	[   # Raposa Ligeira: focinho fino, olhar esperto de pálpebra estreita, orelhas grandes, cicatriz; 16 x 11 (8 de topo)
@@ -267,7 +267,7 @@ static func _pal(fam: int, alfa: float) -> Dictionary:
 	var P: Dictionary = {
 		"r": Color("c8283a"), "R": Color("8e1a2a"), "y": Color("e8c040"), "B": Color("4a90d8"),
 		"b": Color("8a5a30"), "z": Color("5a3a20"), "u": Color("bfe6ff"), "s": Color("b8bcc8"),
-		"q": Color("7a1c24"), "w": Color("fbf4e8"), "k": Color("1c161c"), "g": Color("46343a"),
+		"q": Color("7a1c24"), "w": Color("fbf4e8"), "k": Color("1c161c"), "g": Color("46343a"), "G": Color("7c6c76"),
 	}
 	match fam:
 		0:
