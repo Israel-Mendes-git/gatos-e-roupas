@@ -1,0 +1,493 @@
+class_name Balanco
+extends RefCounted
+## TODAS as constantes de equilíbrio ficam aqui.
+
+# ---------- Regras gerais ----------
+const DT := 1.0 / 30.0          # passo fixo da simulação (jogo e simulador)
+const ONDAS_TOTAIS := 5         # ondas por fase; o chefe vem na última
+const TIJOLOS_INICIAIS := 30
+const CUSTO_BONECO := 3
+const CUSTO_PROMOCAO := 2
+# reforçar a raridade de uma peça com troféus: [comum -> rara, rara -> lendária]
+const REFORCO_CUSTO: Array[int] = [3, 6]
+const MAX_BONECOS := 5
+const BONECOS_INICIAIS := 3     # o time é fixo; cresce ao vencer fases, até MAX_BONECOS
+const NIVEL_MAX := 5
+const ABATES_BASE := 2          # abates p/ 1º nível; +1 a cada nível
+const BONUS_NIVEL := 0.5       # cada nível soma 35% ao efeito numérico
+const DROP_CHANCE := 0.35
+const COPIAS_MAX := 2            # o guarda-roupa guarda até 2 de cada peça; a pior sobra
+const DROP_NIVEL_POR_PROG := 0.3   # peça largada já vem com nível: cresce com o progresso na campanha
+const DROP_MARCA_CHANCE := 0.35   # chance de a peça largada vir com a marca da morte do inimigo
+const TORRE_DANO := 1           # tijolos perdidos por golpe de inimigo na torre
+const TORRE_INTERVALO_MULT := 1.0
+const FERIDA_PERSISTE := true   # boneco não cura entre ondas: corpo gasta, roupa fica
+const CURA_MAX := 0.6           # cura entre ondas com a torre cheia; cai junto com os tijolos
+# A torre atira: a cadência cai junto com os tijolos
+const TORRE_TIRO_DANO := 10.0
+const TORRE_TIRO_INTERVALO := 1.0   # segundos entre tiros com a torre cheia
+const TORRE_TIRO_ALCANCE := 850.0
+const TORRE_TIRO_MIN_TIJOLOS := 4   # abaixo disso a torre não atira
+
+# ---------- Boneco pelado ----------
+const BASE_VIDA := 30.0
+const BASE_DANO := 2.5
+const BASE_INTERVALO := 1.0
+const BASE_ALCANCE := 30.0
+const BASE_VEL := 80.0
+const DANO_MINIMO := 1.0
+
+# ---------- Peças (valores no nível 0) ----------
+const PORRETE_DANO := 9.0
+const PORRETE_INTERVALO := 1.15
+const ESTILINGUE_DANO := 4.5
+const ESTILINGUE_INTERVALO := 0.95
+const ESTILINGUE_ALCANCE := 250.0
+const ESCUDO_REDUCAO := 0.55
+const ESCUDO_REDUCAO_NIVEL := 0.07
+const ESCUDO_REDUCAO_MAX := 0.8
+const ESCUDO_PROVOCA_RAIO := 300.0
+const COLETE_VIDA := 32.0
+const CAPA_VEL := 1.4
+const CAPA_ESQUIVA := 0.40
+const CAPA_ESQUIVA_NIVEL := 0.05
+const CAPA_ESQUIVA_MAX := 0.65
+const ESPINHOS_DANO := 2.5
+const ESPINHOS_VIDA := 10.0
+const CAPACETE_ARMADURA := 3.5
+const CHAPEU_REGEN := 5.0
+const MASCARA_RAIO := 130.0
+const MASCARA_LENTIDAO := 0.45  # multiplicador de velocidade (menor = mais lento)
+const MASCARA_LENTIDAO_NIVEL := 0.06
+const MASCARA_LENTIDAO_MIN := 0.3
+const LANCA_DANO := 8.0
+const LANCA_INTERVALO := 1.1
+const LANCA_ALCANCE := 75.0
+const TOCHA_DANO := 5.0
+const TOCHA_INTERVALO := 1.0
+const TOCHA_DPS := 5.5             # dano por segundo da queimadura (x multiplicador de nível)
+const TOCHA_DURACAO := 3.0         # segundos; cada golpe renova
+const AVENTAL_CURA := 5.5          # vida/s no aliado ferido mais próximo (x nível)
+const AVENTAL_RAIO := 130.0
+const BARRIL_DANO := 18.0          # explosão ao morrer (x nível)
+const BARRIL_RAIO := 90.0
+const COROA_BONUS := 0.60          # +60% de dano nos aliados (x nível)
+const COROA_RAIO := 140.0
+const CHIFRES_BONUS := 1.8         # +180% de dano com vida perto de zero (x nível), linear
+const CHIFRES_BONUS_MAX := 3.0     # teto do bônus dos chifres, em qualquer nível
+
+# ---------- Peças novas (valores no nível 0) ----------
+const CETRO_DANO := 6.0
+const CETRO_INTERVALO := 1.2
+const CETRO_AREA := 0.6            # fração do dano nos vizinhos do alvo (soma com a marca Cerco)
+const REGADOR_DANO := 3.5
+const REGADOR_INTERVALO := 0.9
+const REGADOR_ALCANCE := 110.0
+const REGADOR_LENTIDAO := 0.5      # multiplicador de velocidade do alvo molhado
+const REGADOR_DURACAO := 2.5
+const SABRE_DANO := 4.5
+const SABRE_INTERVALO := 0.5
+const VARINHA_DANO := 9.0
+const VARINHA_INTERVALO := 1.6
+const VARINHA_ALCANCE := 280.0
+const CARTOLA_CRITICO := 0.25
+const CARTOLA_CRITICO_NIVEL := 0.04
+const CARTOLA_CRITICO_MAX := 0.5
+const CARTOLA_MULT := 2.5
+const CAUBOI_RAPIDEZ := 0.22       # ataca 22% mais rápido
+const CAUBOI_RAPIDEZ_NIVEL := 0.03
+const CAUBOI_RAPIDEZ_MAX := 0.45
+const TRICORNIO_SAQUE := 0.25      # chance de +1 bloco por abate
+const TRICORNIO_SAQUE_NIVEL := 0.05
+const TRICORNIO_SAQUE_MAX := 0.6
+const PONTUDO_DPS := 2.5           # dano/s nos inimigos em volta (x nível)
+const PONTUDO_RAIO := 110.0
+const PELE_VIDA := 18.0
+const PELE_CURA := 0.25            # fração da vida máxima curada a cada abate
+const PONCHO_VIDA := 10.0
+const PONCHO_FURO := 0.5           # redução do dano de projéteis (soma com a marca Furo)
+const CASACO_VIDA := 16.0
+const CASACO_EMBALO := 0.10        # +dano por abate nesta luta
+const CASACO_EMBALO_MAX := 1.0
+const MANTO_INTERVALO := 5.0       # segundos entre barreiras
+const MANTO_INTERVALO_NIVEL := 0.5
+const MANTO_INTERVALO_MIN := 2.5
+const BOTAS_VEL := 1.35
+const BOTAS_VIDA := 6.0
+const JOELHEIRAS_REDUCAO := 0.15
+const JOELHEIRAS_REDUCAO_NIVEL := 0.03
+const JOELHEIRAS_REDUCAO_MAX := 0.35
+const BANDEIRA_REGEN := 2.0        # vida/s nos aliados em volta (x nível)
+const BANDEIRA_RAIO := 140.0
+const NARIZ_ESQUIVA := 0.15
+const NARIZ_ESQUIVA_NIVEL := 0.03
+const NARIZ_ESQUIVA_MAX := 0.35
+const ESQUIVA_MAX := 0.75          # teto da esquiva somada
+const COLAR_DANO := 0.2            # +20% de dano (x nível)
+const SEMENTES_CURA := 0.3         # fração da vida máxima curada nos aliados ao morrer
+const SEMENTES_CURA_NIVEL := 0.05
+const CANTIL_LIMIAR := 0.35        # bebe abaixo desta fração de vida
+const CANTIL_CURA := 0.45
+const CANTIL_CURA_NIVEL := 0.05
+const GANCHO_ROUBO := 0.2          # fração do dano causado que volta em vida
+const GANCHO_ROUBO_NIVEL := 0.04
+const ROUBO_MAX := 0.6             # teto do roubo de vida somado
+
+# ---------- Fantasias: [bônus com 2 ou 3 peças, bônus com as 4] ----------
+const CONJ_CAVALEIRO_ARMADURA: Array[float] = [2.0, 5.0]
+const CONJ_GUARDIAO_VIDA: Array[float] = [0.2, 0.5]
+const CONJ_REI_DANO: Array[float] = [0.1, 0.25]
+const CONJ_CIRCO_EXPLOSAO: Array[float] = [10.0, 25.0]
+const CONJ_VIKING_DANO: Array[float] = [0.15, 0.4]
+const CONJ_JARDINEIRO_REGEN: Array[float] = [2.0, 5.0]
+const CONJ_CAUBOI_RAPIDEZ: Array[float] = [0.1, 0.25]
+const CONJ_PIRATA_ROUBO: Array[float] = [0.1, 0.25]
+const CONJ_MAGO_QUEIMA: Array[float] = [2.0, 5.0]
+
+# ---------- Raridades (comum, rara, lendária) ----------
+const RARIDADE_PODER: Array[float] = [1.0, 1.2, 1.4]   # multiplicador do efeito
+const RARIDADE_MARCAS: Array[int] = [2, 3, 4]          # marcas que a peça aguenta
+const DROP_RARA := 0.06            # inimigo comum
+const DROP_RARA_FASE := 0.03
+const DROP_LENDARIA_FASE := 0.01   # inimigo comum: por fase depois da primeira
+const ELITE_RARA := 0.45
+const ELITE_LENDARIA := 0.05
+const ELITE_LENDARIA_FASE := 0.02
+const CHEFE_LENDARIA := 0.25       # o chefe larga no mínimo rara
+const CHEFE_LENDARIA_FASE := 0.1
+
+# ---------- Marcas (a morte do portador marca a peça) ----------
+const MARCA_CICATRIZ_VIDA := 12.0  # vida máxima por marca
+const MARCA_CERCO_MINIMO := 3      # inimigos vivos perto de quem morreu para contar como cerco
+const MARCA_CERCO_RAIO_MORTE := 80.0
+const MARCA_CERCO_RAIO_GOLPE := 60.0   # raio (em volta do alvo) do golpe em área
+const MARCA_CERCO_DANO := 0.35     # fração do dano do golpe, por marca
+const MARCA_FURO_REDUCAO := 0.25   # redução do dano de projéteis, por marca
+const MARCA_FURO_MAX := 0.75
+const MARCA_BRASA_DPS := 2.0       # dano/s da queimadura por marca (soma com a Tocha)
+const MARCA_POLVORA_DANO := 10.0   # dano da explosão ao morrer por marca (soma com o Barril)
+
+# ---------- Ondas / inimigos ----------
+const INIMIGOS_BASE := 3.0
+const INIMIGOS_POR_ONDA := 0.8
+const INIMIGO_VIDA_MULT := 0.6
+const INIMIGO_VIDA_ONDA := 0.06
+const INIMIGO_DANO_ONDA := 0.03
+const PECAS_BASE := 0.3
+const PECAS_POR_ONDA := 0.25
+const NIVEL_INIMIGO_POR_ONDA := 0.18
+const SPAWN_INICIO := 0.2           # segundos até o primeiro inimigo poder entrar
+const ENTRADA_VEL := 2.6            # inimigos entram correndo até ENTRADA_X; depois andam no passo normal
+const ENTRADA_X := 880.0
+const SPAWN_MIN := 0.4
+const SPAWN_MAX := 1.3
+
+# ---------- Chefes ----------
+const CHEFE_VIDA_MULT := 5.0        # sobre a vida de um inimigo comum da mesma onda
+const CHEFE_VIDA_FASE := 0.15       # crescimento extra por fase depois da primeira
+const CHEFE_DANO_MULT := 1.4
+const CHEFE_VEL := 0.65
+const CHEFE_TORRE_DANO := 2         # tijolos por golpe do chefe na torre
+const CHEFE_NIVEL_BONUS := 1        # níveis das peças do chefe acima dos inimigos da onda
+const CHEFE_LACAIOS := 0.6          # fração dos inimigos comuns numa onda de chefe
+const CHEFE_ATRASO := 2.5           # segundos depois do último lacaio
+const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 1.0, 1.0]   # acerto por chefe (a coruja é alta: em pé ocupa muito)
+const CHEFE_ESCALA := 1.7           # tamanho na tela
+
+# ---------- Chefes de cada fase (ver Fases.Chefe) ----------
+const GENERAL_REFORCO_T := 13.0      # segundos entre chamadas
+const GENERAL_REFORCO_N := 1
+const GENERAL_VEL := 0.75           # multiplicador extra de velocidade
+const URSO_AREA := 1.0              # fração do dano nos vizinhos do alvo
+const URSO_FOGO := 2.0              # multiplicador do dano de fogo recebido
+const ROBO_CORDA_T := 6.0           # segundos correndo para a torre
+const ROBO_PARADO_T := 3.5          # segundos sem corda
+const ROBO_VEL := 2.2
+const ROBO_PARADO_DANO := 2.0       # multiplicador do dano recebido sem corda
+const BONECA_ALCANCE := 340.0
+const BONECA_VIDA := 0.75
+const BONECA_CORPO := 1.5           # multiplicador do dano corpo a corpo recebido
+const MASSINHA_REGEN := 0.012       # fração da vida máxima por segundo
+const MASSINHA_PARTES := 3
+const MASSINHA_PARTE_VIDA := 0.25   # vida de cada parte, fração da vida máxima do chefe
+const MASSINHA_PARTE_ESCALA := 1.15
+const MASSINHA_EXPLOSAO := 2.0      # multiplicador do dano de explosão recebido
+# ---- chefes do segundo ato (fora da casa)
+const TOUPEIRA_FORA_T := 6.0        # segundos na superfície entre um mergulho e outro
+const TOUPEIRA_CAVA_T := 1.4        # segundos debaixo da terra (não leva dano)
+const TOUPEIRA_TONTA_T := 1.2       # sai do buraco parada...
+const TOUPEIRA_TONTA_DANO := 1.6    # ...e recebendo mais dano
+const GAMBA_RAIO := 150.0           # fedor: gatos dentro ficam lentos
+const GAMBA_LENTIDAO := 0.6
+const GAMBA_GAS_T := 9.0            # segundos entre nuvens que atordoam
+const GAMBA_GAS_ATORDOA := 1.0
+const GAMBA_FOGO := 2.0
+const CORUJA_ALCANCE := 320.0
+const CORUJA_VIDA := 0.8
+const CORUJA_RASANTE_T := 10.0
+const CORUJA_RASANTE_DANO := 0.9    # x o dano do golpe, em todos os gatos da faixa
+const CORUJA_RASANTE_LARGURA := 70.0
+const CORUJA_EXPLOSAO := 2.0
+const VIRALATA_LATIDO_T := 10.0
+const VIRALATA_LATIDO_RAIO := 210.0
+const VIRALATA_EMPURRA := 90.0
+const VIRALATA_ATORDOA := 0.5
+const VIRALATA_FOLEGO_T := 2.2      # depois de latir: parado, recebendo VIRALATA_FOLEGO_DANO
+const VIRALATA_FOLEGO_DANO := 2.0
+const VIRALATA_MATILHA_T := 14.0
+const VIRALATA_MATILHA_N := 2
+const TEXUGO_COURO := 3.0           # armadura (x a escala de dano da onda): golpe fraco quase não fere
+const TEXUGO_FURIA := 0.5           # abaixo desta fração da vida ataca em dobro
+
+# ---------- Invasão sem fim (depois de zerar) ----------
+const INVASAO_VIDA_ONDA := 0.16     # +vida dos bichos por onda de invasão vencida
+const INVASAO_DANO_ONDA := 0.07     # +dano dos bichos por onda de invasão vencida
+
+# ---------- Campanha e inimigos fantasiados ----------
+const PROG_POR_FASE := 3            # cada fase começa 3 ondas "à frente" da anterior em força
+# o guarda-roupa do jogador cresce depressa nas primeiras fases e depois estabiliza:
+# a força dos inimigos acompanha com um multiplicador por fase
+const FASE_VIDA: Array[float] = [0.75, 1.2, 3.4, 2.4, 1.7]
+const FASE_DANO: Array[float] = [0.8, 0.95, 1.65, 1.35, 1.05]
+const INIMIGOS_POR_FASE := 1.0      # inimigos a mais por onda, por fase
+const ELITE_ONDA_MIN := 2           # primeira onda da fase com inimigo fantasiado
+const ELITE_ONDA_DOIS := 4          # a partir desta onda vêm dois (menos na onda do chefe)
+const ELITE_PECAS: Array[int] = [3, 4, 4, 4, 4]   # peças da fantasia que o fantasiado veste, por fase
+const ELITE_ESCALA := 1.12
+
+# ---------- Tipos de inimigo (ordem de Unidade.Tipo: comum, saltador, ladrão, gigante, gêmeo, atirador, curandeiro, escudeiro, bomba) ----------
+const TIPO_NOMES: Array[String] = ["Comum", "Saltador", "Ladrão", "Grandalhão", "Ninhada", "Atirador", "Curandeiro", "Escudeiro", "Bomba"]
+const TIPO_PROG_MIN: Array[int] = [1, 2, 3, 5, 6, 9, 13, 17, 21]        # primeiro progresso (ver progresso()) em que aparece
+const TIPO_VIDA: Array[float] = [1.0, 1.0, 1.2, 8.0, 1.0, 0.8, 0.9, 1.8, 0.7]  # multiplicador de vida
+const TIPO_VEL: Array[float] = [1.0, 1.8, 1.3, 0.6, 1.0, 0.9, 0.85, 0.8, 1.6]   # multiplicador de velocidade
+const TIPO_ESCALA: Array[float] = [1.0, 0.92, 0.95, 1.4, 1.0, 0.98, 0.98, 1.12, 0.9]  # tamanho na tela
+const ATIRADOR_ALCANCE := 230.0     # atira de longe nos gatos (e na torre)
+const ATIRADOR_DANO := 0.8          # multiplicador do dano
+const CURANDEIRO_CURA := 3.0        # vida/s no bicho ferido mais próximo (x a escala de vida da onda)
+const CURANDEIRO_DANO := 0.5
+const ESCUDEIRO_REDUCAO := 0.4      # leva menos dano e chama os golpes dos gatos para si
+const BOMBA_DANO := 12.0            # explosão ao encostar num gato ou ao cair (x a escala de dano da onda)
+const BOMBA_TORRE := 2              # blocos que leva junto se chega à torre
+const ESPECIAL_FRACAO := 0.4       # no máximo esta fração da onda é especial
+const ESPECIAL_CHANCE := 0.9        # chance de cada vaga livre (até o teto) virar especial
+const LADRAO_ROUBO := 2             # tijolos roubados num golpe
+const LADRAO_FUGA_VEL := 1.3       # multiplicador extra de velocidade ao fugir
+const GIGANTE_TORRE_DANO := 2       # tijolos por golpe do gigante na torre
+const GEMEO_VIDA := 0.6             # vida de cada filhote, fração da vida máxima do gêmeo
+const GEMEO_ESCALA := 0.7
+
+# ---------- Linhas (posição dos bonecos) ----------
+const LINHA_X: Array[float] = [700.0, 560.0, 430.0]  # frente, meio, fundo: posto no meio do campo, para onde o gato corre ao sair da torre
+const LINHA_MEIO_DIST := 420.0      # o meio só avança com inimigo a até esta distância
+const LINHA_FUNDO_DIST := 120.0     # o fundo só luta com quem chega a esta distância (ou ao alcance, se atira)
+const LINHA_ALTERNA := -62.0          # recuo do 2º, 4º... gato da mesma linha
+const LINHA_CASA_MARGEM := 8.0
+const LINHA_CORRIDA := 2.2            # sem alvo e longe do posto, o gato corre até ele (não fica esperando)
+const LINHA_CORRIDA_DIST := 40.0
+
+# ---------- Preparação da onda: posto, postura e alvo prioritário ----------
+const POSTO_X0 := 250.0             # limites de onde o jogador pode largar um gato
+const POSTO_X1 := 800.0
+const POSTO_Y0 := 485.0
+const POSTO_Y1 := 630.0
+const RECUAR_X := 255.0             # postura Recuar: o gato fica junto da torre
+const RECUAR_DIST := 170.0          # ...e só luta com quem chega a esta distância (ou ao alcance, se atira)
+const PRIORIDADE_BONUS := 600.0     # desconto na "distância" do bicho do tipo marcado como alvo prioritário
+const PRIORIDADE_VISAO := 1.5       # quem segura ou recua enxerga o alvo prioritário um pouco mais longe
+
+# ---------- Escolha de alvo (gatos e bichos) ----------
+const ALVO_APEGO := 45.0            # o alvo atual vale esta "distância" a menos: não fica trocando à toa
+const ALVO_LOTADO := 34.0           # cada colega corpo a corpo já em cima do mesmo alvo afasta o próximo
+const ALVO_LOTADO_MAX := 3          # ...até este número de colegas (chefe e grandalhão não contam)
+const ALVO_TORRE := 110.0           # gato prefere o bicho que está batendo (ou vai bater) na torre
+const ALVO_FERIDO := 40.0           # e o que está quase caindo
+const SEPARA_RAIO := 30.0           # unidades do mesmo lado a menos disto se afastam (não viram um bolo)
+const SEPARA_VEL := 46.0            # px/s do empurrão
+
+# ---------- Time fixo: nível e treino dos bonecos ----------
+const BONECO_NIVEL_MAX := 30
+const XP_NIVEL_TETO := 10           # depois deste nível, o custo de cada nível para de crescer
+
+# ---------- Herança: a cada HERANCA_NIVEIS níveis o gato incorpora, como passiva, o poder da fantasia completa que veste ----------
+const HERANCA_NIVEIS := 10
+const HERANCA_INTERVALO := 14.0     # segundos entre disparos automáticos de um poder herdado
+const HERANCA_PRIMEIRO := 6.0       # segundos até o primeiro disparo na luta
+const HERANCA_FORCA := 0.45         # força do poder herdado (o da roupa usa a força das peças, perto de 1 ou mais)...
+const HERANCA_FORCA_NIVEL := 0.02   # ...mais isto por nível do gato
+const HERANCA_APOIO := 0.5          # cura, proteção e frenesi herdados valem esta fração
+
+## Texto curto de como a herança age (igual para todo poder: ele dispara sozinho).
+static func heranca_efeito(_tipo: int) -> String:
+	return "ele solta sozinho a cada %d s, mais fraco que o da roupa" % int(HERANCA_INTERVALO)
+
+const XP_BASE := 2                  # experiência para o 1º nível; +1 a cada nível
+const XP_ONDA_DE_PE := 2            # por onda vencida terminando de pé
+const XP_ONDA_ATO: Array[int] = [2, 5, 5]   # ...por ato: cada ato leva o time uns 10 níveis adiante (quem cai ganha a metade)
+
+# ---------- Atos: depois do Porão a casa é invadida de novo, na ordem que o jogador quiser ----------
+const ATOS := 2
+const ATO_NOME: Array[String] = ["Primeiro ato", "Segundo ato", "Terceiro ato"]
+const ATO_VIDA: Array[float] = [1.0, 1.3, 2.6]      # força dos bichos no primeiro cômodo vencido do ato
+const ATO_DANO: Array[float] = [1.0, 0.95, 1.3]
+const ATO_VIDA_DEGRAU := 0.10       # cada cômodo já vencido no ato deixa os que faltam mais fortes
+const ATO_DANO_DEGRAU := 0.05
+const ATO_COMODO_VIDA: Array[float] = [1.0, 0.8, 0.86, 1.0, 0.95]   # acerto por cômodo (chefe e família da casa pesam diferente)
+const ATO_COMODO_DANO: Array[float] = [1.0, 0.72, 0.84, 1.0, 0.95]
+const ATO_FAMILIA_DA_CASA := 0.4    # fração dos bichos que ainda é da família do cômodo; o resto vem misturado
+const XP_ONDA_NOCAUTE := 1          # por onda vencida tendo caído
+const NOCAUTE_SAUDE := 0.25         # quem caiu volta na onda seguinte com esta fração da vida
+const ATR_NOMES: Array[String] = ["Vida", "Força", "Agilidade"]
+const ATR_VIDA := 0.08              # +vida máxima por ponto
+const ATR_FORCA := 0.06             # +dano por ponto
+const ATR_AGIL := 0.05              # +velocidade de ataque por ponto
+const ATR_AGIL_VEL := 0.03          # +velocidade de movimento por ponto
+const NOMES_BONECOS: Array[String] = ["Fiapo", "Botão", "Retalho", "Feltro", "Novelo"]
+
+# ---------- Poder especial da fantasia completa ----------
+const PODER_INTERVALO := 9.0        # segundos entre usos
+const PODER_PRIMEIRO := 3.5         # segundos até o primeiro uso
+const PODER_DANO := 14.0            # dano de referência (x força média das peças)
+const PODER_RAIO_DANO := 2.5        # multiplicadores do dano de referência
+const PODER_EXPLOSAO_DANO := 1.2
+const PODER_EXPLOSAO_RAIO := 100.0
+const PODER_ATORDOA_T := 2.5
+const PODER_ATORDOA_CHEFE := 0.4    # fração do tempo que vale para chefes
+const PODER_ATORDOA_RAIO := 200.0
+const PODER_ATORDOA_DANO := 0.3
+const PODER_CURA := 0.25            # fração da vida máxima
+const PODER_PROTEGE_T := 3.5
+const PODER_PROTEGE_DANO := 0.3     # multiplicador do dano recebido enquanto protegido
+const PODER_FRENESI_T := 4.0
+const PODER_ATRAVESSA_DANO := 1.3
+const PODER_ATRAVESSA_LARGURA := 45.0
+const PODER_ATRAVESSA_ALCANCE := 520.0
+const PODER_RAJADA_N := 4
+const PODER_RAJADA_DANO := 1.0
+const PODER_GELO_T := 4.5
+const PODER_GELO_DANO := 0.3
+const PODER_EMPURRA_RAIO := 200.0
+const PODER_EMPURRA_DIST := 110.0
+const PODER_EMPURRA_DANO := 0.8
+const PODER_GIRO_RAIO := 95.0
+const PODER_GIRO_DANO := 1.8
+const PODER_DRENO_ALCANCE := 300.0
+const PODER_DRENO_DANO := 1.6
+
+# ---------- Geometria do campo ----------
+const TORRE_X := 175.0
+const ALIADO_X0 := 215.0
+const INIMIGO_X0 := 1340.0
+const VISIVEL_X := 1250.0
+const CHAO_Y0 := 475.0
+const CHAO_Y1 := 640.0
+const RETARGET := 0.3
+const AGGRO := 170.0
+const PROVOCA_BONUS := 140.0
+const TEMPO_MAX := 400.0
+const PROJETIL_VEL := 420.0
+
+## Força acumulada na campanha: a onda 1 da fase 2 vale como a onda 4 da fase 1.
+static func progresso(fase: int, onda: int) -> int:
+	return (fase - 1) * PROG_POR_FASE + onda
+
+static func tem_chefe(onda: int) -> bool:
+	return onda == ONDAS_TOTAIS
+
+## Progresso nos atos seguintes: continua de onde o Porão parou e sobe a cada cômodo já vencido no ato.
+static func progresso_ato(ato: int, vencidos: int, onda: int) -> int:
+	return Fases.TOTAL * PROG_POR_FASE * (ato - 1) + vencidos * PROG_POR_FASE + onda + (PROG_POR_FASE - 1) * (ato - 1)
+
+## `ato` > 1: famílias misturadas e peças de qualquer cômodo; `vencidos` = cômodos já vencidos nesse ato.
+static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0) -> Array:
+	var p: int = progresso(fase, onda) if ato <= 1 else progresso_ato(ato, vencidos, onda)
+	var degrau: float = (fase - 1) if ato <= 1 else (Fases.TOTAL - 1) + vencidos * 0.5
+	var fase_pecas: int = fase if ato <= 1 else Fases.TOTAL
+	var n: int = int(round(INIMIGOS_BASE + onda * INIMIGOS_POR_ONDA + degrau * INIMIGOS_POR_FASE))
+	if tem_chefe(onda):
+		n = int(round(n * CHEFE_LACAIOS))
+	var plano: Array = []
+	var nivel: int = mini(NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)))
+	for i in n:
+		var q: float = PECAS_BASE + p * PECAS_POR_ONDA
+		var qtd: int = int(floor(q))
+		if rng.randf() < q - floor(q):
+			qtd += 1
+		qtd = clampi(qtd, 0, Pecas.SLOTS)
+		var slots: Array = [0, 1, 2, 3]
+		slots.shuffle()  # (usa o rng global; só afeta a variedade)
+		if p == 1:
+			slots = [0, 1, 3]  # onda de aquecimento: ninguém vem armado
+			qtd = mini(qtd, 2)
+		var pecas: Array = [null, null, null, null]
+		for k in qtd:
+			var s: int = slots[k]
+			var opcoes: Array = Fases.pecas_do_slot(fase_pecas, s)
+			var tipo: int = opcoes[rng.randi_range(0, opcoes.size() - 1)]
+			pecas[s] = Peca.new(tipo, nivel)
+		var item: Dictionary = {"pecas": pecas, "tipo": Unidade.Tipo.COMUM, "elite": false}
+		if ato > 1 and rng.randf() >= ATO_FAMILIA_DA_CASA:
+			item["fam"] = rng.randi_range(0, Fases.TOTAL - 1)
+		plano.append(item)
+	_sortear_tipos(plano, p, rng)
+	_sortear_elites(plano, fase + (Fases.TOTAL if ato > 1 else 0), onda, nivel, rng)
+	return plano
+
+## Distribui tipos especiais no plano: tipo novo entra garantido; teto de ESPECIAL_FRACAO.
+static func _sortear_tipos(plano: Array, prog: int, rng: RandomNumberGenerator) -> void:
+	var teto: int = int(floor(plano.size() * ESPECIAL_FRACAO))
+	var disponiveis: Array[int] = []
+	var novos: Array[int] = []
+	for t in range(1, TIPO_NOMES.size()):
+		if prog >= TIPO_PROG_MIN[t]:
+			disponiveis.append(t)
+			if prog == TIPO_PROG_MIN[t]:
+				novos.append(t)
+	if disponiveis.is_empty() or teto <= 0:
+		return
+	var vagas: Array = range(plano.size())
+	vagas.shuffle()
+	var usados: int = 0
+	for t in novos:
+		if usados < teto:
+			plano[vagas[usados]]["tipo"] = t
+			usados += 1
+	while usados < teto and usados < vagas.size():
+		if rng.randf() < ESPECIAL_CHANCE:
+			plano[vagas[usados]]["tipo"] = disponiveis[rng.randi_range(0, disponiveis.size() - 1)]
+		usados += 1
+
+## Inimigos fantasiados: comuns que vestem uma fantasia da fase (e largam uma peça dela).
+static func _sortear_elites(plano: Array, fase: int, onda: int, nivel: int, rng: RandomNumberGenerator) -> void:
+	if onda < ELITE_ONDA_MIN:
+		return
+	var quantos: int = 2 if onda >= ELITE_ONDA_DOIS and not tem_chefe(onda) else 1
+	var comuns: Array = []
+	for i in plano.size():
+		if plano[i]["tipo"] == Unidade.Tipo.COMUM:
+			comuns.append(i)
+	for k in mini(quantos, comuns.size()):
+		var i: int = comuns[comuns.size() - 1 - k]  # os últimos a entrar
+		plano[i]["pecas"] = fantasia(fase, nivel, ELITE_PECAS[(fase - 1) % Fases.TOTAL], rng)
+		plano[i]["elite"] = true
+
+## Peças de uma fantasia sorteada entre as da fase; `quantas` < 4 deixa um espaço vazio.
+static func fantasia(fase: int, nivel: int, quantas: int, rng: RandomNumberGenerator) -> Array:
+	var conjs: Array = Fases.CONJUNTOS[fase - 1]
+	var c: int = conjs[rng.randi_range(0, conjs.size() - 1)]
+	var pecas: Array = [null, null, null, null]
+	var fora: int = rng.randi_range(0, Pecas.SLOTS - 1) if quantas < Pecas.SLOTS else -1
+	for s in Pecas.SLOTS:
+		if s != fora:
+			pecas[s] = Peca.new(Pecas.CONJUNTO_PECAS[c][s], nivel)
+	return pecas
+
+## Peças do chefe da fase (fantasia completa, nível alto, uma marca cada). Vazio se a onda não tem chefe.
+static func gerar_chefe(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0) -> Array:
+	if not tem_chefe(onda):
+		return []
+	var p: int = progresso(fase, onda) if ato <= 1 else progresso_ato(ato, vencidos, onda)
+	var nivel: int = mini(NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)) + CHEFE_NIVEL_BONUS)
+	var pecas: Array = fantasia(fase + (Fases.TOTAL if ato > 1 else 0), nivel, Pecas.SLOTS, rng)
+	for pc in pecas:
+		pc.marcar(rng.randi_range(0, Pecas.Marca.size() - 1))
+	return pecas
