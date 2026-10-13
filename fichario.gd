@@ -1,7 +1,7 @@
 class_name Fichario
 extends Control
 ## Fichário de fantasias: um álbum aberto por cima da tela, no molde da oficina da torre.
-## Página 0 é o índice (as 21 fantasias, por cômodo); depois vêm as fantasias, uma por página dupla:
+## Página 0 é o índice (as 25 fantasias, por cômodo e por lugar de fora); depois vêm as fantasias, uma por página dupla:
 ## à esquerda o gato vestido, o poder e onde achar; à direita as 4 peças e os bônus.
 ## A tela só mostra: quem guarda o que o jogador teve e tem é o `Estado` (atribua `estado` antes de `abrir`).
 ##
@@ -19,7 +19,9 @@ signal metas_vistas
 
 ## Valor de `abrir()` que abre direto na aba "Metas".
 const PAGINA_METAS := -2
-const N_ABAS := 7
+const N_ABAS := 8
+const ABA_FORA := 6    # "De fora": as fantasias que só caem fora da casa
+const ABA_METAS := 7
 
 const GUI_TEX: Texture2D = preload("res://assets/gui/gui_4x.png")
 const BOT_TEX: Texture2D = preload("res://assets/gui/botoes_4x.png")
@@ -45,7 +47,7 @@ const COR_SIL := Color(0.1, 0.08, 0.14, 0.93)
 ## Cor de cada aba de cômodo (Índice primeiro): papel colorido.
 const COR_ABA: Array[Color] = [
 	Color(0.88, 0.84, 0.74), Color(0.96, 0.62, 0.66), Color(0.55, 0.74, 0.96),
-	Color(0.98, 0.84, 0.4), Color(0.75, 0.6, 0.92), Color(0.55, 0.82, 0.55), Color(0.96, 0.78, 0.5),
+	Color(0.98, 0.84, 0.4), Color(0.75, 0.6, 0.92), Color(0.55, 0.82, 0.55), Color(0.5, 0.8, 0.82), Color(0.96, 0.78, 0.5),
 ]
 
 # ---- geometria (tudo a partir destas constantes) ----
@@ -68,7 +70,10 @@ const LIN_Y0 := 78.0       # primeira linha de peça (página direita)
 const LIN_H := 94.0
 const LIN_GAP := 4.0
 const TILE_W := 84.0
-const TILE_H := 116.0
+const TILE_H := 104.0
+const IDX_Y0 := 120.0      # topo da primeira fileira do índice (o rótulo do cômodo fica nos 24 px de cima)
+const IDX_PASSO := 138.0   # de uma fileira à outra
+const TILE_ICO_Y := 34.0   # altura do centro do ícone dentro da miniatura
 const TILE_GAP := 6.5
 const GATO_ESC := 3.1
 const PATADA_CADA := 3.4
@@ -203,13 +208,20 @@ func ir_para_comodo(i: int) -> void:
 		return
 	ir_para_fantasia(Fases.CONJUNTOS[i][0])
 
-## Aba que corresponde à página atual (0 = Índice, 1..5 = cômodos).
+## Pula para a primeira fantasia que só cai fora da casa (aba "De fora").
+func ir_para_fora() -> void:
+	var fo: Array[int] = fantasias_so_de_fora()
+	if not fo.is_empty():
+		ir_para_fantasia(fo[0])
+
+## Aba que corresponde à página atual (0 = Índice, 1..5 = cômodos, ABA_FORA, ABA_METAS).
 func aba_atual() -> int:
 	if em_metas:
-		return 6
+		return ABA_METAS
 	if pagina == 0:
 		return 0
-	return maxi(comodo_da_fantasia(fantasia_da_pagina(pagina)) + 1, 0)   # fantasia de fora: fica na aba do Índice
+	var sala: int = comodo_da_fantasia(fantasia_da_pagina(pagina))
+	return sala + 1 if sala >= 0 else ABA_FORA   # só cai fora da casa: aba "De fora"
 
 # ------------------------------------------------------------------ dados (estáticos, testáveis)
 static func comodo_da_fantasia(c: int) -> int:
@@ -244,9 +256,9 @@ static func ordem_das_fantasias() -> Array[int]:
 	o.append_array(fantasias_so_de_fora())
 	return o
 
-## Retângulo da miniatura da k-ésima fantasia da seção "Lado de fora" (página direita do índice, abaixo dos cômodos).
+## Retângulo da miniatura da k-ésima fantasia da seção "Lado de fora" (página direita do índice, terceira fileira).
 static func rect_tile_fora(k: int) -> Rect2:
-	return Rect2(COL_D_X + k * (TILE_W + TILE_GAP), 124.0 + 2 * 150.0 + 24.0, TILE_W, TILE_H)
+	return Rect2(COL_D_X + k * (TILE_W + TILE_GAP), IDX_Y0 + 2 * IDX_PASSO + 24.0, TILE_W, TILE_H)
 
 static func rect_aba(i: int) -> Rect2:
 	return Rect2(ABA_X, ABA_Y0 + i * (ABA_H + ABA_GAP), ABA_W, ABA_H)
@@ -256,7 +268,7 @@ static func rect_tile(comodo: int, k: int) -> Rect2:
 	var esq: bool = comodo < 3
 	var fila: int = comodo if esq else comodo - 3
 	var x0: float = (COL_E_X if esq else COL_D_X) + k * (TILE_W + TILE_GAP)
-	return Rect2(x0, 124.0 + fila * 150.0 + 24.0, TILE_W, TILE_H)
+	return Rect2(x0, IDX_Y0 + fila * IDX_PASSO + 24.0, TILE_W, TILE_H)
 
 static func rect_linha_peca(i: int) -> Rect2:
 	return Rect2(COL_D_X, LIN_Y0 + i * (LIN_H + LIN_GAP), COL_W, LIN_H)
@@ -278,6 +290,19 @@ static func texto_totais(e: Estado) -> String:
 static func completas_do_comodo(e: Estado, i: int) -> int:
 	var n: int = 0
 	for c in Fases.CONJUNTOS[i]:
+		if e.pecas_da_fantasia(c) >= Pecas.SLOTS:
+			n += 1
+	return n
+
+## Rótulo da seção da fantasia: o cômodo onde cai, ou "Lado de fora".
+static func nome_secao(c: int) -> String:
+	var i: int = comodo_da_fantasia(c)
+	return Fases.NOME[i] if i >= 0 else "Lado de fora"
+
+## Quantas das fantasias que só caem fora da casa estão completas.
+static func completas_so_de_fora(e: Estado) -> int:
+	var n: int = 0
+	for c in fantasias_so_de_fora():
 		if e.pecas_da_fantasia(c) >= Pecas.SLOTS:
 			n += 1
 	return n
@@ -306,7 +331,7 @@ static func texto_onde(c: int) -> String:
 		var lf: int = lugar_de_fora(c)
 		if lf < 0:
 			return "Não cai em nenhum lugar"
-		return "Cai fora da casa, em %s: %s e %s" % [Fases.NOME[lf], Fases.FAMILIA_NOME[lf].to_lower(), Fases.CHEFE_NOME[lf]]
+		return "Cai fora da casa, %s: %s e %s" % [_em(lf), Fases.FAMILIA_NOME[lf].to_lower(), Fases.CHEFE_NOME[lf]]
 	return "Cai %s: %s e %s" % [_em(i), Fases.FAMILIA_NOME[i].to_lower(), Fases.CHEFE_NOME[i]]
 
 static func comodo_bloqueado(e: Estado, i: int) -> bool:
@@ -315,9 +340,19 @@ static func comodo_bloqueado(e: Estado, i: int) -> bool:
 static func texto_bloqueio(i: int) -> String:
 	return "Cômodo ainda bloqueado: vença o %s, %s" % [Fases.CHEFE_NOME[i - 1], _em(i - 1)] if i >= 1 else ""
 
-## "no Quarto", "na Sala", "na Cozinha", "no Sótão", "no Porão".
+## "no Quarto", "na Sala", "na Cozinha", "no Sótão", "no Porão", "no Quintal", "na Garagem", "no Telhado", "na Rua", "na Toca".
 static func _em(i: int) -> String:
-	return ("na " if i == 1 or i == 2 else "no ") + Fases.NOME[i]
+	return ("na " if i in [1, 2, 6, 8, 9] else "no ") + Fases.NOME[i]
+
+## Lugares de fora (índices de Fases.NOME, 5 a 9) onde a fantasia cai, em texto: "no Quintal" ou "no Quintal e na Rua".
+static func texto_fora(c: int) -> String:
+	var l: Array[String] = []
+	for i in range(Fases.TOTAL, Fases.CONJUNTOS.size()):
+		if (Fases.CONJUNTOS[i] as Array).has(c):
+			l.append(_em(i))
+	if l.is_empty():
+		return ""
+	return l[0] if l.size() == 1 else ", ".join(l.slice(0, l.size() - 1)) + " e " + l[l.size() - 1]
 
 static func _maiuscula(s: String) -> String:
 	return s.substr(0, 1).to_upper() + s.substr(1)
@@ -412,14 +447,14 @@ func _montar() -> void:
 				itens.append({"id": "f%d" % c, "r": r, "on": true})
 				var cab: int = Pecas.CONJUNTO_PECAS[c][0]
 				if not estado.ja_teve(cab):
-					_jobs.append({"k": "icone", "tipo": cab, "centro": r.position + Vector2(TILE_W * 0.5, 38.0), "tam": 52.0})
+					_jobs.append({"k": "icone", "tipo": cab, "centro": r.position + Vector2(TILE_W * 0.5, TILE_ICO_Y), "tam": 50.0})
 		var fo: Array[int] = fantasias_so_de_fora()
 		for k in mini(fo.size(), 5):
 			var rf: Rect2 = rect_tile_fora(k)
 			itens.append({"id": "f%d" % fo[k], "r": rf, "on": true})
 			var cabf: int = Pecas.CONJUNTO_PECAS[fo[k]][0]
 			if not estado.ja_teve(cabf):
-				_jobs.append({"k": "icone", "tipo": cabf, "centro": rf.position + Vector2(TILE_W * 0.5, 38.0), "tam": 52.0})
+				_jobs.append({"k": "icone", "tipo": cabf, "centro": rf.position + Vector2(TILE_W * 0.5, TILE_ICO_Y), "tam": 50.0})
 	else:
 		var c2: int = fantasia_da_pagina(pagina)
 		var faltam: Array = []
@@ -466,7 +501,7 @@ func acionar(id: String) -> void:
 		ir_para_pagina(pagina + 1)
 	elif id.begins_with("aba"):
 		var i: int = int(id.substr(3))
-		if i == 6:
+		if i == ABA_METAS:
 			if not em_metas:
 				em_metas = true
 				metas_pag = 0
@@ -479,6 +514,8 @@ func acionar(id: String) -> void:
 			_montar()
 		if i == 0:
 			ir_para_pagina(0)
+		elif i == ABA_FORA:
+			ir_para_fora()
 		else:
 			ir_para_comodo(i - 1)
 	elif id.begins_with("f"):
@@ -849,10 +886,12 @@ func _abas(e: Estado) -> void:
 		var fe: PackedVector2Array = pts.duplicate()
 		fe.append(pts[0])
 		draw_polyline(fe, TINTA, 2.0 if ativa else 1.5)
-		var nome: String = "Índice" if i == 0 else ("Metas" if i == 6 else Fases.NOME[i - 1])
+		var nome: String = "Índice" if i == 0 else ("Metas" if i == ABA_METAS else ("De fora" if i == ABA_FORA else Fases.NOME[i - 1]))
 		var sub: String = ""
-		if i == 6:
+		if i == ABA_METAS:
 			sub = "%d/%d" % [e.metas_cumpridas(), Metas.lista().size()]
+		elif i == ABA_FORA:
+			sub = "%d/%d" % [completas_so_de_fora(e), fantasias_so_de_fora().size()]
 		elif i == 0:
 			sub = "%d/%d" % [e.fantasias_completas(), Pecas.CONJUNTO_PECAS.size()]
 		else:
@@ -861,9 +900,9 @@ func _abas(e: Estado) -> void:
 		var larg_t: float = r.end.x - 14.0 - (r.position.x + 28.0)
 		_txt(nome, Vector2(cx - larg_t * 0.5, rr.position.y + 25.0), 17, TINTA, larg_t)
 		_txt(sub, Vector2(cx - larg_t * 0.5, rr.position.y + 44.0), 13, TINTA2, larg_t)
-		if i == 6 and not metas_novas.is_empty() and not em_metas:
+		if i == ABA_METAS and not metas_novas.is_empty() and not em_metas:
 			draw_circle(Vector2(rr.position.x + 18.0, rr.position.y + 28.0), 7.0, Color(0.9, 0.2, 0.2))
-		if i > 0 and i < 6 and comodo_bloqueado(e, i - 1):
+		if i > 0 and i < ABA_FORA and comodo_bloqueado(e, i - 1):
 			_cadeado(Vector2(rr.position.x + 18.0, rr.position.y + 28.0), Color(0.3, 0.2, 0.25))
 
 func _botoes() -> void:
@@ -876,8 +915,8 @@ func _botoes() -> void:
 		var cor: Color = UIComum.B_MARROM if id == "fechar" else UIComum.B_OURO
 		var o: Dictionary = {"on": it["on"], "foco": i == foco and it["on"], "h": UIComum.anim_h(anim, id), "p": UIComum.anim_p(anim, id), "tam": 17}
 		UIComum.botao(self, it["r"], txt, cor, o, t)
-	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else "Índice" if pagina == 0 else "Fantasia %d de %d" % [pagina, _ordem.size()]
-	_txt(marca, Vector2(250.0, 672.0), 15, Color(1, 0.94, 0.8), 240.0, 4)
+	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else "Índice" if pagina == 0 else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
+	_txt(marca, Vector2(250.0, 672.0), 15 if marca.length() < 26 else 13, Color(1, 0.94, 0.8), 240.0, 4)
 	_txt("Setas, A/D ou PgUp/PgDn  |  Esc fecha", Vector2(700.0, 672.0), 13, Color(1, 0.94, 0.8, 0.7), 230.0, 3)
 
 ## Dica do mouse (ou do foco do teclado) sobre uma miniatura do índice.
@@ -907,31 +946,32 @@ func _pagina_indice(e: Estado) -> void:
 			_txt("bloqueado", Vector2(ax + 11.0 + wl + 28.0, ay - 2.0), 12, TINTA2)
 		for k in sala.size():
 			_tile(e, sala[k], rect_tile(i, k))
-	# seção "Lado de fora": fantasias que só caem fora da casa (página direita, abaixo dos cômodos)
+	# seção "Lado de fora": fantasias que só caem fora da casa (página direita, terceira fileira)
 	var fo2: Array[int] = fantasias_so_de_fora()
 	if not fo2.is_empty():
 		var rf0: Rect2 = rect_tile_fora(0)
-		var cf: int = 0
-		for c3 in fo2:
-			if e.pecas_da_fantasia(c3) >= Pecas.SLOTS:
-				cf += 1
-		draw_rect(Rect2(rf0.position.x, rf0.position.y - 24.0, 5.0, 16.0), COR_ABA[6].darkened(0.1))
-		_txt("Lado de fora  ·  %d/%d completas" % [cf, fo2.size()], Vector2(rf0.position.x + 11.0, rf0.position.y - 10.0), 16, TINTA)
+		var lblf: String = "Lado de fora  ·  %d/%d completas" % [completas_so_de_fora(e), fo2.size()]
+		draw_rect(Rect2(rf0.position.x, rf0.position.y - 24.0, 5.0, 16.0), COR_ABA[ABA_FORA].darkened(0.1))
+		_txt(lblf, Vector2(rf0.position.x + 11.0, rf0.position.y - 10.0), 16, TINTA)
+		_txt("só caem fora da casa", Vector2(rf0.position.x + 11.0 + largura(lblf, 16) + 10.0, rf0.position.y - 10.0), 12, TINTA2)
 		for k in mini(fo2.size(), 5):
 			_tile(e, fo2[k], rect_tile_fora(k))
-	# painel de progresso (página direita, embaixo; some quando há a seção de fora)
-	if not fo2.is_empty():
-		return   # sem espaço para o painel; os totais já estão na faixa de cima da página
-	var pr := Rect2(COL_D_X, 426.0, COL_W, 204.0)
+	# painéis de baixo: como ler o índice (esquerda) e o progresso (direita)
+	var pl := Rect2(COL_E_X, 538.0, COL_W, 92.0)
+	draw_rect(pl, PAPEL_ESC)
+	draw_rect(pl, PAPEL_BORDA, false, 2.0)
+	_txt("Como ler o índice", Vector2(pl.position.x + 14.0, pl.position.y + 24.0), 16, TINTA)
+	_bloco("Clique numa fantasia para abrir a página dela. Fantasias completas ganham uma estrela dourada; peça que ainda não apareceu fica em silhueta.", Vector2(pl.position.x + 14.0, pl.position.y + 44.0), pl.size.x - 28.0, [13, 12], 3, TINTA2, 2.0)
+	var pr := Rect2(COL_D_X, 538.0, COL_W, 92.0)
 	draw_rect(pr, PAPEL_ESC)
 	draw_rect(pr, PAPEL_BORDA, false, 2.0)
-	_txt("Seu progresso", Vector2(pr.position.x + 14.0, pr.position.y + 26.0), 18, TINTA)
+	_txt("Seu progresso", Vector2(pr.position.x + 14.0, pr.position.y + 24.0), 16, TINTA)
 	var comp: int = e.fantasias_completas()
 	var nf: int = Pecas.CONJUNTO_PECAS.size()
-	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 58.0, pr.size.x - 28.0, 16.0), float(comp) / nf, "Fantasias completas: %d de %d" % [comp, nf], Color(0.95, 0.72, 0.15))
 	var po: int = pecas_obtidas(e)
-	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 108.0, pr.size.x - 28.0, 16.0), float(po) / pecas_possiveis(), "Peças já tidas: %d de %d" % [po, pecas_possiveis()], Color(0.4, 0.7, 0.45))
-	_bloco("Clique numa fantasia para abrir a página dela. Fantasias completas ganham uma estrela dourada; peça que ainda não apareceu fica em silhueta.", Vector2(pr.position.x + 14.0, pr.position.y + 152.0), pr.size.x - 28.0, [13, 12], 3, TINTA2, 2.0)
+	var lb: float = (pr.size.x - 28.0 - 14.0) * 0.5
+	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(comp) / nf, "Completas: %d de %d" % [comp, nf], Color(0.95, 0.72, 0.15))
+	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(po) / pecas_possiveis(), "Peças já tidas: %d de %d" % [po, pecas_possiveis()], Color(0.4, 0.7, 0.45))
 
 func _barra(r: Rect2, frac: float, rotulo: String, cor: Color) -> void:
 	_txt(rotulo, Vector2(r.position.x, r.position.y - 6.0), 14, TINTA)
@@ -951,18 +991,18 @@ func _tile(e: Estado, c: int, r: Rect2) -> void:
 	draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 5.0), cor.darkened(0.15))
 	draw_rect(r, Color(0.9, 0.68, 0.1) if completa else PAPEL_BORDA, false, 3.0 if completa else 1.5)
 	var cab: int = Pecas.CONJUNTO_PECAS[c][0]
-	var centro := r.position + Vector2(r.size.x * 0.5, 38.0)
-	draw_circle(centro, 28.0, cor.lerp(PAPEL, 0.7))
+	var centro := r.position + Vector2(r.size.x * 0.5, TILE_ICO_Y)
+	draw_circle(centro, 26.0, cor.lerp(PAPEL, 0.7))
 	if e.ja_teve(cab):
-		Desenho.icone(self, cab, centro, 52.0)
+		Desenho.icone(self, cab, centro, 50.0)
 	# nome em até duas linhas
 	var aj: Dictionary = ajustar(Pecas.CONJUNTO_NOME[c], [12, 11, 10, 9], r.size.x - 8.0, 2)
-	var yy: float = r.position.y + 80.0
+	var yy: float = r.position.y + 70.0
 	for ln in aj["linhas"]:
 		_txt(ln, Vector2(r.position.x + 4.0, yy), aj["tam"], TINTA, r.size.x - 8.0)
 		yy += int(aj["tam"]) + 1
 	var cc: Color = Color(0.6, 0.38, 0.0) if completa else (TINTA2 if n > 0 else Color(0.55, 0.5, 0.48))
-	_txt("%d/%d" % [n, Pecas.SLOTS], Vector2(r.position.x, r.end.y - 6.0), 14, cc, r.size.x)
+	_txt("%d/%d" % [n, Pecas.SLOTS], Vector2(r.position.x, r.end.y - 5.0), 13, cc, r.size.x)
 	if completa:
 		_estrela(r.position + Vector2(r.size.x - 11.0, 16.0), 9.0, COR_OURO)
 	if sobre:
@@ -1014,17 +1054,25 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	var ob := Rect2(COL_E_X, 500.0, COL_W, 130.0)
 	draw_rect(ob, PAPEL_ESC)
 	draw_rect(ob, PAPEL_BORDA, false, 2.0)
-	draw_rect(Rect2(ob.position.x, ob.position.y, 8.0, ob.size.y), COR_ABA[sala + 1 if sala >= 0 else 6].darkened(0.05))
+	draw_rect(Rect2(ob.position.x, ob.position.y, 8.0, ob.size.y), COR_ABA[sala + 1 if sala >= 0 else ABA_FORA].darkened(0.05))
 	_txt("Onde encontrar", Vector2(ob.position.x + 18.0, ob.position.y + 19.0), 13, TINTA2)
-	var yy: float = _bloco(texto_onde(c), Vector2(ob.position.x + 18.0, ob.position.y + 42.0), ob.size.x - 30.0, [18, 16, 15, 14], 2, TINTA, 3.0)
-	if sala >= 0 and comodo_bloqueado(e, sala):
-		_cadeado(Vector2(ob.position.x + 26.0, yy + 8.0), Color(0.62, 0.22, 0.2))
-		yy = _bloco(texto_bloqueio(sala), Vector2(ob.position.x + 40.0, yy + 12.0), ob.size.x - 52.0, [13, 12], 2, COR_FALTA, 2.0)
+	var xo: float = ob.position.x + 18.0
+	var wo: float = ob.size.x - 30.0
+	var yy: float = _bloco(texto_onde(c), Vector2(xo, ob.position.y + 42.0), wo, [18, 16, 15, 14], 2, TINTA, 3.0)
+	if sala >= 0:
+		# as fantasias da casa também caem, redistribuídas, num lugar de fora
+		var tf: String = texto_fora(c)
+		if tf != "":
+			yy = _bloco("Fora da casa, cai " + tf, Vector2(xo, yy), wo, [14, 13, 12], 1, Color(0.28, 0.4, 0.42), 3.0)
+		if comodo_bloqueado(e, sala):
+			_cadeado(Vector2(xo + 8.0, yy + 2.0), Color(0.62, 0.22, 0.2))
+			yy = _bloco(texto_bloqueio(sala), Vector2(xo + 22.0, yy + 6.0), wo - 22.0, [12], 1, COR_FALTA, 2.0)
 	var outras: Array[String] = []
 	for o in Fases.CONJUNTOS[sala if sala >= 0 else lugar_de_fora(c)]:
 		if o != c:
 			outras.append(Pecas.CONJUNTO_NOME[o])
-	_bloco("Também cai aqui: " + ", ".join(outras), Vector2(ob.position.x + 18.0, ob.end.y - 36.0), ob.size.x - 30.0, [12, 11], 2, TINTA2, 2.0)
+	var linhas_livres: int = clampi(int(floor((ob.end.y - 6.0 - yy) / 14.0)), 1, 2)
+	_bloco("Também cai aqui: " + ", ".join(outras), Vector2(xo, yy + 6.0), wo, [12, 11], linhas_livres, TINTA2, 2.0)
 	# ---------------- página da direita
 	for s in Pecas.SLOTS:
 		_linha_peca(e, c, s)
@@ -1140,12 +1188,13 @@ func _desenhar_silhuetas() -> void:
 
 
 # ------------------------------------------------------------------ aba "Metas"
-func _selo_meta(c: Vector2, txt: String, cor: Color) -> void:
+func _selo_meta(c: Vector2, txt: String, cor: Color, tam: int = 13) -> void:
 	UIComum.trans(self, c, -0.16)
-	var w: float = largura(txt, 13) + 12.0
-	draw_rect(Rect2(-w * 0.5, -11.0, w, 22.0), Color(cor.r, cor.g, cor.b, 0.1))
-	draw_rect(Rect2(-w * 0.5, -11.0, w, 22.0), cor, false, 2.0)
-	_txt(txt, Vector2(-w * 0.5, 5.0), 13, cor, w)
+	var w: float = largura(txt, tam) + 12.0
+	var h: float = tam + 9.0
+	draw_rect(Rect2(-w * 0.5, -h * 0.5, w, h), Color(cor.r, cor.g, cor.b, 0.1))
+	draw_rect(Rect2(-w * 0.5, -h * 0.5, w, h), cor, false, 2.0 if tam >= 13 else 1.5)
+	_txt(txt, Vector2(-w * 0.5, tam * 0.4 + 0.5), tam, cor, w)
 	UIComum.trans_fim(self)
 
 func _premio(m: Dictionary, direita: float, y: float, feita: bool) -> void:
@@ -1183,7 +1232,7 @@ func _metas_fora(e: Estado, todas: Array) -> void:
 		if e.metas_pagas.has(m["id"]):
 			feitas += 1
 	var y: float = 120.0
-	draw_rect(Rect2(COL_E_X, y + 3.0, 5.0, 16.0), COR_ABA[6].darkened(0.2))
+	draw_rect(Rect2(COL_E_X, y + 3.0, 5.0, 16.0), COR_ABA[ABA_METAS].darkened(0.2))
 	_txt("Lado de fora  ·  %d/%d" % [feitas, ms.size()], Vector2(COL_E_X + 11.0, y + 17.0), 16, TINTA)
 	y += 24.0
 	for m in ms:
@@ -1197,7 +1246,7 @@ func _metas_fora(e: Estado, todas: Array) -> void:
 		var r := Rect2(COL_D_X, yy, COL_W, 56.0)
 		draw_rect(r, Color(0.86, 0.95, 0.8) if feito else PAPEL_ESC.lightened(0.25))
 		draw_rect(r, COR_TEM if feito else PAPEL_BORDA, false, 1.5 if feito else 1.0)
-		draw_rect(Rect2(r.position.x, r.position.y, 5.0, r.size.y), COR_ABA[6].darkened(0.1))
+		draw_rect(Rect2(r.position.x, r.position.y, 5.0, r.size.y), COR_ABA[ABA_METAS].darkened(0.1))
 		_txt(Fases.NOME[li], Vector2(r.position.x + 14.0, yy + 24.0), 20, TINTA, 180.0)
 		_txt("Chefe: " + Fases.CHEFE_NOME[li], Vector2(r.position.x + 14.0, yy + 44.0), 13, TINTA2, 250.0)
 		if feito:
@@ -1228,13 +1277,13 @@ func _pagina_metas(e: Estado) -> void:
 		for m in ms:
 			if e.metas_pagas.has(m["id"]):
 				feitas += 1
-		draw_rect(Rect2(COL_E_X, y + 3.0, 5.0, 16.0), COR_ABA[6].darkened(0.2))
+		draw_rect(Rect2(COL_E_X, y + 3.0, 5.0, 16.0), COR_ABA[ABA_METAS].darkened(0.2))
 		_txt("%s  ·  %d/%d" % [g, feitas, ms.size()], Vector2(COL_E_X + 11.0, y + 17.0), 16, TINTA)
 		y += 24.0
 		for m in ms:
 			y = _linha_meta(e, m, y, g == "Invasão" and not zerada)
 		y += 6.0
-	# página direita: as 21 fantasias
+	# página direita: as 25 fantasias (linhas baixas: 25 cabem em 118..630)
 	var fs: Array = todas.filter(func(m: Dictionary) -> bool: return m["grupo"] == "Fantasias")
 	var nf: int = 0
 	for m in fs:
@@ -1245,16 +1294,16 @@ func _pagina_metas(e: Estado) -> void:
 	for m in fs:
 		var feita2: bool = e.metas_pagas.has(m["id"])
 		var c: int = int(String(m["id"]).substr(9))
-		var r2 := Rect2(COL_D_X, yy, COL_W, 23.0)
+		var r2 := Rect2(COL_D_X, yy, COL_W, 19.0)
 		draw_rect(r2, Color(0.86, 0.95, 0.8) if feita2 else PAPEL_ESC.lightened(0.25))
 		draw_rect(r2, COR_TEM if feita2 else PAPEL_BORDA, false, 1.5 if feita2 else 1.0)
 		draw_rect(Rect2(r2.position.x, r2.position.y, 5.0, r2.size.y), Pecas.CONJUNTO_COR[c].darkened(0.1))
-		_txt(cortar(m["nome"], 14, 230.0), Vector2(r2.position.x + 12.0, yy + 16.0), 14, TINTA)
+		_txt(cortar(m["nome"], 13, 230.0), Vector2(r2.position.x + 12.0, yy + 14.0), 13, TINTA)
 		if metas_novas.has(m["id"]):
-			_txt("NOVA", Vector2(r2.position.x + 296.0, yy + 15.0), 11, Color(0.85, 0.15, 0.15))
+			_txt("NOVA", Vector2(r2.position.x + 296.0, yy + 14.0), 11, Color(0.85, 0.15, 0.15))
 			draw_rect(r2.grow(2.0), Color(1.0, 0.8, 0.2, 0.5 + 0.5 * sin(t * 6.0)), false, 2.0)
-		_txt("%d/%d" % [e.pecas_da_fantasia(c), Pecas.SLOTS], Vector2(r2.position.x + 250.0, yy + 16.0), 14, COR_TEM if feita2 else TINTA2, 36.0)
-		_premio(m, r2.end.x - 53.0, yy + 12.0, feita2)
+		_txt("%d/%d" % [e.pecas_da_fantasia(c), Pecas.SLOTS], Vector2(r2.position.x + 250.0, yy + 14.0), 13, COR_TEM if feita2 else TINTA2, 36.0)
+		_premio(m, r2.end.x - 53.0, yy + 9.5, feita2)
 		if feita2:
-			_selo_meta(Vector2(r2.end.x - 34.0, yy + 12.0), "FEITA", COR_TEM)
-		yy += 24.5
+			_selo_meta(Vector2(r2.end.x - 34.0, yy + 9.5), "FEITA", COR_TEM, 11)
+		yy += 20.4
