@@ -67,7 +67,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"obbrkkkrbbo",
 				"obbkrkrkbbo",
 				".ooooooooo.",
-			], {"o": Color(0.18, 0.06, 0.2), "r": Color(0.88, 0.12, 0.14), "k": Color(0.06, 0.05, 0.08), "b": Color(0.15, 0.3, 0.85)}, f)
+			], {"o": Color(0.4, 0.04, 0.06), "r": Color(0.88, 0.12, 0.14), "k": Color(0.06, 0.05, 0.08), "b": Color(0.17, 0.28, 0.72)}, f)
 		Pecas.Tipo.LANCA_TEIA:
 			# lançador de teia no pulso e fio de teia branco com uma teia pequena na ponta
 			RoupaGato.sprite(c, -1.0, -9.0, [

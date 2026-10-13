@@ -173,27 +173,26 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 				"........oo....",
 			], _PAL_NINJA]]
 		Pecas.Tipo.PERGAMINHO:
-			# pergaminho grande preso às costas com cordas vermelhas
-			return [[-5.5, -3.0, [
-				"..oooooooo..",
-				".oWpPRPPRpWo",
-				"oWWpPRppRpWo",
-				".oWpPRPPRpWo",
-				"..oooooooo..",
+			# pergaminho pequeno preso às costas com cordas azuis
+			return [[-4.5, -2.0, [
+				".oooooo.",
+				"oWpPRPpWo",
+				"oWpPRPpWo",
+				".oooooo.",
 			], _PAL_NINJA]]
 		Pecas.Tipo.CAPACETE_AZUL:
-			# capacete de robô: cúpula azul com crista clara, viseira escura acima do olho, fone redondo na lateral
-			# e uma antena amarela; sem aba (não lembra boné); olho e focinho de fora
+			# capacete do robô azul: cúpula azul-escura, faixa central azul-clara em relevo, orelha redonda clara
+			# e viseira só na testa (a linha do olho e o focinho do gato ficam de fora)
 			return [[-5.5, -4.0, [
-				"........y..",
-				"...oooooo..",
-				"..oaBBBBao.",
-				".oaaaBBaaao",
-				"oaaaaaaaaao",
-				"oAAoddddddo",
-				"oAwAoaaaao.",
-				"oAAAoaao...",
-				".oooodoo...",
+				"....ooooo..",
+				"..oodaBBaoo",
+				".oddaBBaddo",
+				"oddddBBdddo",
+				"odddddddddo",
+				"oAAoooooooo",
+				"oAwAoddo...",
+				"oAAAodd....",
+				".oooo......",
 			], _PAL_ROBO]]
 		Pecas.Tipo.ARMADURA_AZUL:
 			# peito azul-claro com luzes amarelas, ombros e laterais azul-escuro
@@ -206,17 +205,17 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 				".ooooooooo.",
 			], _PAL_ROBO]]
 		Pecas.Tipo.CANHAO_BRACO:
-			# canhão redondo no lugar da pata: cano azul com anéis e luz amarela que pulsa na ponta
+			# canhão de braço arredondado, mais grosso que comprido: boca clara e luz amarela que pulsa na ponta
 			var pal: Dictionary = _PAL_ROBO.duplicate()
 			if sin(anim * 8.0) > 0.0:
 				pal["Y"] = Color(1.0, 0.97, 0.55)
 			return [[-3.5, -3.0, [
-				"..oooooooo....",
-				".oBBaaaaddoo..",
-				"oBaaaaaaddkYy.",
-				"oaaaaaaaddkYy.",
-				".oaaaaaddoo...",
-				"..oooooooo....",
+				"..oooooo..",
+				".oBBaaddoo",
+				"oBaaaaddSY",
+				"oaaaaaddSY",
+				".oaaaaddoo",
+				"..oooooo..",
 			], pal]]
 		Pecas.Tipo.TANQUE:
 			# latinha de energia azul com tampa prateada e a letra E
@@ -264,21 +263,25 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 				".ooooooooo.",
 			], _PAL_TUBARAO]]
 		Pecas.Tipo.MORDIDA:
-			# dentadura de tubarão: gengiva vermelha e duas fileiras de dentes; abre e fecha devagar na boca do gato
+			# dentadura de tubarão discreta: gengiva apagada e uma fileira de dentes menores em cima e embaixo;
+			# abre e fecha devagar na boca do gato
 			var abre: bool = maxima or sin(anim * 5.0) > 0.2
+			var pal: Dictionary = _PAL_TUBARAO.duplicate()
+			pal["r"] = Color(0.6, 0.32, 0.36)
+			pal["k"] = Color(0.2, 0.25, 0.36)
+			pal["w"] = Color(0.92, 0.95, 0.98)
 			var sup: Array = [
-				".oooooo.",
-				"orrrrrro",
-				"owwwwwwo",
-				"okwkwkwo",
+				".ooooo.",
+				"orrrrro",
+				"owwkwwo",
 			]
 			var inf: Array = [
-				"owkwkwko",
-				"orrrrrro",
-				".oooooo.",
+				"owwkwwo",
+				"orrrrro",
+				".ooooo.",
 			]
-			var meio: Array = ["okkkkkko"] if abre else []
-			return [[-3.0, -3.5, sup + meio + inf, _PAL_TUBARAO]]
+			var meio: Array = ["okkkkko"] if abre else []
+			return [[-2.5, -3.0, sup + meio + inf, pal]]
 		Pecas.Tipo.BOIA:
 			return [[-5.5, -4.5, _boia_linhas(), _PAL_BOIA]]
 		Pecas.Tipo.ANTENAS:

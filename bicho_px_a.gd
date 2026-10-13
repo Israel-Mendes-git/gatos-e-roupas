@@ -111,6 +111,56 @@ const _CAB_ABERTA: Array = [
 	[".oqqwqqqqwqo.", "..ollllllllo.", "...ooooooo..."],
 	[".oqqwqqqqwqo.", "..ollllllllo.", "...ooooooo..."],
 ]
+
+# ---------------------------------------------------------------- cabeças dos chefes do 1º ato, pixel a pixel (largura = 13 + kc, altura = 7 + fechada + rh)
+# Rei dos Ratos: velho rabugento (sobrancelha pesada, pálpebra caída, rugas, orelhas enormes); 17 x 12
+const _CH_TOPO: Array = [
+	[
+		"..ooo.....ooo....",
+		".oppoo...oppoo...",
+		".opppo...opppo...",
+		".oppmoooooommmo..",
+		".ommmmmmmmmmmmoo.",
+		"ommmmmmkkkkkmmmoo",
+		"ommmmmmmkwkkmmmmn",
+		"ommmdmmdmmmmmmmmn",
+		".ommmmmmmmmmmmmoo",
+		".odmmmmmmmmmmmoo.",
+	],
+	[   # Guaxinim Glutão: bochechas cheias, máscara larga, migalhas; 19 x 14 (11 de topo)
+		"...oo.....oo.......",
+		"..ommo...ommo......",
+		"..ommmooommmo......",
+		".ommmmmmmmmmmmo....",
+		"ommmmmmmmmmmmmmoo..",
+		"ommmmmmmmmmmmmmmmo.",
+		"ommkkkkkkkkkkkkkkko",
+		"ollkkkkkkkwwkkkkllo",
+		"olllkkkkkkkwkkklllo",
+		"ollllkkkkkkkkklllln",
+		"olllllllllllllllllo",
+	],
+	[   # Raposa Ligeira: focinho fino, olhar esperto de pálpebra estreita, orelhas grandes, cicatriz; 16 x 11 (8 de topo)
+		"..k.....k.......",
+		".okk...okk......",
+		".ommo..ommo.....",
+		".ommmoommmmo....",
+		".ommmmmmmmkkkoo.",
+		".ommmmmmmwkmmRoo",
+		".ollllmmmmmmRmkk",
+		".ollllllmmmmmmkk",
+	],
+]
+const _CH_FECH: Array = [
+	["..oollllllllllloo", "....oooooooooo..."],
+	[".olllllllllllllllo.", "..ollllllllllllllo..", "...oooooooooooooo..."],
+	["..ollllllllllo..", "...ollllllllo...", "....ooooooooo..."],
+]
+const _CH_ABER: Array = [
+	["..oqqqwqqqqwqqqoo", "..ollllllllllllo.", "....oooooooooo..."],
+	[".oqqqwqqqqqqwqqqqo.", "..ollllllllllllllo..", "...oooooooooooooo..."],
+	["..oqqwqqqqwqqo..", "..ollllllllllo..", "...ooooooooooo.."],
+]
 # altura da cabeça em relação ao topo do tronco
 const _CAB_SOBE: Array = [3, 3, 5]
 
@@ -395,10 +445,22 @@ static func _corpo_lin(fam: int, k: int, rb: int, sal: bool) -> Array:
 	_cache[key] = r
 	return r
 
-static func _cab_lin(fam: int, kc: int, rh: int, boca: bool) -> Array:
-	var key: String = "h%d_%d_%d_%s" % [fam, kc, rh, str(boca)]
+static func _ajusta(l: String, w: int) -> String:
+	return l.substr(0, w) + ".".repeat(maxi(0, w - l.length()))
+
+static func _cab_lin(fam: int, kc: int, rh: int, boca: bool, chefe: bool = false) -> Array:
+	var key: String = "h%d_%d_%d_%s_%s" % [fam, kc, rh, str(boca), str(chefe)]
 	if _cache.has(key):
 		return _cache[key]
+	if chefe:
+		var w: int = 13 + kc
+		var rc: Array = []
+		for l in _CH_TOPO[fam]:
+			rc.append(_ajusta(l, w))
+		for l in (_CH_ABER[fam] if boca else _CH_FECH[fam]):
+			rc.append(_ajusta(l, w))
+		_cache[key] = rc
+		return rc
 	var r: Array = _CAB_TOPO[fam].duplicate()
 	r.append_array(_CAB_ABERTA[fam] if boca else _CAB_FECHADA[fam])
 	r = _larga(r, 4, kc)
@@ -442,6 +504,7 @@ static func _geo(fam: int, tipo: int, anim: float, andando: bool, golpe: float, 
 		rb = 1
 		rl = 1
 		kc = 3
+		rh = 1
 	var q: int = 0
 	var fr: int = 0
 	var salto: int = 0
@@ -466,11 +529,13 @@ static func _geo(fam: int, tipo: int, anim: float, andando: bool, golpe: float, 
 	var boca: bool = e > 0.35 or (chefe_tipo == 2 and parado)
 	var legs: Array = _pernas(fam, fr, rl)
 	var body: Array = _corpo_lin(fam, k, rb, false)
-	var head: Array = _cab_lin(fam, kc, rh, boca)
+	var head: Array = _cab_lin(fam, kc, rh, boca, chefe and chefe_tipo <= 2)
 	var n: int = legs.size()
 	var m: int = body.size()
 	var hw: int = String(head[0]).length()
 	var hh: int = _CAB_TOPO[fam].size() + _CAB_FECHADA[fam].size() + rh
+	if chefe and chefe_tipo <= 2:
+		hh = _CH_TOPO[fam].size() + _CH_FECH[fam].size()
 	var gx: int = -(k >> 1)
 	var oy: int = -salto
 	var yb: int = oy - n - m
@@ -479,6 +544,17 @@ static func _geo(fam: int, tipo: int, anim: float, andando: bool, golpe: float, 
 	if aire > 0:
 		hdx += 1
 		hdy = -1 if aire == 1 else 0
+	match BichoPx.pose_truque:
+		Unidade.Tipo.ESCUDEIRO:
+			hdx -= 2   # encolhido atrás do escudo: cabeça baixa e recuada
+			hdy += 3
+		Unidade.Tipo.BOMBA:
+			hdx += 2   # corre inclinado para a frente, curvado sob o peso da bomba
+			hdy += 2
+		Unidade.Tipo.ATIRADOR:
+			if e > 0.0:
+				hdx = 0   # na hora do tiro fica ereto, cabeça erguida, mirando
+				hdy = -1
 	if chefe_tipo == 2 and parado:
 		hdx = 1
 		hdy = 3 + (q % 2)
@@ -513,6 +589,8 @@ static func desloc(onde: int, fam: int, tipo: int, anim: float, andando: bool, g
 		RoupaGato.Onde.TRASEIRA:
 			p = Vector2(bx + 2, yb + 1) - Vector2(-8.0, -12.0)
 		RoupaGato.Onde.PATAS:
+			if int(g["aire"]) > 0:
+				return Vector2(0, 5000)   # no salto as patas são esticadas: botas de roupa saem de cena em vez de flutuar fora das patas
 			return Vector2(0, -int(g["salto"]))
 	return Vector2(roundf(p.x), roundf(p.y))
 
@@ -661,15 +739,22 @@ static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: b
 	# cabeça
 	_sp(c, hx, hy, g["head"], P, f)
 	if fam == 0:
-		var cmp: int = 3 if chefe else 2
-		_rr(c, hx + hw, hy + 5, cmp, 1, "s", P, f)    # bigodes
-		_rr(c, hx + hw + 1, hy + 4, 1, 1, "s", P, f)
-		_rr(c, hx + hw, hy + 7, cmp, 1, "s", P, f)
-		_rr(c, hx + hw + 1, hy + 8, 1, 1, "s", P, f)
+		if chefe:
+			# bigodes longos e caídos de velho
+			_rr(c, hx + hw, hy + 6, 6, 1, "s", P, f)
+			_rr(c, hx + hw + 5, hy + 7, 2, 1, "s", P, f)
+			_rr(c, hx + hw, hy + 8, 6, 1, "s", P, f)
+			_rr(c, hx + hw + 5, hy + 9, 2, 1, "s", P, f)
+			_rr(c, hx + hw + 1, hy + 5, 3, 1, "s", P, f)
+		else:
+			_rr(c, hx + hw, hy + 5, 2, 1, "s", P, f)    # bigodes
+			_rr(c, hx + hw + 1, hy + 4, 1, 1, "s", P, f)
+			_rr(c, hx + hw, hy + 7, 2, 1, "s", P, f)
+			_rr(c, hx + hw + 1, hy + 8, 1, 1, "s", P, f)
 	if e > 0.0:
 		# golpe: pata da frente sobe e avança sob o queixo
 		_sp(c, hx + 2 + roundi(4.0 * e), hy + hh - 1 + (0 if e > 0.4 else 2), _PATA, P, f)
-	if gig or chefe:
+	if gig:
 		_rr(c, hx + 5 + kc, hy + 3 + rh, 4, 1, "k", P, f)   # cara fechada: sobrancelha pesada
 	if chefe_tipo == 2 and parado:
 		_rr(c, hx + hw - 6, hy + hh - 1, 2, 3, "p", P, f)    # língua de fora
@@ -688,9 +773,10 @@ static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: b
 
 	# chefes: adereços
 	if chefe_tipo == 0:
-		_rr(c, hx + hw - 4, hy + hh - 2, 2, 3, "w", P, f)   # dentes de roedor para fora da boca
-		_rr(c, hx + hw - 4, hy + hh, 1, 1, "o", P, f)
-		_sp(c, hx + 1 + kc, hy - 4, _larga(_TAMPINHA, 5, 3), P, f)
+		_rr(c, hx + hw - 6, hy + hh - 2, 2, 3, "w", P, f)   # dentes de roedor para fora da boca
+		_rr(c, hx + hw - 6, hy + hh + 1, 2, 1, "o", P, f)
+		# coroa pequena e torta, de lado entre as orelhas
+		_sp(c, hx + 6, hy - 3, ["y...y.y..", "yy.yyyyy.", "yyyyyyyyo", "zyzrzyzoo"], P, f)
 		_rr(c, hx + 1, hy + hh - 1, 6, 2, "w", P, f)   # gola de pele
 		_rr(c, hx + 2, hy + hh - 1, 1, 1, "k", P, f)
 		_rr(c, hx + 5, hy + hh, 1, 1, "k", P, f)
@@ -701,6 +787,11 @@ static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: b
 	elif chefe_tipo == 1:
 		_sp(c, hx + hw - 11, hy + hh - 3, _larga(_OSSO, 6, 4), P, f)
 		_sp(c, hx + 1, hy + hh, _BABADOR, P, f)
+		# baba e migalhas no focinho
+		_rr(c, hx + hw - 5, hy + hh, 1, 3 + (int(anim * 2.0) % 2), "u", P, f)
+		_rr(c, hx + hw - 2, hy + hh + 2, 1, 1, "y", P, f)
+		_rr(c, hx + hw - 8, hy + hh + 1, 1, 1, "b", P, f)
+		_rr(c, hx + hw - 3, hy + hh - 4, 1, 1, "y", P, f)
 	elif chefe_tipo == 2:
 		if andando:
 			# rastro de velocidade atrás da raposa

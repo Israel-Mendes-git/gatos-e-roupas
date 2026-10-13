@@ -100,7 +100,7 @@ static func _base(tipo: int) -> int:
 
 ## Âncora absoluta (em pixels do bicho) do lugar `onde`, na pose atual do corpo base.
 static func _a(onde: int, fam: int, tipo: int, anim: float, andando: bool, golpe: float) -> Vector2:
-	return RoupaGato.ORIGEM[onde] + BichoPx.desloc(onde, fam, _base(tipo), anim, andando, golpe, -1, false)
+	return RoupaGato.ORIGEM[onde] + BichoPx.desloc(onde, fam, tipo, anim, andando, golpe, -1, false)
 
 ## Traço fino de 1 pixel entre dois pontos.
 static func _traco(k: BichoPxB._K, x0: float, y0: float, x1: float, y1: float, col: Color) -> void:
@@ -175,7 +175,7 @@ static func _escudeiro(k: BichoPxB._K, cab: Vector2, pe: Vector2, bo: Vector2, c
 	# escudo grande diante do peito, preso ao braço (a manopla aparece na borda de trás); no golpe avança
 	var avanco: int = roundi(3.0 * sn)
 	var sx: int = roundi(pe.x) + 1 + avanco
-	var sy: int = roundi(pe.y) - 2
+	var sy: int = mini(roundi(cab.y) + 3, -12)   # topo do escudo logo abaixo dos olhos: o bicho espia por cima
 	k.r(sx - 3 - avanco, sy + 5, 4 + avanco, 2, COURO_S)
 	k.r(sx - 2 - avanco, sy + 5, 3 + avanco, 1, COURO_L)
 	k.spr(sx, sy, ESCUDO, {"o": O, "L": AZUL_L, "B": AZUL, "D": AZUL_S, "Y": OURO})

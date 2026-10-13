@@ -67,7 +67,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"...m...",
 				"...m...",
 				"...m...",
-			], {"m": Color(0.62, 0.4, 0.18), "r": Color(0.85, 0.15, 0.15), "g": Color(0.6, 0.62, 0.66)}, f)
+			], {"m": Color(0.62, 0.4, 0.18), "r": Color(0.5, 0.3, 0.14), "g": Color(0.6, 0.62, 0.66)}, f)
 		Pecas.Tipo.ESCUDO:
 			# escudo levado na boca, à frente do focinho, sem tapar o rosto
 			RoupaGato.sprite(c, -1.0, -4.0, [

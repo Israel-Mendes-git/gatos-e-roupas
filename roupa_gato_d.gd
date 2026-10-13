@@ -271,8 +271,8 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"ossssssssso",
 				".ooooooooo.",
 			], {"o": Color(0.3, 0.33, 0.48), "w": Color(0.96, 0.96, 1.0), "W": Color(1, 1, 1),
-				"s": Color(0.78, 0.82, 0.92), "r": Color(0.95, 0.15, 0.2), "g": Color(0.15, 0.8, 0.3),
-				"b": Color(0.3, 0.5, 0.95), "L": Color(0.62, 0.95, 0.2)}, f)
+				"s": Color(0.78, 0.82, 0.92), "r": Color(0.6, 0.35, 0.85), "g": Color(0.95, 0.98, 0.9),
+				"b": Color(0.6, 0.35, 0.85), "L": Color(0.62, 0.95, 0.2)}, f)
 		Pecas.Tipo.LASER:
 			var ponta := Color(1.0, 0.25, 0.25) if sin(anim * 6.0) > 0.0 else Color(1.0, 0.6, 0.55)
 			RoupaGato.sprite(c, -1.0, -3.0, [
@@ -282,7 +282,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				".ooggo.....",
 				".ogo.......",
 				"..o........",
-			], {"o": Color(0.3, 0.33, 0.45), "w": Color(0.94, 0.96, 1.0), "g": Color(0.7, 0.74, 0.85),
+			], {"o": Color(0.3, 0.33, 0.45), "w": Color(0.94, 0.96, 1.0), "g": Color(0.55, 0.88, 0.3),
 				"r": ponta}, f)
 		Pecas.Tipo.JATO:
 			# mochila a jato na anca, com asinhas listradas e chama para trás
@@ -292,13 +292,13 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"....ogggggo",
 				"....ooooooo",
 			], {"o": Color(0.35, 0.38, 0.5), "w": Color(0.94, 0.96, 1.0), "W": Color(1, 1, 1),
-				"g": Color(0.7, 0.74, 0.85), "r": Color(0.9, 0.25, 0.25)}, f)
+				"g": Color(0.7, 0.74, 0.85), "r": Color(0.6, 0.35, 0.85)}, f)
 			RoupaGato.sprite(c, 0.0, -5.0, [
 				"rrrr....",
 				"wwwwr...",
 				"ggggwr..",
 				"ooooooo.",
-			], {"o": Color(0.35, 0.38, 0.5), "w": Color(0.96, 0.96, 1.0), "r": Color(0.9, 0.2, 0.25), "g": Color(0.2, 0.75, 0.3)}, f)
+			], {"o": Color(0.3, 0.2, 0.5), "w": Color(0.96, 0.96, 1.0), "r": Color(0.6, 0.35, 0.85), "g": Color(0.55, 0.88, 0.3)}, f)
 			var n: int = 3 if sin(anim * 14.0) > 0.0 else 2
 			RoupaGato.r(c, -4.0 - n, -1.0, n, 2.0, Color(1.0, 0.55, 0.15), f)
 			RoupaGato.r(c, -4.0 - n + 1.0, -0.5, n - 1.0, 1.0, Color(1.0, 0.92, 0.4), f)

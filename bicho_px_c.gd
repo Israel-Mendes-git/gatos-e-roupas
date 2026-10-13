@@ -182,14 +182,14 @@ const VL_CAB: Array = [
 const TX_CAB: Array = [
 	"....ooooooooooooo....",
 	"..ooKkkkkkkkkkkkkoo..",
-	".oKkkkwwwwwwkkkkkkkoo",
-	"oKkkkkvvwwwwwwwwkkkko",
-	"oKkkkkkkvvvvvvvvwwkko",
+	".oKkkwwwwwwwwwwkkkkoo",
+	"oKkkkwwwwwwwwwwwwkkko",
+	"oKkkkkwwwwwwwwwwwwwko",
 	"oKkkkkkkkkkkkkkkkkkko",
 	"oKkkkkkkkkkkkkkkkkkko",
-	"oKkkkkwwwwwwwwkkkkkko",
-	"oKkkkkkvvvvvvvkkkknno",
-	".okkkkkkkkkkkkkkkknno",
+	"oKkkwwwwwwwwwwwkkkkko",
+	"oKkkkwwwwwwwwwwkkknno",
+	".okkkkvvvvvvvvkkkknno",
 	".okkkkkkkkkkkkkkkkoo.",
 	"..ookkkkkkkkkkkkkoo..",
 	"....ooooooooooooo....",
@@ -348,12 +348,10 @@ static func _anc(ct: int, p: Dictionary, parado: bool) -> Array[Vector2]:
 				Vector2(6 + hx6 / 2, -12 - L6), Vector2(0, 0), Vector2(14 + hx6, -14 - L6)]
 		7:
 			var voa: bool = p["and"]
-			if not voa and p["sn"] <= 0.35:
-				return [Vector2(0, -37), Vector2(0, -15), Vector2(2, -25), Vector2(-8, -9), Vector2(0, -21), Vector2(0, 0), Vector2(0, -28)]
 			var L7: int = (5 + [0, 1, 0, -1][fr]) if voa else 0
 			var hx7: int = roundi(3.0 * sn)
-			a = [Vector2(3 + hx7, -34 - L7), Vector2(0, -15 - L7), Vector2(14 + hx7, -25 - L7), Vector2(-8, -9 - L7),
-				Vector2(1 + hx7 / 2, -21 - L7), Vector2(0, -L7), Vector2(7 + hx7, -27 - L7)]
+			a = [Vector2(0, -37 - L7), Vector2(0, -15 - L7), Vector2(2, -25 - L7), Vector2(-8, -9 - L7),
+				Vector2(0, -21 - L7), Vector2(0, -L7), Vector2(0, -28 - L7)]   # coruja sempre de frente
 		8:
 			var L8: int = [0, 1, 0, 1][fr] if p["and"] else 0
 			var hx8: int = 1 if parado else roundi(4.0 * sn)
@@ -601,10 +599,10 @@ static func _fedor(k: BichoPxB._K, anim: float, L: int) -> void:
 
 ## Asa cheia: lâmina que sai do ombro (sx, sy) a `ang` graus acima da horizontal, para trás, `comp` de comprimento e `ancho` de largura.
 ## Ombro largo, borda de ataque clara, miolo no tom-base, borda de fuga escura e recortada, penas primárias separadas por frestas na ponta.
-static func _asa(k: BichoPxB._K, sx: float, sy: float, ang: float, comp: float, ancho: float, base: Color, luz: Color, sombra: Color) -> void:
+static func _asa(k: BichoPxB._K, sx: float, sy: float, ang: float, comp: float, ancho: float, base: Color, luz: Color, sombra: Color, sentido: float = -1.0) -> void:
 	var r: float = deg_to_rad(ang)
-	var d := Vector2(-cos(r), -sin(r))
-	var n := Vector2(sin(r), -cos(r))
+	var d := Vector2(sentido * cos(r), -sin(r))   # sentido -1 = asa para trás/esquerda, +1 = para a direita
+	var n := Vector2(-sentido * sin(r), -cos(r))
 	var raio: int = int(ceil(comp + ancho)) + 2
 	var lado: int = raio * 2 + 1
 	var x0: int = int(floor(sx)) - raio
@@ -680,8 +678,13 @@ static func _asa(k: BichoPxB._K, sx: float, sy: float, ang: float, comp: float, 
 			i += n2
 
 ## Coruja de frente (parada): corpo simétrico, asas dobradas dos dois lados, cara redonda com os dois olhos virados para quem olha.
-static func _coruja_frente(k: BichoPxB._K) -> void:
+static func _coruja_frente(k: BichoPxB._K, L: int = 0, abre: bool = false, ang: float = 40.0) -> void:
 	var piscar: bool = int(Time.get_ticks_msec() / 220) % 14 == 0
+	k = k.em(0.0, float(-L))
+	if abre:
+		# asas abertas, uma de cada lado do corpo, atrás do tronco
+		_asa(k, -6.0, -22.0, ang, 21.0, 10.0, CR_A, CR_B, CR_ASA, -1.0)
+		_asa(k, 6.0, -22.0, ang, 21.0, 10.0, CR_A, CR_B, CR_ASA, 1.0)
 	# pés com garras
 	for x in [-5, 2]:
 		k.r(x - 1, -5, 5, 5, CR_O)
@@ -725,9 +728,9 @@ static func _coruja(k: BichoPxB._K, p: Dictionary) -> void:
 	var fr: int = p["fr"]
 	var sn: float = p["sn"]
 	var voa: bool = p["and"]
-	if not voa and sn <= 0.35:
-		_coruja_frente(k)
-		return
+	var ang0: float = [60.0, 30.0, -25.0, 28.0][fr] if voa else 40.0
+	_coruja_frente(k, (5 + [0, 1, 0, -1][fr]) if voa else 0, voa or sn > 0.35, ang0)
+	return
 	var abre: bool = voa or sn > 0.35
 	var L: int = (5 + [0, 1, 0, -1][fr]) if voa else 0
 	var hx: int = roundi(3.0 * sn)

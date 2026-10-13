@@ -40,7 +40,7 @@ const CAIXA: Array[Rect2] = [
 	Rect2(-4, -2, 7, 6),  # 33 Cantil
 	Rect2(-2, -6, 5, 5),  # 34 Gancho
 	Rect2(-2, -1, 5, 5),  # 35 Amuleto
-	Rect2(-5, -4, 14, 13),  # 36 Boné de encanador
+	Rect2(-5, -4, 12, 13),  # 36 Boné de encanador
 	Rect2(-6, -3, 12, 6),  # 37 Macacão
 	Rect2(-3, -9, 11, 9),  # 38 Desentupidor
 	Rect2(-3, -3, 6, 6),  # 39 Cogumelo

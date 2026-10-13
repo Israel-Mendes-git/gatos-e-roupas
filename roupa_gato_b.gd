@@ -64,7 +64,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"oCCCCCCCCCo",
 				"oRRRRRRRRRo",
 				"ocococococo",
-			], {"o": Color(0.38, 0.14, 0.08), "O": Color(0.9, 0.55, 0.25), "R": Color(0.72, 0.2, 0.15), "C": Color(0.98, 0.9, 0.7), "D": Color(0.25, 0.12, 0.08), "c": Color(0.98, 0.9, 0.7)}, f)
+			], {"o": Color(0.38, 0.14, 0.08), "O": Color(0.9, 0.55, 0.25), "R": Color(0.62, 0.34, 0.16), "C": Color(0.98, 0.9, 0.7), "D": Color(0.25, 0.12, 0.08), "c": Color(0.98, 0.9, 0.7)}, f)
 		Pecas.Tipo.CASACO:
 			# casaco azul com lapela clara, cinto preto e botão dourado (7 linhas, 11 de largura)
 			RoupaGato.sprite(c, -5.5, -3.0, [
@@ -193,10 +193,10 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"ooooooooDDo",
 			], {"o": Color(0.35, 0.04, 0.06), "r": Color(0.85, 0.12, 0.14), "D": Color(0.65, 0.08, 0.1), "W": Color(1, 1, 1)}, f)
 			RoupaGato.sprite(c, 0.5, 5.0, [
-				"kk....kk",
-				"kkkkkkkk",
-				"kKkkkkKk",
-				".kkkkkk.",
+				"kk..kk",
+				"kkkkkk",
+				"kKkkKk",
+				".kkkk.",
 			], {"k": Color(0.1, 0.05, 0.03), "K": Color(0.45, 0.28, 0.17)}, f)
 		Pecas.Tipo.MACACAO:
 			# macacão azul de alças sobre camisa vermelha, dois botões dourados (6 linhas, 11 de largura)

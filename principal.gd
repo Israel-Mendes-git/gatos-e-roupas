@@ -1511,7 +1511,10 @@ func _clicar(a: Dictionary) -> void:
 			sel = idx
 			tirar(idx, pc.slot())
 	elif a.has("boneco"):
-		_selecionar(int(a["idx"]))
+		if int(a["idx"]) == sel:
+			_desselecionar()   # clicar de novo no gato escolhido desfaz a seleção
+		else:
+			_selecionar(int(a["idx"]))
 
 func _qualidade(p: Peca) -> float:
 	return p.raridade * 10.0 + p.nivel + p.marcas.size() * 0.1
@@ -2388,6 +2391,10 @@ func _apertar(p: Vector2) -> void:
 	var ci: int = _coluna_em(p)
 	if ci >= 0:
 		arrasto = {"boneco": estado.bonecos[ci], "idx": ci, "p0": p, "so_selecao": true}
+		return
+	# fundo vazio do palco: desseleciona
+	if Rect2(208, 0, 772, 446).has_point(p):
+		_desselecionar()
 
 func _marcar_treino_explicado() -> void:
 	if treino_explicado:
@@ -2766,6 +2773,11 @@ func _atualizar_guarda(delta: float) -> void:
 	guarda_t += delta
 	btn_desf.disabled = desfazer.is_empty()
 	btn_melhor.disabled = estado.bonecos.is_empty()
+	var rot_melhor: String = "Vestir melhor"
+	if sel >= 0 and sel < estado.bonecos.size():
+		rot_melhor = "Vestir " + estado.bonecos[sel].nome   # diz em quem age
+	if btn_melhor.text != rot_melhor:
+		btn_melhor.text = rot_melhor
 	_avisos_t -= delta
 	if _avisos_t <= 0.0:
 		_avisos_t = 0.25

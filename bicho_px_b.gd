@@ -102,6 +102,31 @@ const CORVO_CAB_AB: Array = [
 	"..oaaaaooooo",
 	"...oaao.....",
 ]
+# Cabeça do Corvo Velho (16 x 10): maior, bico longo e curvo com gancho, olho leitoso, penas arrepiadas na nuca.
+const CORVO_CAB_V: Array = [
+	"o.o.o.oooo......",
+	".oaoaoabbbo.....",
+	"oaaabbbbbbbooooo",
+	"oaabbbbbeeoyyyyo",
+	"oaaabbbbepoyyyyy",
+	"oaaabbbbbbbozzyo",
+	"oaaaabbbbbbbooyo",
+	".oaaabbbbbbbboo.",
+	"..oaaabbbbbboo..",
+	"...ooaaaabboo...",
+]
+const CORVO_CAB_V_AB: Array = [
+	"o.o.o.oooo......",
+	".oaoaoabbbo.....",
+	"oaaabbbbbbbooooo",
+	"oaabbbbbeeoyyyyo",
+	"oaaabbbbepoyyyyy",
+	"oaaabbbbbbbommmo",
+	"oaaaabbbbbbbozzo",
+	".oaaabbbbbbbboyo",
+	"..oaaabbbbbboo..",
+	"...ooaaaabboo...",
+]
 # Asa aberta (batida do Saltador) e saco do ladrão.
 const CORVO_ASA: Array = [
 	"o......",
@@ -317,6 +342,17 @@ static func _pose(fam: int, tipo: int, anim: float, andando: bool, golpe: float,
 			elif big or chefe:
 				add = [0, 1, 1, 0]
 			air = add[fr]
+	match BichoPx.pose_truque:
+		Unidade.Tipo.ESCUDEIRO:
+			hx -= 1
+			hy += 2
+		Unidade.Tipo.BOMBA:
+			hx += 2
+			hy += 2
+		Unidade.Tipo.ATIRADOR:
+			if sn > 0.0:
+				hx = 0
+				hy = -1
 	return {"hx": hx, "hy": hy, "L": base + air, "air": air, "fr": fr, "bat": bat, "sn": sn, "and": andando}
 
 static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: bool, golpe: float, f: float, alfa: float, carregando: bool, filhote: bool, chefe_tipo: int, parte: bool, parado: bool) -> void:
@@ -389,7 +425,7 @@ static func _gc(tipo: int, chefe: int, p: Dictionary) -> Dictionary:
 	var big: bool = tipo == Unidade.Tipo.GIGANTE
 	var nc: int = 2 if big else (5 if velho else 0)
 	var nr: int = 2 if big else (4 if velho else 0)
-	var hc: int = 1 if big else (2 if velho else 0)
+	var hc: int = 1 if big else (4 if velho else 0)
 	var hr: int = 1 if big else (2 if velho else 0)
 	var L: int = p["L"]
 	var w: int = 15 + nc
@@ -486,7 +522,9 @@ static func _corvo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int
 		if ny1 > ny0:
 			k.r(w - 11, ny0, maxi(2, hx0 + 4 - (w - 11)), ny1 - ny0, CV_A if velho else CO_A)
 	var cab: Array = CORVO_CAB_AB if sn > 0.5 else CORVO_CAB
-	if hc > 0:
+	if velho:
+		cab = CORVO_CAB_V_AB if sn > 0.5 else CORVO_CAB_V
+	elif hc > 0:
 		cab = _est(cab, [3], [5] if hr > 0 else [])
 	k.spr(hx0, hy0, cab, pal)
 	var ex: int = hx0 + 5 + hc
@@ -494,12 +532,12 @@ static func _corvo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int
 	if big:
 		k.r(ex - 1, ey, 3, 1, CO_O)            # cara fechada: sobrancelha pesada
 	if velho:
-		# cicatriz sobre o olho leitoso e bico rachado
-		k.r(ex + 1, ey - 1, 1, 1, CICATRIZ)
-		k.r(ex + 1, ey, 1, 1, CICATRIZ)
-		k.r(ex, ey + 1, 1, 1, CICATRIZ)
-		k.r(ex - 1, ey + 2, 1, 1, CICATRIZ)
-		k.r(hx0 + 9 + hc, hy0 + 3, 1, 2 if sn <= 0.5 else 1, CV_O)
+		# cicatriz atravessando o olho leitoso e bico rachado
+		k.r(hx0 + 7, hy0 + 2, 1, 1, CICATRIZ)
+		k.r(hx0 + 8, hy0 + 3, 1, 1, CICATRIZ)
+		k.r(hx0 + 9, hy0 + 4, 1, 1, CICATRIZ)
+		k.r(hx0 + 7, hy0 + 5, 1, 1, CICATRIZ)
+		k.r(hx0 + 13, hy0 + 3, 1, 2, CV_O)
 		# cachecol velho e puído
 		var sy: int = hy0 + 6 + hr
 		k.r(hx0 + 1, sy, 6, 1, CACHE_S)
@@ -610,9 +648,18 @@ static func _sapo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int,
 		k.r(-2, my, 3, 2, RED)
 		k.r(-2, my + 2, 3, 1, RED_S)
 		k.r(-3, my + 2, 1, 3, RED)
+	# sapo-rei: olhos grandes e claros saltados, logo ABAIXO da coroa, e boca larga
+	if rei:
+		for ex in [0.0, 6.0]:
+			k.el(ex, float(y0) - 1.0, 3.0, 3.0, Color("#fffbd0"), SP_O)
+			k.r(ex + 1.0, float(y0) - 1.0, 2, 2, PUPILA)
+			k.r(ex - 2.0, float(y0) - 3.0, 2, 1, Color.WHITE)
+		k.r(-6, my - 1, 15, 1, SP_O)
+		k.r(-7, my - 2, 1, 1, SP_O)
+		k.r(9, my - 2, 1, 1, SP_O)
 	# coroa torta do rei, sobre os olhos
 	if rei:
-		k.spr(-3, y0 - 4, _est(COROA_BM, [1, 4, 7], []), {"Y": COROA, "y": COROA_S, "R": GEMA})
+		k.spr(-3, y0 - 8, _est(COROA_BM, [1, 4, 7], []), {"Y": COROA, "y": COROA_S, "R": GEMA})
 
 static func _sapo_pq(k: _K, p: Dictionary, claro: bool) -> void:
 	var L: int = p["L"]
