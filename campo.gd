@@ -799,7 +799,14 @@ func _consumir() -> void:
 				var alvos_p: Array = []
 				for pt in e["pontos"]:
 					alvos_p.append(Vector2(pt.x, pt.y - 24 * ESC))
+				if int(e.get("poder", 0)) == Pecas.Poder.TELEPORTE:
+					alvos_p = [Vector2(float(e.get("x0", e["x"])), float(e.get("y0", e["y"])) - 24 * ESC)]   # no teleporte, o risco vai da origem ao destino
 				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp})
+			"clone_fim":
+				# clone que some (fim do tempo ou derrotado): fumacinha, sem som e sem nocaute
+				var pcl: Vector2 = Vector2(e["x"], e["y"] - 22 * ESC)
+				for kc in 5:
+					particulas.append({"p": pcl + Vector2(randf_range(-10, 10), randf_range(-8, 8)), "v": Vector2(randf_range(-25, 25), randf_range(-45, -10)), "vida": 0.5, "max": 0.5, "cor": Color(0.85, 0.85, 0.85, 0.55), "r": randf_range(7, 11), "g": 0.0, "tipo": 1})
 			"explosao":
 				_som("poder_explosao", 1.1, -5.0, true)
 				var pe: Vector2 = Vector2(e["x"], e["y"] - 20 * ESC)
@@ -1120,6 +1127,19 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color) -> void:
 			dur = 0.75
 		Pecas.Poder.DRENO:
 			dur = 1.1
+		Pecas.Poder.INVOCA:
+			dur = 0.7
+			for a in alvos:
+				for kc in 6:
+					particulas.append({"p": a + Vector2(randf_range(-12, 12), randf_range(-10, 24)), "v": Vector2(randf_range(-40, 40), randf_range(-60, -15)), "vida": 0.6, "max": 0.6, "cor": Color(0.9, 0.9, 0.9, 0.6), "r": randf_range(8, 13), "g": 0.0, "tipo": 1})
+		Pecas.Poder.TELEPORTE:
+			dur = 0.5
+			tremor = maxf(tremor, 3.0)
+			_faisca(po, Color(0.4, 0.8, 1.0), 12, 220.0, 0.4, 3.0)
+		Pecas.Poder.PUXA:
+			dur = 0.8
+		Pecas.Poder.ENXAME:
+			dur = 0.4
 	var sem: Array = []
 	for i in 8:
 		sem.append(randf())
@@ -1292,8 +1312,45 @@ func _desenhar_fx(f: Dictionary) -> void:
 					draw_circle(b.lerp(p, w2), 5.0 * (0.6 + w2 * 0.4), Color(1.0, 0.45, 0.6, 0.9 * minf(1.0, a * 3.0)))
 				draw_circle(b, 16.0 * a + 3.0, Color(0.9, 0.2, 0.45, 0.4 * a))
 			draw_circle(p, 22.0 * sin(u * PI), Color(0.4, 1.0, 0.55, 0.35))
+		Pecas.Poder.INVOCA:
+			for b in qtd:
+				_anel(b + Vector2(0, 22.0), 10.0 + 26.0 * u, 4.0 + 10.0 * u, Color(c.r, c.g, c.b, 0.8 * a), 3.0)
+			_anel(p, 8.0 + 40.0 * u, 4.0 + 16.0 * u, Color(1, 1, 1, 0.6 * a), 2.0)
+		Pecas.Poder.TELEPORTE:
+			var ori: Vector2 = alvos[0] if not alvos.is_empty() else p
+			draw_line(ori, p, Color(0.3, 0.7, 1.0, 0.45 * a), 12.0)
+			draw_line(ori, p, Color(0.9, 1.0, 1.0, 0.9 * a), 3.0)
+			draw_circle(ori, 20.0 * a + 3.0, Color(0.5, 0.85, 1.0, 0.55 * a))
+			_anel(p, 8.0 + 60.0 * u, 4.0 + 24.0 * u, Color(0.6, 0.9, 1.0, 0.8 * a), 3.0)
+		Pecas.Poder.PUXA:
+			for k in qtd.size():
+				var b2: Vector2 = qtd[k]
+				var alvo_p: Vector2 = p + Vector2(46.0 + (k % 3) * 14.0, 0.0)
+				var cabeca: Vector2 = b2.lerp(alvo_p, minf(1.0, u * 2.0))
+				draw_line(b2, cabeca, Color(c.r, c.g, c.b, 0.35 * a), 7.0)
+				draw_line(b2, cabeca, Color(1, 1, 1, 0.85 * a), 2.0)
+				draw_circle(cabeca, 5.0, Color(1, 1, 1, 0.9 * a))
+			_anel(p, 140.0 * (1.0 - u) + 10.0, 50.0 * (1.0 - u) + 4.0, Color(c.r, c.g, c.b, 0.6 * a), 3.0)
+		Pecas.Poder.ENXAME:
+			_anel(p, 10.0 + 70.0 * u, 5.0 + 28.0 * u, Color(1.0, 0.85, 0.15, 0.7 * a), 3.0)
 		_:
 			_anel(p, 10.0 + 80.0 * u, 5.0 + 30.0 * u, Color(c.r, c.g, c.b, 0.7 * a), 3.0)
+
+## Enxame: pontinhos amarelos e pretos girando sobre a área de cada nuvem ativa (sim.zonas).
+func _desenhar_zonas() -> void:
+	for zz in sim.zonas:
+		var z: Dictionary = zz
+		var centro: Vector2 = Vector2(float(z["x"]), float(z["y"]) - 34.0 * ESC)
+		var raio: float = float(z["raio"])
+		var viva: float = clampf(float(z["t"]) / 0.4, 0.0, 1.0)
+		draw_circle(centro, raio * 0.8, Color(1.0, 0.85, 0.15, 0.10 * viva))
+		_anel(centro + Vector2(0, 30.0), raio, raio * 0.35, Color(1.0, 0.85, 0.15, 0.35 * viva), 2.0)
+		for k in 22:
+			var ang: float = rel * (2.5 + (k % 3)) + k * 2.399
+			var rr: float = raio * (0.25 + 0.75 * fposmod(k * 0.382, 1.0))
+			var pb: Vector2 = centro + Vector2(cos(ang) * rr, sin(ang * 1.3) * rr * 0.45 - 6.0 * sin(rel * 9.0 + k))
+			draw_circle(pb, 3.2, Color(0.1, 0.08, 0.1, 0.95 * viva))
+			draw_circle(pb, 2.2, Color(1.0, 0.85, 0.15, 0.95 * viva) if k % 2 == 0 else Color(0.15, 0.12, 0.12, 0.95 * viva))
 
 ## Estados visíveis de uma unidade (corpo baixo e comprido): queimando, gelo, atordoada,
 ## protegida, frenesi, fúria. `pos` são os pés; `esc_u` já inclui ESC.
@@ -1660,7 +1717,7 @@ func _draw() -> void:
 			sx_u -= br * 0.5
 		var esc_d: float = esc_u * sy_u
 		var dir_d: float = dir * sx_u / sy_u
-		Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, uu2.pecas, fl_u, uu2.anim, uu2.andando, uu2.golpe, 1.0, false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, estado.bonecos.find(uu2.boneco) if uu2.equipe == 0 else 0)
+		Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else 1.0), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else null) if uu2.equipe == 0 else 0))
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
 		if uu2.barreira_int > 0.0 and uu2.barreira_cd <= 0.0:
@@ -1722,6 +1779,7 @@ func _draw() -> void:
 	# poderes das fantasias
 	for f in fx:
 		_desenhar_fx(f)
+	_desenhar_zonas()
 	# partículas
 	for pa in particulas:
 		var p: Dictionary = pa

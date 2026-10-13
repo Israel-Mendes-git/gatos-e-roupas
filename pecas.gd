@@ -1,6 +1,6 @@
 class_name Pecas
 extends RefCounted
-## Dados estáticos das peças: 84 tipos, 4 espaços, 21 fantasias, 3 raridades.
+## Dados estáticos das peças: 100 tipos, 4 espaços, 25 fantasias, 3 raridades.
 ## As 36 primeiras têm efeito próprio; as demais copiam o efeito de uma delas (MOLDE) com outra força.
 
 enum Tipo {
@@ -22,6 +22,11 @@ enum Tipo {
 	ELMO_ALADO, CAPA_RUBRA, MARTELO, CINTURAO,
 	TIARA, VESTIDO, CETRO_GELO, FLOCO,
 	CAPACETE_BOLHA, TRAJE, LASER, JATO,
+	# fantasias do lado de fora (índices 84 a 99): poderes novos
+	BANDANA_FOLHA, MACACAO_LARANJA, KUNAI, PERGAMINHO,
+	CAPACETE_AZUL, ARMADURA_AZUL, CANHAO_BRACO, TANQUE,
+	CAPUZ_TUBARAO, ROUPA_TUBARAO, MORDIDA, BOIA,
+	ANTENAS, COLETE_LISTRADO, FERRAO, POTE_MEL,
 }
 const PROPRIAS := 36   # tipos com efeito próprio
 
@@ -59,6 +64,7 @@ const SLOT: Array[int] = [
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
 ]
 const NOME: Array[String] = [
 	"Porrete", "Estilingue", "Escudo", "Colete", "Capa", "Espinhos", "Capacete", "Chapéu de palha", "Máscara", "Lança", "Tocha", "Avental", "Barril", "Coroa", "Chifres",
@@ -78,6 +84,10 @@ const NOME: Array[String] = [
 	"Elmo alado", "Capa rubra", "Martelo", "Cinturão de força",
 	"Tiara de gelo", "Vestido de gelo", "Cetro de gelo", "Floco de neve",
 	"Capacete bolha", "Traje espacial", "Laser de pulso", "Mochila a jato",
+	"Bandana com placa", "Macacão laranja", "Kunai", "Pergaminho",
+	"Capacete azul", "Armadura azul", "Canhão de braço", "Tanque de energia",
+	"Capuz de tubarão", "Roupa de tubarão", "Mordida", "Boia",
+	"Antenas", "Colete listrado", "Ferrão", "Pote de mel",
 ]
 const DICA: Array[String] = [
 	"Pancada forte de perto",
@@ -122,10 +132,10 @@ static func dica(tipo: int) -> String:
 	return DICA[MOLDE[tipo]]
 
 const POR_SLOT: Array = [
-	[6, 7, 8, 13, 14, 19, 20, 21, 22, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80],    # cabeça
-	[3, 4, 5, 11, 12, 23, 24, 25, 26, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81],    # corpo
-	[0, 1, 2, 9, 10, 15, 16, 17, 18, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82],     # mão
-	[27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75, 79, 83], # acessório
+	[6, 7, 8, 13, 14, 19, 20, 21, 22, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96],    # cabeça
+	[3, 4, 5, 11, 12, 23, 24, 25, 26, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97],    # corpo
+	[0, 1, 2, 9, 10, 15, 16, 17, 18, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98],     # mão
+	[27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75, 79, 83, 87, 91, 95, 99], # acessório
 ]
 ## Tipo cujo efeito cada peça usa (as 36 primeiras usam o próprio).
 const MOLDE: Array[int] = [
@@ -135,6 +145,11 @@ const MOLDE: Array[int] = [
 	7, 26, 17, 35, 6, 5, 10, 31, 20, 24, 9, 29, 14, 3, 17, 33,
 	22, 25, 17, 27, 6, 3, 18, 35, 13, 23, 15, 31, 8, 26, 16, 28,
 	19, 3, 1, 27,
+	# lado de fora: Ninja (rápido e esquivo), Robô (blindado, tiro forte), Tubarão (pancada e vida), Abelha (ferrão que queima, enxame que fere)
+	20, 4, 17, 27,
+	6, 3, 18, 33,
+	14, 23, 0, 34,
+	22, 5, 10, 32,
 ]
 ## Força do efeito em relação ao molde.
 const MOLDE_PODER: Array[float] = [
@@ -145,16 +160,22 @@ const MOLDE_PODER: Array[float] = [
 	1.0, 1.0, 1.25, 1.0, 1.25, 1.2, 1.2, 1.0, 1.0, 1.2, 1.2, 1.2,
 	1.0, 1.25, 1.1, 1.0, 1.2, 1.0, 1.15, 1.3, 1.15, 1.2, 1.1, 1.0,
 	0.8, 1.2, 1.3, 1.2, 1.0, 1.0, 1.4, 1.0, 1.0, 1.15, 1.3, 1.2,
+	1.15, 1.15, 1.2, 1.1,
+	1.2, 1.15, 1.3, 1.1,
+	1.2, 1.2, 1.2, 1.15,
+	1.15, 1.15, 1.25, 1.15,
 ]
 
 # ---------- Fantasias (conjuntos) ----------
 enum Conjunto {
 	CAVALEIRO, GUARDIAO, REI, CIRCO, VIKING, JARDINEIRO, CAUBOI, PIRATA, MAGO,
 	ENCANADOR, MORCEGO, ARANHA, ESTELAR, SOMBRIO, BOSQUE, TARTARUGA, OURICO, FERRO, TROVAO, GELO, PATRULHEIRO,
+	NINJA_FOLHA, ROBO_AZUL, TUBARAO, ABELHA,
 }
 
 const CONJUNTO_NOME: Array[String] = ["Cavaleiro", "Guardião", "Rei", "Circo", "Viking", "Jardineiro", "Caubói", "Pirata", "Mago",
 	"Encanador", "Homem-Morcego", "Garoto-Aranha", "Cavaleiro Estelar", "Lorde Sombrio", "Herói do Bosque", "Tartaruga Ninja", "Ouriço Veloz", "Armadura de Ferro", "Deus do Trovão", "Princesa do Gelo", "Patrulheiro Espacial",
+	"Ninja da Folha", "Robô Azul", "Tubarão", "Abelha",
 ]
 ## Peças de cada fantasia, na ordem dos espaços: cabeça, corpo, mão, acessório.
 const CONJUNTO_PECAS: Array = [
@@ -179,6 +200,10 @@ const CONJUNTO_PECAS: Array = [
 	[Tipo.ELMO_ALADO, Tipo.CAPA_RUBRA, Tipo.MARTELO, Tipo.CINTURAO],
 	[Tipo.TIARA, Tipo.VESTIDO, Tipo.CETRO_GELO, Tipo.FLOCO],
 	[Tipo.CAPACETE_BOLHA, Tipo.TRAJE, Tipo.LASER, Tipo.JATO],
+	[Tipo.BANDANA_FOLHA, Tipo.MACACAO_LARANJA, Tipo.KUNAI, Tipo.PERGAMINHO],
+	[Tipo.CAPACETE_AZUL, Tipo.ARMADURA_AZUL, Tipo.CANHAO_BRACO, Tipo.TANQUE],
+	[Tipo.CAPUZ_TUBARAO, Tipo.ROUPA_TUBARAO, Tipo.MORDIDA, Tipo.BOIA],
+	[Tipo.ANTENAS, Tipo.COLETE_LISTRADO, Tipo.FERRAO, Tipo.POTE_MEL],
 ]
 ## Fantasia de cada tipo de peça.
 const CONJUNTO_DE: Array[int] = [
@@ -190,6 +215,7 @@ const CONJUNTO_DE: Array[int] = [
 	9, 9, 9, 9, 10, 10, 10, 10, 11, 11, 11, 11, 12, 12, 12, 12,
 	13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16,
 	17, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20,
+	21, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 24,
 ]
 const CONJUNTO_COR: Array[Color] = [
 	Color(0.72, 0.78, 0.86),  # cavaleiro
@@ -213,19 +239,24 @@ const CONJUNTO_COR: Array[Color] = [
 	Color(0.75, 0.2, 0.2),  # deus do trovão
 	Color(0.6, 0.9, 1.0),  # princesa do gelo
 	Color(0.6, 0.9, 0.4),  # patrulheiro espacial
+	Color(1.0, 0.55, 0.1),  # ninja da folha
+	Color(0.2, 0.5, 1.0),  # robô azul
+	Color(0.5, 0.65, 0.78),  # tubarão
+	Color(1.0, 0.85, 0.15),  # abelha
 ]
 ## Fantasia cujo bônus numérico cada fantasia usa (as 9 primeiras usam o próprio).
-const CONJUNTO_MOLDE: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 6, 6, 5, 8, 4, 0, 6, 0, 4, 1, 7]
+const CONJUNTO_MOLDE: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 6, 6, 5, 8, 4, 0, 6, 0, 4, 1, 7, 6, 4, 7, 8]
 
 # ---------- Poder especial da fantasia completa ----------
-enum Poder { RAIO, EXPLOSAO, ATORDOA, CURA, PROTEGE, FRENESI, ATRAVESSA, RAJADA, GELO, EMPURRA, GIRO, DRENO }
-const PODER_TIPO: Array[int] = [6, 4, 5, 2, 10, 3, 7, 1, 0, 10, 6, 2, 9, 11, 10, 3, 6, 1, 7, 8, 6]
+enum Poder { RAIO, EXPLOSAO, ATORDOA, CURA, PROTEGE, FRENESI, ATRAVESSA, RAJADA, GELO, EMPURRA, GIRO, DRENO, INVOCA, TELEPORTE, PUXA, ENXAME }
+const PODER_TIPO: Array[int] = [6, 4, 5, 2, 10, 3, 7, 1, 0, 10, 6, 2, 9, 11, 10, 3, 6, 1, 7, 8, 6, 12, 13, 14, 15]
 const PODER_NOME: Array[String] = [
 	"Carga de lança", "Muralha", "Ordem real", "Buzina", "Giro de fúria",
 	"Chuva de pétalas", "Saraivada", "Bala de canhão", "Relâmpago", "Pisão",
 	"Bumerangue", "Teia", "Empurrão", "Aperto sombrio", "Giro da espada",
 	"Pizza para todos", "Disparada", "Míssil", "Trovoada", "Nevasca",
 	"Raio laser",
+	"Clones", "Teletransporte", "Arrastão", "Enxame",
 ]
 const PODER_DICA: Array[String] = [
 	"atravessa a fileira inimiga à frente",
@@ -249,6 +280,10 @@ const PODER_DICA: Array[String] = [
 	"raios em vários inimigos",
 	"deixa todos os inimigos lentos",
 	"o laser atravessa a fileira inimiga",
+	"dois clones lutam ao seu lado por uns segundos",
+	"aparece junto do inimigo mais ao fundo, golpeia e fica protegido",
+	"puxa os inimigos de longe para perto e fere cada um",
+	"uma nuvem de abelhas fere os inimigos mais próximos por uns segundos",
 ]
 const CONJUNTO_MIN := 2   # peças para o bônus parcial; com as 4, bônus completo
 

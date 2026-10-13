@@ -17,8 +17,8 @@ static func lista() -> Array:
 		l.append({"id": "sem_nocaute_%d" % f, "nome": "%s sem um arranhão" % Fases.NOME[f], "texto": "Vença o lugar sem nenhum gato nocauteado", "premio": PREMIO_SEM_NOCAUTE, "grupo": "Lado de fora"})
 	l.append({"id": "heranca", "nome": "De pai para filhote", "texto": "Um gato incorpora o poder de uma fantasia", "premio": 5, "grupo": "Lado de fora"})
 	l.append({"id": "marcada", "nome": "Roupa de guerra", "texto": "Tenha uma peça com 4 marcas", "premio": 5, "grupo": "Guarda-roupa"})
-	l.append({"id": "colecao_42", "nome": "Meio armário", "texto": "Tenha tido 42 peças diferentes", "premio": 5, "grupo": "Guarda-roupa"})
-	l.append({"id": "colecao_84", "nome": "Armário cheio", "texto": "Tenha tido todas as 84 peças", "premio": 10, "grupo": "Guarda-roupa"})
+	l.append({"id": "colecao_42", "nome": "Meio armário", "texto": "Tenha tido 50 peças diferentes", "premio": 5, "grupo": "Guarda-roupa"})
+	l.append({"id": "colecao_84", "nome": "Armário cheio", "texto": "Tenha tido todas as 100 peças", "premio": 10, "grupo": "Guarda-roupa"})
 	l.append({"id": "invasao_10", "nome": "Casa sitiada", "texto": "Passe da onda 10 na Invasão sem fim", "premio": 5, "grupo": "Invasão"})
 	l.append({"id": "invasao_20", "nome": "Muralha de gatos", "texto": "Passe da onda 20 na Invasão sem fim", "premio": 10, "grupo": "Invasão"})
 	for c in Pecas.CONJUNTO_NOME.size():
@@ -42,7 +42,7 @@ static func cumprida(id: String, e: Estado) -> bool:
 				return true
 		return false
 	if id == "colecao_42":
-		return e.pecas_tidas() >= 42
+		return e.pecas_tidas() >= 50
 	if id == "colecao_84":
 		return e.pecas_tidas() >= Pecas.SLOT.size()
 	if id == "invasao_10":

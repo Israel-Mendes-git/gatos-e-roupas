@@ -76,6 +76,8 @@ static func icon_off(tipo: int) -> Vector2:
 		return DesenhoFA.off(tipo)
 	if tipo < 68:
 		return DesenhoFB.off(tipo)
+	if tipo >= 84:
+		return Vector2.ZERO   # kits do lado de fora só existem em pixel (RoupaGatoE)
 	return DesenhoFC.off(tipo)
 
 static func forma(c: CanvasItem, tipo: int, f: float, anim: float = 0.0) -> void:
@@ -85,6 +87,8 @@ static func forma(c: CanvasItem, tipo: int, f: float, anim: float = 0.0) -> void
 			DesenhoFA.forma(c, tipo, f, anim)
 		elif tipo < 68:
 			DesenhoFB.forma(c, tipo, f, anim)
+		elif tipo >= 84:
+			RoupaGatoE.desenhar(c, tipo, f, anim)
 		else:
 			DesenhoFC.forma(c, tipo, f, anim)
 		return
@@ -1215,7 +1219,7 @@ const ICONE_PIXEL := true
 static func icone(c: CanvasItem, tipo: int, centro: Vector2, tam: float, nivel: int = 0, f: float = 0.0, anim: float = 0.0, marcas: Array = [], raridade: int = 0) -> void:
 	if ICONE_PIXEL:
 		# o ícone é a própria roupa em pixel art que o gato veste (RoupaGato), ampliada para caber
-		var cx: Rect2 = IconeDados.CAIXA[tipo]
+		var cx: Rect2 = IconeDados.CAIXA[tipo] if tipo < IconeDados.CAIXA.size() else RoupaGatoE.caixa(tipo)
 		var px: float = tam * 0.92 / maxf(9.0, maxf(cx.size.x, cx.size.y))
 		if raridade > 0:
 			c.draw_set_transform(centro, 0.0, Vector2(tam / 30.0, tam / 30.0))

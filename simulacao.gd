@@ -7,6 +7,8 @@ var aliados: Array[Unidade] = []
 var inimigos: Array[Unidade] = []
 var fila: Array = []
 var nascidos: Array[Unidade] = []
+var nascidos_aliados: Array[Unidade] = []   # clones dos gatos: entram fora dos laços
+var zonas: Array = []   # nuvens do Enxame: {x, y, t, dur, raio, dps, dono, eq}
 var projeteis: Array = []
 var eventos: Array = []
 var bau: Array[Peca] = []
@@ -443,6 +445,7 @@ func passo(dt: float) -> void:
 	_frio(inimigos, dt)
 	_aura_dano(aliados, inimigos, dt)
 	_aura_dano(inimigos, aliados, dt)
+	_zonas(dt)
 	_apoio(aliados, dt)
 	_apoio(inimigos, dt)
 	for u in aliados:
@@ -456,6 +459,8 @@ func passo(dt: float) -> void:
 	_mover_projeteis(dt)
 	inimigos.append_array(nascidos)  # filhotes de gêmeo entram fora dos laços
 	nascidos.clear()
+	aliados.append_array(nascidos_aliados)
+	nascidos_aliados.clear()
 	for i in range(aliados.size() - 1, -1, -1):
 		if not aliados[i].vivo:
 			aliados.remove_at(i)
@@ -783,6 +788,12 @@ func _escolher(u: Unidade) -> Unidade:
 	return melhor
 
 func _agir(u: Unidade, dt: float) -> void:
+	if u.clone:
+		u.clone_t -= dt
+		if u.clone_t <= 0.0:
+			u.vivo = false
+			_ev({"t": "clone_fim", "x": u.x, "y": u.y, "eq": u.equipe, "tempo": true})
+			return
 	u.flash = maxf(0.0, u.flash - dt * 5.0)
 	u.golpe = maxf(0.0, u.golpe - dt)
 	u.cd -= dt * u.lento * (2.0 if u.frenesi_t > 0.0 else 1.0)
@@ -1036,6 +1047,11 @@ func _cercado(u: Unidade) -> bool:
 func _matar(u: Unidade, killer: Unidade, base: int = Pecas.Marca.CICATRIZ) -> void:
 	if not u.vivo:
 		return
+	if u.clone:
+		# clone: some sem marcar roupa, sem largar peça, sem contar como gato caído nem como abate
+		u.vivo = false
+		_ev({"t": "clone_fim", "x": u.x, "y": u.y, "eq": u.equipe, "tempo": false})
+		return
 	u.vivo = false
 	var causa: int = _causa_da_morte(u, base)
 	_ev({"t": "morte", "x": u.x, "y": u.y, "eq": u.equipe, "pecas": u.pecas, "boneco": u.boneco})
@@ -1168,6 +1184,7 @@ func _usar_poder(u: Unidade) -> bool:
 		return false
 	var base: float = Balanco.PODER_DANO * u.poder_forca * u.esc_dano
 	var pontos: Array = []   # onde o efeito acertou (para o desenho)
+	var extra: Dictionary = {}   # campos a mais do evento (teletransporte, enxame)
 	match u.poder:
 		Pecas.Poder.CURA:
 			var ferido: bool = false
@@ -1243,6 +1260,94 @@ func _usar_poder(u: Unidade) -> bool:
 				var dx2: float = (v.x - u.x) * sentido
 				if dx2 >= -20.0 and dx2 <= Balanco.PODER_ATRAVESSA_ALCANCE and absf(v.y - u.y) <= Balanco.PODER_ATRAVESSA_LARGURA:
 					_dano_poder(u, v, base * Balanco.PODER_ATRAVESSA_DANO)
+		Pecas.Poder.INVOCA:
+			if u.clone:
+				return false
+			var fr: float = Balanco.HERANCA_APOIO if em_heranca else 1.0
+			for k in Balanco.PODER_INVOCA_N:
+				var s: float = -1.0 if k % 2 == 0 else 1.0
+				var f := Unidade.new()
+				f.equipe = u.equipe
+				f.clone = true
+				f.dono = u
+				f.clone_t = Balanco.PODER_INVOCA_T
+				f.linha = u.linha
+				f.postura = Boneco.Postura.AVANCAR
+				f.familia = u.familia
+				f.pecas_visuais = u.pecas.duplicate()
+				f.esc_vida = u.esc_vida
+				f.esc_dano = u.esc_dano
+				calcular(f)
+				f.dano = u.dano * Balanco.PODER_INVOCA_DANO * fr
+				f.intervalo = u.intervalo
+				f.alcance = u.alcance
+				f.vel = u.vel
+				f.distancia = u.distancia
+				f.perfura = u.perfura
+				f.vida_max = u.vida_max * Balanco.PODER_INVOCA_VIDA * fr
+				f.vida = f.vida_max
+				f.x = u.x + s * Balanco.PODER_INVOCA_DIST
+				f.y = clampf(u.y + s * 18.0, Balanco.CHAO_Y0, Balanco.CHAO_Y1)
+				f.casa_x = f.x
+				f.casa_y = f.y
+				f.cd = 0.3
+				if u.equipe == 0:
+					nascidos_aliados.append(f)
+				else:
+					nascidos.append(f)
+				pontos.append(Vector2(f.x, f.y))
+		Pecas.Poder.TELEPORTE:
+			var fundo: Unidade = null
+			for v in outros:
+				if fundo == null or (v.x > fundo.x if u.equipe == 0 else v.x < fundo.x):
+					fundo = v
+			if fundo == null:
+				return false
+			var sent: float = 1.0 if u.equipe == 0 else -1.0
+			extra["x0"] = u.x
+			extra["y0"] = u.y
+			u.x = maxf(Balanco.TORRE_X + 20.0, fundo.x - sent * Balanco.PODER_TELEPORTE_DIST)
+			u.y = fundo.y
+			u.vx = -9999.0   # o desenho pula para o lugar novo, sem deslizar
+			u.alvo = fundo
+			u.protegido_t = maxf(u.protegido_t, Balanco.PODER_TELEPORTE_PROTEGE * (Balanco.HERANCA_APOIO if em_heranca else 1.0))
+			pontos.append(Vector2(fundo.x, fundo.y))
+			_dano_poder(u, fundo, base * Balanco.PODER_TELEPORTE_DANO)
+		Pecas.Poder.PUXA:
+			var presos: Array[Unidade] = []
+			for v in outros:
+				if _dentro(v, u.x, u.y, Balanco.PODER_PUXA_RAIO):
+					presos.append(v)
+			if presos.is_empty():
+				return false
+			var sp: float = 1.0 if u.equipe == 0 else -1.0
+			for i in presos.size():
+				var v: Unidade = presos[i]
+				pontos.append(Vector2(v.x, v.y))
+				if not v.chefe and v.tipo != Unidade.Tipo.GIGANTE and not v.fugindo:
+					v.x = clampf(u.x + sp * (Balanco.PODER_PUXA_DIST + (i % 3) * 14.0), Balanco.TORRE_X + 20.0, Balanco.VISIVEL_X)
+					v.y = clampf(u.y + ((i % 5) - 2) * 20.0, Balanco.CHAO_Y0, Balanco.CHAO_Y1)
+					v.vx = -9999.0
+					v.alvo = null
+				_dano_poder(u, v, base * Balanco.PODER_PUXA_DANO)
+		Pecas.Poder.ENXAME:
+			var centro_e: Unidade = _mais_perto(u, outros, 1e9)
+			if centro_e == null:
+				return false
+			var sx_e: float = 0.0
+			var sy_e: float = 0.0
+			var n_e: int = 0
+			for v in outros:
+				if _dentro(v, centro_e.x, centro_e.y, Balanco.PODER_ENXAME_RAIO * 1.2):
+					sx_e += v.x
+					sy_e += v.y
+					n_e += 1
+			var z: Dictionary = {"x": sx_e / n_e, "y": sy_e / n_e, "t": Balanco.PODER_ENXAME_T, "dur": Balanco.PODER_ENXAME_T,
+				"raio": Balanco.PODER_ENXAME_RAIO, "dps": base * Balanco.PODER_ENXAME_DPS, "dono": u, "eq": u.equipe}
+			zonas.append(z)
+			pontos.append(Vector2(z["x"], z["y"]))
+			extra["raio"] = z["raio"]
+			extra["dur"] = z["dur"]
 		Pecas.Poder.ATORDOA, Pecas.Poder.EMPURRA, Pecas.Poder.GIRO:
 			var raio: float = Balanco.PODER_GIRO_RAIO
 			if u.poder == Pecas.Poder.ATORDOA:
@@ -1270,8 +1375,44 @@ func _usar_poder(u: Unidade) -> bool:
 						_dano_poder(u, v, base * Balanco.PODER_EMPURRA_DANO)
 					Pecas.Poder.GIRO:
 						_dano_poder(u, v, base * Balanco.PODER_GIRO_DANO)
-	_ev({"t": "poder", "x": u.x, "y": u.y, "eq": u.equipe, "poder": u.poder, "conj": u.poder_conj, "pontos": pontos, "heranca": em_heranca})
+	var evp: Dictionary = {"t": "poder", "x": u.x, "y": u.y, "eq": u.equipe, "poder": u.poder, "conj": u.poder_conj, "pontos": pontos, "heranca": em_heranca}
+	evp.merge(extra)
+	_ev(evp)
 	return true
+
+## Enxame: cada nuvem acompanha o grupo e fere, aos poucos, quem está dentro dela.
+func _zonas(dt: float) -> void:
+	for i in range(zonas.size() - 1, -1, -1):
+		var z: Dictionary = zonas[i]
+		z["t"] = float(z["t"]) - dt
+		if float(z["t"]) <= 0.0:
+			zonas.remove_at(i)
+			continue
+		var dono: Unidade = z["dono"]
+		var alvos: Array[Unidade] = inimigos if int(z["eq"]) == 0 else aliados
+		var raio: float = float(z["raio"])
+		var sx: float = 0.0
+		var sy: float = 0.0
+		var n: int = 0
+		for v in alvos:
+			if v.vivo and v.x <= Balanco.VISIVEL_X and _dentro(v, float(z["x"]), float(z["y"]), raio * 1.6):
+				sx += v.x
+				sy += v.y
+				n += 1
+		if n > 0:
+			var para := Vector2(sx / n - float(z["x"]), sy / n - float(z["y"]))
+			var d: float = para.length()
+			if d > 0.01:
+				var m: float = minf(d, Balanco.PODER_ENXAME_SEGUE * dt)
+				z["x"] = float(z["x"]) + para.x / d * m
+				z["y"] = float(z["y"]) + para.y / d * m
+		for v in alvos:
+			if not v.vivo or not _dentro(v, float(z["x"]), float(z["y"]), raio):
+				continue
+			v.vida -= float(z["dps"]) * dt * v.vulneravel * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0)
+			v.flash = maxf(v.flash, 0.4)
+			if v.vida <= 0.0:
+				_matar(v, dono if dono != null and dono.vivo else null, Pecas.Marca.CICATRIZ)
 
 ## Dano direto de um poder (ignora armadura e esquiva). Devolve o dano causado.
 func _dano_poder(u: Unidade, v: Unidade, dano: float) -> float:

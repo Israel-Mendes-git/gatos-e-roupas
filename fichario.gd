@@ -109,9 +109,7 @@ func _init() -> void:
 	focus_mode = Control.FOCUS_NONE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	visible = false
-	for sala in Fases.CONJUNTOS:
-		for c in sala:
-			_ordem.append(int(c))
+	_ordem = ordem_das_fantasias()
 	_sil = Control.new()
 	_sil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_sil.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -211,14 +209,44 @@ func aba_atual() -> int:
 		return 6
 	if pagina == 0:
 		return 0
-	return comodo_da_fantasia(fantasia_da_pagina(pagina)) + 1
+	return maxi(comodo_da_fantasia(fantasia_da_pagina(pagina)) + 1, 0)   # fantasia de fora: fica na aba do Índice
 
 # ------------------------------------------------------------------ dados (estáticos, testáveis)
 static func comodo_da_fantasia(c: int) -> int:
 	for i in Fases.TOTAL:
 		if (Fases.CONJUNTOS[i] as Array).has(c):
 			return i
-	return 0
+	return -1   # só cai fora da casa (ver lugar_de_fora)
+
+## Fantasias que só caem nos lugares de fora da casa (as da casa também caem lá, redistribuídas, mas não contam aqui).
+static func fantasias_so_de_fora() -> Array[int]:
+	var l: Array[int] = []
+	for i in range(Fases.TOTAL, Fases.CONJUNTOS.size()):
+		for c in Fases.CONJUNTOS[i]:
+			if comodo_da_fantasia(int(c)) < 0 and not l.has(int(c)):
+				l.append(int(c))
+	return l
+
+## Primeiro lugar de fora (índice de Fases.NOME, 5 a 9) onde a fantasia cai; -1 se não cai fora.
+static func lugar_de_fora(c: int) -> int:
+	for i in range(Fases.TOTAL, Fases.CONJUNTOS.size()):
+		if (Fases.CONJUNTOS[i] as Array).has(c):
+			return i
+	return -1
+
+## Ordem das páginas: as fantasias de cada cômodo, depois as que só caem fora da casa.
+static func ordem_das_fantasias() -> Array[int]:
+	var o: Array[int] = []
+	for i in Fases.TOTAL:
+		for c in Fases.CONJUNTOS[i]:
+			if not o.has(int(c)):
+				o.append(int(c))
+	o.append_array(fantasias_so_de_fora())
+	return o
+
+## Retângulo da miniatura da k-ésima fantasia da seção "Lado de fora" (página direita do índice, abaixo dos cômodos).
+static func rect_tile_fora(k: int) -> Rect2:
+	return Rect2(COL_D_X + k * (TILE_W + TILE_GAP), 124.0 + 2 * 150.0 + 24.0, TILE_W, TILE_H)
 
 static func rect_aba(i: int) -> Rect2:
 	return Rect2(ABA_X, ABA_Y0 + i * (ABA_H + ABA_GAP), ABA_W, ABA_H)
@@ -274,6 +302,11 @@ static func posse(e: Estado, tipo: int) -> Dictionary:
 
 static func texto_onde(c: int) -> String:
 	var i: int = comodo_da_fantasia(c)
+	if i < 0:
+		var lf: int = lugar_de_fora(c)
+		if lf < 0:
+			return "Não cai em nenhum lugar"
+		return "Cai fora da casa, em %s: %s e %s" % [Fases.NOME[lf], Fases.FAMILIA_NOME[lf].to_lower(), Fases.CHEFE_NOME[lf]]
 	return "Cai %s: %s e %s" % [_em(i), Fases.FAMILIA_NOME[i].to_lower(), Fases.CHEFE_NOME[i]]
 
 static func comodo_bloqueado(e: Estado, i: int) -> bool:
@@ -380,6 +413,13 @@ func _montar() -> void:
 				var cab: int = Pecas.CONJUNTO_PECAS[c][0]
 				if not estado.ja_teve(cab):
 					_jobs.append({"k": "icone", "tipo": cab, "centro": r.position + Vector2(TILE_W * 0.5, 38.0), "tam": 52.0})
+		var fo: Array[int] = fantasias_so_de_fora()
+		for k in mini(fo.size(), 5):
+			var rf: Rect2 = rect_tile_fora(k)
+			itens.append({"id": "f%d" % fo[k], "r": rf, "on": true})
+			var cabf: int = Pecas.CONJUNTO_PECAS[fo[k]][0]
+			if not estado.ja_teve(cabf):
+				_jobs.append({"k": "icone", "tipo": cabf, "centro": rf.position + Vector2(TILE_W * 0.5, 38.0), "tam": 52.0})
 	else:
 		var c2: int = fantasia_da_pagina(pagina)
 		var faltam: Array = []
@@ -867,7 +907,21 @@ func _pagina_indice(e: Estado) -> void:
 			_txt("bloqueado", Vector2(ax + 11.0 + wl + 28.0, ay - 2.0), 12, TINTA2)
 		for k in sala.size():
 			_tile(e, sala[k], rect_tile(i, k))
-	# painel de progresso (página direita, embaixo)
+	# seção "Lado de fora": fantasias que só caem fora da casa (página direita, abaixo dos cômodos)
+	var fo2: Array[int] = fantasias_so_de_fora()
+	if not fo2.is_empty():
+		var rf0: Rect2 = rect_tile_fora(0)
+		var cf: int = 0
+		for c3 in fo2:
+			if e.pecas_da_fantasia(c3) >= Pecas.SLOTS:
+				cf += 1
+		draw_rect(Rect2(rf0.position.x, rf0.position.y - 24.0, 5.0, 16.0), COR_ABA[6].darkened(0.1))
+		_txt("Lado de fora  ·  %d/%d completas" % [cf, fo2.size()], Vector2(rf0.position.x + 11.0, rf0.position.y - 10.0), 16, TINTA)
+		for k in mini(fo2.size(), 5):
+			_tile(e, fo2[k], rect_tile_fora(k))
+	# painel de progresso (página direita, embaixo; some quando há a seção de fora)
+	if not fo2.is_empty():
+		return   # sem espaço para o painel; os totais já estão na faixa de cima da página
 	var pr := Rect2(COL_D_X, 426.0, COL_W, 204.0)
 	draw_rect(pr, PAPEL_ESC)
 	draw_rect(pr, PAPEL_BORDA, false, 2.0)
@@ -960,14 +1014,14 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	var ob := Rect2(COL_E_X, 500.0, COL_W, 130.0)
 	draw_rect(ob, PAPEL_ESC)
 	draw_rect(ob, PAPEL_BORDA, false, 2.0)
-	draw_rect(Rect2(ob.position.x, ob.position.y, 8.0, ob.size.y), COR_ABA[sala + 1].darkened(0.05))
+	draw_rect(Rect2(ob.position.x, ob.position.y, 8.0, ob.size.y), COR_ABA[sala + 1 if sala >= 0 else 6].darkened(0.05))
 	_txt("Onde encontrar", Vector2(ob.position.x + 18.0, ob.position.y + 19.0), 13, TINTA2)
 	var yy: float = _bloco(texto_onde(c), Vector2(ob.position.x + 18.0, ob.position.y + 42.0), ob.size.x - 30.0, [18, 16, 15, 14], 2, TINTA, 3.0)
-	if comodo_bloqueado(e, sala):
+	if sala >= 0 and comodo_bloqueado(e, sala):
 		_cadeado(Vector2(ob.position.x + 26.0, yy + 8.0), Color(0.62, 0.22, 0.2))
 		yy = _bloco(texto_bloqueio(sala), Vector2(ob.position.x + 40.0, yy + 12.0), ob.size.x - 52.0, [13, 12], 2, COR_FALTA, 2.0)
 	var outras: Array[String] = []
-	for o in Fases.CONJUNTOS[sala]:
+	for o in Fases.CONJUNTOS[sala if sala >= 0 else lugar_de_fora(c)]:
 		if o != c:
 			outras.append(Pecas.CONJUNTO_NOME[o])
 	_bloco("Também cai aqui: " + ", ".join(outras), Vector2(ob.position.x + 18.0, ob.end.y - 36.0), ob.size.x - 30.0, [12, 11], 2, TINTA2, 2.0)

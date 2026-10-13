@@ -376,6 +376,25 @@ const PODER_GIRO_RAIO := 95.0
 const PODER_GIRO_DANO := 1.8
 const PODER_DRENO_ALCANCE := 300.0
 const PODER_DRENO_DANO := 1.6
+# Clones (Ninja da Folha): N aliados temporários com fração da vida e do dano do dono. Dano total por uso ~ N x DANO x dano do golpe x T.
+const PODER_INVOCA_N := 2
+const PODER_INVOCA_T := 6.0         # segundos até sumirem
+const PODER_INVOCA_VIDA := 0.35     # fração da vida máxima do dono
+const PODER_INVOCA_DANO := 0.5      # fração do dano por golpe do dono
+const PODER_INVOCA_DIST := 28.0     # distância do dono ao nascer
+# Teletransporte (Robô Azul): vai até o inimigo mais ao fundo, golpe forte (perto do Raio, 2,5) e fica protegido um instante
+const PODER_TELEPORTE_DANO := 2.2
+const PODER_TELEPORTE_DIST := 34.0  # fica a esta distância do alvo, do lado do gato
+const PODER_TELEPORTE_PROTEGE := 2.0
+# Arrastão (Tubarão): puxa todos num raio grande; chefe e Grandalhão não se movem
+const PODER_PUXA_RAIO := 320.0
+const PODER_PUXA_DIST := 46.0       # fica a esta distância do gato (os puxados se espalham em leque)
+const PODER_PUXA_DANO := 0.9
+# Enxame (Abelha): nuvem sobre o grupo inimigo mais próximo; dano contínuo por inimigo = DPS x dano de referência x T
+const PODER_ENXAME_T := 5.0
+const PODER_ENXAME_RAIO := 90.0
+const PODER_ENXAME_DPS := 0.45      # x PODER_DANO por segundo, em cada inimigo dentro da nuvem (31 em 5 s)
+const PODER_ENXAME_SEGUE := 45.0    # a nuvem acompanha o grupo, nesta velocidade (px/s)
 
 # ---------- Geometria do campo ----------
 const TORRE_X := 175.0

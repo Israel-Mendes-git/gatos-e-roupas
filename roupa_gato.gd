@@ -17,7 +17,7 @@ const ORIGEM: Array[Vector2] = [
 ]
 # qual linha de GatoDados.ANCORAS dá o movimento de cada lugar ao longo da animação
 const _SEGUE: Array[int] = [0, 1, 0, 3, 0, 2, 0]
-const _FAIXA := 21   # tipos por arquivo: A 0..20, B 21..41, C 42..62, D 63..83
+const _FAIXA := 21   # tipos por arquivo: A 0..20, B 21..41, C 42..62, D 63..83, E 84..99
 
 ## Origem do lugar `onde` no quadro `quadro` do atlas (acompanha a animação).
 static func origem(onde: int, quadro: int) -> Vector2:
@@ -54,8 +54,10 @@ static func onde(tipo: int) -> int:
 			o = RoupaGatoB.onde(tipo)
 		2:
 			o = RoupaGatoC.onde(tipo)
-		_:
+		3:
 			o = RoupaGatoD.onde(tipo)
+		_:
+			o = RoupaGatoE.onde(tipo)
 	if o >= 0:
 		return o
 	# sem escolha do arquivo da peça: a de mão vai na boca; o acessório, na traseira
@@ -70,8 +72,10 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 			RoupaGatoB.desenhar(c, tipo, f, anim)
 		2:
 			RoupaGatoC.desenhar(c, tipo, f, anim)
-		_:
+		3:
 			RoupaGatoD.desenhar(c, tipo, f, anim)
+		_:
+			RoupaGatoE.desenhar(c, tipo, f, anim)
 
 ## Um retângulo de pixels.
 static func r(c: CanvasItem, x: float, y: float, w: float, h: float, cor: Color, f: float = 0.0) -> void:

@@ -86,11 +86,11 @@ const CONJUNTOS: Array = [
 	[Pecas.Conjunto.CIRCO, Pecas.Conjunto.PIRATA, Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.OURICO],
 	[Pecas.Conjunto.REI, Pecas.Conjunto.MAGO, Pecas.Conjunto.ESTELAR, Pecas.Conjunto.GELO],
 	[Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.FERRO, Pecas.Conjunto.TROVAO, Pecas.Conjunto.PATRULHEIRO],
-	# fora da casa caem as mesmas fantasias, redistribuídas
-	[Pecas.Conjunto.CAVALEIRO, Pecas.Conjunto.JARDINEIRO, Pecas.Conjunto.BOSQUE, Pecas.Conjunto.OURICO],
-	[Pecas.Conjunto.ENCANADOR, Pecas.Conjunto.FERRO, Pecas.Conjunto.CIRCO, Pecas.Conjunto.TARTARUGA],
-	[Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.MAGO, Pecas.Conjunto.TROVAO],
-	[Pecas.Conjunto.CAUBOI, Pecas.Conjunto.PIRATA, Pecas.Conjunto.PATRULHEIRO, Pecas.Conjunto.ESTELAR, Pecas.Conjunto.GUARDIAO],
+	# fora da casa caem as mesmas fantasias, redistribuídas, mais 4 kits novos só daqui: Abelha no Quintal, Robô Azul na Garagem, Ninja da Folha no Telhado, Tubarão na Rua
+	[Pecas.Conjunto.CAVALEIRO, Pecas.Conjunto.JARDINEIRO, Pecas.Conjunto.BOSQUE, Pecas.Conjunto.OURICO, Pecas.Conjunto.ABELHA],
+	[Pecas.Conjunto.ENCANADOR, Pecas.Conjunto.FERRO, Pecas.Conjunto.CIRCO, Pecas.Conjunto.TARTARUGA, Pecas.Conjunto.ROBO_AZUL],
+	[Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.MAGO, Pecas.Conjunto.TROVAO, Pecas.Conjunto.NINJA_FOLHA],
+	[Pecas.Conjunto.CAUBOI, Pecas.Conjunto.PIRATA, Pecas.Conjunto.PATRULHEIRO, Pecas.Conjunto.ESTELAR, Pecas.Conjunto.GUARDIAO, Pecas.Conjunto.TUBARAO],
 	[Pecas.Conjunto.REI, Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.VIKING, Pecas.Conjunto.GELO],
 ]
 

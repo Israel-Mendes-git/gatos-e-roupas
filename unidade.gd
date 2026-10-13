@@ -26,6 +26,11 @@ var familia: int = 0           # Fases.Familia (só inimigos)
 var chefe_tipo: int = -1       # Fases.Chefe; -1 se não é chefe
 var parte: bool = false        # pedaço do Rei de Massinha
 var pecas: Array = [null, null, null, null]
+# clone invocado (Pecas.Poder.INVOCA): unidade temporária, sem roupa para drops e marcas, fora do time
+var clone: bool = false
+var clone_t: float = 0.0
+var dono: Unidade = null
+var pecas_visuais: Array = [null, null, null, null]   # só para desenhar o clone com a roupa do dono
 var esc_vida: float = 1.0
 var esc_dano: float = 1.0
 var x: float = 0.0
