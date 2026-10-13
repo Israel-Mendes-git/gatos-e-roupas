@@ -1464,6 +1464,31 @@ func _selecionar(i: int) -> void:
 		Som.tocar("pegar", 1.25, 0.04, -3.0)
 	estado.bonecos[i].pop = maxf(estado.bonecos[i].pop, 0.55)
 
+## Teclas 1 a 5: seleciona o gato; apertar a tecla do que já está selecionado desfaz a seleção.
+func _selecionar_ou_soltar(i: int) -> void:
+	if i < 0 or i >= estado.bonecos.size():
+		return
+	if sel == i:
+		_desselecionar()
+	else:
+		_selecionar(i)
+
+func _desselecionar() -> void:
+	if sel < 0:
+		return
+	sel = -1
+	Som.tocar("pegar", 0.9, 0.04, -6.0)
+
+## Coluna do gato no palco (nome, corpo, chão): o clique em qualquer ponto dela seleciona. -1 se fora.
+func _coluna_em(p: Vector2) -> int:
+	if p.y < 0.0 or p.y > 446.0:
+		return -1
+	for i in estado.bonecos.size():
+		var cx: float = pos_boneco(i).x
+		if p.x >= cx - 76.5 and p.x < cx + 76.5:
+			return i
+	return -1
+
 ## Gato que recebe a peça num clique: o selecionado.
 func _alvo_vestir() -> int:
 	if sel >= 0 and sel < estado.bonecos.size():
@@ -1788,10 +1813,13 @@ func _tecla_guarda(k: InputEventKey) -> bool:
 	if not arrasto.is_empty():
 		return false
 	if kc >= KEY_1 and kc <= KEY_5:
-		_selecionar(kc - KEY_1)
+		_selecionar_ou_soltar(kc - KEY_1)
 		return true
 	if kc >= KEY_KP_1 and kc <= KEY_KP_5:
-		_selecionar(kc - KEY_KP_1)
+		_selecionar_ou_soltar(kc - KEY_KP_1)
+		return true
+	if kc == KEY_0 or kc == KEY_KP_0:
+		_desselecionar()
 		return true
 	if aba == ABA_FANTASIAS and (kc == KEY_UP or kc == KEY_DOWN):
 		rolagem = clampi(rolagem + (-1 if kc == KEY_UP else 1), 0, _rolagem_max())
@@ -2355,6 +2383,11 @@ func _apertar(p: Vector2) -> void:
 	var bi: int = _boneco_em(p)
 	if bi >= 0:
 		arrasto = {"boneco": estado.bonecos[bi], "idx": bi, "p0": p}
+		return
+	# nome ou chão da coluna: só seleciona (arrastar dali não tira a roupa)
+	var ci: int = _coluna_em(p)
+	if ci >= 0:
+		arrasto = {"boneco": estado.bonecos[ci], "idx": ci, "p0": p, "so_selecao": true}
 
 func _marcar_treino_explicado() -> void:
 	if treino_explicado:
@@ -2393,7 +2426,7 @@ func _soltar(p: Vector2) -> void:
 				vestir(bi, pc)
 			elif PAINEL.has_point(p) and origem != null:
 				tirar(estado.bonecos.find(origem), pc.slot())
-	elif a.has("boneco"):
+	elif a.has("boneco") and not a.has("so_selecao"):
 		var b: Boneco = a["boneco"]
 		if PAINEL.has_point(p):
 			var idx: int = estado.bonecos.find(b)
@@ -2792,9 +2825,22 @@ func _id_hover() -> String:
 	if ss.x >= 0 and estado.bonecos[ss.x].pecas[ss.y] != null:
 		return "s%d_%d" % [ss.x, ss.y]
 	var bi: int = _boneco_em(mouse)
+	if bi < 0:
+		bi = _coluna_em(mouse)
 	if bi >= 0:
 		return "g%d" % bi
 	return ""
+
+## Gato cujo clique selecionaria agora (sob o mouse); -1 se o mouse não está num ponto que seleciona.
+func _gato_sob_mouse() -> int:
+	if not arrasto.is_empty() or mouse.x < 0.0:
+		return -1
+	var id: String = _id_hover()
+	if id.begins_with("g"):
+		return int(id.substr(1))
+	if id.begins_with("s"):
+		return int(id.substr(1).split("_")[0])
+	return -1
 
 func _em_voo(p: Peca) -> bool:
 	for v in voos:
@@ -2824,18 +2870,48 @@ func _realce_fantasia(r: Rect2, p: Peca) -> void:
 	draw_rect(tg, Color(0.05, 0.03, 0.05, 0.92))
 	Desenho.texto(self, "%d/%d" % [ef.y, Pecas.SLOTS], Vector2(tg.position.x, tg.end.y - 1), 13, Desenho.DOURADO if completa else cc.lightened(0.5), tg.size.x)
 
-func _anel_sel(base: Vector2) -> void:
-	var pu: float = 0.5 + 0.5 * sin(t * 4.0)
-	_ellipse_sombra(base + Vector2(0, 3), 66.0, 14.0, Color(1.0, 0.85, 0.3, 0.14 + 0.06 * pu))
+## Foco do gato no palco: SEL_FORTE (selecionado), SEL_PRE (mouse em cima) e SEL_ALVO (ninguém selecionado: quem receberia a ação).
+const SEL_NENHUM := 0
+const SEL_FORTE := 1
+const SEL_PRE := 2
+const SEL_ALVO := 3
+
+## Foco que o gato `i` tem agora. `sob` é o gato sob o mouse (-1 se nenhum).
+func _foco_gato(i: int, sob: int) -> int:
+	if i == sel:
+		return SEL_FORTE
+	if i == sob:
+		return SEL_PRE
+	if sel < 0 and i == _alvo_vestir():
+		return SEL_ALVO
+	return SEL_NENHUM
+
+## Luz e pedestal do gato em foco: feixe de luz na coluna dele e anel no tapete (mais fraco no pré-destaque e no alvo).
+func _anel_sel(base: Vector2, foco: int = SEL_FORTE) -> void:
+	var forca: float = 1.0 if foco == SEL_FORTE else (0.5 if foco == SEL_PRE else 0.4)
+	var pu: float = 0.5 + 0.5 * sin(t * 3.0)
+	var luz: Color = Color(1.0, 0.93, 0.62)
+	var a_base: float = (0.46 + 0.08 * pu) * forca
+	var a_topo: float = 0.12 * forca
+	draw_polygon(PackedVector2Array([Vector2(base.x - 74, base.y + 2), Vector2(base.x + 74, base.y + 2), Vector2(base.x + 60, 66), Vector2(base.x - 60, 66)]),
+			PackedColorArray([_com_alfa(luz, a_base), _com_alfa(luz, a_base), _com_alfa(luz, a_topo), _com_alfa(luz, a_topo)]))
+	if foco == SEL_FORTE:
+		_ellipse_sombra(base + Vector2(0, 3), 72.0, 16.0, Color(1.0, 0.85, 0.3, 0.3 + 0.1 * pu))
+		_ellipse_sombra(base + Vector2(0, 3), 54.0, 12.0, Color(1.0, 0.95, 0.6, 0.3 + 0.1 * pu))
 	var pts := PackedVector2Array()
 	for k in 33:
 		var a: float = TAU * k / 32.0
-		pts.append(base + Vector2(cos(a) * 68.0, 3.0 + sin(a) * 15.0))
-	draw_polyline(pts, Color(1.0, 0.88, 0.35, 0.6 + 0.4 * pu), 3.0)
+		pts.append(base + Vector2(cos(a) * 74.0, 3.0 + sin(a) * 16.0))
+	var cor_anel: Color = Color(1.0, 0.9, 0.4, 0.95) if foco == SEL_FORTE else Color(1.0, 0.9, 0.5, 0.55 if foco == SEL_PRE else 0.5)
+	draw_polyline(pts, cor_anel, 4.0 if foco == SEL_FORTE else 2.0)
 
 func _titulo_ou_filtro() -> void:
 	if filtro_cj < 0:
-		Desenho.texto(self, "Guarda-roupa", PAINEL.position + Vector2(22, 34), 22, COR_TINTA, -1.0, 3)
+		var titulo: String = "Guarda-roupa"
+		var alvo_t: int = _alvo_vestir()
+		if aba == ABA_FANTASIAS and alvo_t >= 0:
+			titulo = "Fantasias de " + estado.bonecos[alvo_t].nome   # diz para quem o clique vai vestir
+		Desenho.texto(self, titulo, PAINEL.position + Vector2(22, 34), _tam_cabe(titulo, [22, 19, 17, 15], 158.0), COR_TINTA, -1.0, 3)
 		return
 	var cor: Color = Pecas.CONJUNTO_COR[filtro_cj]
 	var sob: bool = FILTRO_R.has_point(mouse)
@@ -3112,13 +3188,15 @@ func _bonecos() -> void:
 	var destaque_peca: Peca = null
 	if arrasto.has("peca"):
 		destaque_peca = arrasto["peca"]
+	var sob_gato: int = _gato_sob_mouse()
 	for i in Balanco.MAX_BONECOS:
 		var base: Vector2 = pos_boneco(i)
 		var existe: bool = i < estado.bonecos.size()
-		# sombra sob o gato, em cima do tapete
+		var foco: int = _foco_gato(i, sob_gato) if existe else SEL_NENHUM
+		# luz e anel no tapete (sob o gato), depois a sombra dele
+		if foco != SEL_NENHUM:
+			_anel_sel(base, foco)
 		_ellipse_sombra(base + Vector2(0, 3), 52.0, 11.0, Color(0, 0, 0, 0.4 if existe else 0.16))
-		if existe and i == sel:
-			_anel_sel(base)
 		if not existe:
 			var vazio: Array = [null, null, null, null]
 			Desenho.boneco(self, base, ESC_G, 1.0, 0, vazio, 0.0, 0.0, false, 0.0, 0.12)
@@ -3133,7 +3211,15 @@ func _bonecos() -> void:
 			_brilho_treino(base)
 		var nasc_e: float = 0.4 + 0.6 * ease(b.nasc, 0.4)
 		var esc: float = ESC_G * (1.0 + 0.1 * sin(b.pop * PI)) * nasc_e
+		if foco == SEL_FORTE:
+			esc *= 1.0 + 0.012 * sin(t * 3.0)   # respira de leve
 		var bob: float = sin(t * 2.0 + i) * 2.0
+		if foco == SEL_FORTE:
+			bob -= sin(b.pop * PI) * 10.0       # pulinho ao ser selecionado
+		# quando há um escolhido, os outros ficam um pouco mais apagados (o mouse em cima acende de novo)
+		var alfa_gato: float = 1.0
+		if sel >= 0 and foco != SEL_FORTE:
+			alfa_gato = 0.9 if foco == SEL_PRE else 0.7
 		var sobre: bool = false
 		var slot_dest: int = -1
 		if destaque_peca != null:
@@ -3170,7 +3256,7 @@ func _bonecos() -> void:
 			if pulos.has(kp) and float(pulos[kp]) < 0.4:
 				pulo = maxf(pulo, sin(PI * float(pulos[kp]) / 0.4) * 14.0)
 		var pose: Vector2 = base + Vector2(0, bob - pulo)
-		Desenho.boneco(self, pose, esc, 1.0, 0, mostradas, 0.0, t * 3.0, false, 0.0, 1.0, true, slot_dest, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
+		Desenho.boneco(self, pose, esc, 1.0, 0, mostradas, 0.0, t * 3.0, false, 0.0, alfa_gato, true, slot_dest, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
 		if tem:
 			_estrelas_treino(base, b.pontos)
 		# barra de saúde: a ferida fica de uma onda para a outra
@@ -3182,7 +3268,7 @@ func _bonecos() -> void:
 		if nocauteados.has(b):
 			draw_rect(barra.grow(2.0), Color(0.8, 0.15, 0.15, 0.4))
 			Desenho.texto(self, "NOCAUTE", barra.position + Vector2(0, 9), 13, Color(1, 0.9, 0.85), barra.size.x, 3)
-		_cabecalho_boneco(b, base, i)
+		_cabecalho_boneco(b, base, i, foco)
 		_treino_boneco(b, i, base)
 		_botao_promover_tudo(b, i)
 		if destaque_peca != null:
@@ -3220,19 +3306,29 @@ func _estrelas_treino(base: Vector2, pontos: int) -> void:
 	Desenho.texto(self, "+%d" % pontos, bp + Vector2(-20, 6), 18, COR_TINTA_ESC, 40.0)
 
 ## Nome grande, nível e barra de experiência no alto do vão do boneco.
-func _cabecalho_boneco(b: Boneco, base: Vector2, i: int) -> void:
+func _cabecalho_boneco(b: Boneco, base: Vector2, i: int, foco: int = SEL_NENHUM) -> void:
 	var maximo: bool = b.nivel >= Balanco.BONECO_NIVEL_MAX
-	var escolhido: bool = i == sel
+	var escolhido: bool = foco == SEL_FORTE
+	var pl := Rect2(base.x - 76, 14, 152, 48)
 	if escolhido:
-		var pl := Rect2(base.x - 76, 14, 152, 48)
-		draw_rect(pl, Color(1.0, 0.85, 0.3, 0.16))
-		draw_rect(pl, Color(1.0, 0.88, 0.4, 0.8), false, 2.0)
+		# plaquinha clara: o nome do gato escolhido é o ponto mais claro da tela
+		draw_rect(pl.grow(2.0), Color(0.25, 0.14, 0.04, 0.9))
+		draw_rect(pl, Color(1.0, 0.92, 0.6))
+		draw_rect(Rect2(pl.position.x, pl.position.y, pl.size.x, 3.0), Color(1.0, 0.98, 0.82))
+		draw_rect(Rect2(pl.position.x, pl.end.y - 3.0, pl.size.x, 3.0), Color(0.82, 0.6, 0.2))
+	elif foco == SEL_PRE:
+		draw_rect(pl, Color(1.0, 0.88, 0.45, 0.14))
+		draw_rect(pl, Color(1.0, 0.88, 0.4, 0.55), false, 2.0)
+	elif foco == SEL_ALVO:
+		draw_rect(pl, Color(1.0, 0.88, 0.45, 0.07))
+		draw_rect(pl, Color(1.0, 0.88, 0.4, 0.3), false, 1.0)
+	var tinta: Color = COR_TINTA_ESC if escolhido else COR_TINTA
 	Desenho.texto(self, "[%d]" % (i + 1), Vector2(base.x - 74, base.y + 22), 13, Color(1, 1, 1, 0.55))
-	Desenho.texto(self, b.nome, Vector2(base.x - 73, 36), 22, Desenho.DOURADO if escolhido else COR_TINTA, 146.0, 5)
+	Desenho.texto(self, b.nome, Vector2(base.x - 73, 36), 22, tinta, 146.0, 0 if escolhido else 5)
 	if maximo:
-		Desenho.texto(self, "Nível máximo", Vector2(base.x - 73, 56), 13, Desenho.DOURADO, 146.0, 3)
+		Desenho.texto(self, "Nível máximo", Vector2(base.x - 73, 56), 13, Color(0.5, 0.3, 0.0) if escolhido else Desenho.DOURADO, 146.0, 0 if escolhido else 3)
 		return
-	Desenho.texto(self, "Nv %d" % b.nivel, Vector2(base.x - 70, 57), 16, Color(1, 0.9, 0.5), -1.0, 4)
+	Desenho.texto(self, "Nv %d" % b.nivel, Vector2(base.x - 70, 57), 16, COR_TINTA_ESC if escolhido else Color(1, 0.9, 0.5), -1.0, 0 if escolhido else 4)
 	_barra(Rect2(base.x - 24, 49, 92, 8), float(b.xp) / float(maxi(1, b.xp_para_subir())), Color(0.4, 0.7, 1.0))
 
 ## Treino: botões grandes com ganho escrito quando há ponto; fichinhas com os valores quando não há.

@@ -1051,7 +1051,9 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 			continue
 		var rot: float = -sin(golpe / 0.22 * PI) * 0.5 if (onde == RoupaGato.Onde.BOCA and golpe > 0.0) else 0.0
 		var o: Vector2 = RoupaGato.ORIGEM[onde] + BichoPx.desloc(onde, fam, tipo, anim, andando, golpe, ct, parado)
-		_tr(c, pos, esc, dir, o * GATO_K, rot, GATO_K)
+		# peça de mão (presa na boca) em bicho: menor, para não invadir o bicho vizinho; continua presa à boca
+		var k_mao: float = GATO_K * (0.7 if onde == RoupaGato.Onde.BOCA else 1.0)
+		_tr(c, pos, esc, dir, o * GATO_K, rot, k_mao)
 		RoupaGato.desenhar(c, p.tipo, f, anim)
 	if not chefe:
 		_tr(c, pos, esc, dir)

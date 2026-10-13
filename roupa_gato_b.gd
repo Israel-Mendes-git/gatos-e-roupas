@@ -183,20 +183,21 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				".ooo.",
 			], {"y": Color(1.0, 0.85, 0.3), "o": Color(0.4, 0.25, 0.05), "P": Color(0.7, 0.35, 1.0), "w": Color(1, 1, 1)}, f)
 		Pecas.Tipo.BONE_ENCANADOR:
-			# boné vermelho com disco branco na frente e BIGODE preto grosso sobre o focinho
+			# boné vermelho com disco branco na frente e um bigode de pontas viradas para cima logo abaixo do nariz
+			# (a linha do olho fica livre)
 			RoupaGato.sprite(c, -4.5, -4.0, [
 				"..ooooo....",
 				".orrrrro...",
 				"orrrWWWrro.",
 				"orrrWWWrro.",
 				"ooooooooDDo",
-				"...........",
-				"...........",
-				".....k...k.",
-				".....kkkkkk",
-				"....kKkkkkk",
-				".....kkkkk.",
-			], {"o": Color(0.35, 0.04, 0.06), "r": Color(0.85, 0.12, 0.14), "D": Color(0.65, 0.08, 0.1), "W": Color(1, 1, 1), "k": Color(0.03, 0.02, 0.03), "K": Color(0.5, 0.4, 0.35)}, f)
+			], {"o": Color(0.35, 0.04, 0.06), "r": Color(0.85, 0.12, 0.14), "D": Color(0.65, 0.08, 0.1), "W": Color(1, 1, 1)}, f)
+			RoupaGato.sprite(c, 0.5, 5.0, [
+				"kk....kk",
+				"kkkkkkkk",
+				"kKkkkkKk",
+				".kkkkkk.",
+			], {"k": Color(0.1, 0.05, 0.03), "K": Color(0.45, 0.28, 0.17)}, f)
 		Pecas.Tipo.MACACAO:
 			# macacão azul de alças sobre camisa vermelha, dois botões dourados (6 linhas, 11 de largura)
 			RoupaGato.sprite(c, -5.5, -3.0, [

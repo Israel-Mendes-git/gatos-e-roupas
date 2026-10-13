@@ -136,7 +136,8 @@ const CORVO_FIL: Array = [
 const SAPO_CORPO: Array = [
 	".....ooooooooo..",
 	".....oeeeoeeeo..",
-	".....oepeoepeo..",
+	".....oeppoeppo..",
+	".....oeppoeppo..",
 	"..oooobbbbbbboo.",
 	".oobbbbbbbbbaaao",
 	"obbbbaaaaaaaaaao",
@@ -359,23 +360,25 @@ static func desloc(onde: int, fam: int, tipo: int, anim: float, andando: bool, g
 			RoupaGato.Onde.ROSTO: return Vector2(hx0 + 5.0 + hc - 8.0, hy0 + 2.0 + 13.0)
 		return Vector2.ZERO
 	if chefe_tipo == 4:
+		var sr: float = float(_gs(tipo, chefe_tipo, {"L": 0})["nr"] - 3)   # quanto o rei cresceu além do corpo-base
 		match onde:
-			RoupaGato.Onde.CABECA: return Vector2(-4.5, 3.0 - L)
-			RoupaGato.Onde.CORPO: return Vector2(-1.5, 1.5 - L)
-			RoupaGato.Onde.BOCA: return Vector2(-4.0, 6.0 - L)
-			RoupaGato.Onde.TRASEIRA: return Vector2(0.0, 3.0 - L)
-			RoupaGato.Onde.PESCOCO: return Vector2(-2.0, 5.0 - L)
+			RoupaGato.Onde.CABECA: return Vector2(-4.5, 3.0 - L - sr)
+			RoupaGato.Onde.CORPO: return Vector2(-1.5, 1.5 - L - sr * 0.5)
+			RoupaGato.Onde.BOCA: return Vector2(-4.0, 6.0 - L - sr)
+			RoupaGato.Onde.TRASEIRA: return Vector2(0.0, 3.0 - L - sr * 0.5)
+			RoupaGato.Onde.PESCOCO: return Vector2(-2.0, 5.0 - L - sr)
 			RoupaGato.Onde.PATAS: return Vector2(0.0, 0.0)
-			RoupaGato.Onde.ROSTO: return Vector2(-4.0, 3.0 - L)
+			RoupaGato.Onde.ROSTO: return Vector2(-4.0, 3.0 - L - sr)
 		return Vector2.ZERO
+	var sd: float = float(_gs(tipo, chefe_tipo, {"L": 0})["nr"] + 1)   # quanto o corpo cresceu para cima
 	match onde:
-		RoupaGato.Onde.CABECA: return Vector2(-4.5, (5.0 if big else 6.0) - L)
-		RoupaGato.Onde.CORPO: return Vector2(-0.5, 3.0 - L)
-		RoupaGato.Onde.BOCA: return Vector2(-4.0, 6.0 - L)
-		RoupaGato.Onde.TRASEIRA: return Vector2(1.0, 4.0 - L)
-		RoupaGato.Onde.PESCOCO: return Vector2(-2.0, 5.0 - L)
+		RoupaGato.Onde.CABECA: return Vector2(-4.5, 6.0 - L - sd)
+		RoupaGato.Onde.CORPO: return Vector2(-0.5, 3.0 - L - sd * 0.5)
+		RoupaGato.Onde.BOCA: return Vector2(-4.0, 6.0 - L - sd)
+		RoupaGato.Onde.TRASEIRA: return Vector2(1.0, 4.0 - L - sd * 0.5)
+		RoupaGato.Onde.PESCOCO: return Vector2(-2.0, 5.0 - L - sd)
 		RoupaGato.Onde.PATAS: return Vector2(0.0, -air * 0.5 if air >= 2.0 else 0.0)
-		RoupaGato.Onde.ROSTO: return Vector2(-4.0, 4.0 - L)
+		RoupaGato.Onde.ROSTO: return Vector2(-4.0, 4.0 - L - sd)
 	return Vector2.ZERO
 
 # ------------------------------------------------ CORVOS ------------------------------------------------
@@ -384,10 +387,10 @@ static func desloc(onde: int, fam: int, tipo: int, anim: float, andando: bool, g
 static func _gc(tipo: int, chefe: int, p: Dictionary) -> Dictionary:
 	var velho: bool = chefe >= 0
 	var big: bool = tipo == Unidade.Tipo.GIGANTE
-	var nc: int = 2 if big else (1 if velho else 0)
-	var nr: int = 2 if (big or velho) else 0
-	var hc: int = 1 if (big or velho) else 0
-	var hr: int = 1 if (big or velho) else 0
+	var nc: int = 2 if big else (5 if velho else 0)
+	var nr: int = 2 if big else (4 if velho else 0)
+	var hc: int = 1 if big else (2 if velho else 0)
+	var hr: int = 1 if big else (2 if velho else 0)
 	var L: int = p["L"]
 	var w: int = 15 + nc
 	var h: int = 9 + nr
@@ -530,11 +533,11 @@ static func _gs(tipo: int, chefe: int, p: Dictionary) -> Dictionary:
 	var rei: bool = chefe >= 0
 	var big: bool = tipo == Unidade.Tipo.GIGANTE
 	var sal: bool = tipo == Unidade.Tipo.SALTADOR
-	var nc: int = 4 if rei else (2 if big else 0)
-	var nr: int = 3 if rei else (1 if big else 0)
+	var nc: int = 8 if rei else (6 if big else 3)
+	var nr: int = 5 if rei else (4 if big else 3)
 	var cort: int = 1 if sal else 0
 	var L: int = p["L"]
-	return {"nc": nc, "nr": nr, "cort": cort, "x0": -8 - nc, "y0": -12 - nr + cort - L, "boca": 7 + nr}
+	return {"nc": nc, "nr": nr, "cort": cort, "x0": -8 - nc, "y0": -13 - nr + cort - L, "boca": 8 + nr}
 
 static func _sapo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int, anim: float) -> void:
 	var rei: bool = chefe >= 0
@@ -554,8 +557,8 @@ static func _sapo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int,
 		cols.append(2 + (i % 3))
 	var rows: Array = []
 	for i in nr:
-		rows.append(5)
-	var corpo: Array = _est(SAPO_CORPO, cols, rows, [9] if sal else [])
+		rows.append(6)
+	var corpo: Array = _est(SAPO_CORPO, cols, rows, [10] if sal else [])
 	var fundo: int = y0 + corpo.size()     # linha logo abaixo do corpo
 	# perna traseira: no ar ou de pernas longas, estica para baixo e para trás, em diagonal curta
 	if ext:
@@ -601,15 +604,15 @@ static func _sapo(k: _K, p: Dictionary, tipo: int, carregando: bool, chefe: int,
 		k.r(2, int(py2) - 1, 3, 1, SP_V)
 	# expressão: sobrancelha pesada (cara fechada) no Grandalhão e no rei; ladrão com lenço
 	if big or rei:
-		k.r(-2, y0 + 1, 3, 1, SP_O)
-		k.r(2, y0 + 1, 3, 1, SP_O)
+		k.r(0, y0 + 1, 1, 1, SP_O)   # só os cantos de dentro: sobrancelha em V sem tapar os olhos
+		k.r(2, y0 + 1, 1, 1, SP_O)
 	if tipo == Unidade.Tipo.LADRAO:
 		k.r(-2, my, 3, 2, RED)
 		k.r(-2, my + 2, 3, 1, RED_S)
 		k.r(-3, my + 2, 1, 3, RED)
 	# coroa torta do rei, sobre os olhos
 	if rei:
-		k.spr(-2, y0 - 4, COROA_BM, {"Y": COROA, "y": COROA_S, "R": GEMA})
+		k.spr(-3, y0 - 4, _est(COROA_BM, [1, 4, 7], []), {"Y": COROA, "y": COROA_S, "R": GEMA})
 
 static func _sapo_pq(k: _K, p: Dictionary, claro: bool) -> void:
 	var L: int = p["L"]

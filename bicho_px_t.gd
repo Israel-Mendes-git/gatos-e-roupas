@@ -142,17 +142,18 @@ static func _atirador(k: BichoPxB._K, cab: Vector2, tr: Vector2, pe: Vector2, bo
 	k.spr(roundi(cab.x) - 5, roundi(cab.y) - 2, CAP_ARQ, {"o": O, "V": VERDE, "v": VERDE_L})
 	k.r(roundi(cab.x) - 7, roundi(cab.y) - 4, 1, 3, PENA)
 	# braço com manga de couro até a empunhadura do arco, que fica diante do focinho
-	k.lin(pe.x + 1.0, pe.y + 2.0, float(bx + 2), float(by), 1.0, COURO, O)
+	# braço curto e esticado: do ombro (adiantado, junto ao peito) à empunhadura, para não parecer um bastão atravessado
+	k.lin(pe.x + 4.0, pe.y + 3.0, float(bx + 2), float(by + 1), 1.0, COURO, O)
 	var gx: int = bx + 4
 	k.r(gx - 1, by - 1, 3, 3, O)
 	k.r(gx, by, 2, 2, COURO_L)
 	# arco de madeira: arco do alto à ponta de baixo, corda e flecha (a corda recua no golpe)
 	var pux: int = roundi(3.0 * sn)
-	k.lin(float(gx), float(by - 7), float(gx + 2), float(by - 3), 1.0, COURO, O)
-	k.lin(float(gx + 2), float(by - 3), float(gx + 2), float(by + 1), 1.0, COURO, O)
-	k.lin(float(gx + 2), float(by + 1), float(gx), float(by + 5), 1.0, COURO, O)
-	_traco(k, float(gx), float(by - 7), float(gx - pux), float(by - 1), CORDA)
-	_traco(k, float(gx - pux), float(by - 1), float(gx), float(by + 5), CORDA)
+	k.lin(float(gx - 1), float(by - 8), float(gx + 2), float(by - 4), 1.0, COURO_L, O)
+	k.lin(float(gx + 2), float(by - 4), float(gx + 3), float(by + 1), 2.0, COURO, O)
+	k.lin(float(gx + 3), float(by + 1), float(gx - 1), float(by + 6), 1.0, COURO_L, O)
+	_traco(k, float(gx - 1), float(by - 8), float(gx - pux), float(by - 1), CORDA)
+	_traco(k, float(gx - pux), float(by - 1), float(gx - 1), float(by + 6), CORDA)
 	if sn > 0.1:
 		_traco(k, float(gx - pux), float(by - 1), float(gx + 6), float(by - 1), CORDA)
 		k.r(gx + 6, by - 2, 2, 3, ACO_L)

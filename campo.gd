@@ -4666,14 +4666,25 @@ func _desenhar_prep_chao() -> void:
 			yy += 16.0
 	# a prévia da onda fica do lado de fora, atrás de uma linha
 	draw_rect(Rect2(848.0, y0, 404.0, y1 - y0), Color(0.6, 0.1, 0.1, 0.12))
+	var sob_prep: Unidade = null   # gato sob o mouse (pré-destaque), enquanto ninguém é arrastado
+	if prep_arr == null and mouse_c.x >= 0.0:
+		sob_prep = _unidade_em(mouse_c, true)
 	for u in sim.aliados:
 		var a: Unidade = u
 		var sel: bool = a == prep_sel
 		var cp: Color = PREP_COR[a.postura]
+		if sel:
+			# feixe de luz subindo do gato escolhido
+			var luz := Color(1.0, 0.93, 0.62)
+			draw_polygon(PackedVector2Array([Vector2(a.vx - 60.0, a.vy + 4.0), Vector2(a.vx + 60.0, a.vy + 4.0), Vector2(a.vx + 36.0, a.vy - 150.0), Vector2(a.vx - 36.0, a.vy - 150.0)]),
+					PackedColorArray([Color(luz, 0.3), Color(luz, 0.3), Color(luz, 0.0), Color(luz, 0.0)]))
 		draw_set_transform(Vector2(a.vx, a.vy), 0.0, Vector2(1, 0.3))
 		if sel:
-			draw_arc(Vector2.ZERO, 54.0, 0.0, TAU, 40, Color(0, 0, 0, 0.6), 14.0)
-			draw_arc(Vector2.ZERO, 54.0, 0.0, TAU, 40, Color(1.0, 0.92, 0.5, 0.75 + 0.25 * sin(rel * 6.0)), 8.0)
+			draw_arc(Vector2.ZERO, 58.0, 0.0, TAU, 40, Color(0, 0, 0, 0.65), 18.0)
+			draw_circle(Vector2.ZERO, 54.0, Color(1.0, 0.92, 0.5, 0.18))
+			draw_arc(Vector2.ZERO, 58.0, 0.0, TAU, 40, Color(1.0, 0.92, 0.5, 0.8 + 0.2 * sin(rel * 6.0)), 11.0)
+		elif a == sob_prep:
+			draw_arc(Vector2.ZERO, 52.0, 0.0, TAU, 40, Color(1.0, 0.92, 0.5, 0.5), 5.0)
 		draw_arc(Vector2.ZERO, 42.0, 0.0, TAU, 40, Color(cp.r, cp.g, cp.b, 0.75), 6.0)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -4699,7 +4710,15 @@ func _desenhar_prep() -> void:
 		var ea: float = ESC * a.escala()
 		var cp: Color = PREP_COR[a.postura]
 		var rot: String = Boneco.POSTURA_NOMES[a.postura]
-		Desenho.texto(self, rot, Vector2(a.vx - 70.0, a.vy - (CORPO_ALT + 12.0) * ea), 14, cp.lightened(0.25), 140.0, 4)
+		var y_rot: float = a.vy - (CORPO_ALT + 12.0) * ea
+		if a == prep_sel:
+			# plaquinha clara com o nome: é para ele que valem as ordens
+			var nm: String = a.boneco.nome if a.boneco != null else "Gato"
+			var pl := Rect2(a.vx - 40.0, y_rot - 40.0, 80.0, 20.0)
+			draw_rect(pl.grow(2.0), Color(0.25, 0.14, 0.04, 0.9))
+			draw_rect(pl, Color(1.0, 0.92, 0.6))
+			Desenho.texto(self, nm, Vector2(pl.position.x, pl.end.y - 5.0), 14, Color(0.2, 0.1, 0.03), pl.size.x)
+		Desenho.texto(self, rot, Vector2(a.vx - 70.0, y_rot), 14, cp.lightened(0.25), 140.0, 4)
 	# nomes das faixas e da prévia, numa régua logo acima do chão (por cima de tudo, para não sumirem atrás dos gatos)
 	var xs: Array[float] = [Balanco.POSTO_X0 - 30.0, (Balanco.LINHA_X[2] + Balanco.LINHA_X[1]) * 0.5, (Balanco.LINHA_X[1] + Balanco.LINHA_X[0]) * 0.5, Balanco.POSTO_X1 + 30.0]
 	var yr: float = Balanco.CHAO_Y0 - 30.0
@@ -4717,7 +4736,12 @@ func _desenhar_prep() -> void:
 	# faixa de baixo: para quem vale a ordem, os três botões e "Começar"
 	var quem: String = "o time todo" if prep_sel == null else (prep_sel.boneco.nome if prep_sel.boneco != null else "o gato")
 	Desenho.texto(self, "Ordem para", Vector2(206.0, 672.0), 14, Color(1, 1, 1, 0.8), 140.0, 3)
-	Desenho.texto(self, quem, Vector2(206.0, 696.0), 20, Desenho.DOURADO, 140.0, 4)
+	if prep_sel != null:
+		var rq := Rect2(204.0, 678.0, 132.0, 26.0)
+		draw_rect(rq, Color(1.0, 0.92, 0.6))
+		Desenho.texto(self, quem, Vector2(rq.position.x, rq.end.y - 6.0), 20, Color(0.2, 0.1, 0.03), rq.size.x)
+	else:
+		Desenho.texto(self, quem, Vector2(206.0, 696.0), 20, Desenho.DOURADO, 140.0, 4)
 	var atual: int = _prep_postura_atual()
 	for i in 3:
 		var id: String = "o%d" % i

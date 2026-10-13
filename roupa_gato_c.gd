@@ -90,17 +90,16 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"...o.o.",
 			], {"o": Color(0.05, 0.05, 0.08), "k": Color(0.2, 0.2, 0.26), "r": Color(0.9, 0.15, 0.15)}, f)
 		Pecas.Tipo.CAPUZ_ESTELAR:
-			# capuz de monge bege com forro marrom em volta do rosto; olho, focinho e queixo de fora
+			# capuz de monge bege com ponta caída para trás e forro marrom na borda do rosto; olho, focinho e queixo de fora
 			RoupaGato.sprite(c, -4.5, -2.0, [
-				"..ooooo..",
-				".ottttto.",
-				"ottTtttdo",
+				"...oooo..",
+				"..ottTto.",
+				".ottttddo",
 				"ottttttdo",
-				"otttttddo",
+				"ottttdd.o",
 				"otttd....",
-				"ottd.....",
-				"otd......",
-				".oo......",
+				".ootd....",
+				"..oo.....",
 			], {"o": Color(0.3, 0.2, 0.1), "t": Color(0.86, 0.74, 0.52), "T": Color(0.96, 0.9, 0.72), "d": Color(0.55, 0.38, 0.22)}, f)
 		Pecas.Tipo.TUNICA:
 			# túnica bege cruzada no peito (lapelas marrons em V), faixa de couro na cintura (6 linhas, 11 de largura)
@@ -240,20 +239,18 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 		Pecas.Tipo.BANDANA:
 			# faixa ninja numa cor só, na testa, cobrindo o olho (que aparece branco); duas pontas soltas atrás
 			var sw: int = int(round(sin(anim * 4.0)))
-			RoupaGato.sprite(c, -4.5, 1.0, [
+			RoupaGato.sprite(c, -4.5, 2.0, [
 				"oaaaAaaao",
-				"oaaaaaaaa",
 				"oaaaawwka",
 				"ooooooooo",
 			], {"o": Color(0.5, 0.2, 0.04), "a": Color(0.97, 0.52, 0.12), "A": Color(1.0, 0.75, 0.4), "w": Color(1, 1, 1), "k": Color(0.08, 0.06, 0.06)}, f)
-			RoupaGato.sprite(c, -7.5, 1.0 + sw, [
-				"oaaa",
-				"oaao",
-				"oo..",
-			], {"o": Color(0.5, 0.2, 0.04), "a": Color(0.97, 0.52, 0.12)}, f)
-			RoupaGato.sprite(c, -8.5, 3.0 - sw, [
+			RoupaGato.sprite(c, -6.5, 3.0 + sw, [
 				"oaao",
 				"ooao",
+			], {"o": Color(0.5, 0.2, 0.04), "a": Color(0.97, 0.52, 0.12)}, f)
+			RoupaGato.sprite(c, -7.5, 4.0 - sw, [
+				"oaao",
+				".oo.",
 			], {"o": Color(0.5, 0.2, 0.04), "a": Color(0.85, 0.42, 0.08)}, f)
 		Pecas.Tipo.CASCO:
 			# casco verde-oliva com placas e borda amarelada; cabe no tronco
@@ -268,26 +265,23 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				".oooooooooo.",
 			], {"o": Color(0.14, 0.17, 0.05), "q": Color(0.34, 0.4, 0.15), "P": Color(0.58, 0.64, 0.28), "p": Color(0.46, 0.52, 0.2), "Y": Color(0.85, 0.78, 0.42)}, f)
 		Pecas.Tipo.NUNCHAKU:
-			var sw: int = int(round(sin(anim * 4.0) * 1.5))
+			var sw: int = int(round(sin(anim * 4.0)))
 			var cb := {"o": Color(0.3, 0.17, 0.06), "m": Color(0.62, 0.38, 0.16), "M": Color(0.85, 0.6, 0.35), "c": Color(0.75, 0.77, 0.82)}
-			# bastão preso na boca (o cabo passa pela ponta do focinho)
-			RoupaGato.sprite(c, -1.0, -5.0, [
-				"..oo",
-				".oMo",
-				".omo",
-				"omo.",
-				"omo.",
-				"oo..",
+			# um bastão reto preso na boca, apontando para a frente (o cabo passa pela ponta do focinho)
+			RoupaGato.sprite(c, -1.0, -4.0, [
+				"ooooooo",
+				"oMMmmmo",
+				"ooooooo",
 			], cb, f)
-			# corrente e segundo bastão pendurado, balançando à frente do focinho
-			RoupaGato.r(c, 3, -5, 1, 1, cb["c"], f)
-			RoupaGato.r(c, 3, -4, 1, 1, cb["c"], f)
-			RoupaGato.sprite(c, 3.0 + sw, -3.0, [
-				"oo",
-				"om",
-				"om",
-				"oM",
-				"oo",
+			# corrente curta e o segundo bastão pendurado, balançando: forma um L, não um estilingue
+			RoupaGato.r(c, 5, -1, 1, 1, cb["c"], f)
+			RoupaGato.r(c, 5 + sw, 0, 1, 1, cb["c"], f)
+			RoupaGato.sprite(c, 4.0 + sw, 1.0, [
+				"ooo",
+				"oMo",
+				"omo",
+				"omo",
+				"ooo",
 			], cb, f)
 		_:
 			RoupaGato.r(c, -2, -2, 4, 4, Pecas.CONJUNTO_COR[Pecas.CONJUNTO_DE[tipo]], f)

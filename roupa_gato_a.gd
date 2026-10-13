@@ -27,7 +27,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"ogggggggGo",
 				"oGGGGGGGGo",
 				".oooooooo.",
-			], {"o": Color(0.1, 0.25, 0.12), "g": Color(0.25, 0.6, 0.3), "G": Color(0.18, 0.45, 0.22), "y": Color(1.0, 0.85, 0.3)}, f)
+			], {"o": Color(0.16, 0.2, 0.32), "g": Color(0.55, 0.64, 0.8), "G": Color(0.4, 0.5, 0.68), "y": Color(1.0, 0.85, 0.3)}, f)
 		Pecas.Tipo.LANCA:
 			# EXEMPLO de mão: o gato leva a arma na boca; origem na ponta do focinho, a arma aponta para a frente e para cima
 			RoupaGato.sprite(c, -4.0, -9.0, [
@@ -77,7 +77,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"oSyybo",
 				"obbbbo",
 				".oooo.",
-			], {"o": Color(0.1, 0.16, 0.38), "b": Color(0.22, 0.42, 0.88), "S": Color(0.82, 0.86, 0.93), "y": Color(1.0, 0.85, 0.3)}, f)
+			], {"o": Color(0.07, 0.24, 0.17), "b": Color(0.3, 0.66, 0.48), "S": Color(0.82, 0.86, 0.93), "y": Color(1.0, 0.85, 0.3)}, f)
 		Pecas.Tipo.CAPA:
 			var o1: String = "ooRRRRRo..." if int(anim * 3.0) % 2 == 0 else "..ooRRRRRo."
 			RoupaGato.sprite(c, -11.0, -4.0, [
@@ -100,7 +100,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"obbbbbbbbbo",
 				"obBbbbbbBbo",
 				".ooooooooo.",
-			], {"o": Color(0.18, 0.12, 0.09), "b": Color(0.35, 0.25, 0.2), "B": Color(0.5, 0.38, 0.3), "s": Color(0.86, 0.88, 0.92)}, f)
+			], {"o": Color(0.06, 0.2, 0.15), "b": Color(0.2, 0.42, 0.33), "B": Color(0.35, 0.6, 0.48), "s": Color(0.86, 0.88, 0.92)}, f)
 		Pecas.Tipo.CHAPEU:
 			# chapéu de palha: copa baixa e aba de 11, encostado no crânio
 			RoupaGato.sprite(c, -5.5, -5.0, [
@@ -121,7 +121,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"oppdpwkpo",
 				"opppo....",
 				".ooo.....",
-			], {"o": Color(0.25, 0.08, 0.32), "p": Color(0.5, 0.18, 0.62), "d": Color(0.36, 0.12, 0.46), "g": Color(1.0, 0.85, 0.3), "w": Color(1, 1, 1), "k": Color(0.1, 0.05, 0.15)}, f)
+			], {"o": Color(0.07, 0.24, 0.17), "p": Color(0.3, 0.66, 0.48), "d": Color(0.2, 0.48, 0.35), "g": Color(1.0, 0.85, 0.3), "w": Color(1, 1, 1), "k": Color(0.1, 0.05, 0.15)}, f)
 		Pecas.Tipo.TOCHA:
 			var ch: String = "...r..." if int(anim * 5.0) % 2 == 0 else "....r.."
 			RoupaGato.sprite(c, -1.0, -11.0, [
@@ -158,7 +158,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"obbrrbbo",
 				"okkkkkko",
 				".oooooo.",
-			], {"o": Color(0.25, 0.12, 0.05), "b": Color(0.58, 0.32, 0.14), "B": Color(0.75, 0.5, 0.28), "k": Color(0.12, 0.1, 0.1), "r": Color(0.9, 0.2, 0.15), "y": fu}, f)
+			], {"o": Color(0.45, 0.08, 0.12), "b": Color(0.9, 0.3, 0.28), "B": Color(1.0, 0.6, 0.55), "k": Color(1.0, 0.82, 0.25), "r": Color(1, 1, 1), "y": fu}, f)
 		Pecas.Tipo.COROA:
 			RoupaGato.sprite(c, -3.5, -4.0, [
 				"o.o.o.o",
@@ -175,7 +175,7 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				".owo.owo.",
 				".owo.owo.",
 				"rrrrrrrrr",
-			], {"o": Color(0.3, 0.18, 0.1), "w": Color(0.95, 0.9, 0.75), "r": Color(0.7, 0.1, 0.1)}, f)
+			], {"o": Color(0.3, 0.18, 0.1), "w": Color(0.95, 0.9, 0.75), "r": Color(0.5, 0.3, 0.15)}, f)
 		Pecas.Tipo.CETRO:
 			var br: String = "..oyYo.." if int(anim * 3.0) % 2 == 0 else "..oyyo.."
 			RoupaGato.sprite(c, -3.0, -11.0, [

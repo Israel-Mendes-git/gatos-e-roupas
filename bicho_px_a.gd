@@ -430,13 +430,13 @@ static func _geo(fam: int, tipo: int, anim: float, andando: bool, golpe: float, 
 	if chefe_tipo == 0:
 		k = 6
 		rb = 3
-		kc = 3
-		rh = 2
+		kc = 4
+		rh = 3
 	elif chefe_tipo == 1:
 		k = 8
-		rb = 4
-		kc = 5
-		rh = 3
+		rb = 6
+		kc = 6
+		rh = 4
 	elif chefe_tipo == 2:
 		k = 2
 		rb = 1
@@ -445,12 +445,16 @@ static func _geo(fam: int, tipo: int, anim: float, andando: bool, golpe: float, 
 	var q: int = 0
 	var fr: int = 0
 	var salto: int = 0
+	var aire: int = 0   # Saltador no ar: 0 = no chão, 1 = subindo (corpo esticado, patas estendidas), 2 = descendo (patas recolhidas)
 	if andando:
 		var fase: float = fposmod(anim * _PASSO, 1.0)
 		q = posmod(int(anim * _PASSO), 6)
 		if sal:
 			salto = roundi(3.0 * sin(PI * fase))
 			fr = 0 if salto == 0 else (3 if fase < 0.5 else 6)
+			if salto > 0:
+				aire = 1 if fase < 0.5 else 2
+				k += 2
 		else:
 			fr = 1 + q
 	elif chefe_tipo == 2 and parado:
@@ -472,6 +476,9 @@ static func _geo(fam: int, tipo: int, anim: float, andando: bool, golpe: float, 
 	var yb: int = oy - n - m
 	var hdx: int = roundi((3.0 if chefe else 2.0) * e)
 	var hdy: int = 0
+	if aire > 0:
+		hdx += 1
+		hdy = -1 if aire == 1 else 0
 	if chefe_tipo == 2 and parado:
 		hdx = 1
 		hdy = 3 + (q % 2)
@@ -479,7 +486,7 @@ static func _geo(fam: int, tipo: int, anim: float, andando: bool, golpe: float, 
 	var hy: int = yb - int(_CAB_SOBE[fam]) - rh + hdy
 	return {"q": q, "fr": fr, "salto": salto, "e": e, "boca": boca, "legs": legs, "body": body, "head": head,
 		"n": n, "m": m, "hw": hw, "hh": hh, "gx": gx, "k": k, "kc": kc, "rb": rb, "rh": rh, "oy": oy, "yb": yb,
-		"hx": hx, "hy": hy, "bx": -10 + gx, "lx": -16 + gx, "gig": gig, "sal": sal, "chefe": chefe}
+		"hx": hx, "hy": hy, "bx": -10 + gx, "lx": -16 + gx, "gig": gig, "sal": sal, "chefe": chefe, "aire": aire}
 
 static func desloc(onde: int, fam: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parado: bool) -> Vector2:
 	fam = clampi(fam, 0, 2)
@@ -508,6 +515,39 @@ static func desloc(onde: int, fam: int, tipo: int, anim: float, andando: bool, g
 		RoupaGato.Onde.PATAS:
 			return Vector2(0, -int(g["salto"]))
 	return Vector2(roundf(p.x), roundf(p.y))
+
+# perna fina de 2 px de grossura com contorno, de (x0, y0) a (x1, y1); o último 2 x 2 leva a cor do pé
+static func _pata_ar(c: CanvasItem, x0: int, y0: int, x1: int, y1: int, cor: String, pe: String, P: Dictionary, f: float) -> void:
+	var n: int = maxi(1, maxi(absi(x1 - x0), absi(y1 - y0)))
+	for pas in 2:
+		for i in n + 1:
+			var t: float = float(i) / float(n)
+			var x: int = roundi(lerpf(x0, x1, t))
+			var y: int = roundi(lerpf(y0, y1, t))
+			if pas == 0:
+				_rr(c, x - 1, y - 1, 4, 4, "o", P, f)
+			else:
+				_rr(c, x, y, 2, 2, pe if i >= n - 1 else cor, P, f)
+
+# patas do Saltador no ar. aire 1 = subindo: dianteiras para a frente e traseiras para trás, estendidas (corpo em arco);
+# aire 2 = descendo: dianteiras alcançando o chão, traseiras recolhidas sob a barriga.
+static func _pernas_ar(c: CanvasItem, fam: int, aire: int, bx: int, lw: int, fundo: int, oy: int, n: int, P: Dictionary, f: float) -> void:
+	var pe: String = "k" if fam == 2 else ("d" if fam == 1 else "p")
+	var fx: int = bx + lw - 7
+	var rx: int = bx + 4
+	var y0: int = fundo - 2
+	var cai: int = 1 + n / 4
+	if aire == 1:
+		_pata_ar(c, fx - 2, y0, fx + 5, y0 + cai, "d", pe, P, f)     # dianteira de longe (mais curta, escura)
+		_pata_ar(c, rx + 2, y0, rx - 5, y0 + cai, "d", pe, P, f)     # traseira de longe
+		_pata_ar(c, fx, y0, fx + 8, y0 + cai - 1, "m", pe, P, f)     # dianteira de perto
+		_pata_ar(c, rx, y0, rx - 8, y0 + cai - 1, "m", pe, P, f)     # traseira de perto
+	else:
+		var py: int = oy - 3
+		_pata_ar(c, fx - 2, y0, fx + 1, py, "d", pe, P, f)
+		_pata_ar(c, fx + 1, y0, fx + 5, py + 1, "m", pe, P, f)
+		_pata_ar(c, rx + 2, y0, rx - 1, y0 + 3 + n / 3, "d", pe, P, f)
+		_pata_ar(c, rx, y0, rx + 3, y0 + 3 + n / 3, "m", pe, P, f)
 
 # ---------------------------------------------------------------- filhote solto da Ninhada: cabeça grande, corpo pequeno
 static func _filhote(c: CanvasItem, fam: int, P: Dictionary, f: float, anim: float, andando: bool) -> void:
@@ -565,11 +605,15 @@ static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: b
 	var sal: bool = g["sal"]
 	var gig: bool = g["gig"]
 	var chefe: bool = g["chefe"]
+	var aire: int = g["aire"]
 	var lw: int = k + 20   # largura do tronco
 
 	# rabo (nasce na anca)
 	var grosso: int = 1 if (gig or chefe) else 0
-	var rabo: Array = _rabo(fam, grosso, (q % 2) if andando else 0)
+	var wag: int = (q % 2) if andando else 0
+	if aire > 0 and fam > 0:
+		wag = -2   # no salto o rabo acompanha esticado para trás
+	var rabo: Array = _rabo(fam, grosso, wag)
 	var rw: int = String(rabo[0]).length()
 	var ry: int = yb + 3
 	if fam == 1:
@@ -578,8 +622,11 @@ static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: b
 		ry = yb + 2 - (8 + grosso)
 	_sp(c, bx - (rw - 2), ry, rabo, P, f)
 
-	# pernas (do molde do gato)
-	_sp(c, g["lx"], oy - n, g["legs"], P, f)
+	# pernas (do molde do gato); no ar, o Saltador usa patas próprias, de silhueta limpa
+	if aire > 0:
+		_pernas_ar(c, fam, aire, bx, lw, yb + m, oy, n, P, f)
+	else:
+		_sp(c, g["lx"], oy - n, g["legs"], P, f)
 
 	# ladrão: saco nas costas; ninhada: dois filhotes montados
 	if tipo == Unidade.Tipo.LADRAO and not chefe:
@@ -595,17 +642,9 @@ static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: b
 		_mini(c, fam, bx + 4, yb + 3, P, f)
 		_mini(c, fam, bx + 13 + k, yb + 3, P, f)
 
-	if sal:
+	if sal and aire == 0:
 		# coxa traseira dobrada, redonda
 		_sp(c, bx - 2, yb + 2, _blob(9, 7, "l", "m", "d"), P, f)   # coxa para trás
-		var chao: int = oy - 1
-		var j: int = 0
-		for y in range(yb + 8, chao):
-			_rr(c, bx + 3 + j, y, 4, 1, "o", P, f)             # canela para a frente
-			_rr(c, bx + 4 + j, y, 2, 1, "m", P, f)
-			j += 1
-		_rr(c, bx + 3 + j, chao, 7, 1, "o", P, f)             # pé comprido
-		_rr(c, bx + 4 + j, chao - 1, 6, 1, "m", P, f)
 	if fam == 2:
 		_rr(c, bx + lw - 7, yb + m - 3, 4 + (k >> 1), 2, "w", P, f)   # peito branco
 	if gig:
@@ -649,6 +688,8 @@ static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: b
 
 	# chefes: adereços
 	if chefe_tipo == 0:
+		_rr(c, hx + hw - 4, hy + hh - 2, 2, 3, "w", P, f)   # dentes de roedor para fora da boca
+		_rr(c, hx + hw - 4, hy + hh, 1, 1, "o", P, f)
 		_sp(c, hx + 1 + kc, hy - 4, _larga(_TAMPINHA, 5, 3), P, f)
 		_rr(c, hx + 1, hy + hh - 1, 6, 2, "w", P, f)   # gola de pele
 		_rr(c, hx + 2, hy + hh - 1, 1, 1, "k", P, f)
@@ -661,6 +702,10 @@ static func desenhar(c: CanvasItem, fam: int, tipo: int, anim: float, andando: b
 		_sp(c, hx + hw - 11, hy + hh - 3, _larga(_OSSO, 6, 4), P, f)
 		_sp(c, hx + 1, hy + hh, _BABADOR, P, f)
 	elif chefe_tipo == 2:
+		if andando:
+			# rastro de velocidade atrás da raposa
+			for i in 3:
+				_rr(c, bx - 14 - i * 3, yb + 1 + i * 4, 9 - i, 1, "w", P, f)
 		var fx: int = hx + 2
 		_rr(c, fx, hy + 3, 8, 1, "r", P, f)
 		_rr(c, fx, hy + 4, 8, 1, "R", P, f)

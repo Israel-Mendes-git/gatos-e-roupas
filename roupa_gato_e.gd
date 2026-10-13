@@ -62,7 +62,7 @@ const _PAL_NINJA := {
 	"B": Color(0.13, 0.2, 0.58), "b": Color(0.3, 0.42, 0.9),
 	"O": Color(0.04, 0.06, 0.22), "n": Color(0.2, 0.3, 0.75), "m": Color(0.4, 0.55, 0.98),
 	"S": Color(0.92, 0.95, 1.0), "s": Color(0.6, 0.66, 0.78), "k": Color(0.1, 0.1, 0.18), "G": Color(0.5, 0.3, 0.12),
-	"W": Color(0.6, 0.3, 0.12), "p": Color(0.88, 0.78, 0.52), "P": Color(0.98, 0.93, 0.74), "R": Color(0.82, 0.18, 0.15),
+	"W": Color(0.6, 0.3, 0.12), "p": Color(0.88, 0.78, 0.52), "P": Color(0.98, 0.93, 0.74), "R": Color(0.2, 0.3, 0.75),
 }
 ## Robô: o contorno azul-noite, a azul, d azul-escuro, A/B azul-claro, S metal, W branco, y/Y luz amarela.
 const _PAL_ROBO := {
@@ -78,8 +78,8 @@ const _PAL_TUBARAO := {
 }
 ## Boia: contorno vinho, r vermelho, R vermelho claro, w branco, s branco na sombra.
 const _PAL_BOIA := {
-	"o": Color(0.36, 0.06, 0.1), "r": Color(0.9, 0.17, 0.17), "R": Color(1.0, 0.45, 0.4),
-	"w": Color(1, 1, 1), "s": Color(0.74, 0.76, 0.84), "d": Color(0.62, 0.1, 0.12),
+	"o": Color(0.09, 0.15, 0.25), "r": Color(0.3, 0.58, 0.88), "R": Color(0.6, 0.82, 1.0),
+	"w": Color(1, 1, 1), "s": Color(0.74, 0.8, 0.9), "d": Color(0.2, 0.38, 0.65),
 }
 
 ## Abelha: o contorno marrom-escuro, Y amarelo, H mel-claro/realce, h brilho, U amarelo na sombra, k listra preta,
@@ -134,19 +134,19 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 			# faixa azul-escura na testa com plaquinha de metal (folha gravada) e duas pontas soltas ao vento
 			var sw: int = 0 if maxima else int(round(sin(anim * 4.0)))
 			return [
-				[-4.5, -1.0, [
+				[-4.5, -2.0, [
 					"....OOOOO.",
 					"OOOOOSssOO",
 					"OmmmOSkSOn",
 					"OnnnOsSsOn",
 					"OOOOOOOOOO",
 				], _PAL_NINJA],
-				[-7.5, 0.0 + sw, [
+				[-7.5, -1.0 + sw, [
 					"Onnn",
 					"OnnO",
 					"OO..",
 				], _PAL_NINJA],
-				[-8.5, 2.0 - sw, [
+				[-8.5, 1.0 - sw, [
 					"OnnO",
 					"OOnO",
 				], _PAL_NINJA],
@@ -162,13 +162,15 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 				".ooooooooo.",
 			], _PAL_NINJA]]
 		Pecas.Tipo.KUNAI:
-			# kunai: argola, cabo enrolado, guarda e lâmina em folha
-			return [[-3.5, -3.0, [
-				"........oooooo...",
-				".ooo.oooSSSSsssoo",
-				"o...oGGGSSSssssso",
-				".ooo.oooSSSSsssoo",
-				"........oooooo...",
+			# kunai: argola, cabo enrolado, guarda e lâmina larga em folha (5 de altura, para ler na luta)
+			return [[-4.5, -3.0, [
+				"........oo....",
+				".......oSSoo..",
+				".oo.oooSSSSsoo",
+				"o..oGGoSSSSSso",
+				".oo.oooSSSSsoo",
+				".......oSSoo..",
+				"........oo....",
 			], _PAL_NINJA]]
 		Pecas.Tipo.PERGAMINHO:
 			# pergaminho grande preso às costas com cordas vermelhas
@@ -180,14 +182,16 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 				"..oooooooo..",
 			], _PAL_NINJA]]
 		Pecas.Tipo.CAPACETE_AZUL:
-			# capacete azul com faixa central clara e orelhas redondas; olho e focinho de fora
-			return [[-5.5, -3.0, [
-				"...ooooo...",
+			# capacete de robô: cúpula azul com crista clara, viseira escura acima do olho, fone redondo na lateral
+			# e uma antena amarela; sem aba (não lembra boné); olho e focinho de fora
+			return [[-5.5, -4.0, [
+				"........y..",
+				"...oooooo..",
 				"..oaBBBBao.",
-				".oaaBBBBaao",
+				".oaaaBBaaao",
 				"oaaaaaaaaao",
-				"oAAAoaaaao.",
-				"oAwAoaao...",
+				"oAAoddddddo",
+				"oAwAoaaaao.",
 				"oAAAoaao...",
 				".oooodoo...",
 			], _PAL_ROBO]]
@@ -229,18 +233,19 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 				".ooooo.",
 			], _PAL_ROBO]]
 		Pecas.Tipo.CAPUZ_TUBARAO:
-			# cabeça de tubarão engolindo a do gato: dorsal para trás, olhinho, fileira de dentes na testa;
-			# do olho do gato para baixo (olho, focinho, queixo) fica de fora
-			return [[-5.5, -5.0, [
+			# cabeça de tubarão engolindo a do gato: dorsal para trás e uma só fileira de dentes na borda da boca,
+			# acima da linha do olho; do olho do gato para baixo (olho, focinho, queixo) fica de fora
+			return [[-5.5, -6.0, [
 				"...o........",
 				"...oo.......",
 				"..oao.......",
 				"..oaaooooo..",
 				".oaaaaabbbo.",
-				"oaaddaabbkao",
+				"oaaddaabbao.",
 				"oaadddaaaaao",
-				"owwwwwwwwwwo",
-				"owowowowowo.",
+				"orrrrrrrrrro",
+				"owwowwowwowo",
+				".o.o.o.o.o..",
 			], _PAL_TUBARAO]]
 		Pecas.Tipo.ROUPA_TUBARAO:
 			# corpo cinza-azulado com barbatana dorsal para trás, fendas de guelra e barriga branca ondulada
@@ -310,28 +315,25 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 				".ooooooooo.",
 			], _PAL_ABELHA]]
 		Pecas.Tipo.FERRAO:
-			# ferrão comprido preso pelo bulbo listrado: ponta escura para a frente
-			return [[-3.5, -3.0, [
-				"..ooo........",
-				".oYYYoooo....",
-				"oYkYYhKKKooo.",
-				"oYYkYKKKKKKoo",
-				".oYYYoooooo..",
-				"..ooo........",
+			# ferrão: bulbo listrado do abdômen e agulha curta e escura, com uma gota de veneno na ponta
+			return [[-4.5, -3.0, [
+				"..ooo.......",
+				".oYkYoo.....",
+				"oYhYkKKKoo.w",
+				".oYkYoo.....",
+				"..ooo.......",
 			], _PAL_ABELHA]]
 		Pecas.Tipo.POTE_MEL:
-			# pote de barro com mel dourado transbordando e escorrendo pelas laterais
-			return [[-4.0, -9.0, [
-				"..oooo..",
-				".oHhHHo.",
-				"oHHHHHHo",
-				"oPHPPPHo",
-				"oppHppHo",
-				"oppHppHo",
-				"opppHpqo",
-				"oqppppqo",
-				".oqqqqo.",
-				"..oooo..",
+			# potinho de mel: tampa de cortiça, vidro com mel dourado e brilho (pequeno, para não virar uma pedra marrom)
+			return [[-3.5, -7.0, [
+				"..ooo..",
+				".oPPPo.",
+				".oqqqo.",
+				"oHhHHHo",
+				"oHhHHUo",
+				"oHHHHUo",
+				"oUUUUUo",
+				".ooooo.",
 			], _PAL_ABELHA]]
 	return []
 

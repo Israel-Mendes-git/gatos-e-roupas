@@ -31,18 +31,18 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 			var ang: float = deg_to_rad(42.0)
 			var eixo := Vector2(cos(ang), -sin(ang))
 			var perp := Vector2(sin(ang), cos(ang))
-			var comp: float = 11.0
+			var comp: float = 8.5
 			var cel: Dictionary = {}
 			for yy in range(-14, 2):
 				for xx in range(-2, 14):
 					var p := Vector2(xx + 0.5, yy + 0.5) - Vector2(0.5, -0.5)
 					var t: float = p.dot(eixo)
 					var s: float = p.dot(perp)
-					if t >= 0.0 and t <= comp and absf(s) <= t * 0.42 + 0.3:
+					if t >= 0.0 and t <= comp and absf(s) <= t * 0.5 + 0.3:
 						var tom: String = "y"
-						if t > comp - 2.4:
-							tom = "B" if t < comp - 1.2 else "b"
-						elif (absf(t - 4.0) < 1.1 and absf(s + 1.0) < 1.1) or (absf(t - 7.0) < 1.1 and absf(s - 1.2) < 1.1):
+						if t > comp - 2.2:
+							tom = "B" if t < comp - 1.1 else "b"
+						elif (absf(t - 3.8) < 1.3 and absf(s + 0.6) < 1.3) or (absf(t - 6.0) < 1.2 and absf(s - 1.6) < 1.2):
 							tom = "r"
 						cel[Vector2i(xx, yy)] = tom
 			for k in cel:
@@ -62,14 +62,12 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				RoupaGato.r(c, k.x, k.y, 1, 1, cor, f)
 		Pecas.Tipo.TOPETE:
 			# espinhos azuis varridos para trás
-			RoupaGato.sprite(c, -5.5, -6.0, [
-				".....o...o.",
-				"bo..obo.obo",
-				"obobbbobbbo",
-				".obbBbbbbbo",
-				"..obbbbbbo.",
-				"...obbbbbo.",
-				"....oooooo.",
+			RoupaGato.sprite(c, -3.5, -4.0, [
+				"o..o.o...",
+				"bo.obobo.",
+				"obobbbbo.",
+				".obbBbbbo",
+				"..ooooooo",
 			], {"o": _AZUL_ESC, "b": Color(0.2, 0.35, 0.95), "B": Color(0.5, 0.65, 1.0)}, f)
 		Pecas.Tipo.PELO_AZUL:
 			# pelagem azul com os espinhos nas costas e a barriga bege embaixo
@@ -96,15 +94,14 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 		Pecas.Tipo.TENIS:
 			# um tênis vermelho com faixa branca e fivela dourada: quem chama desenha um em cada pata
 			var tenis: Array = [
-				"ooooo..",
-				"orrrroo",
-				"owywrro",
-				"orrrrro",
-				"owwwwwo",
+				"oooo..",
+				"orrroo",
+				"owywro",
+				"oooooo",
 			]
 			var pal := {"o": Color(0.45, 0.05, 0.08), "r": Color(0.92, 0.12, 0.15),
 				"y": Color(1.0, 0.82, 0.2), "w": Color(0.97, 0.97, 1.0)}
-			RoupaGato.sprite(c, -3.0, -5.0, tenis, pal, f)
+			RoupaGato.sprite(c, -3.0, -4.0, tenis, pal, f)
 		Pecas.Tipo.CAPACETE_FERRO:
 			# capacete vermelho com máscara dourada na frente e olhos em fenda branco-azulados
 			RoupaGato.sprite(c, -4.5, -2.0, [
@@ -202,21 +199,18 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"ooooo",
 			], {"o": Color(0.3, 0.12, 0.05), "b": Color(0.6, 0.25, 0.1), "g": _OURO, "G": Color(1.0, 0.95, 0.6), "y": Color(0.75, 0.5, 0.1)}, f)
 		Pecas.Tipo.TIARA:
-			# tiara de gelo e trança loira grossa caída de lado, com laço azul
+			# tiara de gelo e trança loira curta e fina caída atrás da cabeça, com laço azul
 			RoupaGato.sprite(c, -6.5, -4.0, [
 				".....w.w.w.",
 				"....owowowo",
 				"....oiiiiio",
 				"..yyoooooo.",
-				"..yyYyy....",
-				".nyYyn.....",
-				"nyYyYn.....",
-				"nYyYyn.....",
-				"nyYyYn.....",
-				"nYyYyn.....",
-				"nyYyYn.....",
-				".nbbbn.....",
-				"..nbn......",
+				"..yYyy.....",
+				"..nyYn.....",
+				"..nYyn.....",
+				"..nyYn.....",
+				"..nbbn.....",
+				"...nn......",
 			], {"o": _GELO_ESC, "i": Color(0.62, 0.86, 1.0), "w": Color(0.9, 0.98, 1.0),
 				"y": Color(1.0, 0.85, 0.35), "Y": Color(1.0, 0.95, 0.6), "n": Color(0.72, 0.5, 0.12), "b": Color(0.3, 0.55, 1.0)}, f)
 		Pecas.Tipo.VESTIDO:

@@ -40,7 +40,7 @@ const CAIXA: Array[Rect2] = [
 	Rect2(-4, -2, 7, 6),  # 33 Cantil
 	Rect2(-2, -6, 5, 5),  # 34 Gancho
 	Rect2(-2, -1, 5, 5),  # 35 Amuleto
-	Rect2(-5, -4, 12, 11),  # 36 Boné de encanador
+	Rect2(-5, -4, 14, 13),  # 36 Boné de encanador
 	Rect2(-6, -3, 12, 6),  # 37 Macacão
 	Rect2(-3, -9, 11, 9),  # 38 Desentupidor
 	Rect2(-3, -3, 6, 6),  # 39 Cogumelo
@@ -52,7 +52,7 @@ const CAIXA: Array[Rect2] = [
 	Rect2(-6, -3, 12, 6),  # 45 Colante de aranha
 	Rect2(0, -9, 12, 9),  # 46 Lança-teia
 	Rect2(-4, -6, 8, 5),  # 47 Aranha de estimação
-	Rect2(-5, -2, 10, 9),  # 48 Capuz de monge
+	Rect2(-5, -2, 10, 8),  # 48 Capuz de monge
 	Rect2(-6, -3, 12, 6),  # 49 Túnica
 	Rect2(-1, -10, 13, 11),  # 50 Espada de luz
 	Rect2(-3, -2, 7, 7),  # 51 Cristal
@@ -64,14 +64,14 @@ const CAIXA: Array[Rect2] = [
 	Rect2(-6, -3, 12, 6),  # 57 Túnica verde
 	Rect2(-1, -11, 14, 12),  # 58 Espada lendária
 	Rect2(-3, -1, 7, 5),  # 59 Ocarina
-	Rect2(-9, 1, 14, 4),  # 60 Bandana ninja
+	Rect2(-8, 2, 13, 4),  # 60 Bandana ninja
 	Rect2(-8, -4, 13, 8),  # 61 Casco
-	Rect2(-1, -5, 6, 7),  # 62 Nunchaku
-	Rect2(0, -11, 12, 11),  # 63 Fatia de pizza
-	Rect2(-6, -6, 12, 7),  # 64 Topete de ouriço
+	Rect2(-1, -4, 8, 10),  # 62 Nunchaku
+	Rect2(0, -9, 9, 9),  # 63 Fatia de pizza
+	Rect2(-4, -4, 10, 5),  # 64 Topete de ouriço
 	Rect2(-6, -4, 12, 8),  # 65 Pelo azul
 	Rect2(-3, -9, 6, 5),  # 66 Luvas brancas
-	Rect2(-3, -5, 7, 5),  # 67 Tênis vermelhos
+	Rect2(-3, -4, 6, 4),  # 67 Tênis vermelhos
 	Rect2(-5, -2, 12, 9),  # 68 Capacete de ferro
 	Rect2(-6, -3, 12, 7),  # 69 Armadura de ferro
 	Rect2(-3, -3, 9, 5),  # 70 Luva repulsora
@@ -80,7 +80,7 @@ const CAIXA: Array[Rect2] = [
 	Rect2(-8, -4, 11, 8),  # 73 Capa rubra
 	Rect2(-1, -10, 11, 10),  # 74 Martelo
 	Rect2(-3, -3, 6, 6),  # 75 Cinturão de força
-	Rect2(-7, -4, 12, 13),  # 76 Tiara de gelo
+	Rect2(-5, -4, 10, 10),  # 76 Tiara de gelo
 	Rect2(-6, -3, 12, 6),  # 77 Vestido de gelo
 	Rect2(0, -11, 8, 11),  # 78 Cetro de gelo
 	Rect2(-3, -2, 6, 5),  # 79 Floco de neve
