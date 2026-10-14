@@ -1274,7 +1274,7 @@ func _painel_lateral(f: int) -> void:
 			_botao_painel(BT_JOGAR, "Jogar de novo", UIComum.B_VERDE)
 			_botao_painel(BT_INVASAO, "Invasão sem fim", UIComum.B_LARANJA)
 	else:
-		var dica: String = "Vença o %s antes" % Fases.NOME[fi - 1] if bloq else "Clique ou Enter para entrar"
+		var dica: String = "Vença antes: %s" % Fases.NOME[fi - 1] if bloq else "Clique ou Enter para entrar"
 		var lh: Array[String] = p._quebrar(dica, 13, lr)
 		for k in mini(lh.size(), 3):
 			Desenho.texto(cv, lh[k], Vector2(xr, 314.0 + 16.0 * k), 13, Color(1, 0.95, 0.7, 0.9) if not bloq else Color(1, 1, 1, 0.5))

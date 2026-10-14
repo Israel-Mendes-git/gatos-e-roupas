@@ -48,11 +48,11 @@ const CHEFE_NOME: Array[String] = [
 	"Raposa Ligeira",
 	"Corvo Velho",
 	"Sapo-Rei",
-	"Toupeira Mineira",
+	"Toupeira Escavadora",
 	"Gambá Fedido",
 	"Coruja da Meia-Noite",
 	"Vira-Lata Chefão",
-	"Texugo Rei",
+	"Texugo-Rei",
 ]
 const CHEFE_ATAQUE: Array[String] = [
 	"Chama ratos de reforço",

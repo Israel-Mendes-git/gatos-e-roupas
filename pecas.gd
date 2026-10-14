@@ -32,7 +32,7 @@ const PROPRIAS := 36   # tipos com efeito próprio
 
 enum Marca { CICATRIZ, CERCO, FURO, BRASA, POLVORA }
 
-const MARCA_NOME: Array[String] = ["Cicatriz", "Cerco", "Furo", "Brasa", "Pólvora"]
+const MARCA_NOME: Array[String] = ["Cicatriz", "Estilhaço", "Couraça", "Brasa", "Pólvora"]
 const MARCA_DICA: Array[String] = [
 	"vida máxima",
 	"golpes ferem em volta",
@@ -75,18 +75,18 @@ const NOME: Array[String] = [
 	"Boné de encanador", "Macacão", "Desentupidor", "Cogumelo",
 	"Capuz de morcego", "Capa de morcego", "Bumerangue", "Cinto de utilidades",
 	"Máscara de teia", "Colante de aranha", "Lança-teia", "Aranha de estimação",
-	"Capuz de monge", "Túnica", "Espada de luz", "Cristal",
+	"Capuz estelar", "Túnica estelar", "Espada de luz", "Cristal estelar",
 	"Elmo sombrio", "Armadura sombria", "Espada rubra", "Respirador",
 	"Gorro verde", "Túnica verde", "Espada lendária", "Ocarina",
-	"Bandana ninja", "Casco", "Nunchaku", "Fatia de pizza",
+	"Bandana ninja", "Casco de tartaruga", "Nunchaku", "Fatia de pizza",
 	"Topete de ouriço", "Pelo azul", "Luvas brancas", "Tênis vermelhos",
 	"Capacete de ferro", "Armadura de ferro", "Luva repulsora", "Reator",
 	"Elmo alado", "Capa rubra", "Martelo", "Cinturão de força",
 	"Tiara de gelo", "Vestido de gelo", "Cetro de gelo", "Floco de neve",
-	"Capacete bolha", "Traje espacial", "Laser de pulso", "Mochila a jato",
+	"Capacete de bolha", "Traje espacial", "Laser de pulso", "Mochila a jato",
 	"Bandana com placa", "Macacão laranja", "Kunai", "Pergaminho",
 	"Capacete azul", "Armadura azul", "Canhão de braço", "Tanque de energia",
-	"Capuz de tubarão", "Roupa de tubarão", "Mordida", "Boia",
+	"Capuz de tubarão", "Roupa de tubarão", "Dentadura", "Boia de salva-vidas",
 	"Antenas", "Colete listrado", "Ferrão", "Pote de mel",
 ]
 const DICA: Array[String] = [

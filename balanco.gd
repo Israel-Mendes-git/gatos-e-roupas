@@ -260,7 +260,7 @@ const ELITE_PECAS: Array[int] = [3, 4, 4, 4, 4]   # peças da fantasia que o fan
 const ELITE_ESCALA := 1.12
 
 # ---------- Tipos de inimigo (ordem de Unidade.Tipo: comum, saltador, ladrão, gigante, gêmeo, atirador, curandeiro, escudeiro, bomba) ----------
-const TIPO_NOMES: Array[String] = ["Comum", "Saltador", "Ladrão", "Grandalhão", "Ninhada", "Atirador", "Curandeiro", "Escudeiro", "Bomba"]
+const TIPO_NOMES: Array[String] = ["Bicho comum", "Saltador", "Ladrão", "Grandalhão", "Ninhada", "Atirador", "Curandeiro", "Escudeiro", "Bicho-bomba"]
 const TIPO_PROG_MIN: Array[int] = [1, 2, 3, 5, 6, 9, 13, 17, 21]        # primeiro progresso (ver progresso()) em que aparece
 const TIPO_VIDA: Array[float] = [1.0, 1.0, 1.2, 8.0, 1.0, 0.8, 0.9, 1.8, 0.7]  # multiplicador de vida
 const TIPO_VEL: Array[float] = [1.0, 1.8, 1.3, 0.6, 1.0, 0.9, 0.85, 0.8, 1.6]   # multiplicador de velocidade

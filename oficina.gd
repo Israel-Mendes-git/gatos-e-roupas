@@ -189,7 +189,7 @@ static func motivo_melhoria(e: Estado, m: int) -> String:
 	return ""
 
 static func requisito_modulo(m: int) -> String:
-	return "Vença o %s, no %s" % [Fases.CHEFE_NOME[m], Fases.NOME[m]]
+	return "Vença o chefe %s, %s" % [Fases.CHEFE_NOME[m], ("na " if m in [1, 2, 6, 8, 9] else "no ") + Fases.NOME[m]]
 
 # ------------------------------------------------------------------ ícones em pixel
 ## Desenha uma arte de letras: cada letra é uma célula `cel` x `cel`; runs da mesma cor viram um retângulo só.

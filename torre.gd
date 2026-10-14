@@ -3,7 +3,7 @@ extends RefCounted
 ## Dados da torre: melhorias permanentes (pagas com troféus) e módulos (um por chefe vencido).
 
 enum Melhoria { ESTRUTURA, CANHAO, CADENCIA, ENFERMARIA }
-const MELHORIA_NOME: Array[String] = ["Estrutura", "Canhão", "Cadência", "Enfermaria"]
+const MELHORIA_NOME: Array[String] = ["Estrutura", "Canhão", "Rapidez", "Enfermaria"]
 const MELHORIA_NIVEL_MAX := 5
 const MELHORIA_CUSTO := 4            # troféus por nível (preço fixo)
 const ESTRUTURA_BLOCOS := 3          # blocos iniciais a mais por nível
