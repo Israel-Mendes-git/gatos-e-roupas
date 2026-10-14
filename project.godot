@@ -1,10 +1,10 @@
-; Protótipo descartável: Guarda-Roupa (autobattler de defesa)
+; Gatos e Roupas (autobattler de defesa)
 
 config_version=5
 
 [application]
 
-config/name="Guarda-Roupa Protótipo"
+config/name="Gatos e Roupas"
 run/main_scene="res://principal.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 

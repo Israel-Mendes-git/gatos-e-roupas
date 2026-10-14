@@ -7,7 +7,7 @@ extends Control
 
 enum Tela { NENHUMA, TITULO, PAUSA, OPCOES, CREDITOS, CONFIRMA, FINAL }
 
-const TITULO_JOGO := "Guarda-Roupa"   # nome provisório: troque aqui
+const TITULO_JOGO := "Gatos e Roupas"
 const AUTOR_JOGO := "Israel"
 const DURACAO_TRANSICAO := 0.25
 
@@ -978,7 +978,7 @@ func _placa_titulo() -> void:
 	_orelha(x0 + largs[0] - 34.0, topo - 18.0, false, 4.0, C_ROSA)
 	x = x0
 	for k in letras.length():
-		draw_string(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, C_CREME if letras[k] != "-" else Color(1.0, 0.62, 0.68))
+		draw_string(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, Color(1.0, 0.62, 0.68) if (letras[k] == "-" or (letras[k] == "e" and k > 0 and k < letras.length() - 1 and letras[k - 1] == " " and letras[k + 1] == " ")) else C_CREME)
 		x += largs[k]
 	# novelo de lã rolando ao lado do nome, com a ponta do fio solta
 	var cn: Vector2 = Vector2(x0 + total + 40.0, base - 30.0)
