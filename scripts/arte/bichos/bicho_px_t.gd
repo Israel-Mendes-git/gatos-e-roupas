@@ -138,9 +138,10 @@ static func _atirador(k: BichoPxB._K, cab: Vector2, tr: Vector2, pe: Vector2, bo
 	_traco(k, pe.x + 1.0, pe.y + 1.0, float(tx), float(ty - 3), COURO_S)
 	_traco(k, pe.x + 1.0, pe.y + 2.0, float(tx), float(ty - 2), COURO_L)
 	k.spr(tx - 3, ty - 9, ALJAVA, {"o": O, "L": COURO_L, "B": COURO, "D": COURO_S, "S": CORDA, "g": VERDE_L, "y": PENA})
-	# boné verde com pena
-	k.spr(roundi(cab.x) - 5, roundi(cab.y) - 2, CAP_ARQ, {"o": O, "V": VERDE, "v": VERDE_L})
-	k.r(roundi(cab.x) - 7, roundi(cab.y) - 4, 1, 3, PENA)
+	# boné verde com pena (sai se o bicho veste peça de cabeça)
+	if not BichoPx.cabeca_coberta:
+		k.spr(roundi(cab.x) - 5, roundi(cab.y) - 2, CAP_ARQ, {"o": O, "V": VERDE, "v": VERDE_L})
+		k.r(roundi(cab.x) - 7, roundi(cab.y) - 4, 1, 3, PENA)
 	# braço com manga de couro até a empunhadura do arco, que fica diante do focinho
 	# braço curto e esticado: do ombro (adiantado, junto ao peito) à empunhadura, para não parecer um bastão atravessado
 	k.lin(pe.x + 4.0, pe.y + 3.0, float(bx + 2), float(by + 1), 1.0, COURO, O)
@@ -166,12 +167,14 @@ static func _curandeiro(k: BichoPxB._K, cab: Vector2, tr: Vector2, pe: Vector2, 
 	_traco(k, pe.x - 1.0, pe.y + 1.0, float(bx + 4), float(by), COURO_S)
 	_traco(k, pe.x - 1.0, pe.y + 2.0, float(bx + 4), float(by + 1), COURO)
 	k.spr(bx, by, BOLSA, {"o": O, "W": BRANCO, "S": CINZA, "R": VERM})
-	# touca branca com cruz vermelha
-	k.spr(roundi(cab.x) - 5, roundi(cab.y) - 3, CAP_CURA, {"o": O, "W": BRANCO, "S": CINZA, "R": VERM})
+	# touca branca com cruz vermelha (sai se o bicho veste peça de cabeça)
+	if not BichoPx.cabeca_coberta:
+		k.spr(roundi(cab.x) - 5, roundi(cab.y) - 3, CAP_CURA, {"o": O, "W": BRANCO, "S": CINZA, "R": VERM})
 
 static func _escudeiro(k: BichoPxB._K, cab: Vector2, pe: Vector2, bo: Vector2, co: Vector2, sn: float) -> void:
-	# capacete de ferro
-	k.spr(roundi(cab.x) - 5, roundi(cab.y) - 2, ELMO, {"o": O, "A": ACO, "a": ACO_L, "D": ACO_S})
+	# capacete de ferro (sai se o bicho veste peça de cabeça)
+	if not BichoPx.cabeca_coberta:
+		k.spr(roundi(cab.x) - 5, roundi(cab.y) - 2, ELMO, {"o": O, "A": ACO, "a": ACO_L, "D": ACO_S})
 	# escudo grande diante do peito, preso ao braço (a manopla aparece na borda de trás); no golpe avança
 	var avanco: int = roundi(3.0 * sn)
 	var sx: int = roundi(pe.x) + 1 + avanco

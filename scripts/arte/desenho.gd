@@ -1034,7 +1034,9 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		c.draw_colored_polygon(el, Color(ca.r, ca.g, ca.b, 0.08 + 0.06 * pu))
 		c.draw_polyline(_fechado(el), Color(ca.r, ca.g, ca.b, 0.5 + 0.3 * pu), 2.0)
 	_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null
 	BichoPx.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando and tipo == Unidade.Tipo.LADRAO, filhote, ct, parte, parado)
+	BichoPx.cabeca_coberta = false
 	if parte or filhote:
 		resetar(c)
 		return
@@ -1054,10 +1056,14 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 			continue
 		var rot: float = -sin(golpe / 0.22 * PI) * 0.5 if (onde == RoupaGato.Onde.BOCA and golpe > 0.0) else 0.0
 		var o: Vector2 = RoupaGato.ORIGEM[onde] + BichoPx.desloc(onde, fam, tipo, anim, andando, golpe, ct, parado)
-		# peça de mão (presa na boca) em bicho: menor, para não invadir o bicho vizinho; continua presa à boca
-		var k_mao: float = GATO_K * (0.6 if onde == RoupaGato.Onde.BOCA else 1.0)
+		# peça de mão (presa na boca) em bicho: escala MAO_BICHO; continua presa à boca
+		var k_mao: float = GATO_K * (MAO_BICHO if onde == RoupaGato.Onde.BOCA else 1.0)
 		_tr(c, pos, esc, dir, o * GATO_K, rot, k_mao)
+		if onde == RoupaGato.Onde.CORPO:
+			# o tronco do bicho é maior que o do gato: a peça cresce até cobri-lo (mesmo tamanho de pixel)
+			RoupaGato.esticar = BichoPx.esticar_corpo(fam, tipo, anim, andando, golpe, ct, parte)
 		RoupaGato.desenhar(c, p.tipo, f, anim)
+		RoupaGato.esticar = Vector2i.ZERO
 	if not chefe:
 		_tr(c, pos, esc, dir)
 		_adereco_tipo(c, tipo, alfa)
@@ -1073,6 +1079,7 @@ const GATO_TEX: Array[Texture2D] = [preload("res://assets/terceiros/gatos/gato_0
 ## Pelagem de cada gato do time: [textura, tinta]. As duas últimas tingem as de base para que os cinco gatos sejam diferentes.
 const PELAGENS: Array = [[0, Color(1, 1, 1)], [1, Color(1, 1, 1)], [2, Color(1, 1, 1)], [2, Color(1.0, 0.84, 0.6)], [1, Color(0.6, 0.47, 0.42)]]
 const GATO_K := 3.2        # unidades locais por pixel do sprite original
+const MAO_BICHO := 1.0     # escala da peça de mão nos bichos (a 0.6 a espada e a varinha viravam um fiapo)
 const GATO_CHAO := 25.0    # y do pé dentro do quadro original
 
 ## Quadro do atlas para o estado do gato.

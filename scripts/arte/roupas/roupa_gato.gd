@@ -87,7 +87,21 @@ static func r(c: CanvasItem, x: float, y: float, w: float, h: float, cor: Color,
 ## Os chamadores montam as linhas e a paleta de novo a cada quadro, então a chave é pelo conteúdo.
 static var _cache_sprite: Dictionary = {}
 
+## Colunas e linhas a mais para a peça cobrir um tronco maior que o do gato (bichos). Quem desenha liga antes e zera depois.
+## A peça cresce repetindo colunas/linhas lisas do meio, então o pixel continua do mesmo tamanho; o centro fica no lugar.
+static var esticar: Vector2i = Vector2i.ZERO
+static var _cache_esticado: Dictionary = {}
+
 static func sprite(c: CanvasItem, x: float, y: float, linhas: Array, paleta: Dictionary, f: float = 0.0) -> void:
+	if esticar != Vector2i.ZERO:
+		var ce: int = linhas.hash() * 131 + esticar.x * 17 + esticar.y
+		if not _cache_esticado.has(ce):
+			if _cache_esticado.size() > 400:
+				_cache_esticado.clear()
+			_cache_esticado[ce] = _esticado(linhas, esticar)
+		linhas = _cache_esticado[ce]
+		x -= floorf(esticar.x * 0.5)
+		y -= floorf(esticar.y * 0.5)
 	var chave: int = linhas.hash() * 31 + paleta.hash()
 	var e: Array = _cache_sprite.get(chave, [])
 	if e.is_empty() or e[0] != linhas or e[1] != paleta:
@@ -105,6 +119,84 @@ static func sprite(c: CanvasItem, x: float, y: float, linhas: Array, paleta: Dic
 		for k in rs.size():
 			var q2: Rect2 = rs[k]
 			c.draw_rect(Rect2(x + q2.position.x, y + q2.position.y, q2.size.x, q2.size.y), Desenho.b(cs[k], f))
+
+## Quanto a coluna `i` destoa das vizinhas (0 = lisa, boa para repetir). Coluna com vazio no meio da peça conta caro.
+static func _rugosidade_col(linhas: Array, i: int) -> int:
+	var n: int = 0
+	for l in linhas:
+		var s: String = l
+		var ch: String = s[i]
+		if ch == "." and s.substr(0, i).strip_edges().replace(".", "") != "" and s.substr(i + 1).replace(".", "") != "":
+			n += 3
+		if i > 0 and s[i - 1] != ch:
+			n += 1
+		if i < s.length() - 1 and s[i + 1] != ch:
+			n += 1
+	return n
+
+## A coluna mais lisa entre `de` e `ate` (inclusive); no empate, a mais perto de `meio`.
+static func _col_lisa(linhas: Array, de: int, ate: int, meio: float) -> int:
+	var melhor: int = de
+	var nota: int = 1 << 30
+	for i in range(de, ate + 1):
+		var r: int = _rugosidade_col(linhas, i)
+		if r < nota or (r == nota and absf(i - meio) < absf(melhor - meio)):
+			melhor = i
+			nota = r
+	return melhor
+
+## Transposta de um desenho em linhas (para escolher e repetir linhas com o mesmo código das colunas).
+static func _transposta(linhas: Array) -> Array:
+	var w: int = 0
+	for l in linhas:
+		w = maxi(w, String(l).length())
+	var t: Array = []
+	for i in w:
+		var s: String = ""
+		for l in linhas:
+			var ls: String = l
+			s += ls[i] if i < ls.length() else "."
+		t.append(s)
+	return t
+
+## Repete colunas lisas: metade numa coluna da metade esquerda, metade numa da direita (detalhes do centro e das bordas ficam).
+static func _alargado(linhas: Array, extra: int) -> Array:
+	if extra <= 0:
+		return linhas
+	var w: int = 0
+	for l in linhas:
+		w = maxi(w, String(l).length())
+	var pad: Array = []
+	for l in linhas:
+		pad.append(String(l).rpad(w, "."))
+	if w < 4:
+		return pad
+	var meio: float = (w - 1) * 0.5
+	var ce: int = _col_lisa(pad, maxi(1, int(w * 0.2)), maxi(1, int(meio)), meio)
+	var cd: int = _col_lisa(pad, mini(w - 2, int(ceil(meio))), mini(w - 2, int(ceil(w * 0.8))), meio)
+	var ne: int = int(ceil(extra * 0.5))
+	var nd: int = extra - ne
+	if cd == ce:
+		ne = extra
+		nd = 0
+	var r: Array = []
+	for l in pad:
+		var s: String = l
+		var o: String = ""
+		for i in w:
+			o += s[i]
+			if i == ce:
+				o += s[i].repeat(ne)
+			elif i == cd:
+				o += s[i].repeat(nd)
+		r.append(o)
+	return r
+
+static func _esticado(linhas: Array, e: Vector2i) -> Array:
+	var r: Array = _alargado(linhas, e.x)
+	if e.y > 0:
+		r = _transposta(_alargado(_transposta(r), e.y))
+	return r
 
 static func _montar_sprite(linhas: Array, paleta: Dictionary) -> Array:
 	var rs: Array = []

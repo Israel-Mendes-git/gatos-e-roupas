@@ -12,6 +12,10 @@ extends RefCounted
 ## uma postura própria (cabeça baixa, inclinado, ereto). Só vale durante a chamada de desenhar()/desloc().
 static var pose_truque: int = -1
 
+## O bicho veste uma peça de cabeça: os gorros, bonés e elmos que já vêm no desenho do tipo saem, para o chapéu não ficar por cima deles.
+## Só vale durante a chamada de desenhar().
+static var cabeca_coberta: bool = false
+
 ## Arte nova (refeita do zero) de cada família de bichos comuns, um arquivo por família. Enquanto o arquivo
 ## de uma família não existe, ela continua com o desenho antigo (BichoPxA/BichoPxB).
 const NOVOS: Array[String] = ["res://scripts/arte/bichos/bicho_px_rato.gd", "res://scripts/arte/bichos/bicho_px_guaxinim.gd", "res://scripts/arte/bichos/bicho_px_raposa.gd", "res://scripts/arte/bichos/bicho_px_corvo.gd", "res://scripts/arte/bichos/bicho_px_sapo.gd"]
@@ -58,6 +62,22 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 ## Bichos de truque (Atirador, Curandeiro, Escudeiro, Bomba): corpo da família mais roupa e adereço (BichoPxT).
 static func _truque(tipo: int) -> bool:
 	return tipo >= Unidade.Tipo.ATIRADOR and tipo <= Unidade.Tipo.BOMBA
+
+## Tronco do gato que as peças de corpo cobrem (largura e altura em pixels): os bichos maiores esticam a peça até o tronco deles.
+const TRONCO_GATO := Vector2i(12, 8)
+
+## Colunas e linhas que a peça de corpo ganha neste bicho (RoupaGato.esticar). Chefes e famílias sem arte nova: nada.
+static func esticar_corpo(familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parte: bool) -> Vector2i:
+	if chefe_tipo >= 0 or parte or _novo(familia) == null:
+		return Vector2i.ZERO
+	pose_truque = -1
+	if _truque(tipo):
+		pose_truque = tipo
+		tipo = _tipo_corpo(tipo)
+	var s: Script = _novo(familia)
+	var g: Dictionary = s._geo(tipo, anim, andando, golpe, false) if familia == 4 else s._geo(tipo, anim, andando, golpe, false, false)
+	pose_truque = -1
+	return Vector2i(clampi(int(g["bw"]) - TRONCO_GATO.x, 0, 10), clampi(int(g["bh"]) - TRONCO_GATO.y, 0, 3))
 
 ## Corpo-base de cada truque: o Escudeiro usa o corpo parrudo do Grandalhão, os outros o comum.
 static func _tipo_corpo(tipo: int) -> int:
