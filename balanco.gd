@@ -7,12 +7,14 @@ const DT := 1.0 / 30.0          # passo fixo da simulação (jogo e simulador)
 const ONDAS_TOTAIS := 5         # ondas por fase; o chefe vem na última
 const TIJOLOS_INICIAIS := 30
 const CUSTO_BONECO := 3
-const CUSTO_PROMOCAO := 2
-# reforçar a raridade de uma peça com troféus: [comum -> rara, rara -> lendária]
-const REFORCO_CUSTO: Array[int] = [3, 6]
+# promover o nível de uma peça com blocos: custo por nível atual da peça (0 -> 1, 1 -> 2, ...); os primeiros níveis custam o de sempre
+const PROMOCAO_CUSTO: Array[int] = [2, 2, 2, 2, 2, 3, 3, 4, 4, 5]
+# reforçar a raridade de uma peça com troféus, por raridade atual: [comum -> rara, rara -> épica, épica -> lendária, lendária -> mítica]
+const REFORCO_CUSTO: Array[int] = [3, 5, 8, 12]
 const MAX_BONECOS := 5
 const BONECOS_INICIAIS := 3     # o time é fixo; cresce ao vencer fases, até MAX_BONECOS
-const NIVEL_MAX := 5
+const NIVEL_MAX := 10           # nível máximo de uma peça
+const INIMIGO_NIVEL_MAX := 5    # ...e o das peças que os bichos vestem (a curva deles não acompanha a das peças do jogador)
 const ABATES_BASE := 2          # abates p/ 1º nível; +1 a cada nível
 const BONUS_NIVEL := 0.5       # cada nível soma 35% ao efeito numérico
 const DROP_CHANCE := 0.35
@@ -144,17 +146,47 @@ const CONJ_CAUBOI_RAPIDEZ: Array[float] = [0.1, 0.25]
 const CONJ_PIRATA_ROUBO: Array[float] = [0.1, 0.25]
 const CONJ_MAGO_QUEIMA: Array[float] = [2.0, 5.0]
 
-# ---------- Raridades (comum, rara, lendária) ----------
-const RARIDADE_PODER: Array[float] = [1.0, 1.2, 1.4]   # multiplicador do efeito
-const RARIDADE_MARCAS: Array[int] = [2, 3, 4]          # marcas que a peça aguenta
+# ---------- Raridades (comum, rara, épica, lendária, mítica) ----------
+const RARIDADE_PODER: Array[float] = [1.0, 1.15, 1.3, 1.45, 1.6]   # multiplicador do efeito
+const RARIDADE_MARCAS: Array[int] = [2, 3, 3, 4, 5]                # marcas que a peça aguenta
+# Chances de drop. `g` = "degrau" do lugar: 0..4 nos cômodos, 5..9 fora da casa; a invasão soma mais (INVASAO_DROP_*).
+# Cada raridade só passa a cair depois do degrau `*_DESDE`; a chance cresce `*_FASE` por degrau.
 const DROP_RARA := 0.06            # inimigo comum
 const DROP_RARA_FASE := 0.03
-const DROP_LENDARIA_FASE := 0.01   # inimigo comum: por fase depois da primeira
-const ELITE_RARA := 0.45
-const ELITE_LENDARIA := 0.05
+const DROP_RARA_TETO := 5.0        # degrau a partir do qual a chance de rara para de crescer
+const DROP_EPICA_FASE := 0.01
+const DROP_LENDARIA_FASE := 0.006
+const DROP_LENDARIA_DESDE := 3.0
+const DROP_MITICA_FASE := 0.004
+const DROP_MITICA_DESDE := 6.0
+const ELITE_RARA := 0.45           # fantasiado
+const ELITE_EPICA := 0.05
+const ELITE_EPICA_FASE := 0.02
 const ELITE_LENDARIA_FASE := 0.02
-const CHEFE_LENDARIA := 0.25       # o chefe larga no mínimo rara
-const CHEFE_LENDARIA_FASE := 0.1
+const ELITE_MITICA_FASE := 0.01
+const CHEFE_EPICA := 0.25          # o chefe larga no mínimo rara
+const CHEFE_EPICA_FASE := 0.1
+const CHEFE_EPICA_TETO := 4.0
+const CHEFE_LENDARIA_FASE := 0.06
+const CHEFE_MITICA_FASE := 0.03
+const CHEFE_MITICA_DESDE := 5.0
+const INVASAO_DROP_DEGRAU := 0.4   # na invasão, cada onda vencida sobe o degrau de drop...
+const INVASAO_DROP_DEGRAU_MAX := 4.0   # ...até este tanto
+
+## Blocos para subir a peça do nível `nivel` para o seguinte.
+static func custo_promocao(nivel: int) -> int:
+	return PROMOCAO_CUSTO[clampi(nivel, 0, PROMOCAO_CUSTO.size() - 1)]
+
+## Troféus para subir uma peça da raridade `rar` para a seguinte.
+static func custo_reforco(rar: int) -> int:
+	return REFORCO_CUSTO[clampi(rar, 0, REFORCO_CUSTO.size() - 1)]
+
+## Degrau do lugar para os drops: 0..4 nos cômodos, 5..9 fora da casa, mais o avanço da invasão.
+static func degrau_drop(fase: int, ato: int, invasao: bool, onda_invasao: int) -> float:
+	var g: float = float(fase - 1) + (float(Fases.TOTAL) if ato > 1 else 0.0)
+	if invasao:
+		g += minf(INVASAO_DROP_DEGRAU_MAX, INVASAO_DROP_DEGRAU * (onda_invasao - 1))
+	return g
 
 # ---------- Marcas (a morte do portador marca a peça) ----------
 const MARCA_CICATRIZ_VIDA := 12.0  # vida máxima por marca
@@ -319,6 +351,19 @@ const HERANCA_PRIMEIRO := 6.0       # segundos até o primeiro disparo na luta
 const HERANCA_FORCA := 0.45         # força do poder herdado (o da roupa usa a força das peças, perto de 1 ou mais)...
 const HERANCA_FORCA_NIVEL := 0.02   # ...mais isto por nível do gato
 const HERANCA_APOIO := 0.5          # cura, proteção e frenesi herdados valem esta fração
+# Grau: incorporar a MESMA fantasia de novo sobe o grau da herança (I, II, III) em vez de criar outra igual.
+const HERANCA_GRAU_MAX := 3
+const HERANCA_GRAU_FORCA := 0.35    # cada grau acima do I soma isto à força (e à fração dos poderes de apoio)
+const HERANCA_GRAU_INTERVALO := 2.0 # ...e tira estes segundos do intervalo entre disparos
+
+static func heranca_grau_romano(grau: int) -> String:
+	return ["I", "I", "II", "III"][clampi(grau, 0, 3)]
+
+static func heranca_intervalo(grau: int) -> float:
+	return HERANCA_INTERVALO - HERANCA_GRAU_INTERVALO * (maxi(grau, 1) - 1)
+
+static func heranca_mult(grau: int) -> float:
+	return 1.0 + HERANCA_GRAU_FORCA * (maxi(grau, 1) - 1)
 
 ## Texto curto de como a herança age (igual para todo poder: ele dispara sozinho).
 static func heranca_efeito(_tipo: int) -> String:
@@ -331,8 +376,8 @@ const XP_ONDA_ATO: Array[int] = [2, 5, 5]   # ...por ato: cada ato leva o time u
 # ---------- Atos: depois do Porão a casa é invadida de novo, na ordem que o jogador quiser ----------
 const ATOS := 2
 const ATO_NOME: Array[String] = ["Primeiro ato", "Segundo ato", "Terceiro ato"]
-const ATO_VIDA: Array[float] = [1.0, 1.3, 2.6]      # força dos bichos no primeiro cômodo vencido do ato
-const ATO_DANO: Array[float] = [1.0, 0.95, 1.3]
+const ATO_VIDA: Array[float] = [1.0, 1.45, 2.6]      # força dos bichos no primeiro cômodo vencido do ato
+const ATO_DANO: Array[float] = [1.0, 1.0, 1.3]
 const ATO_VIDA_DEGRAU := 0.10       # cada cômodo já vencido no ato deixa os que faltam mais fortes
 const ATO_DANO_DEGRAU := 0.05
 const ATO_COMODO_VIDA: Array[float] = [1.1, 0.78, 0.97, 0.98, 0.89]   # acerto por cômodo (chefe e família da casa pesam diferente)
@@ -429,7 +474,7 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 	if tem_chefe(onda):
 		n = int(round(n * CHEFE_LACAIOS))
 	var plano: Array = []
-	var nivel: int = mini(NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)))
+	var nivel: int = mini(INIMIGO_NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)))
 	for i in n:
 		var q: float = PECAS_BASE + p * PECAS_POR_ONDA
 		var qtd: int = int(floor(q))
@@ -509,7 +554,7 @@ static func gerar_chefe(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 	if not tem_chefe(onda):
 		return []
 	var p: int = progresso(fase, onda) if ato <= 1 else progresso_ato(ato, vencidos, onda)
-	var nivel: int = mini(NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)) + CHEFE_NIVEL_BONUS)
+	var nivel: int = mini(INIMIGO_NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)) + CHEFE_NIVEL_BONUS)
 	var pecas: Array = fantasia(fase + (Fases.TOTAL if ato > 1 else 0), nivel, Pecas.SLOTS, rng)
 	for pc in pecas:
 		pc.marcar(rng.randi_range(0, Pecas.Marca.size() - 1))

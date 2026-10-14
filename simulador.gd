@@ -89,7 +89,7 @@ func _init() -> void:
 				marcas_fim += p.marcas.size()
 				if p.raridade == Pecas.Raridade.RARA:
 					raras += 1
-				elif p.raridade == Pecas.Raridade.LENDARIA:
+				elif p.raridade >= Pecas.Raridade.EPICA:
 					lendarias += 1
 		print("%-9s campanhas completas %d/%d | pecas ao fim %.1f (raras %.1f, lendarias %.1f, marcas %.1f)" % [pol, completas, n_jogos, pecas_fim / n_jogos, raras / n_jogos, lendarias / n_jogos, marcas_fim / n_jogos])
 		for fa in Fases.TOTAL * Balanco.ATOS:
@@ -202,7 +202,7 @@ func _preparar(pol: String, e: Estado, _primeira: bool) -> void:
 			_vestir_fantasias(e)
 		"misto":
 			_vestir_melhor(e)
-			while e.tijolos >= Balanco.CUSTO_PROMOCAO + 12:
+			while e.tijolos >= Balanco.custo_promocao(0) + 12:
 				var q: Peca = _pior_vestida(e)
 				if q == null or not e.promover(q):
 					break

@@ -150,6 +150,12 @@ func iniciar_fase(f: int) -> void:
 	em_curso = true
 	preparar_onda()
 
+## Repete um cômodo da casa depois de o 1º ato estar vencido: família e força do 1º ato (o 2º ato é jogado lá fora).
+func iniciar_fase_casa(f: int) -> void:
+	iniciar_fase(f)
+	ato = 1
+	preparar_onda()
+
 ## Invasão sem fim no cômodo `f` (só depois de zerar a campanha): ondas até a torre cair.
 ## `fora`: invasão num lugar de fora da casa (só depois de vencê-lo no segundo ato); senão, no cômodo.
 func iniciar_invasao(f: int, fora: bool = false) -> void:
@@ -318,9 +324,9 @@ func treinar(b: Boneco, a: int) -> bool:
 	return true
 
 func promover(p: Peca) -> bool:
-	if tijolos < Balanco.CUSTO_PROMOCAO or p.nivel >= Balanco.NIVEL_MAX:
+	if p.nivel >= Balanco.NIVEL_MAX or tijolos < Balanco.custo_promocao(p.nivel):
 		return false
-	tijolos -= Balanco.CUSTO_PROMOCAO
+	tijolos -= Balanco.custo_promocao(p.nivel)
 	p.nivel += 1
 	return true
 
@@ -338,7 +344,7 @@ func custo_promover_fantasia(b: Boneco) -> int:
 	var n: int = 0
 	for p in b.pecas:
 		if p != null and p.nivel < Balanco.NIVEL_MAX:
-			n += Balanco.CUSTO_PROMOCAO
+			n += Balanco.custo_promocao(p.nivel)
 	return n
 
 ## Duas peças iguais podem virar uma? (Mesmo tipo, e a fusão ainda tem o que melhorar.)
@@ -347,7 +353,7 @@ func pode_fundir(a: Peca, b: Peca) -> bool:
 		return false
 	var nivel: int = maxi(a.nivel, b.nivel)
 	var rar: int = maxi(a.raridade, b.raridade)
-	return nivel < Balanco.NIVEL_MAX or rar < Pecas.Raridade.LENDARIA
+	return nivel < Balanco.NIVEL_MAX or rar < Pecas.Raridade.MITICA
 
 ## Funde `outra` em `base` (de graça): a base fica com a maior raridade das duas e um nível acima do
 ## maior; se o nível já está no teto, sobe a raridade. Marcas e abates se somam (até o que a peça aguenta).
@@ -380,15 +386,15 @@ func fundir(base: Peca, outra: Peca) -> bool:
 func custo_reforcar_fantasia(b: Boneco) -> int:
 	var total: int = 0
 	for p in b.pecas:
-		if p != null and p.raridade < Pecas.Raridade.LENDARIA:
-			total += Balanco.REFORCO_CUSTO[p.raridade]
+		if p != null and p.raridade < Pecas.Raridade.MITICA:
+			total += Balanco.custo_reforco(p.raridade)
 	return total
 
 ## Sobe uma raridade em cada peça vestida, das mais baratas para as mais caras, enquanto houver troféus.
 ## Devolve quantas subiram.
 func reforcar_fantasia(b: Boneco) -> int:
 	var n: int = 0
-	for rar in [Pecas.Raridade.COMUM, Pecas.Raridade.RARA]:
+	for rar in [Pecas.Raridade.COMUM, Pecas.Raridade.RARA, Pecas.Raridade.EPICA, Pecas.Raridade.LENDARIA]:
 		for p in b.pecas:
 			if p != null and not p.raridade_subiu and p.raridade == rar and pode_reforcar(p) and reforcar(p):
 				n += 1
@@ -399,13 +405,13 @@ func reforcar_fantasia(b: Boneco) -> int:
 	return n
 
 func pode_reforcar(p: Peca) -> bool:
-	return p != null and p.raridade < Pecas.Raridade.LENDARIA and trofeus >= Balanco.REFORCO_CUSTO[p.raridade]
+	return p != null and p.raridade < Pecas.Raridade.MITICA and trofeus >= Balanco.custo_reforco(p.raridade)
 
 ## Paga troféus para subir a raridade da peça (mais efeito e mais espaço para marcas).
 func reforcar(p: Peca) -> bool:
 	if not pode_reforcar(p):
 		return false
-	trofeus -= Balanco.REFORCO_CUSTO[p.raridade]
+	trofeus -= Balanco.custo_reforco(p.raridade)
 	p.raridade += 1
 	p.nova = true
 	salvar()
@@ -609,7 +615,22 @@ func salvar() -> void:
 		time.append(b.para_dados())
 	var arq := FileAccess.open(ARQUIVO, FileAccess.WRITE)
 	if arq != null:
-		arq.store_string(JSON.stringify({"versao": 2, "fase_liberada": fase_liberada, "fases_vencidas": fases_vencidas, "vencido": vencido.duplicate(), "curso": _dados_curso(), "pecas": pecas, "bonecos": time, "trofeus": trofeus, "melhorias": melhorias.duplicate(), "modulos": modulos.duplicate(), "colecao": colecao.duplicate(), "recordes": recordes.duplicate(), "estat": estat.duplicate(), "feitos": feitos.keys(), "metas_pagas": metas_pagas.keys()}))
+		arq.store_string(JSON.stringify({"versao": 3, "fase_liberada": fase_liberada, "fases_vencidas": fases_vencidas, "vencido": vencido.duplicate(), "curso": _dados_curso(), "pecas": pecas, "bonecos": time, "trofeus": trofeus, "melhorias": melhorias.duplicate(), "modulos": modulos.duplicate(), "colecao": colecao.duplicate(), "recordes": recordes.duplicate(), "estat": estat.duplicate(), "feitos": feitos.keys(), "metas_pagas": metas_pagas.keys()}))
+
+## Gravação de antes da versão 3 (3 raridades): a Lendária era o índice 2 e agora é o 3 (o 2 virou Épica).
+## Sem isto, toda Lendária gravada viraria Épica.
+func _migrar_raridades(dados: Dictionary) -> void:
+	if int(dados.get("versao", 1)) >= 3:
+		return
+	var listas: Array = [dados.get("pecas", [])]
+	for bd in dados.get("bonecos", []):
+		if typeof(bd) == TYPE_DICTIONARY:
+			listas.append(bd.get("pecas", []))
+	for l in listas:
+		if l is Array:
+			for pd in l:
+				if typeof(pd) == TYPE_DICTIONARY and int(pd.get("raridade", 0)) >= 2:
+					pd["raridade"] = int(pd["raridade"]) + 1
 
 ## Carrega a campanha gravada. Devolve false se não há gravação válida.
 func carregar() -> bool:
@@ -618,6 +639,7 @@ func carregar() -> bool:
 	var dados: Variant = JSON.parse_string(FileAccess.get_file_as_string(ARQUIVO))
 	if typeof(dados) != TYPE_DICTIONARY or not dados.has("pecas"):
 		return false
+	_migrar_raridades(dados)
 	fase_liberada = clampi(int(dados.get("fase_liberada", 1)), 1, Fases.TOTAL)
 	fases_vencidas = clampi(int(dados.get("fases_vencidas", 0)), 0, Fases.TOTAL)
 	ato = 1

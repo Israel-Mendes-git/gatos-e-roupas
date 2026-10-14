@@ -795,7 +795,7 @@ func _consumir() -> void:
 				for on in numeros:
 					if on.get("placa", false) and absf(on["p"].x - clampf(e["x"], 140.0, 1140.0)) < 280.0 and on["vida"] > 0.3:
 						nivel_nome += 1
-				numeros.append({"p": Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 92 * ESC - nivel_nome * 46.0), "txt": ("Herança: " if e.get("heranca", false) else "") + Pecas.PODER_NOME[e["conj"]] + "!", "cor": _cor_legivel(Pecas.CONJUNTO_COR[e["conj"]], 0.78), "vida": 1.5, "tam": 28, "larg": 260.0, "ct": 8, "placa": true})
+				numeros.append({"p": Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 92 * ESC - nivel_nome * 46.0), "txt": ("Herança: " if e.get("heranca", false) else "") + Simulacao.heranca_nome_curto(e["conj"], int(e.get("grau", 1))) + "!", "cor": _cor_legivel(Pecas.CONJUNTO_COR[e["conj"]], 0.78), "vida": 1.5, "tam": 28, "larg": 380.0, "ct": 8, "placa": true})
 				particulas.append({"p": po, "v": Vector2.ZERO, "vida": 0.4, "max": 0.4, "cor": Color(cp.r, cp.g, cp.b, 0.5), "r": 22.0, "g": 0.0, "tipo": 1})
 				var alvos_p: Array = []
 				for pt in e["pontos"]:
@@ -882,12 +882,12 @@ func _consumir() -> void:
 				voando.append({"ini": Vector2(e["x"], e["y"] - 40 * ESC), "tipo": e["tipo"], "t": 0.0, "marca": e.get("marca", -1), "rar": rar,
 					"py": float(e["y"]) - 40.0 * ESC, "vy": -240.0, "vx": randf_range(-45.0, 45.0), "chao": float(e["y"]) - 6.0, "esp": 0.5, "quicou": 0})
 				if rar > 0:
-					var cr: Color = Pecas.RARIDADE_COR[clampi(rar, 0, 2)]
+					var cr: Color = Pecas.cor_rar(rar)
 					var pr0: Vector2 = Vector2(e["x"], e["y"] - 60 * ESC)
 					_faisca(pr0, cr, 10 + 8 * rar, 220.0, 0.8, 3.6)
 					particulas.append({"p": pr0, "v": Vector2.ZERO, "vida": 0.5, "max": 0.5, "cor": Color(cr.r, cr.g, cr.b, 0.5), "r": 22.0 + 10.0 * rar, "g": 0.0, "tipo": 1})
-					_numero(pr0 + Vector2(0, -30), "Lendária!" if rar >= 2 else "Rara!", cr, 26 if rar >= 2 else 22, 1.4, 160.0)
-					if rar >= 2:
+					_numero(pr0 + Vector2(0, -30), Pecas.RARIDADE_NOME[clampi(rar, 0, 4)] + "!", cr, 22 + 2 * rar, 1.4, 160.0)
+					if rar >= 3:
 						tremor = maxf(tremor, 5.0)
 			"marca":
 				# a morte marcou a roupa: nome da marca sobe na cor dela
@@ -1597,7 +1597,7 @@ func _atualizar_visual(dt: float, delta_real: float) -> void:
 					v["vy"] = -float(v["vy"]) * 0.5
 					v["quicou"] = int(v["quicou"]) + 1
 					if int(v["rar"]) > 0:
-						_faisca(Vector2(ini_q.x, float(v["chao"])), Pecas.RARIDADE_COR[clampi(int(v["rar"]), 0, 2)], 4, 90.0, 0.3, 2.6)
+						_faisca(Vector2(ini_q.x, float(v["chao"])), Pecas.cor_rar(int(v["rar"])), 4, 90.0, 0.3, 2.6)
 					else:
 						_poeira(Vector2(ini_q.x, float(v["chao"]) + 6.0), 1.0, 2, 0.8)
 				else:
@@ -1612,7 +1612,7 @@ func _atualizar_visual(dt: float, delta_real: float) -> void:
 			bau_n += 1
 			bau_pulso = 1.0
 			_faisca(BAU_POS + Vector2(0, -10), Desenho.DOURADO, 8 + 4 * int(v["rar"]), 160.0, 0.5, 2.8)
-			_som(["drop", "drop_raro", "drop_lendario"][clampi(int(v["rar"]), 0, 2)], 1.0, -3.0, int(v["rar"]) > 0)
+			_som(["drop", "drop_raro", "drop_raro", "drop_lendario", "drop_lendario"][clampi(int(v["rar"]), 0, 4)], 1.0, -3.0, int(v["rar"]) > 0)
 	tremor = move_toward(tremor, 0.0, dt * 28.0)
 	chefe_t = maxf(0.0, chefe_t - delta_real)
 	bau_pulso = move_toward(bau_pulso, 0.0, dt * 3.0)
@@ -1811,7 +1811,7 @@ func _draw() -> void:
 		var e: float = t * t * (3.0 - 2.0 * t)
 		var ini: Vector2 = v["ini"]
 		var rar_v: int = int(v.get("rar", 0))
-		var cor_r: Color = Pecas.RARIDADE_COR[clampi(rar_v, 0, 2)] if rar_v > 0 else Color(1.0, 0.9, 0.4)
+		var cor_r: Color = Pecas.cor_rar(rar_v) if rar_v > 0 else Color(1.0, 0.9, 0.4)
 		for k in range(7, 0, -1):
 			var tt: float = maxf(t - k * 0.03, 0.0)
 			var ee: float = tt * tt * (3.0 - 2.0 * tt)
@@ -4592,8 +4592,8 @@ func _desenhar_foco() -> void:
 		linhas.append([par[0], par[1], 14, Color(1, 1, 1)])
 	if aliado and not u.herancas.is_empty():
 		var nomes: Array[String] = []
-		for h in u.herancas:
-			nomes.append(Pecas.PODER_NOME[clampi(h, 0, Pecas.PODER_NOME.size() - 1)])
+		for hi in u.herancas.size():
+			nomes.append(Simulacao.heranca_nome_curto(u.herancas[hi], u.heranca_graus[hi] if hi < u.heranca_graus.size() else 1))
 		linhas.append(["Herança: " + ", ".join(nomes), 13, Color(0.85, 0.78, 1.0)])
 	if u.poder >= 0 and aliado:
 		var cj: int = clampi(u.poder_conj, 0, Pecas.PODER_NOME.size() - 1)

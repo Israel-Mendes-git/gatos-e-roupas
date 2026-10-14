@@ -106,6 +106,12 @@ var campo: Campo
 var t: float = 0.0
 var mouse: Vector2 = Vector2(-500, -500)
 var arrasto: Dictionary = {}
+# Renomear gato no guarda-roupa: caixa de texto sobre a plaquinha do nome.
+const NOME_MAX := 12
+var nome_edit: LineEdit
+var nome_idx: int = -1
+var nome_aviso: String = ""
+var nome_aviso_t: float = 0.0
 ## Sessão guardada ao sair para o menu principal no meio de um cômodo: -1, Modo.GUARDA ou Modo.COMBATE.
 ## "Continuar" no título devolve o jogador exatamente a ela.
 var suspenso: int = -1
@@ -140,7 +146,7 @@ const AJUDA_ATALHOS: Array[String] = [
 ]
 const AJUDA_REGRAS: Array[String] = [
 	"Fantasia: grupo de peças da mesma família. Com 2 ou 3 peças da mesma fantasia num gato vem um bônus; com as 4 (cabeça, corpo, mão e acessório) ele libera o poder da fantasia.",
-	"Raridade: comum, rara e lendária. Mais raridade dá mais efeito e mais espaço para marcas.",
+	"Raridade: comum, rara, épica, lendária e mítica. Mais raridade dá mais efeito e mais espaço para marcas.",
 	"Marca: quando um gato cai na luta, a roupa dele ganha uma marca para sempre. Cada peça comporta um número limitado delas.",
 	"Promover (carretel): sobe o nível da peça e custa blocos. Reforçar (estrela): sobe a raridade e custa troféus.",
 	"Fundir: peça repetida que cai na luta se funde sozinha com a que você já tem, que fica melhor. Você nunca tem duas iguais paradas.",
@@ -347,6 +353,7 @@ func _ready() -> void:
 	tutorial.iniciar(self)
 	tutorial.migrar()
 	tutorial.retomar_se_preciso()
+	_montar_nome_edit()
 	# por último: vê o Esc antes de todos os outros (arrasto, ajuda e resumo)
 	guardiao = Guardiao.new()
 	guardiao.tratar = _esc_guarda
@@ -749,7 +756,7 @@ func _soma_niveis() -> int:
 func _escolher_invasao(f: int) -> void:
 	_escolher_fase(f, true)
 
-func _escolher_fase(f: int, invasao: bool = false) -> void:
+func _escolher_fase(f: int, invasao: bool = false, rejogo_casa: bool = false) -> void:
 	if f < 1 or f > estado.fase_liberada:
 		return
 	if invasao:
@@ -758,6 +765,8 @@ func _escolher_fase(f: int, invasao: bool = false) -> void:
 		var fora: bool = mapa_casa != null and mapa_casa.vista_fora() and estado.vencido[f - 1] >= 2
 		invasao_rec_ini = estado.recordes[f - 1 + (Fases.TOTAL if fora else 0)]
 		estado.iniciar_invasao(f, fora)
+	elif rejogo_casa:
+		estado.iniciar_fase_casa(f)
 	else:
 		estado.iniciar_fase(f)
 	fim_invasao = false
@@ -895,14 +904,13 @@ func _dicas_do_gato() -> void:
 	for b in estado.bonecos:
 		var bb: Boneco = b
 		if bb.herancas_pendentes() > 0:
-			var nv: int = (bb.herancas.size() + 1) * passo
 			var fc: int = bb.fantasia_completa()
 			if fc >= 0:
-				menus.dica("her_pend_%s_%d" % [bb.nome, bb.herancas.size()], "%s: clique em \"Herança pronta!\" para guardar %s." % [bb.nome, Pecas.PODER_NOME[fc]], true)
+				menus.dica("her_pend_%s_%d" % [bb.nome, bb.incorporacoes()], "%s: clique em \"Herança pronta!\" para guardar %s." % [bb.nome, _txt_incorporar(bb, fc)], true)
 			else:
-				menus.dica("her_falta_%s_%d" % [bb.nome, bb.herancas.size()], "%s pode guardar um poder: vista uma fantasia completa." % bb.nome, true)
-		elif bb.herancas.size() < Balanco.BONECO_NIVEL_MAX / passo and bb.nivel % passo >= passo - 2:
-			menus.dica("her_aviso_%d" % (bb.herancas.size() + 1), "No nível %d o gato guarda o poder da fantasia vestida." % ((bb.herancas.size() + 1) * passo))
+				menus.dica("her_falta_%s_%d" % [bb.nome, bb.incorporacoes()], "%s pode guardar um poder: vista uma fantasia completa." % bb.nome, true)
+		elif bb.incorporacoes() < Balanco.BONECO_NIVEL_MAX / passo and bb.nivel % passo >= passo - 2:
+			menus.dica("her_aviso_%d" % (bb.incorporacoes() + 1), "No nível %d o gato guarda o poder da fantasia vestida (a mesma de novo sobe o grau)." % ((bb.incorporacoes() + 1) * passo))
 	if estado.ato > 1:
 		menus.dica("ato_%d" % estado.ato, "%s: bichos misturados e com truques novos." % Balanco.ATO_NOME[estado.ato - 1])
 	if estado.fases_vencidas >= 1:
@@ -913,8 +921,8 @@ func _montar_aviso(subiram: Array[String]) -> void:
 	var partes: Array[String] = []
 	for hn in estado.herancas_novas:
 		var bh: Boneco = hn[0]
-		dicas_heranca.append(["her_ok_%s_%d" % [bh.nome, bh.herancas.size()], "%s incorporou %s." % [bh.nome, Pecas.PODER_NOME[int(hn[1])]]])
-		partes.append("%s incorporou %s!" % [bh.nome, Simulacao.heranca_nome(int(hn[1]))])
+		dicas_heranca.append(["her_ok_%s_%d" % [bh.nome, bh.incorporacoes()], "%s incorporou %s." % [bh.nome, Simulacao.heranca_nome_curto(int(hn[1]), bh.grau_de(int(hn[1])))]])
+		partes.append("%s incorporou %s!" % [bh.nome, Simulacao.heranca_nome(int(hn[1]), bh.grau_de(int(hn[1])))])
 	estado.herancas_novas.clear()
 	if subiram.size() > 0:
 		partes.append("Subiu de nível: %s." % _lista_nomes(subiram))
@@ -1519,6 +1527,9 @@ func _esc_guarda(ev: InputEvent) -> bool:
 	var k: InputEventKey = ev as InputEventKey
 	if k == null or not k.pressed or k.echo or k.keycode != KEY_ESCAPE:
 		return false
+	if nome_idx >= 0:
+		_cancelar_nome()   # Esc na caixa do nome só cancela a edição (não abre a pausa)
+		return true
 	if modo != Modo.GUARDA or menus.ativo() or menus.em_transicao() or not fusao.is_empty():
 		return false
 	if oficina != null and oficina.aberta:
@@ -1939,15 +1950,15 @@ func _tecla_guarda(k: InputEventKey) -> bool:
 func _motivo_nivel(p: Peca) -> String:
 	if p.nivel >= Balanco.NIVEL_MAX:
 		return "Nível máximo"
-	if estado.tijolos < Balanco.CUSTO_PROMOCAO:
+	if estado.tijolos < Balanco.custo_promocao(p.nivel):
 		return "Faltam blocos"
 	return ""
 
 ## Motivo de a peça não poder subir de raridade agora (vazio se pode).
 func _motivo_reforco(p: Peca) -> String:
-	if p.raridade >= Pecas.Raridade.LENDARIA:
-		return "Já é lendária"
-	if estado.trofeus < Balanco.REFORCO_CUSTO[p.raridade]:
+	if p.raridade >= Pecas.Raridade.MITICA:
+		return "Já é mítica"
+	if estado.trofeus < Balanco.custo_reforco(p.raridade):
 		return "Faltam troféus"
 	return ""
 
@@ -1959,7 +1970,7 @@ func promover(peca: Peca) -> bool:
 	if m == "" and estado.promover(peca):
 		estado.salvar()
 		_lista_suja = true
-		_gastar_tijolos(Balanco.CUSTO_PROMOCAO, centro_carretel())
+		_gastar_tijolos(Balanco.custo_promocao(peca.nivel - 1), centro_carretel())
 		_faisca(centro_carretel() + Vector2(0, -20), Desenho.DOURADO, 18, 220.0)
 		efeito_peca = {"peca": peca, "t": 0.0}
 		Som.tocar("promover")
@@ -1969,7 +1980,7 @@ func promover(peca: Peca) -> bool:
 	elif m == "Nível máximo":
 		_recado("Nível máximo.")
 	else:
-		_recado("Faltam blocos (custa %d)." % Balanco.CUSTO_PROMOCAO)
+		_recado("Faltam blocos (custa %d)." % Balanco.custo_promocao(peca.nivel))
 	return false
 
 func reforcar(peca: Peca) -> bool:
@@ -1979,12 +1990,12 @@ func reforcar(peca: Peca) -> bool:
 		_faisca(ALVO_ESTRELA.get_center() + Vector2(0, -16), Color(1.0, 0.9, 0.4), 22, 240.0)
 		efeito_peca = {"peca": peca, "t": 0.0}
 		Som.tocar("raridade")
-		_flutuar(Pecas.RARIDADE_NOME[peca.raridade], ALVO_ESTRELA.get_center() + Vector2(0, -50), Pecas.RARIDADE_COR[peca.raridade].lightened(0.3), 18, 1.3)
+		_flutuar(Pecas.RARIDADE_NOME[peca.raridade], ALVO_ESTRELA.get_center() + Vector2(0, -50), Pecas.cor_rar(peca.raridade).lightened(0.3), 18, 1.3)
 		return true
-	elif m == "Já é lendária":
-		_recado("Já é lendária.")
+	elif m == "Já é mítica":
+		_recado("Já é mítica.")
 	else:
-		_recado("Faltam troféus (custa %d)." % Balanco.REFORCO_CUSTO[mini(peca.raridade, 1)])
+		_recado("Faltam troféus (custa %d)." % Balanco.custo_reforco(peca.raridade))
 	return false
 
 # ---- promover a fantasia inteira
@@ -2013,10 +2024,10 @@ func _estado_reforcar_tudo(b: Boneco) -> Dictionary:
 	for q in b.pecas:
 		if q != null:
 			vestidas += 1
-			if q.raridade < Pecas.Raridade.LENDARIA:
-				barata = mini(barata, Balanco.REFORCO_CUSTO[q.raridade])
+			if q.raridade < Pecas.Raridade.MITICA:
+				barata = mini(barata, Balanco.custo_reforco(q.raridade))
 	if custo == 0:
-		motivo = "%s está sem roupa." % b.nome if vestidas == 0 else "Tudo já é lendário."
+		motivo = "%s está sem roupa." % b.nome if vestidas == 0 else "Tudo já é mítico."
 	elif estado.trofeus < barata:
 		motivo = "Faltam troféus (mínimo %d)." % barata
 	return {"custo": custo, "ok": motivo == "", "motivo": motivo}
@@ -2054,13 +2065,16 @@ func _estado_promover_tudo(b: Boneco) -> Dictionary:
 	var custo: int = estado.custo_promover_fantasia(b)
 	var motivo: String = ""
 	var vestidas: int = 0
+	var barato: int = 99
 	for q in b.pecas:
 		if q != null:
 			vestidas += 1
+			if q.nivel < Balanco.NIVEL_MAX:
+				barato = mini(barato, Balanco.custo_promocao(q.nivel))
 	if custo == 0:
 		motivo = "%s está sem roupa." % b.nome if vestidas == 0 else "Tudo no nível máximo."
-	elif estado.tijolos < Balanco.CUSTO_PROMOCAO:
-		motivo = "Faltam blocos (%d por peça)." % Balanco.CUSTO_PROMOCAO
+	elif estado.tijolos < barato:
+		motivo = "Faltam blocos (mínimo %d)." % barato
 	return {"custo": custo, "ok": motivo == "", "motivo": motivo}
 
 func _acao_promover_tudo(i: int) -> void:
@@ -2221,6 +2235,17 @@ func _gui_input(ev: InputEvent) -> void:
 	elif ev is InputEventMouseButton:
 		var mb: InputEventMouseButton = ev as InputEventMouseButton
 		mouse = mb.position
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			if nome_idx >= 0:
+				_fim_nome_por_clique()
+				return
+			var ln: int = _lapis_em(mb.position)
+			if ln < 0 and mb.double_click:
+				ln = _ficha_em(mb.position)
+			if ln >= 0 and _pode_renomear():
+				arrasto = {}
+				_iniciar_nome(ln)
+				return
 		if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 			if PAINEL.has_point(mb.position):
 				_visiveis()
@@ -2256,7 +2281,10 @@ func _entrada_mapa(ev: InputEvent) -> void:
 					return
 			var f: int = _comodo_em(mb.position)
 			if f >= 1 and f <= estado.fase_liberada:
-				menus.ir(_escolher_fase.bind(f))
+				if MAPA_EM_CORTE and estado.campanha_vencida():
+					mapa_casa.escolher(f)   # campanha vencida: o clique escolhe; "Jogar de novo" e "Invasão sem fim" entram
+				else:
+					menus.ir(_escolher_fase.bind(f))
 
 ## Botões do mapa depois de zerar: "Jogar o cômodo", "Invasão sem fim" (do cômodo em destaque) e "Final".
 func _botao_do_mapa(bt: int) -> void:
@@ -2273,7 +2301,7 @@ func _botao_do_mapa(bt: int) -> void:
 	if bt == MapaCasa.BOTAO_INVASAO:
 		menus.ir(_escolher_invasao.bind(f))
 	else:
-		menus.ir(_escolher_fase.bind(f))
+		menus.ir(_escolher_fase.bind(f, false, mapa_casa.casa_rejogo()))
 
 ## Cômodo (ou cartão) sob o ponto, conforme o mapa em uso; -1 se nenhum.
 func _comodo_em(pos: Vector2) -> int:
@@ -2284,6 +2312,8 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 	if oficina != null and oficina.aberta:
 		return
 	var k: InputEventKey = ev as InputEventKey
+	if nome_idx >= 0:
+		return   # digitando o nome de um gato: nenhum atalho dispara
 	if not fusao.is_empty():
 		if k != null and k.pressed and not k.echo and (k.keycode == KEY_ENTER or k.keycode == KEY_KP_ENTER):
 			_confirmar_fusao()
@@ -2318,7 +2348,7 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 		return
 	var f: int = mapa_casa.tecla(k.keycode)
 	if f >= 1 and f <= estado.fase_liberada:
-		menus.ir(_escolher_fase.bind(f))
+		menus.ir(_escolher_fase.bind(f, false, mapa_casa.casa_rejogo()))
 
 func _fechar_janelas() -> void:
 	oficina.fechar()
@@ -2537,6 +2567,9 @@ func _process(delta: float) -> void:
 	else:
 		mouse = get_local_mouse_position()
 	negado = maxf(0.0, negado - delta)
+	nome_aviso_t = maxf(0.0, nome_aviso_t - delta)
+	if nome_idx >= 0 and (modo != Modo.GUARDA or menus.ativo() or menus.em_transicao() or not fusao.is_empty()):
+		_fechar_nome()
 	msg_painel_t = maxf(0.0, msg_painel_t - delta)
 	if not efeito_peca.is_empty():
 		efeito_peca["t"] = float(efeito_peca["t"]) + delta
@@ -3092,7 +3125,7 @@ func _tela_resumo() -> void:
 		var cy: float = y0 + (j / por_linha) * 66.0 + 30.0
 		var esc: float = 1.0 + 0.7 * maxf(0.0, 1.0 - age * 4.0)
 		if p.raridade > 0:
-			var cc: Color = Pecas.RARIDADE_COR[p.raridade]
+			var cc: Color = Pecas.cor_rar(p.raridade)
 			var pu: float = 0.5 + 0.5 * sin(t * 5.0 + j)
 			draw_circle(Vector2(cx, cy), 30.0, _com_alfa(cc, 0.16 + 0.14 * pu))
 			draw_arc(Vector2(cx, cy), 30.0, 0.0, TAU, 28, _com_alfa(cc, 0.9), 2.0)
@@ -3420,12 +3453,32 @@ func _cabecalho_boneco(b: Boneco, base: Vector2, i: int, foco: int = SEL_NENHUM)
 		draw_rect(pl, Color(1.0, 0.88, 0.4, 0.3), false, 1.0)
 	var tinta: Color = COR_TINTA_ESC if escolhido else COR_TINTA
 	Desenho.texto(self, "[%d]" % (i + 1), Vector2(base.x - 74, base.y + 22), 13, Color(1, 1, 1, 0.55))
+	if nome_idx == i:
+		# editando: a caixa de texto cobre o nome; embaixo, a instrução (ou o motivo de recusa)
+		draw_rect(pl.grow(2.0), Color(0.25, 0.14, 0.04, 0.9))
+		draw_rect(pl, Color(1.0, 0.92, 0.6))
+		var msg: String = nome_aviso if nome_aviso_t > 0.0 else "Enter ok · Esc sai"
+		Desenho.texto(self, msg, Vector2(pl.position.x, pl.end.y - 3.0), 12, Color(0.6, 0.12, 0.08) if nome_aviso_t > 0.0 else COR_TINTA_ESC, pl.size.x)
+		return
 	Desenho.texto(self, b.nome, Vector2(base.x - 73, 36), 22, tinta, 146.0, 0 if escolhido else 5)
+	if arrasto.is_empty() and nome_idx < 0 and (pl.has_point(mouse) or rect_lapis(i).has_point(mouse)) and _pode_renomear():
+		_lapis(rect_lapis(i), rect_lapis(i).has_point(mouse))
 	if maximo:
 		Desenho.texto(self, "Nível máximo", Vector2(base.x - 73, 56), 13, Color(0.5, 0.3, 0.0) if escolhido else Desenho.DOURADO, 146.0, 0 if escolhido else 3)
 		return
 	Desenho.texto(self, "Nv %d" % b.nivel, Vector2(base.x - 70, 57), 16, COR_TINTA_ESC if escolhido else Color(1, 0.9, 0.5), -1.0, 0 if escolhido else 4)
 	_barra(Rect2(base.x - 24, 49, 92, 8), float(b.xp) / float(maxi(1, b.xp_para_subir())), Color(0.4, 0.7, 1.0))
+
+## Abinha com um lápis desenhado (renomear o gato).
+func _lapis(r: Rect2, forte: bool) -> void:
+	draw_rect(r, Color(0.25, 0.14, 0.04, 0.95))
+	draw_rect(r.grow(-2.0), Color(1.0, 0.92, 0.6) if forte else Color(0.95, 0.8, 0.45))
+	var c: Vector2 = r.get_center()
+	var pts := PackedVector2Array([c + Vector2(-8, 5), c + Vector2(-6, 7), c + Vector2(-1, 5), c + Vector2(7, -3), c + Vector2(4, -6), c + Vector2(-4, 2)])
+	draw_colored_polygon(pts, Color(0.85, 0.45, 0.15))
+	pts.append(pts[0])
+	draw_polyline(pts, Color(0.25, 0.14, 0.04), 1.5)
+	draw_line(c + Vector2(4, -6), c + Vector2(7, -3), Color(0.95, 0.5, 0.55), 3.0)
 
 ## Treino: botões grandes com ganho escrito quando há ponto; fichinhas com os valores quando não há.
 func _treino_boneco(b: Boneco, i: int, base: Vector2) -> void:
@@ -3497,9 +3550,27 @@ func _clique_heranca(p: Vector2) -> bool:
 			if fc < 0:
 				_negar("Vista as 4 peças da fantasia em %s." % b.nome)
 				return true
-			menus.confirmar("Incorporar %s?" % Pecas.PODER_NOME[fc], "%s passa a soltar %s sozinho na luta, a cada %d s, com qualquer roupa (%s). Isso é para sempre e não dá para trocar depois." % [b.nome, Pecas.PODER_NOME[fc], int(Balanco.HERANCA_INTERVALO), Pecas.PODER_DICA[fc]], "Incorporar", "Ainda não", Callable(self, "_incorporar").bind(int(rh[1])))
+			if b.grau_de(fc) >= Balanco.HERANCA_GRAU_MAX:
+				_negar("%s já tem %s no grau máximo. Vista outra fantasia completa." % [b.nome, Simulacao.heranca_nome_curto(fc, b.grau_de(fc))])
+				return true
+			var g_novo: int = b.grau_de(fc) + 1
+			var corpo: String
+			if g_novo > 1:
+				corpo = "%s já tem %s: a herança sobe para o grau %s, com mais força (+%d%%) e solta a cada %d s. Isso é para sempre." % [b.nome, Pecas.PODER_NOME[fc], Balanco.heranca_grau_romano(g_novo), int(round(Balanco.HERANCA_GRAU_FORCA * 100.0)), int(Balanco.heranca_intervalo(g_novo))]
+			else:
+				corpo = "%s passa a soltar %s sozinho na luta, a cada %d s, com qualquer roupa (%s). Isso é para sempre e não dá para trocar depois. Incorporar a mesma fantasia de novo sobe o grau." % [b.nome, Pecas.PODER_NOME[fc], int(Balanco.HERANCA_INTERVALO), Pecas.PODER_DICA[fc]]
+			menus.confirmar(("%s?" % _txt_incorporar(b, fc)) if b.grau_de(fc) > 0 else ("Incorporar %s?" % Pecas.PODER_NOME[fc]), corpo, "Incorporar", "Ainda não", Callable(self, "_incorporar").bind(int(rh[1])))
 			return true
 	return false
+
+## "Relâmpago" (herança nova) ou "Relâmpago sobe para II" (a mesma de novo).
+func _txt_incorporar(b: Boneco, fc: int) -> String:
+	var g: int = b.grau_de(fc)
+	if g <= 0:
+		return Pecas.PODER_NOME[fc]
+	if g >= Balanco.HERANCA_GRAU_MAX:
+		return "%s (grau máximo)" % Simulacao.heranca_nome_curto(fc, g)
+	return "%s sobe para %s" % [Pecas.PODER_NOME[fc], Balanco.heranca_grau_romano(g + 1)]
 
 func _incorporar(i: int) -> void:
 	var b: Boneco = estado.bonecos[i]
@@ -3509,7 +3580,7 @@ func _incorporar(i: int) -> void:
 	b.pop = 1.0
 	Som.tocar("fantasia")
 	_faisca(pos_boneco(i) + Vector2(0, -60), Color(0.8, 0.65, 1.0), 26, 220.0)
-	_recado("%s incorporou %s!" % [b.nome, Pecas.PODER_NOME[hc]])
+	_recado("%s incorporou %s!" % [b.nome, Simulacao.heranca_nome_curto(hc, b.grau_de(hc))])
 	estado.conferir_metas()
 	estado.salvar()
 
@@ -3567,7 +3638,8 @@ func _fantasias_boneco(b: Boneco, base: Vector2) -> void:
 			draw_rect(rh, Color(1, 1, 1, 0.12))
 		_rect_her_feita.append([rh, estado.bonecos.find(b), h])
 		_estrela4(Vector2(rh.position.x + 18.0, rh.get_center().y), 5.0, roxo.lightened(0.3))
-		Desenho.texto(self, Pecas.PODER_NOME[h], Vector2(rh.position.x + 28, rh.position.y + 19), _tam_cabe(Pecas.PODER_NOME[h], [16, 14, 13, 12], 114.0), Color(1, 1, 1), -1.0, 3)
+		var nome_h: String = Simulacao.heranca_nome_curto(h, b.grau_de(h))
+		Desenho.texto(self, nome_h, Vector2(rh.position.x + 28, rh.position.y + 19), _tam_cabe(nome_h, [16, 14, 13, 12], 114.0), Color(1, 1, 1), -1.0, 3)
 		y += 30.0
 	if b.herancas_pendentes() > 0:
 		var rp := Rect2(base.x - 74, y, 148, 28.0)
@@ -3600,8 +3672,11 @@ func _ladrilho(r: Rect2, p: Peca, escondida: bool = false, sob: bool = false) ->
 			draw_rect(r.grow(-2), Pecas.RARIDADE_COR[1], false, 2.0)
 		_:
 			var pulso: float = 0.5 + 0.5 * sin(t * 3.0)
-			draw_rect(r.grow(1), Color(1.0, 0.72, 0.15, 0.2 + 0.25 * pulso), false, 2.0)
-			draw_rect(r.grow(-2), Pecas.RARIDADE_COR[2], false, 2.0)
+			var cr_r: Color = Pecas.cor_rar(p.raridade)
+			draw_rect(r.grow(1), Color(cr_r.r, cr_r.g, cr_r.b, 0.2 + 0.25 * pulso), false, 2.0)
+			draw_rect(r.grow(-2), cr_r, false, 2.0)
+			if p.raridade >= 4:
+				draw_rect(r.grow(-5), Color.from_hsv(fposmod(t * 0.3 + 0.5, 1.0), 0.6, 1.0, 0.5), false, 1.0)
 	nove(self, GUI_TEX, R_FINA, M_FINA, r, 0.5)
 	# tarja da fantasia
 	draw_rect(Rect2(r.position.x + 4, r.position.y + 4, r.size.x - 8, 4), Pecas.CONJUNTO_COR[p.conjunto()])
@@ -3912,15 +3987,15 @@ func _bigorna() -> void:
 		_paragrafo(expl, Vector2(BIGORNA.position.x + 20.0, BIGORNA.position.y + 52.0), 12, cor_expl, BIGORNA.size.x - 40.0, 14.0, true)
 	# alvo 1: carretel (nível, custa blocos)
 	var m1: String = _motivo_nivel(pc) if pc != null else ""
-	var c1: String = "" if pc == null else ("−%d blocos" % Balanco.CUSTO_PROMOCAO)
-	_alvo_promover(ALVO_CARRETEL, pc, m1, "Nível", c1 if pc != null else "%d blocos" % Balanco.CUSTO_PROMOCAO, false)
+	var c1: String = "" if pc == null else ("−%d blocos" % Balanco.custo_promocao(pc.nivel))
+	_alvo_promover(ALVO_CARRETEL, pc, m1, "Nível", c1 if pc != null else "%d a %d blocos" % [Balanco.PROMOCAO_CUSTO[0], Balanco.PROMOCAO_CUSTO[-1]], false)
 	# alvo 2: estrela (raridade, custa troféus)
 	var m2: String = _motivo_reforco(pc) if pc != null else ""
 	var c2: String = ""
-	if pc != null and pc.raridade < Pecas.Raridade.LENDARIA:
-		c2 = "−%d troféus" % Balanco.REFORCO_CUSTO[pc.raridade]
+	if pc != null and pc.raridade < Pecas.Raridade.MITICA:
+		c2 = "−%d troféus" % Balanco.custo_reforco(pc.raridade)
 	elif pc == null:
-		c2 = "%d ou %d troféus" % [Balanco.REFORCO_CUSTO[0], Balanco.REFORCO_CUSTO[1]]
+		c2 = "%d a %d troféus" % [Balanco.REFORCO_CUSTO[0], Balanco.REFORCO_CUSTO[-1]]
 	_alvo_promover(ALVO_ESTRELA, pc, m2, "Raridade", c2, true)
 
 ## Um dos dois alvos do painel: apagado com o motivo quando a peça arrastada não pode, aceso com o custo quando pode.
@@ -4096,10 +4171,13 @@ func _dica_promover_tudo(i: int) -> void:
 	var b: Boneco = estado.bonecos[i]
 	var st: Dictionary = _estado_promover_tudo(b)
 	var itens: Array = [["t", "Promover a fantasia inteira", 22, Desenho.DOURADO]]
-	itens.append(["t", "Sobe um nível de cada peça que %s veste e ainda pode subir, pagando %d blocos por peça enquanto houver blocos." % [b.nome, Balanco.CUSTO_PROMOCAO], 13, Color(1, 1, 1)])
+	itens.append(["t", "Sobe um nível de cada peça que %s veste e ainda pode subir, pagando os blocos de cada peça (o nível mais alto custa mais) enquanto houver blocos." % [b.nome], 13, Color(1, 1, 1)])
 	itens.append(["sep"])
 	if st["ok"]:
-		var n_pecas: int = int(st["custo"]) / Balanco.CUSTO_PROMOCAO
+		var n_pecas: int = 0
+		for q in b.pecas:
+			if q != null and q.nivel < Balanco.NIVEL_MAX:
+				n_pecas += 1
 		itens.append(["t", "Custo total: %d blocos para %d peça%s (a torre tem %d)." % [st["custo"], n_pecas, "" if n_pecas == 1 else "s", estado.tijolos], 13, Color(0.7, 1.0, 0.7)])
 	else:
 		itens.append(["t", st["motivo"], 13, Color(1.0, 0.6, 0.55)])
@@ -4108,6 +4186,115 @@ func _dica_promover_tudo(i: int) -> void:
 ## Faixa do nome do gato i, no alto do vão: o mouse em cima abre a ficha em números.
 func rect_ficha(i: int) -> Rect2:
 	return Rect2(pos_boneco(i).x - 76.0, 14.0, 152.0, 48.0)
+
+## Lápis do nome: abinha que sai pela quina de cima da plaquinha (aparece com o mouse em cima).
+func rect_lapis(i: int) -> Rect2:
+	return Rect2(pos_boneco(i).x + 48.0, 0.0, 28.0, 20.0)
+
+func _lapis_em(p: Vector2) -> int:
+	if modo != Modo.GUARDA:
+		return -1
+	for i in estado.bonecos.size():
+		if rect_lapis(i).has_point(p):
+			return i
+	return -1
+
+func _pode_renomear() -> bool:
+	return modo == Modo.GUARDA and arrasto.is_empty() and fusao.is_empty() and resumo.is_empty() and not ajuda_aberta and not avisos_aberto and not menus.ativo() and not menus.em_transicao() and (oficina == null or not oficina.aberta) and (fichario == null or not fichario.aberto())
+
+func _montar_nome_edit() -> void:
+	nome_edit = LineEdit.new()
+	nome_edit.visible = false
+	nome_edit.max_length = NOME_MAX
+	nome_edit.context_menu_enabled = false
+	nome_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	nome_edit.add_theme_font_size_override("font_size", 20)
+	nome_edit.add_theme_color_override("font_color", COR_TINTA_ESC)
+	nome_edit.add_theme_color_override("caret_color", COR_TINTA_ESC)
+	nome_edit.add_theme_color_override("selection_color", Color(0.85, 0.4, 0.08, 0.95))
+	nome_edit.add_theme_color_override("font_selected_color", Color(1, 1, 1))
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.96, 0.78)
+	sb.set_border_width_all(3)
+	sb.border_color = Color(0.85, 0.6, 0.15)
+	sb.set_corner_radius_all(3)
+	sb.content_margin_left = 6.0
+	sb.content_margin_right = 6.0
+	nome_edit.add_theme_stylebox_override("normal", sb)
+	nome_edit.add_theme_stylebox_override("focus", sb)
+	nome_edit.text_submitted.connect(func(_t: String) -> void: _confirmar_nome())
+	add_child(nome_edit)
+
+func _iniciar_nome(i: int) -> void:
+	if i < 0 or i >= estado.bonecos.size():
+		return
+	nome_idx = i
+	nome_aviso = ""
+	nome_aviso_t = 0.0
+	var r: Rect2 = rect_ficha(i)
+	nome_edit.position = Vector2(r.position.x + 2.0, r.position.y + 2.0)
+	nome_edit.size = Vector2(r.size.x - 4.0, 28.0)
+	nome_edit.text = estado.bonecos[i].nome
+	nome_edit.visible = true
+	nome_edit.grab_focus()
+	nome_edit.select_all()
+	Som.tocar("abrir")
+
+## Texto limpo do nome: sem espaços sobrando.
+static func _nome_limpo(txt: String) -> String:
+	var partes: PackedStringArray = txt.strip_edges().split(" ", false)
+	return " ".join(partes)
+
+## Motivo de o nome não servir ("" se serve).
+func _nome_invalido(txt: String, i: int) -> String:
+	if txt.is_empty():
+		return "Escreva um nome."
+	for j in estado.bonecos.size():
+		if j != i and estado.bonecos[j].nome.to_lower() == txt.to_lower():
+			return "Nome já em uso."
+	return ""
+
+func _confirmar_nome() -> void:
+	if nome_idx < 0:
+		return
+	var txt: String = _nome_limpo(nome_edit.text)
+	var motivo: String = _nome_invalido(txt, nome_idx)
+	if motivo != "":
+		nome_aviso = motivo
+		nome_aviso_t = 2.5
+		Som.tocar("negado")
+		nome_edit.grab_focus()
+		return
+	var b: Boneco = estado.bonecos[nome_idx]
+	var mudou: bool = b.nome != txt
+	b.nome = txt
+	_fechar_nome()
+	if mudou:
+		estado.salvar()
+		Som.tocar("clique", 1.1)
+		_toast("O gato agora se chama %s." % txt)
+
+func _cancelar_nome() -> void:
+	if nome_idx < 0:
+		return
+	_fechar_nome()
+	Som.tocar("fechar")
+
+func _fechar_nome() -> void:
+	nome_idx = -1
+	nome_aviso = ""
+	nome_edit.release_focus()
+	nome_edit.visible = false
+
+## Clique fora da caixa: guarda se o nome serve, senão volta ao que era.
+func _fim_nome_por_clique() -> void:
+	if nome_edit.get_global_rect().has_point(mouse):
+		return
+	var txt: String = _nome_limpo(nome_edit.text)
+	if _nome_invalido(txt, nome_idx) == "":
+		_confirmar_nome()
+	else:
+		_cancelar_nome()
 
 func _ficha_em(p: Vector2) -> int:
 	for i in estado.bonecos.size():
@@ -4136,9 +4323,10 @@ func _dica_ficha(i: int) -> void:
 	]
 	itens.append_array(_itens_ficha(b))
 	itens.append(["sep"])
-	itens.append(["t", "Heranças (%d de %d)" % [b.herancas.size(), Balanco.BONECO_NIVEL_MAX / Balanco.HERANCA_NIVEIS], 16, Color(0.8, 0.7, 1.0)])
+	itens.append(["t", "Duplo clique no nome (ou no lápis) troca o nome.", 12, Color(1, 1, 1, 0.55)])
+	itens.append(["t", "Heranças (%d de %d)" % [b.incorporacoes(), Balanco.BONECO_NIVEL_MAX / Balanco.HERANCA_NIVEIS], 16, Color(0.8, 0.7, 1.0)])
 	for h in b.herancas:
-		itens.append(["t", "%s: %s; %s" % [Simulacao.heranca_nome(h), Pecas.PODER_DICA[h], Balanco.heranca_efeito(Pecas.PODER_TIPO[h])], 13, Color(0.9, 0.85, 1.0)])
+		itens.append(["t", "%s: %s; %s" % [Simulacao.heranca_nome(h, b.grau_de(h)), Pecas.PODER_DICA[h], _efeito_heranca(b.grau_de(h))], 13, Color(0.9, 0.85, 1.0)])
 	if b.herancas_pendentes() > 0:
 		var fc: int = b.fantasia_completa()
 		if fc >= 0:
@@ -4227,11 +4415,16 @@ func _dica_caixa_fantasia(c: int, bi: int) -> void:
 	]
 	_caixa_dica(itens, 320.0, cor, Desenho.DOURADO, mouse, Vector2(18, 10))
 
+## Frase do efeito de uma herança no grau dado.
+func _efeito_heranca(grau: int) -> String:
+	return "solta sozinho a cada %d s, com %d%% da força do grau I" % [int(Balanco.heranca_intervalo(grau)), int(round(Balanco.heranca_mult(grau) * 100.0))] if grau > 1 else Balanco.heranca_efeito(0)
+
 ## Dica de uma herança já incorporada.
 func _dica_heranca_feita(bi: int, h: int) -> void:
 	var itens: Array = [
-		["t", "Herança: " + Pecas.PODER_NOME[h], 22, Color(0.8, 0.7, 1.0)],
-		["t", "%s; %s" % [Pecas.PODER_DICA[h], Balanco.heranca_efeito(Pecas.PODER_TIPO[h])], 13, Color(1, 1, 1)],
+		["t", "Herança: " + Simulacao.heranca_nome_curto(h, estado.bonecos[bi].grau_de(h)), 22, Color(0.8, 0.7, 1.0)],
+		["t", "%s; %s" % [Pecas.PODER_DICA[h], _efeito_heranca(estado.bonecos[bi].grau_de(h))], 13, Color(1, 1, 1)],
+		["t", "Grau %s de %s. A mesma fantasia incorporada de novo sobe o grau." % [Balanco.heranca_grau_romano(estado.bonecos[bi].grau_de(h)), Balanco.heranca_grau_romano(Balanco.HERANCA_GRAU_MAX)], 13, Color(0.85, 0.78, 1.0)],
 		["t", "%s solta sozinho na luta, com qualquer roupa." % estado.bonecos[bi].nome, 13, Color(1, 1, 1, 0.6)],
 	]
 	_caixa_dica(itens, 320.0, Color(0.72, 0.56, 1.0), Color(0.72, 0.56, 1.0), mouse, Vector2(18, 10))
@@ -4242,7 +4435,7 @@ func _dica_heranca_pronta(bi: int) -> void:
 	var fc: int = b.fantasia_completa()
 	var itens: Array = [["t", "Herança pronta!", 22, Desenho.DOURADO]]
 	if fc >= 0:
-		itens.append(["t", "Clique para incorporar %s: %s solta sozinho na luta, para sempre." % [Pecas.PODER_NOME[fc], b.nome], 13, Color(0.7, 1.0, 0.7)])
+		itens.append(["t", "Clique para incorporar %s: %s solta sozinho na luta, para sempre." % [_txt_incorporar(b, fc), b.nome], 13, Color(0.7, 1.0, 0.7)])
 	else:
 		itens.append(["t", "Vista uma fantasia completa (4 peças) em %s e clique aqui." % b.nome, 13, Color(1.0, 0.8, 0.5)])
 	_caixa_dica(itens, 320.0, Desenho.DOURADO, Desenho.DOURADO, mouse, Vector2(18, 10))
@@ -4264,7 +4457,7 @@ func _dica() -> void:
 	if ri >= 0:
 		var br: Boneco = estado.bonecos[ri]
 		var sr: Dictionary = _estado_reforcar_tudo(br)
-		var it_r: Array = [["t", "Raridade da fantasia inteira", 22, Color(0.85, 0.75, 1.0)], ["t", "Sobe uma raridade em cada peça que %s veste (comum 3 troféus, rara 6)." % br.nome, 13, Color(1, 1, 1)], ["sep"]]
+		var it_r: Array = [["t", "Raridade da fantasia inteira", 22, Color(0.85, 0.75, 1.0)], ["t", "Sobe uma raridade em cada peça que %s veste (de %d a %d troféus por peça, conforme a raridade)." % [br.nome, Balanco.REFORCO_CUSTO[0], Balanco.REFORCO_CUSTO[-1]], 13, Color(1, 1, 1)], ["sep"]]
 		it_r.append(["t", "Custo total: %d troféus (você tem %d)." % [sr["custo"], estado.trofeus] if sr["ok"] else str(sr["motivo"]), 13, Color(0.7, 1.0, 0.7) if sr["ok"] else Color(1.0, 0.6, 0.55)])
 		_caixa_dica(it_r, 300.0, Color(0.8, 0.7, 1.0), Color(0.8, 0.7, 1.0), mouse, Vector2(16, 24))
 		return
@@ -4300,7 +4493,7 @@ func _dica() -> void:
 		return
 	var cj: int = p.conjunto()
 	var cor_cj: Color = Pecas.CONJUNTO_COR[cj]
-	var cor_r: Color = Pecas.RARIDADE_COR[p.raridade]
+	var cor_r: Color = Pecas.cor_rar(p.raridade)
 	var verde := Color(0.7, 1.0, 0.7)
 	var cinza := Color(1, 1, 1, 0.55)
 	# essencial: nome, raridade, o que faz, a fantasia do gato escolhido e uma linha de ação
@@ -4332,13 +4525,13 @@ func _dica() -> void:
 	itens.append(["sep"])
 	var mn: String = _motivo_nivel(p)
 	if mn == "":
-		itens.append(["t", "Arraste ao carretel: nível +1 (%d blocos)" % Balanco.CUSTO_PROMOCAO, 13, verde])
+		itens.append(["t", "Arraste ao carretel: nível +1 (%d blocos)" % Balanco.custo_promocao(p.nivel), 13, verde])
 	elif par > 0:
 		itens.append(["t", "Solte sobre outra igual: funde, de graça", 13, verde])
 	elif p.nivel >= Balanco.NIVEL_MAX:
 		itens.append(["t", "Nível máximo", 13, cinza])
 	else:
-		itens.append(["t", "Faltam blocos para o nível (custa %d)" % Balanco.CUSTO_PROMOCAO, 13, cinza])
+		itens.append(["t", "Faltam blocos para o nível (custa %d)" % Balanco.custo_promocao(p.nivel), 13, cinza])
 	_caixa_dica(itens, 320.0, cor_cj, cor_r if p.raridade > 0 else Desenho.DOURADO, mouse, Vector2(18, -92))
 
 # ------------------------------------------------------------------ fim de fase
@@ -4439,7 +4632,15 @@ func _rodape_mapa() -> void:
 		Desenho.texto(self, "%d ponto%s de treino por gastar" % [pt, "" if pt == 1 else "s"], Vector2(r.position.x + 40, r.position.y + 24), 16, COR_TINTA_ESC, r.size.x - 48.0)
 	elif estado.bonecos.size() < Balanco.MAX_BONECOS:
 		_texto_dir("Cada cômodo vencido traz um gato novo", 1236.0, 690.0, 13, Color(0.75, 0.9, 1.0), 3)
-	Desenho.texto(self, "Esc ou II: menu de pausa  |  T: oficina da torre" + ("  |  I: invasão sem fim  |  V: casa ou lado de fora" if estado.campanha_vencida() else ""), Vector2(48, 668), 13, Color(1, 1, 1, 0.5), -1.0, 3)
+	var rod: String = "Esc ou II: menu de pausa  |  T: oficina da torre"
+	if estado.campanha_vencida() and mapa_casa != null:
+		var dst: int = mapa_casa.destaque()
+		var inv_ok: bool = mapa_casa.invasao_fora_liberada(dst) if mapa_casa.vista_fora() else (dst >= 1 and dst <= estado.fase_liberada)
+		if inv_ok:
+			rod += "  |  I: invasão sem fim"
+		if estado.ato_atual() > 1:
+			rod += "  |  V: casa ou lado de fora"
+	Desenho.texto(self, rod, Vector2(48, 668), 13, Color(1, 1, 1, 0.5), -1.0, 3)
 	if confirma_nova > 0.0:
 		Desenho.texto(self, "Isso apaga o progresso e as peças.", Vector2(48, 724), 13, Color(1, 0.55, 0.5), -1.0, 3)
 

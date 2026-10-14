@@ -28,6 +28,7 @@ const PRIO_ELITE := 10
 const PRIO_CHEFE := 11
 var prioridade: int = -1
 var em_heranca: bool = false   # o poder em disparo é uma herança (cura, proteção e frenesi saem reduzidos)
+var heranca_grau: int = 1      # grau da herança em disparo
 
 func iniciar(e: Estado, semente: int = 0) -> void:
 	estado = e
@@ -48,6 +49,7 @@ func iniciar(e: Estado, semente: int = 0) -> void:
 		u.linha = b.linha
 		u.postura = b.postura_atual()
 		u.herancas = b.herancas.duplicate()
+		u.heranca_graus = b.graus.duplicate()
 		u.atr = b.atr.duplicate()
 		# saem correndo da torre para o posto: o da linha ou o que o jogador escolheu na preparação
 		var desvio: float = rng.randf_range(0.0, 25.0)
@@ -1114,18 +1116,38 @@ func _largar(u: Unidade, causa: int) -> void:
 		_ev({"t": "drop", "x": u.x, "y": u.y, "tipo": nova.tipo, "marca": veio, "raridade": nova.raridade})
 
 func _raridade_do_drop(u: Unidade) -> int:
-	var f: float = estado.fase - 1
+	var g: float = Balanco.degrau_drop(estado.fase, estado.ato, estado.invasao, estado.onda_invasao)
 	var r: float = rng.randf()
+	var mitica: float
+	var lend: float
+	var epica: float
+	var rara: float
 	if u.chefe:
-		return Pecas.Raridade.LENDARIA if r < Balanco.CHEFE_LENDARIA + f * Balanco.CHEFE_LENDARIA_FASE else Pecas.Raridade.RARA
-	var lend: float = f * Balanco.DROP_LENDARIA_FASE
-	var rara: float = Balanco.DROP_RARA + f * Balanco.DROP_RARA_FASE
-	if u.elite:
-		lend = Balanco.ELITE_LENDARIA + f * Balanco.ELITE_LENDARIA_FASE
+		# o chefe larga no mínimo rara
+		mitica = maxf(0.0, g - Balanco.CHEFE_MITICA_DESDE) * Balanco.CHEFE_MITICA_FASE
+		lend = maxf(0.0, g - Balanco.DROP_LENDARIA_DESDE) * Balanco.CHEFE_LENDARIA_FASE
+		epica = Balanco.CHEFE_EPICA + minf(g, Balanco.CHEFE_EPICA_TETO) * Balanco.CHEFE_EPICA_FASE
+		rara = 1.0
+	elif u.elite:
+		mitica = maxf(0.0, g - Balanco.DROP_MITICA_DESDE) * Balanco.ELITE_MITICA_FASE
+		lend = maxf(0.0, g - Balanco.DROP_LENDARIA_DESDE) * Balanco.ELITE_LENDARIA_FASE
+		epica = Balanco.ELITE_EPICA + g * Balanco.ELITE_EPICA_FASE
 		rara = Balanco.ELITE_RARA
+	else:
+		mitica = maxf(0.0, g - Balanco.DROP_MITICA_DESDE) * Balanco.DROP_MITICA_FASE
+		lend = maxf(0.0, g - Balanco.DROP_LENDARIA_DESDE) * Balanco.DROP_LENDARIA_FASE
+		epica = g * Balanco.DROP_EPICA_FASE
+		rara = Balanco.DROP_RARA + minf(g, Balanco.DROP_RARA_TETO) * Balanco.DROP_RARA_FASE
+	if r < mitica:
+		return Pecas.Raridade.MITICA
+	r -= mitica
 	if r < lend:
 		return Pecas.Raridade.LENDARIA
-	if r < lend + rara:
+	r -= lend
+	if r < epica:
+		return Pecas.Raridade.EPICA
+	r -= epica
+	if r < rara:
 		return Pecas.Raridade.RARA
 	return Pecas.Raridade.COMUM
 
@@ -1140,9 +1162,15 @@ func disparar_poder(u: Unidade) -> bool:
 	u.poder_pronto = false
 	return true
 
+## Fração dos poderes de apoio (cura, proteção, frenesi) quando o disparo é uma herança: sobe com o grau.
+func _frac_apoio() -> float:
+	return minf(1.0, Balanco.HERANCA_APOIO * Balanco.heranca_mult(heranca_grau)) if em_heranca else 1.0
+
 ## Heranças: cada poder incorporado dispara sozinho, mais fraco que o da roupa, no seu próprio relógio.
 ## Devolve false se o gato caiu por causa do disparo.
 func _herancas_agem(u: Unidade, dt: float) -> bool:
+	while u.heranca_graus.size() < u.herancas.size():
+		u.heranca_graus.append(1)
 	while u.heranca_cd.size() < u.herancas.size():
 		u.heranca_cd.append(Balanco.HERANCA_PRIMEIRO + 2.5 * u.heranca_cd.size() + 1.7 * maxi(0, aliados.find(u)))   # cada gato no seu tempo: não saem todos juntos
 	for i in u.herancas.size():
@@ -1155,14 +1183,15 @@ func _herancas_agem(u: Unidade, dt: float) -> bool:
 		var f0: float = u.poder_forca
 		u.poder = Pecas.PODER_TIPO[conj]
 		u.poder_conj = conj
-		u.poder_forca = Balanco.HERANCA_FORCA + Balanco.HERANCA_FORCA_NIVEL * (u.boneco.nivel if u.boneco != null else 10)
+		heranca_grau = u.heranca_graus[i]
+		u.poder_forca = (Balanco.HERANCA_FORCA + Balanco.HERANCA_FORCA_NIVEL * (u.boneco.nivel if u.boneco != null else 10)) * Balanco.heranca_mult(heranca_grau)
 		em_heranca = true
 		var saiu: bool = _usar_poder(u)
 		em_heranca = false
 		u.poder = p0
 		u.poder_conj = c0
 		u.poder_forca = f0
-		u.heranca_cd[i] = Balanco.HERANCA_INTERVALO if saiu else 1.0   # sem alvo agora: tenta de novo logo
+		u.heranca_cd[i] = Balanco.heranca_intervalo(heranca_grau) if saiu else 1.0   # sem alvo agora: tenta de novo logo
 		if not u.vivo:
 			return false
 	return true
@@ -1195,7 +1224,7 @@ func _usar_poder(u: Unidade) -> bool:
 				return false
 			for v in meus:
 				if v.vivo:
-					v.vida = minf(v.vida_max, v.vida + v.vida_max * Balanco.PODER_CURA * (Balanco.HERANCA_APOIO if em_heranca else 1.0))
+					v.vida = minf(v.vida_max, v.vida + v.vida_max * Balanco.PODER_CURA * _frac_apoio())
 					pontos.append(Vector2(v.x, v.y))
 		Pecas.Poder.PROTEGE, Pecas.Poder.FRENESI:
 			if outros.is_empty():
@@ -1203,9 +1232,9 @@ func _usar_poder(u: Unidade) -> bool:
 			for v in meus:
 				if v.vivo:
 					if u.poder == Pecas.Poder.PROTEGE:
-						v.protegido_t = maxf(v.protegido_t, Balanco.PODER_PROTEGE_T * (Balanco.HERANCA_APOIO if em_heranca else 1.0))
+						v.protegido_t = maxf(v.protegido_t, Balanco.PODER_PROTEGE_T * _frac_apoio())
 					else:
-						v.frenesi_t = maxf(v.frenesi_t, Balanco.PODER_FRENESI_T * (Balanco.HERANCA_APOIO if em_heranca else 1.0))
+						v.frenesi_t = maxf(v.frenesi_t, Balanco.PODER_FRENESI_T * _frac_apoio())
 					pontos.append(Vector2(v.x, v.y))
 		Pecas.Poder.RAIO:
 			var alvo: Unidade = null
@@ -1263,7 +1292,7 @@ func _usar_poder(u: Unidade) -> bool:
 		Pecas.Poder.INVOCA:
 			if u.clone:
 				return false
-			var fr: float = Balanco.HERANCA_APOIO if em_heranca else 1.0
+			var fr: float = _frac_apoio()
 			for k in Balanco.PODER_INVOCA_N:
 				var s: float = -1.0 if k % 2 == 0 else 1.0
 				var f := Unidade.new()
@@ -1310,7 +1339,7 @@ func _usar_poder(u: Unidade) -> bool:
 			u.y = fundo.y
 			u.vx = -9999.0   # o desenho pula para o lugar novo, sem deslizar
 			u.alvo = fundo
-			u.protegido_t = maxf(u.protegido_t, Balanco.PODER_TELEPORTE_PROTEGE * (Balanco.HERANCA_APOIO if em_heranca else 1.0))
+			u.protegido_t = maxf(u.protegido_t, Balanco.PODER_TELEPORTE_PROTEGE * _frac_apoio())
 			pontos.append(Vector2(fundo.x, fundo.y))
 			_dano_poder(u, fundo, base * Balanco.PODER_TELEPORTE_DANO)
 		Pecas.Poder.PUXA:
@@ -1375,7 +1404,7 @@ func _usar_poder(u: Unidade) -> bool:
 						_dano_poder(u, v, base * Balanco.PODER_EMPURRA_DANO)
 					Pecas.Poder.GIRO:
 						_dano_poder(u, v, base * Balanco.PODER_GIRO_DANO)
-	var evp: Dictionary = {"t": "poder", "x": u.x, "y": u.y, "eq": u.equipe, "poder": u.poder, "conj": u.poder_conj, "pontos": pontos, "heranca": em_heranca}
+	var evp: Dictionary = {"t": "poder", "x": u.x, "y": u.y, "eq": u.equipe, "poder": u.poder, "conj": u.poder_conj, "pontos": pontos, "heranca": em_heranca, "grau": heranca_grau if em_heranca else 0}
 	evp.merge(extra)
 	_ev(evp)
 	return true
@@ -1579,6 +1608,7 @@ static func ficha_de(e: Estado, b: Boneco) -> Unidade:
 	u.linha = b.linha
 	u.postura = b.postura_atual()
 	u.herancas = b.herancas.duplicate()
+	u.heranca_graus = b.graus.duplicate()
 	u.atr = b.atr.duplicate()
 	s.calcular(u)
 	u.vida = u.vida_max
@@ -1647,6 +1677,11 @@ static func ficha_linhas(u: Unidade) -> Array:
 	return l
 
 ## Nome da herança: o poder e a fantasia de onde veio.
-static func heranca_nome(conj: int) -> String:
+static func heranca_nome(conj: int, grau: int = 1) -> String:
 	var c: int = clampi(conj, 0, Pecas.PODER_NOME.size() - 1)
-	return "%s (%s)" % [Pecas.PODER_NOME[c], Pecas.CONJUNTO_NOME[c]]
+	return "%s (%s)" % [heranca_nome_curto(c, grau), Pecas.CONJUNTO_NOME[c]]
+
+## "Relâmpago" no grau I, "Relâmpago II" a partir do grau II.
+static func heranca_nome_curto(conj: int, grau: int = 1) -> String:
+	var c: int = clampi(conj, 0, Pecas.PODER_NOME.size() - 1)
+	return Pecas.PODER_NOME[c] + ("" if grau <= 1 else " " + Balanco.heranca_grau_romano(grau))

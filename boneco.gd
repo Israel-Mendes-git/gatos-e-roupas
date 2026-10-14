@@ -14,7 +14,8 @@ var pecas: Array = [null, null, null, null]  # cabeça, corpo, mão, acessório
 var linha: int = Linha.MEIO  # onde fica na luta; o jogador escolhe no guarda-roupa
 var postura: int = -1        # Postura escolhida na preparação da onda; -1 = a da linha (frente avança, o resto segura)
 var posto: Vector2 = SEM_POSTO   # posto escolhido arrastando o gato na preparação; SEM_POSTO = o da linha
-var herancas: Array[int] = []    # fantasias (Pecas.Conjunto) cujo poder o gato incorporou como passiva, uma a cada HERANCA_NIVEIS níveis
+var herancas: Array[int] = []    # fantasias (Pecas.Conjunto) cujo poder o gato incorporou como passiva, sem repetição
+var graus: Array[int] = []       # grau (1 a HERANCA_GRAU_MAX) de cada herança, na mesma ordem; incorporar a mesma fantasia de novo sobe o grau
 var nivel: int = 0
 var xp: int = 0              # experiência desde o último nível
 var pontos: int = 0          # pontos de treino por gastar (um por nível)
@@ -50,17 +51,38 @@ func fantasia_completa() -> int:
 			return c
 	return -1
 
+## Quantas incorporações o gato já fez (cada grau conta uma).
+func incorporacoes() -> int:
+	var n: int = 0
+	for g in graus:
+		n += g
+	return n
+
+## Grau da herança desta fantasia (0 = ainda não tem).
+func grau_de(conj: int) -> int:
+	var i: int = herancas.find(conj)
+	return 0 if i < 0 else (graus[i] if i < graus.size() else 1)
+
 ## Heranças a que o nível já dá direito e que ainda não foram incorporadas.
 func herancas_pendentes() -> int:
-	return maxi(0, nivel / Balanco.HERANCA_NIVEIS - herancas.size())
+	return maxi(0, nivel / Balanco.HERANCA_NIVEIS - incorporacoes())
 
-## Incorpora o poder da fantasia completa vestida, se há herança pendente. Devolve a fantasia ou -1.
+## A fantasia completa vestida pode ser incorporada agora? (Já ter a herança no grau máximo não deixa.)
+func pode_incorporar(conj: int) -> bool:
+	return herancas_pendentes() > 0 and conj >= 0 and grau_de(conj) < Balanco.HERANCA_GRAU_MAX
+
+## Incorpora o poder da fantasia completa vestida, se há herança pendente: fantasia nova vira uma herança
+## de grau I; a mesma de novo sobe o grau da que já existe. Devolve a fantasia ou -1.
 func incorporar() -> int:
-	if herancas_pendentes() <= 0:
-		return -1
 	var c: int = fantasia_completa()
-	if c >= 0:
+	if not pode_incorporar(c):
+		return -1
+	var i: int = herancas.find(c)
+	if i >= 0:
+		graus[i] += 1
+	else:
 		herancas.append(c)
+		graus.append(1)
 	return c
 
 ## Soma experiência. Devolve quantos níveis subiu.
@@ -88,7 +110,7 @@ func para_dados() -> Dictionary:
 	var ps: Array = []
 	for p in pecas:
 		ps.append(null if p == null else p.para_dados())
-	return {"nome": nome, "linha": linha, "postura": postura, "posto": [posto.x, posto.y], "herancas": herancas.duplicate(), "nivel": nivel, "xp": xp, "pontos": pontos, "atr": atr.duplicate(), "pecas": ps}
+	return {"nome": nome, "linha": linha, "postura": postura, "posto": [posto.x, posto.y], "herancas": herancas.duplicate(), "graus": graus.duplicate(), "nivel": nivel, "xp": xp, "pontos": pontos, "atr": atr.duplicate(), "pecas": ps}
 
 static func de_dados(d: Dictionary) -> Boneco:
 	var b := Boneco.new()
@@ -102,9 +124,21 @@ static func de_dados(d: Dictionary) -> Boneco:
 	b.xp = int(d.get("xp", 0))
 	var hs: Variant = d.get("herancas", [])
 	if hs is Array:
+		# gravação antiga: a mesma fantasia repetida na lista vira grau (migração); a nova traz `graus` ao lado
+		var gs: Array = d.get("graus", [])
+		var k: int = 0
 		for h in hs:
-			if int(h) >= 0 and int(h) < Pecas.PODER_TIPO.size() and b.herancas.size() < Balanco.BONECO_NIVEL_MAX / Balanco.HERANCA_NIVEIS:
-				b.herancas.append(int(h))
+			var c: int = int(h)
+			var g: int = clampi(int(gs[k]), 1, Balanco.HERANCA_GRAU_MAX) if k < gs.size() else 1
+			k += 1
+			if c < 0 or c >= Pecas.PODER_TIPO.size():
+				continue
+			var i: int = b.herancas.find(c)
+			if i >= 0:
+				b.graus[i] = mini(Balanco.HERANCA_GRAU_MAX, b.graus[i] + g)
+			elif b.incorporacoes() < Balanco.BONECO_NIVEL_MAX / Balanco.HERANCA_NIVEIS:
+				b.herancas.append(c)
+				b.graus.append(g)
 	b.pontos = int(d.get("pontos", 0))
 	var at: Array = d.get("atr", [])
 	for i in mini(3, at.size()):

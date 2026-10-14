@@ -66,7 +66,7 @@ func para_dados() -> Dictionary:
 	return {"tipo": tipo, "nivel": nivel, "raridade": raridade, "abates": abates, "prog": prog, "marcas": marcas.duplicate()}
 
 static func de_dados(d: Dictionary) -> Peca:
-	var p := Peca.new(int(d.get("tipo", 0)), int(d.get("nivel", 0)), int(d.get("raridade", 0)))
+	var p := Peca.new(int(d.get("tipo", 0)), clampi(int(d.get("nivel", 0)), 0, Balanco.NIVEL_MAX), clampi(int(d.get("raridade", 0)), 0, Balanco.RARIDADE_PODER.size() - 1))
 	p.abates = int(d.get("abates", 0))
 	p.prog = int(d.get("prog", 0))
 	for m in d.get("marcas", []):

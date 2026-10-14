@@ -11,6 +11,7 @@ var tipo: int = Tipo.COMUM
 var pequeno: bool = false      # filhote de gêmeo
 var linha: int = Boneco.Linha.MEIO
 var heranca_cd: Array[float] = []   # relógio de cada herança (o poder incorporado dispara sozinho)
+var heranca_graus: Array[int] = []   # grau de cada herança (mesma ordem)
 var herancas: Array[int] = []   # passivas herdadas (Pecas.Conjunto); ver Balanco.HER_*
 var atordoa_chance: float = 0.0  # herança Atordoa: chance de o golpe corpo a corpo atordoar
 var gelo_chance: float = 0.0     # herança Gelo: chance de o golpe deixar o alvo lento

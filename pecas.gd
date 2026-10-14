@@ -288,9 +288,16 @@ const PODER_DICA: Array[String] = [
 const CONJUNTO_MIN := 2   # peças para o bônus parcial; com as 4, bônus completo
 
 # ---------- Raridades ----------
-enum Raridade { COMUM, RARA, LENDARIA }
-const RARIDADE_NOME: Array[String] = ["Comum", "Rara", "Lendária"]
-const RARIDADE_COR: Array[Color] = [Color(0.8, 0.8, 0.8), Color(0.35, 0.65, 1.0), Color(1.0, 0.72, 0.15)]
+enum Raridade { COMUM, RARA, EPICA, LENDARIA, MITICA }
+const RARIDADE_NOME: Array[String] = ["Comum", "Rara", "Épica", "Lendária", "Mítica"]
+const RARIDADE_COR: Array[Color] = [Color(0.8, 0.8, 0.8), Color(0.35, 0.65, 1.0), Color(0.72, 0.38, 1.0), Color(1.0, 0.72, 0.15), Color(0.3, 0.95, 0.95)]
+
+## Cor da raridade. A Mítica gira pelo arco-íris (claro, perto do ciano); as outras são fixas.
+static func cor_rar(r: int) -> Color:
+	var i: int = clampi(r, 0, RARIDADE_COR.size() - 1)
+	if i == Raridade.MITICA:
+		return Color.from_hsv(fposmod(Time.get_ticks_msec() / 1000.0 * 0.3 + 0.5, 1.0), 0.55, 1.0)
+	return RARIDADE_COR[i]
 
 ## Linha da dica para n marcas de um tipo (ex.: "Brasa ×2: golpes queimam (+4/s)").
 static func marca_linha(m: int, n: int) -> String:
