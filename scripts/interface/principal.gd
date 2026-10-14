@@ -141,6 +141,7 @@ const AJUDA_ATALHOS: Array[String] = [
 	"Clique numa peça do guarda-roupa: veste no gato selecionado (ou no primeiro com o espaço livre). Clique numa peça vestida: devolve.",
 	"Arraste uma peça: no gato veste; no carretel sobe o nível; na estrela sobe a raridade; sobre uma igual, funde. Esc cancela o arrasto.",
 	"Clique num gato para selecioná-lo. Teclas 1 a 5 também. Clique na tarja de uma fantasia para filtrar o guarda-roupa por ela.",
+	"Lápis acima do nome (ou duplo clique no nome): dá outro nome ao gato. Enter confirma, Esc desiste.",
 	"Q / E ou Tab: troca de aba.   V: vestir o time.   Z: desfazer.   F: fichário.   T: oficina da torre.   ? : esta ajuda.",
 	"Espaço ou Enter: LUTAR.   Botão direito numa peça: abre o fichário na fantasia dela.",
 ]
@@ -3526,8 +3527,10 @@ func _cabecalho_boneco(b: Boneco, base: Vector2, i: int, foco: int = SEL_NENHUM)
 		Desenho.texto(self, msg, Vector2(pl.position.x, pl.end.y - 3.0), 12, Color(0.6, 0.12, 0.08) if nome_aviso_t > 0.0 else COR_TINTA_ESC, pl.size.x)
 		return
 	Desenho.texto(self, b.nome, Vector2(base.x - 73, 36), 22, tinta, 146.0, 0 if escolhido else 5)
-	if arrasto.is_empty() and nome_idx < 0 and (pl.has_point(mouse) or rect_lapis(i).has_point(mouse)) and _pode_renomear():
-		_lapis(rect_lapis(i), rect_lapis(i).has_point(mouse))
+	if arrasto.is_empty() and nome_idx < 0 and _pode_renomear():
+		# sempre à vista (apagado) para o jogador achar onde renomear; acende com o mouse na plaquinha ou no lápis
+		var perto: bool = pl.has_point(mouse) or rect_lapis(i).has_point(mouse)
+		_lapis(rect_lapis(i), rect_lapis(i).has_point(mouse), 1.0 if perto else 0.5)
 	if maximo:
 		Desenho.texto(self, "Nível máximo", Vector2(base.x - 73, 56), 13, Color(0.5, 0.3, 0.0) if escolhido else Desenho.DOURADO, 146.0, 0 if escolhido else 3)
 		return
@@ -3535,15 +3538,15 @@ func _cabecalho_boneco(b: Boneco, base: Vector2, i: int, foco: int = SEL_NENHUM)
 	_barra(Rect2(base.x - 24, 49, 92, 8), float(b.xp) / float(maxi(1, b.xp_para_subir())), Color(0.4, 0.7, 1.0))
 
 ## Abinha com um lápis desenhado (renomear o gato).
-func _lapis(r: Rect2, forte: bool) -> void:
-	draw_rect(r, Color(0.25, 0.14, 0.04, 0.95))
-	draw_rect(r.grow(-2.0), Color(1.0, 0.92, 0.6) if forte else Color(0.95, 0.8, 0.45))
+func _lapis(r: Rect2, forte: bool, alfa: float = 1.0) -> void:
+	draw_rect(r, Color(0.25, 0.14, 0.04, 0.95 * alfa))
+	draw_rect(r.grow(-2.0), Color(1.0, 0.92, 0.6, alfa) if forte else Color(0.95, 0.8, 0.45, alfa))
 	var c: Vector2 = r.get_center()
 	var pts := PackedVector2Array([c + Vector2(-8, 5), c + Vector2(-6, 7), c + Vector2(-1, 5), c + Vector2(7, -3), c + Vector2(4, -6), c + Vector2(-4, 2)])
-	draw_colored_polygon(pts, Color(0.85, 0.45, 0.15))
+	draw_colored_polygon(pts, Color(0.85, 0.45, 0.15, alfa))
 	pts.append(pts[0])
-	draw_polyline(pts, Color(0.25, 0.14, 0.04), 1.5)
-	draw_line(c + Vector2(4, -6), c + Vector2(7, -3), Color(0.95, 0.5, 0.55), 3.0)
+	draw_polyline(pts, Color(0.25, 0.14, 0.04, alfa), 1.5)
+	draw_line(c + Vector2(4, -6), c + Vector2(7, -3), Color(0.95, 0.5, 0.55, alfa), 3.0)
 
 ## Treino: botões grandes com ganho escrito quando há ponto; fichinhas com os valores quando não há.
 func _treino_boneco(b: Boneco, i: int, base: Vector2) -> void:
