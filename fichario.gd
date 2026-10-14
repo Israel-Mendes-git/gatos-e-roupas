@@ -358,8 +358,18 @@ static func _maiuscula(s: String) -> String:
 	return s.substr(0, 1).to_upper() + s.substr(1)
 
 # ------------------------------------------------------------------ texto medido
+static var _larg_c: Dictionary = {}   # tamanho -> {texto -> largura}: a fonte não muda
+
 static func largura(txt: String, tam: int) -> float:
-	return ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	var por_tam: Dictionary = _larg_c.get(tam, {})
+	if por_tam.has(txt):
+		return float(por_tam[txt])
+	var w: float = ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	if por_tam.size() > 400:
+		por_tam.clear()
+	por_tam[txt] = w
+	_larg_c[tam] = por_tam
+	return w
 
 ## Maior tamanho da lista em que o texto cabe em `larg` (o último, se nenhum couber).
 static func tam_cabe(txt: String, tams: Array, larg: float) -> int:

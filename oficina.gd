@@ -508,8 +508,18 @@ func _nove(src: Rect2, dst: Rect2, esc: float, cor: Color, miolo: bool, tex: Tex
 func _texto(txt: String, pos: Vector2, tam: int, cor: Color, larg: float = -1.0, contorno: int = 0) -> void:
 	Desenho.texto(self, txt, pos, tam, cor, larg, contorno)
 
+static var _larg_c: Dictionary = {}   # tamanho -> {texto -> largura}: a fonte não muda
+
 static func largura(txt: String, tam: int) -> float:
-	return ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	var por_tam: Dictionary = _larg_c.get(tam, {})
+	if por_tam.has(txt):
+		return float(por_tam[txt])
+	var w: float = ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	if por_tam.size() > 400:
+		por_tam.clear()
+	por_tam[txt] = w
+	_larg_c[tam] = por_tam
+	return w
 
 ## Maior tamanho da lista em que o texto cabe em `larg`.
 static func tam_cabe(txt: String, tams: Array, larg: float) -> int:

@@ -83,7 +83,32 @@ static func r(c: CanvasItem, x: float, y: float, w: float, h: float, cor: Color,
 
 ## Desenho em pixels a partir de linhas de texto: cada letra é um pixel da cor `paleta[letra]`;
 ## ponto ou espaço é transparente. (x, y) é o canto de cima à esquerda.
+## Retângulos já mesclados de cada sprite (chave: hash do desenho + paleta; a entrada guarda os dois para conferir).
+## Os chamadores montam as linhas e a paleta de novo a cada quadro, então a chave é pelo conteúdo.
+static var _cache_sprite: Dictionary = {}
+
 static func sprite(c: CanvasItem, x: float, y: float, linhas: Array, paleta: Dictionary, f: float = 0.0) -> void:
+	var chave: int = linhas.hash() * 31 + paleta.hash()
+	var e: Array = _cache_sprite.get(chave, [])
+	if e.is_empty() or e[0] != linhas or e[1] != paleta:
+		e = _montar_sprite(linhas, paleta)
+		if _cache_sprite.size() > 600:
+			_cache_sprite.clear()
+		_cache_sprite[chave] = e
+	var rs: Array = e[2]
+	var cs: PackedColorArray = e[3]
+	if f <= 0.0:
+		for k in rs.size():
+			var q: Rect2 = rs[k]
+			c.draw_rect(Rect2(x + q.position.x, y + q.position.y, q.size.x, q.size.y), cs[k])
+	else:
+		for k in rs.size():
+			var q2: Rect2 = rs[k]
+			c.draw_rect(Rect2(x + q2.position.x, y + q2.position.y, q2.size.x, q2.size.y), Desenho.b(cs[k], f))
+
+static func _montar_sprite(linhas: Array, paleta: Dictionary) -> Array:
+	var rs: Array = []
+	var cs := PackedColorArray()
 	for j in linhas.size():
 		var l: String = linhas[j]
 		var i: int = 0
@@ -95,5 +120,7 @@ static func sprite(c: CanvasItem, x: float, y: float, linhas: Array, paleta: Dic
 			var n: int = 1
 			while i + n < l.length() and l[i + n] == ch:
 				n += 1
-			c.draw_rect(Rect2(x + i, y + j, n + 0.03, 1.03), Desenho.b(paleta[ch], f))
+			rs.append(Rect2(i, j, n + 0.03, 1.03))
+			cs.append(paleta[ch])
 			i += n
+	return [linhas.duplicate(true), paleta.duplicate(true), rs, cs]

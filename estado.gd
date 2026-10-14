@@ -209,14 +209,17 @@ func registrar(tipo: int) -> void:
 	colecao[tipo] = true
 
 func ja_teve(tipo: int) -> bool:
-	_garantir_colecao()
+	if colecao.size() < Pecas.SLOT.size():
+		_garantir_colecao()
 	return colecao[tipo]
 
 ## Quantas das 4 peças da fantasia o jogador já teve.
 func pecas_da_fantasia(c: int) -> int:
+	if colecao.size() < Pecas.SLOT.size():
+		_garantir_colecao()
 	var n: int = 0
 	for tp in Pecas.CONJUNTO_PECAS[c]:
-		if ja_teve(tp):
+		if colecao[tp]:
 			n += 1
 	return n
 

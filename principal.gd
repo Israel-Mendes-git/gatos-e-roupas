@@ -184,6 +184,14 @@ var guardiao: Guardiao
 
 # guarda-roupa com abas e rolagem
 var aba: int = ABA_TODAS
+var _coberto_ant: bool = false   # fichário ou oficina estavam abertos no quadro anterior (ver _process)
+var _coberto_q: int = 0
+var _cont_aba_q: int = -1          # quadro em que _cont_aba foi calculado (cache só do desenho)
+var _cont_aba: Array[int] = []
+var _mapa_guarda_q: int = -1       # idem para o mapa "melhor peça de cada tipo" do desenho
+var _mapa_guarda_c: Dictionary = {}
+var _quebrar_c: Dictionary = {}
+var _tam_cabe_c: Dictionary = {}   # cache de _tam_cabe: a fonte não muda
 var rolagem: int = 0  # primeira linha visível
 var _lista: Array[Peca] = []
 var _lista_suja: bool = true
@@ -711,11 +719,24 @@ func _rolagem_max() -> int:
 func _contar_aba(k: int) -> int:
 	if k == ABA_FANTASIAS:
 		return _fantasias_prontas()
-	var n: int = 0
-	for p in estado.guarda:
-		if k == ABA_TODAS or (k == ABA_NOVAS and p.nova) or (k >= 0 and k < Pecas.SLOTS and p.slot() == k):
-			n += 1
-	return n
+	# só o desenho chama isto: uma varredura por quadro serve a todas as abas (antes eram 7 varreduras)
+	var qd: int = Engine.get_process_frames()
+	if _cont_aba_q != qd or _cont_aba.size() != Pecas.SLOTS + 2:
+		_cont_aba_q = qd
+		_cont_aba.clear()
+		_cont_aba.resize(Pecas.SLOTS + 2)   # [0..SLOTS-1] por espaço, SLOTS = novas, SLOTS+1 = todas
+		for p in estado.guarda:
+			_cont_aba[Pecas.SLOT[p.tipo]] += 1
+			if p.nova:
+				_cont_aba[Pecas.SLOTS] += 1
+		_cont_aba[Pecas.SLOTS + 1] = estado.guarda.size()
+	if k == ABA_TODAS:
+		return _cont_aba[Pecas.SLOTS + 1]
+	if k == ABA_NOVAS:
+		return _cont_aba[Pecas.SLOTS]
+	if k >= 0 and k < Pecas.SLOTS:
+		return _cont_aba[k]
+	return 0
 
 func _atualizar_botoes() -> void:
 	pass  # (o botão de comprar boneco saiu: o time é fixo)
@@ -1188,10 +1209,21 @@ func _cartao_fant_em(p: Vector2) -> int:
 ## Melhor peça parada no guarda-roupa de cada tipo: {tipo: Peca}.
 func _mapa_guarda() -> Dictionary:
 	var m: Dictionary = {}
+	var ql: Dictionary = {}
 	for q in estado.guarda:
-		if not m.has(q.tipo) or _qualidade(q) > _qualidade(m[q.tipo]):
+		var qq: float = _qualidade(q)
+		if not m.has(q.tipo) or qq > float(ql[q.tipo]):
 			m[q.tipo] = q
+			ql[q.tipo] = qq
 	return m
+
+## Igual a _mapa_guarda, mas uma vez por quadro: só para o desenho (a lógica de vestir usa sempre a versão fresca).
+func _mapa_guarda_desenho() -> Dictionary:
+	var qd: int = Engine.get_process_frames()
+	if _mapa_guarda_q != qd:
+		_mapa_guarda_q = qd
+		_mapa_guarda_c = _mapa_guarda()
+	return _mapa_guarda_c
 
 ## Situação da fantasia c para o gato `alvo`: {"pecas": [Peca ou null], "onde": [FS_*], "dono": [índice do gato ou -1],
 ## "tipos": [tipo], "gato": n, "guarda": n, "outro": n, "nao": n}. Cada lista tem 4 itens, na ordem das peças da fantasia.
@@ -1231,7 +1263,7 @@ func _situacao_fantasia(c: int, alvo: int, mapa: Dictionary = {}) -> Dictionary:
 ## Quantas fantasias o gato escolhido pode vestir inteiras agora (e ainda não veste).
 func _fantasias_prontas() -> int:
 	var alvo: int = _alvo_vestir()
-	var mapa: Dictionary = _mapa_guarda()
+	var mapa: Dictionary = _mapa_guarda_desenho()
 	var n: int = 0
 	for c in Pecas.CONJUNTO_PECAS.size():
 		var st: Dictionary = _situacao_fantasia(c, alvo, mapa)
@@ -2610,11 +2642,35 @@ func _process(delta: float) -> void:
 			tijolos_voando.remove_at(i)
 	_atualizar_guarda(delta)
 	if modo != Modo.COMBATE:
-		queue_redraw()
+		# fichário ou oficina abertos: o fundo fica atrás de uma cortina preta de 74% e de um painel cheio,
+		# então basta redesenhá-lo a cada 4 quadros (o mapa e o guarda-roupa custam 15 a 30 ms por desenho)
+		var coberto: bool = (fichario != null and fichario.aberto()) or (oficina != null and oficina.aberta)
+		if coberto and _coberto_ant:
+			_coberto_q = (_coberto_q + 1) % 4
+			if _coberto_q == 0:
+				queue_redraw()
+		else:
+			_coberto_q = 0
+			queue_redraw()
+		_coberto_ant = coberto
 
 # ------------------------------------------------------------------ utilidades de texto
 ## Quebra o texto em linhas que cabem em `larg` pixels.
 func _quebrar(txt: String, tam: int, larg: float) -> Array[String]:
+	# a fonte não muda: a mesma quebra é pedida a cada quadro pelos avisos e dicas (cópia, para ninguém mexer no cache)
+	var chave: int = hash([txt, tam, larg])
+	var ent: Array = _quebrar_c.get(chave, [])
+	if not ent.is_empty() and ent[0] == txt and ent[1] == tam and ent[2] == larg:
+		var cop: Array[String] = []
+		cop.assign(ent[3])
+		return cop
+	var res: Array[String] = _quebrar_calc(txt, tam, larg)
+	if _quebrar_c.size() > 400:
+		_quebrar_c.clear()
+	_quebrar_c[chave] = [txt, tam, larg, res.duplicate()]
+	return res
+
+func _quebrar_calc(txt: String, tam: int, larg: float) -> Array[String]:
 	var fonte: Font = ThemeDB.fallback_font
 	var res: Array[String] = []
 	var atual: String = ""
@@ -2758,11 +2814,20 @@ func _texto_dir(txt: String, x_dir: float, y: float, tam: int, cor: Color, conto
 
 ## Maior tamanho (da lista) em que o texto cabe em `larg`.
 func _tam_cabe(txt: String, tams: Array, larg: float) -> int:
+	var chave: int = hash([txt, tams, larg])
+	var ent: Array = _tam_cabe_c.get(chave, [])
+	if not ent.is_empty() and ent[0] == txt and ent[1] == tams and ent[2] == larg:
+		return int(ent[3])
+	var res: int = int(tams[tams.size() - 1])
 	var fonte: Font = ThemeDB.fallback_font
 	for tm in tams:
 		if fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(tm)).x <= larg:
-			return int(tm)
-	return int(tams[tams.size() - 1])
+			res = int(tm)
+			break
+	if _tam_cabe_c.size() > 400:
+		_tam_cabe_c.clear()
+	_tam_cabe_c[chave] = [txt, tams.duplicate(), larg, res]
+	return res
 
 func _icone_gui(ico: Rect2, centro: Vector2, esc: float, cor: Color = Color.WHITE) -> void:
 	var tam: Vector2 = ico.size * esc
@@ -3694,7 +3759,7 @@ func _ladrilho(r: Rect2, p: Peca, escondida: bool = false, sob: bool = false) ->
 ## Grade da aba Fantasias: um cartão por fantasia, com as 4 peças, o nome e quantas dá para vestir.
 func _cartoes_fantasias() -> void:
 	var alvo: int = _alvo_vestir()
-	var mapa: Dictionary = _mapa_guarda()
+	var mapa: Dictionary = _mapa_guarda_desenho()
 	var fonte: Font = ThemeDB.fallback_font
 	var sob_c: int = _cartao_fant_em(mouse) if arrasto.is_empty() else -1
 	for c in Pecas.CONJUNTO_PECAS.size():

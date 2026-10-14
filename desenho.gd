@@ -391,13 +391,16 @@ static func _forma_nova(c: CanvasItem, tipo: int, f: float, anim: float) -> void
 			c.draw_circle(Vector2(11, -8), 2.6, b(Color(0.7, 0.35, 1.0), f))
 			c.draw_circle(Vector2(10.2, -9), 0.9, b(Color(1, 1, 1), f))
 
+const PIP_BORDA := Color(0.25, 0.15, 0.0, 0.9)
+
 static func pips(c: CanvasItem, centro: Vector2, nivel: int, raio: float = 2.2, passo: float = 5.6) -> void:
 	if nivel <= 0:
 		return
 	var n: int = nivel
+	var r2: float = raio + 0.9
 	for i in n:
-		var p: Vector2 = centro + Vector2((i - (n - 1) * 0.5) * passo, 0)
-		c.draw_circle(p, raio + 0.9, Color(0.25, 0.15, 0.0, 0.9))
+		var p := Vector2(centro.x + (i - (n - 1) * 0.5) * passo, centro.y)
+		c.draw_circle(p, r2, PIP_BORDA)
 		c.draw_circle(p, raio, DOURADO)
 
 ## Pontinhos coloridos das marcas (uma cor por tipo), com contorno escuro.
