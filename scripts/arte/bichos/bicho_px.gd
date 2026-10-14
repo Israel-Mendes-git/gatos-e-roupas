@@ -63,21 +63,77 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 static func _truque(tipo: int) -> bool:
 	return tipo >= Unidade.Tipo.ATIRADOR and tipo <= Unidade.Tipo.BOMBA
 
-## Tronco do gato que as peças de corpo cobrem (largura e altura em pixels): os bichos maiores esticam a peça até o tronco deles.
+## Tronco do gato que as peças de corpo cobrem (largura e altura em pixels): nos bichos a peça estica até cobrir o tronco deles.
 const TRONCO_GATO := Vector2i(12, 8)
 
-## Colunas e linhas que a peça de corpo ganha neste bicho (RoupaGato.esticar). Chefes e famílias sem arte nova: nada.
-static func esticar_corpo(familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parte: bool) -> Vector2i:
+## Pixels pintados de uma camada da grade de letras, em coordenadas do bicho (y = 0 no chão): {Vector2i: true}.
+static func recorte(L: PackedInt32Array, w: int, h: int, ox: int, oy: int) -> Dictionary:
+	var m: Dictionary = {}
+	for j in h:
+		for i in w:
+			if L[j * w + i] != 0:
+				m[Vector2i(i - ox, j - oy)] = true
+	return m
+
+## Quadro em cache do bicho comum nesta pose: sprite ("x", "y", "l") e molde do tronco ("t"). Vazio para chefes e famílias sem arte nova.
+static func quadro(familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parte: bool) -> Dictionary:
 	if chefe_tipo >= 0 or parte or _novo(familia) == null:
-		return Vector2i.ZERO
-	pose_truque = -1
-	if _truque(tipo):
-		pose_truque = tipo
-		tipo = _tipo_corpo(tipo)
-	var s: Script = _novo(familia)
-	var g: Dictionary = s._geo(tipo, anim, andando, golpe, false) if familia == 4 else s._geo(tipo, anim, andando, golpe, false, false)
-	pose_truque = -1
-	return Vector2i(clampi(int(g["bw"]) - TRONCO_GATO.x, 0, 10), clampi(int(g["bh"]) - TRONCO_GATO.y, 0, 3))
+		return {}
+	var q: Dictionary = ultimo_quadro
+	if q.is_empty():
+		pose_truque = -1
+		if _truque(tipo):
+			pose_truque = tipo
+			tipo = _tipo_corpo(tipo)
+		q = _novo(familia).quadro(tipo, anim, andando, golpe)
+		pose_truque = -1
+	if not q.has("id"):
+		_ids_quadro += 1
+		q["id"] = _ids_quadro   # o mesmo dicionário fica no cache da família: a identidade vale enquanto a pose existir
+	return q
+
+static var _ids_quadro: int = 0
+## Último quadro desenhado por uma família (cada uma grava aqui em desenhar()); quem desenha o bicho esvazia antes.
+static var ultimo_quadro: Dictionary = {}
+
+## Caixa do molde do tronco: Rect2i em pixels do bicho.
+static func caixa_tronco(q: Dictionary) -> Rect2i:
+	if q.has("caixa"):
+		return q["caixa"]
+	var m: Dictionary = q["t"]
+	var r := Rect2i()
+	var primeiro: bool = true
+	for p in m.keys():
+		var v: Vector2i = p
+		if primeiro:
+			r = Rect2i(v, Vector2i.ONE)
+			primeiro = false
+		else:
+			r = r.expand(v).expand(v + Vector2i.ONE)
+	q["caixa"] = r
+	return r
+
+## Colunas e linhas que a peça de corpo ganha (RoupaGato.esticar): sobra um pouco além do tronco, e o molde apara o excesso.
+static func esticar_corpo(q: Dictionary) -> Vector2i:
+	var r: Rect2i = caixa_tronco(q)
+	return Vector2i(clampi(r.size.x + 2 - TRONCO_GATO.x, 0, 16), clampi(r.size.y + 2 - TRONCO_GATO.y, 0, 8))
+
+## Pés do bicho no chão neste quadro, de trás para a frente (x do meio de cada pé, y do chão), lidos da última linha do desenho.
+static func pes(q: Dictionary) -> Array[Vector2]:
+	var r: Array[Vector2] = []
+	var linhas: Array = q["l"]
+	var base: String = linhas[linhas.size() - 1]
+	var chao: float = float(q["y"]) + linhas.size()
+	var i: int = 0
+	while i < base.length():
+		if base[i] == ".":
+			i += 1
+			continue
+		var ini: int = i
+		while i < base.length() and base[i] != ".":
+			i += 1
+		r.append(Vector2(float(q["x"]) + (ini + i) * 0.5, chao))
+	return r
 
 ## Corpo-base de cada truque: o Escudeiro usa o corpo parrudo do Grandalhão, os outros o comum.
 static func _tipo_corpo(tipo: int) -> int:

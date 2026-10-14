@@ -1035,11 +1035,14 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		c.draw_polyline(_fechado(el), Color(ca.r, ca.g, ca.b, 0.5 + 0.3 * pu), 2.0)
 	_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
 	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null
+	BichoPx.ultimo_quadro = {}
 	BichoPx.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando and tipo == Unidade.Tipo.LADRAO, filhote, ct, parte, parado)
 	BichoPx.cabeca_coberta = false
 	if parte or filhote:
 		resetar(c)
 		return
+	var q: Dictionary = BichoPx.quadro(fam, tipo, anim, andando, golpe, ct, parte)
+	BichoPx.ultimo_quadro = {}
 	for s in [1, 3, 0, 2]:
 		var p: Peca = pecas[s]
 		if p == null:
@@ -1048,6 +1051,12 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		if onde == RoupaGato.Onde.PATAS:
 			var dp: Vector2 = BichoPx.desloc(onde, fam, tipo, anim, andando, golpe, ct, parado)
 			var pp: Array[Vector2] = RoupaGato.PATAS_PADRAO
+			if not q.is_empty():
+				# pés de verdade do desenho: o de trás e o da frente (o calçado acompanha o passo)
+				var pes: Array[Vector2] = BichoPx.pes(q)
+				if pes.size() > 0:
+					pp = [pes[0], pes[pes.size() - 1]]
+					dp = Vector2.ZERO
 			for k in pp.size():
 				if RoupaGato.so_pata_da_frente(p.tipo) and k < pp.size() - 1:
 					continue
@@ -1059,11 +1068,20 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		# peça de mão (presa na boca) em bicho: escala MAO_BICHO; continua presa à boca
 		var k_mao: float = GATO_K * (MAO_BICHO if onde == RoupaGato.Onde.BOCA else 1.0)
 		_tr(c, pos, esc, dir, o * GATO_K, rot, k_mao)
-		if onde == RoupaGato.Onde.CORPO:
-			# o tronco do bicho é maior que o do gato: a peça cresce até cobri-lo (mesmo tamanho de pixel)
-			RoupaGato.esticar = BichoPx.esticar_corpo(fam, tipo, anim, andando, golpe, ct, parte)
+		if onde == RoupaGato.Onde.CORPO and Pecas.SLOT[p.tipo] == Pecas.SLOT_CORPO and not q.is_empty():
+			# roupa de corpo (não acessório preso ao tronco, como cinto ou reator): o tronco do bicho é maior e de outro formato,
+			# então a peça cresce até cobri-lo e é aparada pelo molde dele,
+			# centrada no meio do tronco (mesmo tamanho de pixel)
+			var ct_r: Rect2i = BichoPx.caixa_tronco(q)
+			o = Vector2(ct_r.position) + Vector2(ct_r.size) * 0.5
+			_tr(c, pos, esc, dir, o * GATO_K, rot, k_mao)
+			RoupaGato.esticar = BichoPx.esticar_corpo(q)
+			RoupaGato.mascara = q["t"]
+			RoupaGato.mascara_origem = o
+			RoupaGato.mascara_id = q["id"]
 		RoupaGato.desenhar(c, p.tipo, f, anim)
 		RoupaGato.esticar = Vector2i.ZERO
+		RoupaGato.mascara = {}
 	if not chefe:
 		_tr(c, pos, esc, dir)
 		_adereco_tipo(c, tipo, alfa)

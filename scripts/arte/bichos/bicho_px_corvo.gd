@@ -492,6 +492,7 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	_elip(B, bx + bw - 10, by0 - 1, 10, maxi(4, bh - 1))   # peito estufado
 	var nw: int = 10 if gig else 8
 	var ny0: int = hy + 3
+	var TR: PackedInt32Array = B.duplicate()   # só o tronco: molde das peças de corpo (BichoPx.quadro)
 	_elip(B, hx - 1, ny0, nw, maxi(5, by0 + bh - ny0 - 1))   # pescoço
 	if gig:
 		_tinta(B, bx + 4, by0 + 1, bw - 8, bh - 3, "m")
@@ -579,7 +580,7 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 			var v: int = G[j * _W + i]
 			s2 += String.chr(v) if v != 0 else "."
 		lin.append(s2)
-	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin}
+	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin, "t": BichoPx.recorte(TR, _W, _H, _OX, _OY)}
 
 static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andando: bool, golpe: float, f: float, alfa: float, carregando: bool, filhote: bool, chefe_tipo: int, parte: bool, parado: bool) -> void:
 	var g: Dictionary = _geo(tipo, anim, andando, golpe, filhote, carregando)
@@ -587,4 +588,13 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 	if not _cache.has(k):
 		_cache[k] = _monta(tipo, filhote, carregando, g)
 	var s: Dictionary = _cache[k]
+	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
 	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(tipo, filhote, alfa), f)
+
+## Quadro em cache do bicho nesta pose (sprite "l" e molde do tronco "t"), para as roupas acompanharem o desenho.
+static func quadro(tipo: int, anim: float, andando: bool, golpe: float) -> Dictionary:
+	var g: Dictionary = _geo(tipo, anim, andando, golpe, false, false)
+	var k: String = _chave(g, tipo, false, false)
+	if not _cache.has(k):
+		_cache[k] = _monta(tipo, false, false, g)
+	return _cache[k]

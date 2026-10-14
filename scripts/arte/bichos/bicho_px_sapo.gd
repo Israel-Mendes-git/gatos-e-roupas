@@ -371,6 +371,7 @@ static func _monta(tipo: int, mk: int, carregando: bool, g: Dictionary) -> Dicti
 	# corpo + pescoço + cabeça numa camada só
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
+	var TR: PackedInt32Array = B.duplicate()   # só o tronco: molde das peças de corpo (BichoPx.quadro)
 	_elip(B, hx - 1, hy + 3, 8, maxi(4, tb - (hy + 3)))   # pescoço
 	_tinta(B, bx + 3, by0 + bh - 5, bw - 6, 5, "v")      # barriga clara
 	var rows2: Array = cab_rows
@@ -509,7 +510,7 @@ static func _monta(tipo: int, mk: int, carregando: bool, g: Dictionary) -> Dicti
 			var v: int = G[j * _W + i]
 			s2 += String.chr(v) if v != 0 else "."
 		lin.append(s2)
-	return {"x": x0c - _OX, "y": y0c - _OY, "l": lin}
+	return {"x": x0c - _OX, "y": y0c - _OY, "l": lin, "t": BichoPx.recorte(TR, _W, _H, _OX, _OY)}
 
 ## Quadradinho pintado só onde a camada já tem pixel.
 static func _rect_t(L: PackedInt32Array, x: int, y: int, w: int, h: int, ch: String) -> void:
@@ -524,4 +525,13 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 	if not _cache.has(k):
 		_cache[k] = _monta(tipo, mk, carregando, g)
 	var s: Dictionary = _cache[k]
+	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
 	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(tipo, mk, alfa), f)
+
+## Quadro em cache do bicho nesta pose (sprite "l" e molde do tronco "t"), para as roupas acompanharem o desenho.
+static func quadro(tipo: int, anim: float, andando: bool, golpe: float) -> Dictionary:
+	var g: Dictionary = _geo(tipo, anim, andando, golpe, false)
+	var k: String = _chave(g, tipo, 0, false)
+	if not _cache.has(k):
+		_cache[k] = _monta(tipo, 0, false, g)
+	return _cache[k]
