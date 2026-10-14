@@ -1,3 +1,9 @@
 .godot/
 *.tmp
 build/
+
+# Pacotes de terceiros que a licença não deixa redistribuir (ver CREDITOS.md)
+assets/terceiros/
+
+# Notas locais
+HANDOFF.md

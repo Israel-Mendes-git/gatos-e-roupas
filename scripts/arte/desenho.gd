@@ -1069,7 +1069,7 @@ static func _adereco_tipo(_c: CanvasItem, _tipo: int, _alfa: float) -> void:
 	pass
 
 # ------------------------------------------------------------------ gato (os heróis)
-const GATO_TEX: Array[Texture2D] = [preload("res://assets/gato_0.png"), preload("res://assets/gato_1.png"), preload("res://assets/gato_2.png")]
+const GATO_TEX: Array[Texture2D] = [preload("res://assets/terceiros/gatos/gato_0.png"), preload("res://assets/terceiros/gatos/gato_1.png"), preload("res://assets/terceiros/gatos/gato_2.png")]
 ## Pelagem de cada gato do time: [textura, tinta]. As duas últimas tingem as de base para que os cinco gatos sejam diferentes.
 const PELAGENS: Array = [[0, Color(1, 1, 1)], [1, Color(1, 1, 1)], [2, Color(1, 1, 1)], [2, Color(1.0, 0.84, 0.6)], [1, Color(0.6, 0.47, 0.42)]]
 const GATO_K := 3.2        # unidades locais por pixel do sprite original

@@ -5,8 +5,8 @@ extends Control
 ## A tela só mostra e pede: quem compra e monta é o `Estado` (melhorar / alternar_modulo).
 ## Tudo é desenhado por código com as molduras do pacote "Cryo's Mini GUI" e ícones em pixel (grade de 4 px).
 
-const GUI_TEX: Texture2D = preload("res://assets/gui/gui_4x.png")
-const BOT_TEX: Texture2D = preload("res://assets/gui/botoes_4x.png")
+const GUI_TEX: Texture2D = preload("res://assets/terceiros/gui/gui_4x.png")
+const BOT_TEX: Texture2D = preload("res://assets/terceiros/gui/botoes_4x.png")
 const R_MADEIRA := Rect2(8, 136, 80, 80)
 const M_MADEIRA := Vector4(28, 28, 28, 28)
 const R_BT_N := Rect2(132, 4, 88, 56)

@@ -57,8 +57,8 @@ const MOD_SLOT_PASSO := 30.0
 
 # Molduras do pacote "Cryo's Mini GUI" (imagens em 4x: cada pixel original ocupa 4 pixels).
 # Desenhamos sempre em 1x (4 px por pixel original) ou 0,5x (2 px), escalas inteiras do original.
-const GUI_TEX: Texture2D = preload("res://assets/gui/gui_4x.png")
-const BOT_TEX: Texture2D = preload("res://assets/gui/botoes_4x.png")
+const GUI_TEX: Texture2D = preload("res://assets/terceiros/gui/gui_4x.png")
+const BOT_TEX: Texture2D = preload("res://assets/terceiros/gui/botoes_4x.png")
 const R_MADEIRA := Rect2(8, 136, 80, 80)    # moldura de madeira com cantoneiras
 const M_MADEIRA := Vector4(28, 28, 28, 28)
 const R_FINA := Rect2(100, 4, 88, 88)       # contorno fino escuro

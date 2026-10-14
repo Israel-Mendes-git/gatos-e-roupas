@@ -23,8 +23,8 @@ const N_ABAS := 8
 const ABA_FORA := 6    # "De fora": as fantasias que só caem fora da casa
 const ABA_METAS := 7
 
-const GUI_TEX: Texture2D = preload("res://assets/gui/gui_4x.png")
-const BOT_TEX: Texture2D = preload("res://assets/gui/botoes_4x.png")
+const GUI_TEX: Texture2D = preload("res://assets/terceiros/gui/gui_4x.png")
+const BOT_TEX: Texture2D = preload("res://assets/terceiros/gui/botoes_4x.png")
 const R_MADEIRA := Rect2(8, 136, 80, 80)
 const M_MADEIRA := Vector4(28, 28, 28, 28)
 const R_BT_N := Rect2(132, 4, 88, 56)

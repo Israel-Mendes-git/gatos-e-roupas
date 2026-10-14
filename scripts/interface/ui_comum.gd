@@ -6,7 +6,7 @@ extends RefCounted
 ##   além de animação suave (hover/clique), salto de painel, cascata, contagem e faíscas em pixel.
 ## Tudo é desenhado por código sobre um CanvasItem qualquer e não guarda estado de jogo.
 
-const GATO_TEX: Texture2D = preload("res://assets/gui/gato_ui.png")
+const GATO_TEX: Texture2D = preload("res://assets/terceiros/gui/gato_ui.png")
 const C_CONT := Color(0.24, 0.17, 0.19)
 const C_CREME := Color(1.0, 0.94, 0.88)
 const C_ROSA := Color(1.0, 0.82, 0.76)

@@ -36,8 +36,8 @@ static var pular_titulo: bool = false
 ## Quando falso, as trocas de tela são imediatas (sem cortina).
 static var transicoes: bool = true
 
-const GUI_TEX: Texture2D = preload("res://assets/gui/gui_4x.png")
-const BOT_TEX: Texture2D = preload("res://assets/gui/botoes_4x.png")
+const GUI_TEX: Texture2D = preload("res://assets/terceiros/gui/gui_4x.png")
+const BOT_TEX: Texture2D = preload("res://assets/terceiros/gui/botoes_4x.png")
 const R_MADEIRA := Rect2(8, 136, 80, 80)
 const M_MADEIRA := Vector4(28, 28, 28, 28)
 const R_BT_N := Rect2(132, 4, 88, 56)
@@ -673,7 +673,7 @@ func _mover_foco(d: int) -> void:
 
 # ------------------------------------------------------------------ pintura: peças comuns
 ## Recortes do pacote "Cat User Interface" (ToffeeCraft), sempre em escala inteira.
-const GATO_TEX: Texture2D = preload("res://assets/gui/gato_ui.png")
+const GATO_TEX: Texture2D = preload("res://assets/terceiros/gui/gato_ui.png")
 const R_BALAO: Array[Rect2] = [Rect2(5, 39, 21, 18), Rect2(37, 39, 21, 18), Rect2(5, 71, 21, 18), Rect2(37, 71, 21, 18)]
 const R_DORMINDO := Rect2(66, 90, 43, 32)
 ## Botõezinhos redondos: (fileira, coluna) dentro de cada bloco de 4x4.

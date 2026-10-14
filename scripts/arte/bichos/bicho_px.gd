@@ -14,7 +14,7 @@ static var pose_truque: int = -1
 
 ## Arte nova (refeita do zero) de cada família de bichos comuns, um arquivo por família. Enquanto o arquivo
 ## de uma família não existe, ela continua com o desenho antigo (BichoPxA/BichoPxB).
-const NOVOS: Array[String] = ["res://bicho_px_rato.gd", "res://bicho_px_guaxinim.gd", "res://bicho_px_raposa.gd", "res://bicho_px_corvo.gd", "res://bicho_px_sapo.gd"]
+const NOVOS: Array[String] = ["res://scripts/arte/bichos/bicho_px_rato.gd", "res://scripts/arte/bichos/bicho_px_guaxinim.gd", "res://scripts/arte/bichos/bicho_px_raposa.gd", "res://scripts/arte/bichos/bicho_px_corvo.gd", "res://scripts/arte/bichos/bicho_px_sapo.gd"]
 static var _novos: Dictionary = {}
 
 static func _novo(fam: int) -> Script:
@@ -24,7 +24,7 @@ static func _novo(fam: int) -> Script:
 	return _novos[fam]
 
 ## Arte nova dos chefes: 0 a 4 (primeiro ato) num arquivo, 5 a 9 (fora da casa) noutro. Sem o arquivo, fica o desenho antigo.
-const NOVOS_CHEFES: Array[String] = ["res://bicho_px_chefe_casa.gd", "res://bicho_px_chefe_fora.gd"]
+const NOVOS_CHEFES: Array[String] = ["res://scripts/arte/bichos/bicho_px_chefe_casa.gd", "res://scripts/arte/bichos/bicho_px_chefe_fora.gd"]
 static var _novos_chefes: Dictionary = {}
 
 static func _novo_chefe(ct: int) -> Script:

@@ -1,6 +1,6 @@
 extends SceneTree
 ## Simulador headless da campanha: mesma lógica de combate (Simulacao), sem desenho.
-## Uso: godot --headless --path <projeto> --script res://simulador.gd -- 30 [politica] [v]
+## Uso: godot --headless --path <projeto> --script res://ferramentas/simulador.gd -- 30 [politica] [v]
 ## Cada campanha joga as fases em ordem; ao perder, tenta de novo (o guarda-roupa fica).
 
 const PRIORIDADE: Array[int] = [
