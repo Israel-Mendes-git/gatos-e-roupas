@@ -338,7 +338,7 @@ static func comodo_bloqueado(e: Estado, i: int) -> bool:
 	return i + 1 > e.fase_liberada
 
 static func texto_bloqueio(i: int) -> String:
-	return "Cômodo ainda bloqueado: vença o %s, %s" % [Fases.CHEFE_NOME[i - 1], _em(i - 1)] if i >= 1 else ""
+	return "Cômodo bloqueado: vença o chefe %s, %s" % [Fases.CHEFE_NOME[i - 1], _em(i - 1)] if i >= 1 else ""
 
 ## "no Quarto", "na Sala", "na Cozinha", "no Sótão", "no Porão", "no Quintal", "na Garagem", "no Telhado", "na Rua", "na Toca".
 static func _em(i: int) -> String:
@@ -971,7 +971,7 @@ func _pagina_indice(e: Estado) -> void:
 	var po: int = pecas_obtidas(e)
 	var lb: float = (pr.size.x - 28.0 - 14.0) * 0.5
 	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(comp) / nf, "Completas: %d de %d" % [comp, nf], Color(0.95, 0.72, 0.15))
-	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(po) / pecas_possiveis(), "Peças já tidas: %d de %d" % [po, pecas_possiveis()], Color(0.4, 0.7, 0.45))
+	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(po) / pecas_possiveis(), "Peças encontradas: %d de %d" % [po, pecas_possiveis()], Color(0.4, 0.7, 0.45))
 
 func _barra(r: Rect2, frac: float, rotulo: String, cor: Color) -> void:
 	_txt(rotulo, Vector2(r.position.x, r.position.y - 6.0), 14, TINTA)
@@ -1136,7 +1136,7 @@ func _linha_peca(e: Estado, c: int, s: int) -> void:
 		if melhor != null:
 			txt += "  ·  melhor: %s" % Pecas.RARIDADE_NOME[melhor.raridade].to_lower()
 			if melhor.nivel > 0:
-				txt += ", nv %d" % melhor.nivel
+				txt += ", nível %d" % melhor.nivel
 		cs = COR_TEM
 	elif teve:
 		txt = "Já teve (não tem agora)"
@@ -1175,7 +1175,7 @@ func _gato(alvo: CanvasItem, c: int, so_faltam: bool) -> void:
 		pecas.append(Peca.new(tp) if teve != so_faltam else null)
 	var ciclo: float = fmod(t, PATADA_CADA)
 	var golpe: float = ciclo if ciclo < PATADA_DUR else 0.0
-	Desenho.boneco(alvo, _pos_gato(), GATO_ESC, 1.0, 0, pecas, 0.0, t, golpe <= 0.0, golpe, 0.0 if so_faltam else 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, posmod(c, Desenho.GATO_TEX.size()))
+	Desenho.boneco(alvo, _pos_gato(), GATO_ESC, 1.0, 0, pecas, 0.0, t, golpe <= 0.0, golpe, 0.0 if so_faltam else 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, posmod(c, Desenho.PELAGENS.size()))
 
 func _desenhar_silhuetas() -> void:
 	if not aberta or estado == null:
@@ -1215,7 +1215,7 @@ func _linha_meta(e: Estado, m: Dictionary, y: float, trancada: bool) -> float:
 	if metas_novas.has(m["id"]):
 		_txt("NOVA", Vector2(r.position.x + 270.0, y + 13.0), 11, Color(0.85, 0.15, 0.15))
 		draw_rect(r.grow(2.0), Color(1.0, 0.8, 0.2, 0.5 + 0.5 * sin(t * 6.0)), false, 3.0)
-	var det: String = "Zere a campanha para liberar" if trancada else str(m["texto"])
+	var det: String = "Vença a campanha para liberar" if trancada else str(m["texto"])
 	_txt(cortar(det, 11, 285.0), Vector2(xt, y + 27.0), 11, TINTA2)
 	_premio(m, r.end.x - 90.0, y + 16.0, feita)
 	if feita:
@@ -1289,7 +1289,7 @@ func _pagina_metas(e: Estado) -> void:
 	for m in fs:
 		if e.metas_pagas.has(m["id"]):
 			nf += 1
-	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), "Fantasias  ·  %d/%d  ·  tenha tido as 4 peças" % [nf, fs.size()], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), "Fantasias  ·  %d/%d  ·  junte as 4 peças" % [nf, fs.size()], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
 	var yy: float = 118.0
 	for m in fs:
 		var feita2: bool = e.metas_pagas.has(m["id"])

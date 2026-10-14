@@ -1067,6 +1067,8 @@ static func _adereco_tipo(_c: CanvasItem, _tipo: int, _alfa: float) -> void:
 
 # ------------------------------------------------------------------ gato (os heróis)
 const GATO_TEX: Array[Texture2D] = [preload("res://assets/gato_0.png"), preload("res://assets/gato_1.png"), preload("res://assets/gato_2.png")]
+## Pelagem de cada gato do time: [textura, tinta]. As duas últimas tingem as de base para que os cinco gatos sejam diferentes.
+const PELAGENS: Array = [[0, Color(1, 1, 1)], [1, Color(1, 1, 1)], [2, Color(1, 1, 1)], [2, Color(1.0, 0.84, 0.6)], [1, Color(0.6, 0.47, 0.42)]]
 const GATO_K := 3.2        # unidades locais por pixel do sprite original
 const GATO_CHAO := 25.0    # y do pé dentro do quadro original
 
@@ -1102,7 +1104,9 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		tinta = tinta.lerp(Color(1.0, 0.35, 0.3, alfa), clampf(furia, 0.0, 1.0) * 0.7)
 	_tr(c, pos, esc, dir)
 	c.draw_colored_polygon(_elipse(0, 0, 26.0, 5.0, 14), Color(0, 0, 0, 0.22 * alfa))
-	c.draw_texture_rect_region(GATO_TEX[posmod(variante, GATO_TEX.size())], dest, src, tinta)
+	var pel: Array = PELAGENS[posmod(variante, PELAGENS.size())]
+	var tp: Color = pel[1]
+	c.draw_texture_rect_region(GATO_TEX[int(pel[0])], dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
 	if fantasma_slots:
 		for s in Pecas.SLOTS:
 			if pecas[s] == null:

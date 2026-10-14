@@ -298,6 +298,7 @@ var vinheta_poder: float = 0.0     # bordas escurecem por um instante ao dispara
 var perigo_tocou: bool = false
 var tiros_torre: int = 0           # tiros da torre já vistos (som e clarão na boca do canhão)
 var fim_tratado: bool = false      # o desfecho (som, câmera lenta, desabamento) já foi disparado
+var segurar: bool = false          # o tutorial segura a luta (como um hit-stop) enquanto explica algo
 
 # ---- barra de poderes (só visual e entrada; a lógica fica na Simulacao)
 var poder_btns: Array = []       # {u, conj, poder, cor, nome, dica, tecla, rect, pronto, trancado, carga_ant, flash, tremor, motivo, motivo_t, variante}
@@ -401,7 +402,7 @@ func _process(delta: float) -> void:
 	if sim == null or not visible:
 		return
 	sons_quadro = 0
-	var parado: bool = pausa_t > 0.0   # hit-stop: a luta espera, a tela continua tremendo
+	var parado: bool = pausa_t > 0.0 or segurar   # hit-stop: a luta espera, a tela continua tremendo
 	pausa_t = maxf(0.0, pausa_t - delta)
 	pausa_cd = maxf(0.0, pausa_cd - delta)
 	var dt: float = delta * velocidade
@@ -840,7 +841,7 @@ func _consumir() -> void:
 			"cantil":
 				var pc2: Vector2 = Vector2(e["x"], e["y"] - 46 * ESC)
 				_faisca(pc2, Color(0.4, 0.95, 0.6), 8, 110.0, 0.6, 3.0)
-				_numero(pc2, "glub! +", Color(0.5, 1.0, 0.65), 18)
+				_numero(pc2, "glub! cura", Color(0.5, 1.0, 0.65), 18)
 				_som("poder_cura", 1.3, -9.0)
 			"sementes":
 				var ps: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
@@ -908,7 +909,7 @@ func _consumir() -> void:
 				_numero(pd, "+%d blocos" % int(e["n"]), Color(0.6, 1.0, 0.6), 22, 1.4, 160.0)
 				_som("drop", 1.1, -6.0)
 			"fuga":
-				_numero(Vector2(1180, e["y"] - 70 * ESC), "fugiu! -%d" % int(e["n"]), Color(1.0, 0.5, 0.4), 22, 1.4, 160.0)
+				_numero(Vector2(1180, e["y"] - 70 * ESC), "fugiu! -%d bloco%s" % [int(e["n"]), "" if int(e["n"]) == 1 else "s"], Color(1.0, 0.5, 0.4), 22, 1.4, 160.0)
 				_som("negado", 0.9, -6.0)
 			"gemeos":
 				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Desenho.COR_TIPO[Unidade.Tipo.GEMEO], 12, 200.0, 0.5, 3.5)
@@ -1717,7 +1718,7 @@ func _draw() -> void:
 			sx_u -= br * 0.5
 		var esc_d: float = esc_u * sy_u
 		var dir_d: float = dir * sx_u / sy_u
-		Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else 1.0), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else null) if uu2.equipe == 0 else 0))
+		Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else 1.0), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
 		if uu2.barreira_int > 0.0 and uu2.barreira_cd <= 0.0:
@@ -3898,9 +3899,7 @@ func _atualizar_poderes(delta: float) -> void:
 			poder_dica_ok = true
 			poder_seta = i
 			poder_seta_t = 7.0
-			var m: Menus = _menus()
-			if m != null:
-				m.dica("poder", "Poder carregado: clique no botão ou aperte o número", true)
+			# a explicação do botão vem da aula "a_poder" (tutorial.gd)
 		if pronto and not bool(b["pronto"]) and rel > 0.5:
 			_som("poder_pronto", 1.0, -3.0, true)
 			b["brilho"] = 1.0
@@ -4304,13 +4303,7 @@ func _montar_preparacao() -> void:
 			k += 1
 		prep_previa.append(g)
 	prep_previa.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return (a["pos"] as Vector2).y < (b["pos"] as Vector2).y)
-	var m: Menus = _menus()
-	if m != null:
-		for gd in prep_previa:
-			var pr_d: int = int(gd["prio"])
-			if pr_d != Unidade.Tipo.COMUM and pr_d != Simulacao.PRIO_CHEFE:
-				m.dica("bicho_%d" % pr_d, "%s: %s" % [gd["nome"], str(gd["dica"]).to_lower()])
-		m.dica("prep", "Arraste os gatos, dê ordens e clique num bicho para marcar o alvo.", true)
+	# (a explicação da preparação e dos bichos novos vem das aulas de tutorial.gd)
 
 func _prep_rect(i: int) -> Rect2:
 	return Rect2(PREP_BT_X[i], PREP_BT_Y, PREP_BT_W, PREP_BT_H)
@@ -4530,11 +4523,13 @@ func _nome_unidade(u: Unidade) -> String:
 	if u.chefe:
 		return Fases.CHEFE_NOME[estado.lugar()]
 	if u.parte:
-		return "Pedaço de massinha"
+		return "Sapinho"
 	if u.pequeno:
 		return "Filhote"
 	var n: String = Balanco.TIPO_NOMES[clampi(u.tipo, 0, Balanco.TIPO_NOMES.size() - 1)]
-	return n + " fantasiado" if u.elite else n
+	if not u.elite:
+		return n
+	return n + (" fantasiada" if u.tipo == Unidade.Tipo.GEMEO else " fantasiado")
 
 ## Estados em vigor, por extenso.
 func _estados_txt(u: Unidade) -> String:
@@ -4558,7 +4553,7 @@ func _estados_txt(u: Unidade) -> String:
 	if u.fugindo:
 		e.append("fugindo com %d bloco%s" % [u.carga, "" if u.carga == 1 else "s"])
 	if u.parado:
-		e.append("sem corda")
+		e.append("sem fôlego")
 	return ", ".join(e)
 
 ## Ficha em números da unidade sob o mouse e a linha até quem ela está atacando.

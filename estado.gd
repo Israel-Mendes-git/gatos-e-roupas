@@ -9,6 +9,7 @@ var fase: int = 1             # cômodo em curso (1..Fases.TOTAL)
 var fase_liberada: int = 1    # maior fase que o jogador pode escolher no mapa
 var fases_vencidas: int = 0   # maior fase já vencida (Fases.TOTAL = campanha terminada)
 var persistir: bool = false   # o jogo grava em disco; o simulador não
+var tutorial_facil: bool = false   # tutorial ativo: a 1ª onda vem mais fraca (ver Tutorial.FACIL); nunca é gravado
 var tijolos: int = Balanco.TIJOLOS_INICIAIS
 # fichário: tipos de peça que o jogador já teve alguma vez (índice = Pecas.Tipo)
 var colecao: Array[bool] = []
@@ -118,12 +119,16 @@ func tudo_vencido() -> bool:
 ## Multiplicadores de vida e dano dos bichos do cômodo em curso (sem contar a invasão).
 func mult_vida() -> float:
 	if ato <= 1:
-		return Balanco.FASE_VIDA[fase - 1]
+		return Balanco.FASE_VIDA[fase - 1] * _facil()
 	return Balanco.ATO_VIDA[ato - 1] * Balanco.ATO_COMODO_VIDA[fase - 1] * (1.0 + Balanco.ATO_VIDA_DEGRAU * degrau_ato())
+
+## Só com o tutorial ativo e só na primeira onda do cômodo; fora disso é 1 (o balanço normal não muda).
+func _facil() -> float:
+	return Tutorial.FACIL if tutorial_facil and onda <= 1 and not invasao else 1.0
 
 func mult_dano() -> float:
 	if ato <= 1:
-		return Balanco.FASE_DANO[fase - 1]
+		return Balanco.FASE_DANO[fase - 1] * _facil()
 	return Balanco.ATO_DANO[ato - 1] * Balanco.ATO_COMODO_DANO[fase - 1] * (1.0 + Balanco.ATO_DANO_DEGRAU * degrau_ato())
 
 ## "Fase" que conta para a vida extra do chefe.

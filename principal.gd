@@ -139,7 +139,7 @@ const AJUDA_ATALHOS: Array[String] = [
 	"Espaço ou Enter: LUTAR.   Botão direito numa peça: abre o fichário na fantasia dela.",
 ]
 const AJUDA_REGRAS: Array[String] = [
-	"Fantasia: grupo de peças da mesma família. Com 2 ou 3 peças iguais num gato vem um bônus; com as 4 (cabeça, corpo, mão e acessório) ele libera o poder da fantasia.",
+	"Fantasia: grupo de peças da mesma família. Com 2 ou 3 peças da mesma fantasia num gato vem um bônus; com as 4 (cabeça, corpo, mão e acessório) ele libera o poder da fantasia.",
 	"Raridade: comum, rara e lendária. Mais raridade dá mais efeito e mais espaço para marcas.",
 	"Marca: quando um gato cai na luta, a roupa dele ganha uma marca para sempre. Cada peça comporta um número limitado delas.",
 	"Promover (carretel): sobe o nível da peça e custa blocos. Reforçar (estrela): sobe a raridade e custa troféus.",
@@ -209,6 +209,8 @@ var oficina: Oficina
 var fichario: Fichario
 var btn_fich: BotaoArte
 var menus: Menus
+var tutorial: Tutorial     # tutorial guiado, treino do título e aulas de primeira vez (tutorial.gd)
+var _real: Dictionary = {}  # sessão verdadeira, guardada enquanto o treino do título (partida descartável) roda
 var tem_save: bool = false   # há campanha gravada em disco (mostra "Continuar" no título)
 var fim_painel: ColorRect
 var fim_titulo: Label
@@ -338,6 +340,13 @@ func _ready() -> void:
 	bloq_tela.gui_input.connect(_clique_bloq)
 	add_child(bloq_tela)
 	move_child(bloq_tela, menus.get_index())
+	# tutorial: logo abaixo dos menus (a cortina e a pausa ficam por cima dele)
+	tutorial = Tutorial.new()
+	add_child(tutorial)
+	move_child(tutorial, menus.get_index())
+	tutorial.iniciar(self)
+	tutorial.migrar()
+	tutorial.retomar_se_preciso()
 	# por último: vê o Esc antes de todos os outros (arrasto, ajuda e resumo)
 	guardiao = Guardiao.new()
 	guardiao.tratar = _esc_guarda
@@ -407,6 +416,8 @@ func ir_para_mapa() -> void:
 	_entrar_mapa()
 
 func ir_para_titulo() -> void:
+	if not _real.is_empty():
+		encerrar_treino()   # saiu do treino pela pausa: a campanha verdadeira volta como estava
 	# sair no meio de um cômodo guarda a sessão: "Continuar" devolve o jogador ao ponto exato
 	# (guarda-roupa da mesma onda, ou a luta parada onde estava). Nada de recolher o time aqui.
 	if modo == Modo.GUARDA or modo == Modo.COMBATE:
@@ -485,6 +496,79 @@ func desistir_fase() -> void:
 		_voltar_mapa()
 	else:
 		_entrar_mapa()
+
+## Botão "Tutorial" do título: roda o roteiro guiado numa partida descartável (nada vai para o save).
+func iniciar_treino() -> void:
+	_real = {"estado": estado, "tem_save": tem_save, "suspenso": suspenso, "vel": velocidade}
+	if suspenso == Modo.COMBATE:
+		campo.finalizado = true   # a luta guardada é encerrada: o campo vai ser usado pelo treino
+		campo.process_mode = Node.PROCESS_MODE_INHERIT
+	suspenso = -1
+	fusao = {}
+	arrasto = {}
+	estado = Estado.new()
+	estado.persistir = false
+	estado.novo_jogo()
+	faiscas.clear()
+	tijolos_voando.clear()
+	drops_fase.clear()
+	resumo = {}
+	resumo_pend.clear()
+	desfazer = {}
+	nocauteados.clear()
+	aviso = ""
+	aviso_t = 0.0
+	sel = -1
+	filtro_cj = -1
+	aba = ABA_TODAS
+	rolagem = 0
+	_lista_suja = true
+	modo = Modo.MAPA
+	_entrar_mapa()
+	tutorial.comecar(Tutorial.Fonte.TREINO)
+
+## Fim do treino (ou saída pela pausa): devolve a campanha verdadeira e vai ao título.
+func sair_do_treino() -> void:
+	encerrar_treino()
+	ir_para_titulo()
+
+func encerrar_treino() -> void:
+	if _real.is_empty():
+		return
+	var r: Dictionary = _real
+	_real = {}
+	campo.finalizado = true
+	campo.segurar = false
+	campo.visible = false
+	campo.process_mode = Node.PROCESS_MODE_INHERIT
+	tutorial.parar()
+	estado.tutorial_facil = false
+	if int(r["suspenso"]) == Modo.COMBATE:
+		# a luta guardada foi encerrada: volta ao guarda-roupa da mesma onda, como se o jogo tivesse sido reaberto
+		estado = Estado.new()
+		estado.persistir = true
+		estado.carregar()
+		suspenso = Modo.GUARDA if estado.em_curso else -1
+	else:
+		estado = r["estado"]
+		suspenso = int(r["suspenso"])
+	tem_save = bool(r["tem_save"])
+	velocidade = int(r["vel"])
+	btn_vel.text = "%dx" % velocidade
+	campo.velocidade = velocidade
+	modo = Modo.MAPA   # (assim ir_para_titulo não guarda o treino como sessão suspensa)
+	arrasto = {}
+	fusao = {}
+	resumo = {}
+	resumo_pend.clear()
+	desfazer = {}
+	nocauteados.clear()
+	sel = -1
+	aba = ABA_TODAS
+	rolagem = 0
+	_lista_suja = true
+	menus.fila_dicas.clear()
+	menus.dica_atual = {}
 
 func nova_campanha_do_titulo() -> void:
 	_descartar_sessao()
@@ -737,7 +821,6 @@ func _lutar() -> void:
 	_fechar_janelas()
 	trofeus_luta = estado.trofeus
 	campo.iniciar(estado)
-	menus.dica("queda", "Gato que cai na luta deixa uma marca na roupa.")
 
 func _trocar_velocidade() -> void:
 	velocidade = velocidade % 3 + 1
@@ -761,8 +844,6 @@ func _on_campo_terminou(vitoria: bool) -> void:
 	var vencidas_antes: int = estado.fases_vencidas
 	var era_invasao: bool = estado.invasao
 	trofeus_fase += maxi(0, estado.trofeus - trofeus_luta)
-	if estado.trofeus > trofeus_luta:
-		menus.dica("trofeu", "Troféus evoluem a torre: abra a Oficina [T].", true)
 	trofeus_luta = estado.trofeus
 	modulos_novos.clear()
 	if vitoria:
@@ -781,6 +862,8 @@ func _on_campo_terminou(vitoria: bool) -> void:
 			if not ja_resumo.has(qr) and (estado.guarda.has(qr) or estado.dono_de(qr) != null):
 				ja_resumo.append(qr)
 				resumo_pend.append({"tipo": "peca", "p": qr})
+		if not estado.fundida_em.is_empty():
+			tutorial.pedir("a_fusao")
 		estado.fundida_em.clear()
 		for b in estado.bonecos:
 			if niveis_antes.has(b) and b.nivel > int(niveis_antes[b]):
@@ -961,6 +1044,9 @@ func _ajustar_fim() -> void:
 
 ## Metas recém-cumpridas viram avisos em sequência (mapa e guarda-roupa) e ganham o selo no Fichário.
 func _conferir_avisos_metas() -> void:
+	if not _real.is_empty():
+		estado.metas_novas.clear()   # no treino as metas não contam nem avisam
+		return
 	if estado.metas_novas.is_empty():
 		return
 	if not (modo == Modo.MAPA or modo == Modo.GUARDA) or menus.em_transicao() or menus.tela == Menus.Tela.TITULO:
@@ -1008,6 +1094,7 @@ func _novo_jogo() -> void:
 	rolagem = 0
 	_lista_suja = true
 	_entrar_mapa()
+	tutorial.guiar_campanha_nova()
 
 # ------------------------------------------------------------------ geometria do guarda-roupa
 func pos_boneco(i: int) -> Vector2:
@@ -1242,7 +1329,7 @@ func _atr_ganho(a: int) -> String:
 		Boneco.Atr.FORCA:
 			return "+%d%% de dano" % int(round(Balanco.ATR_FORCA * 100.0))
 		Boneco.Atr.AGILIDADE:
-			return "+%d%% velocidade" % int(round(Balanco.ATR_AGIL * 100.0))
+			return "+%d%% de velocidade de ataque" % int(round(Balanco.ATR_AGIL * 100.0))
 	return ""
 
 func _linha_em(p: Vector2) -> int:
@@ -1317,7 +1404,6 @@ func vestir(bi: int, peca: Peca) -> void:
 		if ef.y > ef.x and ef.y >= Pecas.CONJUNTO_MIN:
 			_flutuar("%s %d/%d" % [Pecas.CONJUNTO_NOME[peca.conjunto()], ef.y, Pecas.SLOTS], destino + Vector2(0, -30), Pecas.CONJUNTO_COR[peca.conjunto()].lightened(0.4), 16, 1.1)
 	menus.dica_cumprida("vestir")
-	menus.dica("fantasia", "4 peças da mesma fantasia liberam o poder dela.", true)
 
 func tirar(bi: int, s: int) -> void:
 	var q: Peca = estado.bonecos[bi].pecas[s]
@@ -2467,8 +2553,6 @@ func _process(delta: float) -> void:
 	fusao_bloq.mouse_filter = Control.MOUSE_FILTER_STOP if not fusao.is_empty() else Control.MOUSE_FILTER_IGNORE
 	aviso_t = maxf(0.0, aviso_t - delta)
 	_conferir_avisos_metas()
-	if modo == Modo.COMBATE and estado.trofeus > trofeus_luta:
-		menus.dica("trofeu", "Troféus evoluem a torre: abra a Oficina [T].", true)
 	if confirma_nova > 0.0:
 		confirma_nova -= delta
 		if confirma_nova <= 0.0 and modo == Modo.MAPA:
@@ -3588,7 +3672,7 @@ func _cartoes_fantasias() -> void:
 				vestes[Pecas.SLOT[tp0]] = Peca.new(tp0)
 		var pe := Vector2(r.get_center().x - 2.0, r.position.y + 75.0)
 		_ellipse_sombra(pe + Vector2(0, 2), 24.0, 4.5, Color(0, 0, 0, 0.35))
-		Desenho.boneco(self, pe, FANT_ESC, 1.0, 0, vestes, 0.0, 0.0, false, 0.0, 1.0, not nenhuma, -1, 0.0, 0, false, false, 0, false, -1, false, false, posmod(maxi(alvo, 0), Desenho.GATO_TEX.size()), false)
+		Desenho.boneco(self, pe, FANT_ESC, 1.0, 0, vestes, 0.0, 0.0, false, 0.0, 1.0, not nenhuma, -1, 0.0, 0, false, false, 0, false, -1, false, false, posmod(maxi(alvo, 0), Desenho.PELAGENS.size()), false)
 		if nenhuma:
 			draw_rect(Rect2(r.position.x + 3, r.position.y + 22, r.size.x - 6, 58), Color(fundo.r, fundo.g, fundo.b, 0.84))
 		# quatro pontinhos: situação de cada peça (verde: já no gato; azul: guarda-roupa; laranja: outro gato; cinza: não tem)
@@ -3743,7 +3827,7 @@ func _celula_previa(g: Dictionary, topo_esq: Vector2, larg: float, alt: float, e
 	var cor_r: Color = Color.WHITE
 	if eli:
 		var cj: int = _fantasia_de(ini["pecas"])
-		rotulo = Pecas.CONJUNTO_NOME[cj] if cj >= 0 else "Elite"
+		rotulo = Pecas.CONJUNTO_NOME[cj] if cj >= 0 else "Fantasiado"
 		cor_r = Pecas.CONJUNTO_COR[cj].lightened(0.35) if cj >= 0 else Desenho.DOURADO
 	elif tp != Unidade.Tipo.COMUM:
 		rotulo = Balanco.TIPO_NOMES[tp]
@@ -4221,7 +4305,7 @@ func _dica() -> void:
 	var cinza := Color(1, 1, 1, 0.55)
 	# essencial: nome, raridade, o que faz, a fantasia do gato escolhido e uma linha de ação
 	var itens: Array = [
-		["t", Pecas.NOME[p.tipo] + ("  nv " + str(p.nivel) if p.nivel > 0 else ""), 22, cor_r.lightened(0.15) if p.raridade > 0 else Desenho.DOURADO],
+		["t", Pecas.NOME[p.tipo] + ("  nível " + str(p.nivel) if p.nivel > 0 else ""), 22, cor_r.lightened(0.15) if p.raridade > 0 else Desenho.DOURADO],
 		["t", "%s  ·  %s" % [Pecas.RARIDADE_NOME[p.raridade], Pecas.SLOT_NOME[p.slot()]], 13, cor_r],
 		["t", Pecas.dica(p.tipo), 16, Color(1, 1, 1)],
 	]
@@ -4436,7 +4520,7 @@ func _cartao(f: int) -> void:
 	if sob and not bloqueada:
 		Desenho.texto(self, "Clique para entrar", Vector2(r.position.x, r.position.y + 454), 13, Color(1, 0.95, 0.7, 0.9), r.size.x, 3)
 	elif bloqueada:
-		Desenho.texto(self, "Vença o %s antes" % Fases.NOME[fi - 1] if fi > 0 else "", Vector2(r.position.x, r.position.y + 454), 13, Color(1, 1, 1, 0.5), r.size.x, 3)
+		Desenho.texto(self, "Vença antes: %s" % Fases.NOME[fi - 1] if fi > 0 else "", Vector2(r.position.x, r.position.y + 454), 13, Color(1, 1, 1, 0.5), r.size.x, 3)
 
 ## Dica do mapa: nome completo da fantasia sob o mouse.
 func _dica_mapa() -> void:

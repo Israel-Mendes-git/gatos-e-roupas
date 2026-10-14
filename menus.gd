@@ -355,18 +355,21 @@ func _montar() -> void:
 	tela_t = 0.0
 	match tela:
 		Tela.TITULO:
-			var y: float = 220.0 if tem_save else 250.0
+			# seis botões cabem acima do tapete (que começa em y ~ 590): os comuns ficam mais baixos
+			var y: float = 210.0 if tem_save else 236.0
 			var x: float = 490.0
 			if tem_save:
-				_bt("continuar", "Continuar", Rect2(x, y, 300, 72), B_VERDE, 26, {"sub": _resumo_save()})
-				y += 84.0
-			_bt("nova", "Nova campanha", Rect2(x, y, 300, 52), B_LARANJA)
-			y += 62.0
-			_bt("opcoes", "Opções", Rect2(x, y, 300, 52), B_AZUL)
-			y += 62.0
-			_bt("creditos", "Créditos", Rect2(x, y, 300, 52), B_MARROM)
-			y += 62.0
-			_bt("sair", "Sair", Rect2(x, y, 300, 52), B_VERMELHO)
+				_bt("continuar", "Continuar", Rect2(x, y, 300, 68), B_VERDE, 26, {"sub": _resumo_save()})
+				y += 78.0
+			_bt("nova", "Nova campanha", Rect2(x, y, 300, 46), B_LARANJA)
+			y += 54.0
+			_bt("tutorial", "Tutorial", Rect2(x, y, 300, 46), B_OURO)
+			y += 54.0
+			_bt("opcoes", "Opções", Rect2(x, y, 300, 46), B_AZUL)
+			y += 54.0
+			_bt("creditos", "Créditos", Rect2(x, y, 300, 46), B_MARROM)
+			y += 54.0
+			_bt("sair", "Sair", Rect2(x, y, 300, 46), B_VERMELHO)
 		Tela.PAUSA:
 			var itens: Array = [["p_continuar", "Continuar", B_VERDE], ["opcoes", "Opções", B_AZUL]]
 			if dono.modo != dono.Modo.MAPA:
@@ -451,6 +454,11 @@ func _acionar(id: String) -> void:
 				confirmar("Nova campanha?", "A campanha gravada (%s) será apagada, com o guarda-roupa e os gatos treinados." % _resumo_save(), "Apagar e começar", "Cancelar", Callable(self, "_nova_campanha"))
 			else:
 				_nova_campanha()
+		"tutorial":
+			if dono.suspenso == dono.Modo.COMBATE:
+				confirmar("Fazer o tutorial?", "Há uma luta guardada. Fazer o tutorial agora encerra essa luta (as roupas e o progresso gravado ficam).", "Fazer o tutorial", "Cancelar", Callable(self, "_treino_ok"))
+			else:
+				_treino_ok()
 		"opcoes":
 			_ir_tela(Tela.OPCOES)
 		"creditos":
@@ -464,7 +472,7 @@ func _acionar(id: String) -> void:
 			if dono.estado.invasao:
 				confirmar("Encerrar a invasão?", "Sair agora termina a invasão. O recorde das ondas vencidas fica gravado" + (", mas o que caiu nesta luta se perde." if luta else ".") + " As roupas ficam como estão.", "Voltar ao mapa", "Continuar invasão", Callable(self, "_voltar_mapa_ok"))
 				return
-			confirmar("Voltar ao mapa?", ("Sair da luta conta como desistir da fase: o que caiu nela se perde. As roupas ficam como estão." if luta else "A fase em curso termina aqui. As roupas ficam como estão."), "Voltar ao mapa", "Continuar fase", Callable(self, "_voltar_mapa_ok"))
+			confirmar("Voltar ao mapa?", ("Sair da luta conta como desistir dela: o que caiu nela se perde. As roupas ficam como estão." if luta else "A luta em curso termina aqui. As roupas ficam como estão."), "Voltar ao mapa", "Continuar luta", Callable(self, "_voltar_mapa_ok"))
 		"f_creditos":
 			_ir_tela(Tela.CREDITOS)
 		"f_voltar":
@@ -473,7 +481,7 @@ func _acionar(id: String) -> void:
 			if dono.modo == dono.Modo.MAPA:
 				_menu_principal_ok()
 			else:
-				confirmar("Ir ao menu principal?", ("A invasão fica guardada" if dono.estado.invasao else "A fase fica guardada") + ": \"Continuar\" no menu principal volta a este ponto. Se você fechar o jogo, ela se perde (as roupas ficam).", "Menu principal", "Continuar fase", Callable(self, "_menu_principal_ok"))
+				confirmar("Ir ao menu principal?", ("A invasão fica guardada" if dono.estado.invasao else "A luta fica guardada") + ": \"Continuar\" no menu principal volta a este ponto. Se você fechar o jogo, ela se perde (as roupas ficam).", "Menu principal", "Continuar luta", Callable(self, "_menu_principal_ok"))
 		"o_tela":
 			tela_cheia = not tela_cheia
 			aplicar_janela()
@@ -500,7 +508,7 @@ func _acionar(id: String) -> void:
 			poder_automatico = not poder_automatico
 			_opcao_mudou()
 		"o_apagar":
-			confirmar("Apagar a campanha?", "Isso apaga o progresso, o guarda-roupa e os gatos treinados.", "Continuar", "Cancelar", Callable(self, "_apagar_etapa2"))
+			confirmar("Apagar a campanha?", "Isso apaga o progresso, o guarda-roupa e os gatos treinados.", "Sim, apagar", "Cancelar", Callable(self, "_apagar_etapa2"))
 		"o_voltar", "c_voltar":
 			_voltar_de_sub()
 		"cf_nao":
@@ -539,6 +547,10 @@ func _apagar_ok() -> void:
 func _nova_campanha() -> void:
 	fechar_tudo()
 	ir(dono.nova_campanha_do_titulo)
+
+func _treino_ok() -> void:
+	fechar_tudo()
+	ir(dono.iniciar_treino)
 
 func _voltar_mapa_ok() -> void:
 	fechar_tudo()
@@ -1150,6 +1162,8 @@ func _pos_dica(id: String) -> int:
 func dica(id: String, texto: String, urgente: bool = false) -> void:
 	if dicas_vistas.get(id, false):
 		return
+	if dono != null and dono.tutorial != null and dono.tutorial.guiado_ativo():
+		return   # durante o tutorial guiado só fala o gato-guia
 	for d in fila_dicas:
 		if d["id"] == id:
 			return
@@ -1323,12 +1337,12 @@ func _cena_final() -> void:
 	var cnt := func(v: int) -> int: return int(round(v * kf))
 	var linhas: Array = [
 		["Tempo de luta", "%d min" % cnt.call(minutos)],
-		["Lutas travadas", str(cnt.call(int(e.estat.get("ondas", 0))))],
+		["Ondas lutadas", str(cnt.call(int(e.estat.get("ondas", 0))))],
 		["Gatos nocauteados", str(cnt.call(int(e.estat.get("nocautes", 0))))],
 		["Bichos derrotados", str(cnt.call(int(e.estat.get("abates", 0))))],
 		["Derrotas", str(cnt.call(int(e.estat.get("derrotas", 0))))],
 		["Fantasias completas", "%d de %d" % [cnt.call(e.fantasias_completas()), Pecas.CONJUNTO_PECAS.size()]],
-		["Peças tidas", "%d de %d" % [cnt.call(e.pecas_tidas()), Pecas.SLOT.size()]],
+		["Peças encontradas", "%d de %d" % [cnt.call(e.pecas_tidas()), Pecas.SLOT.size()]],
 		["Troféus", str(cnt.call(e.trofeus))],
 	]
 	for k in linhas.size():
@@ -1351,7 +1365,7 @@ func _cena_final() -> void:
 	# o que se abriu
 	var ro := Rect2(660, 345, 330, 145)
 	_painel_gato(ro, false)
-	_t("O que se abriu", Vector2(ro.position.x, ro.position.y + 40.0), 20, C_NOME, ro.size.x)
+	_t("O que foi liberado", Vector2(ro.position.x, ro.position.y + 40.0), 20, C_NOME, ro.size.x)
 	var yo: float = ro.position.y + 76.0
 	for txt in ["Invasão sem fim liberada no mapa", "Metas no fichário"]:
 		_pata(0, Vector2(ro.position.x + 26.0, yo - 20.0), 1)
