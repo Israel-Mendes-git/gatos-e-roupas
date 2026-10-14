@@ -23,7 +23,9 @@ func _init() -> void:
 	var politicas: Array[String] = ["veste", "misto", "sacrifica", "fantasia"]
 	if args.size() > 1 and args[1] != "todas":
 		politicas = [args[1]]
-	verboso = args.size() > 2
+	var so_q: bool = args.size() > 2 and args[2] == "q"   # só o primeiro cômodo (medição rápida)
+	verboso = args.size() > 2 and not so_q
+	Simulacao.medir = true
 	for pol in politicas:
 		var de_primeira: Array[int] = []   # campanhas que venceram a fase na 1ª tentativa
 		var tentativas: Array[int] = []    # soma das tentativas até vencer
@@ -69,12 +71,14 @@ func _init() -> void:
 				if not venceu:
 					travou = true
 					break
+				if so_q:
+					break
 				if fa % Fases.TOTAL == 0:
 					var soma_nv: float = 0.0
 					for b in e.bonecos:
 						soma_nv += b.nivel
 					nivel_fim[(fa - 1) / Fases.TOTAL] += soma_nv / maxf(1.0, e.bonecos.size())
-			if not travou:
+			if not travou and not so_q:
 				completas += 1
 				# invasão sem fim com o time do fim do jogo: um cômodo e um lugar de fora, um por campanha
 				inv_casa.append(_jogar_invasao(pol, e, g % Fases.TOTAL + 1, false, 5000 + g))
@@ -103,7 +107,20 @@ func _init() -> void:
 			if f == Fases.TOTAL - 1:
 				print("      nivel medio dos gatos ao fim do ato %d: %.1f (entre as campanhas que chegaram)" % [fa / Fases.TOTAL + 1, nivel_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos)])
 		print("   invasao sem fim (time do fim do jogo): comodo %s | lugar de fora %s" % [_resumo_inv(inv_casa), _resumo_inv(inv_fora)])
+		_imprimir_poderes(n_jogos)
 	quit()
+
+## Telemetria dos poderes (Simulacao.tele), por fantasia, média por campanha.
+func _imprimir_poderes(n_jogos: int) -> void:
+	print("   poderes (por campanha): usos | usos de heranca | dano | abates | extras")
+	for c in Pecas.CONJUNTO_NOME.size():
+		var d: Dictionary = Simulacao.tele.get(c, {})
+		var extras: String = ""
+		for k in d.keys():
+			if not (k in ["usos", "usos_h", "dano", "abates"]):
+				extras += " %s %.1f" % [k, float(d[k]) / n_jogos]
+		print("     %-16s %-17s usos %6.1f | her %6.1f | dano %8.0f | abates %6.1f |%s" % [Pecas.CONJUNTO_NOME[c], Pecas.PODER_NOME[c], float(d.get("usos", 0.0)) / n_jogos, float(d.get("usos_h", 0.0)) / n_jogos, float(d.get("dano", 0.0)) / n_jogos, float(d.get("abates", 0.0)) / n_jogos, extras])
+	Simulacao.tele.clear()
 
 ## Ondas de invasão vencidas até a torre cair (limite de 60).
 func _jogar_invasao(pol: String, e: Estado, f: int, fora: bool, semente: int) -> int:

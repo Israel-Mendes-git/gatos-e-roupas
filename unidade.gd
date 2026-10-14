@@ -82,6 +82,19 @@ var poder_pronto: bool = false  # carregado, esperando o jogador disparar (modo 
 var atordoado_t: float = 0.0
 var protegido_t: float = 0.0
 var frenesi_t: float = 0.0
+# estados dos poderes diversos (rodada 2026-10-14)
+var preso_t: float = 0.0        # Teia: não anda (ainda ataca quem alcançar)
+var marcado_t: float = 0.0      # Alvo travado: recebe mais dano de qualquer fonte
+var marcado_bonus: float = 0.0
+var marcado_conj: int = -1      # fantasia que marcou (só para a telemetria)
+var oculto_t: float = 0.0       # Fumaça: os inimigos não o escolhem como alvo
+var furor_t: float = 0.0        # Fúria: golpes em área e roubo de vida
+var furor_cerco: float = 0.0
+var furor_roubo: float = 0.0
+var bola_t: float = 0.0         # Bola de espinhos: veloz, espinhento e imune a atordoar
+var bola_vel: float = 1.0
+var bola_espinho: float = 0.0
+var poder_cd_menos: float = 0.0 # Alvo travado: segundos a menos na próxima recarga
 # chefes
 var truque_cd: float = 0.0      # chefes de fora: relógio do truque (mergulho, gás, rasante, latido)
 var reforco_cd: float = 0.0     # General

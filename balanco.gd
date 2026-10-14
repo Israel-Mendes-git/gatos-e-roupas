@@ -440,6 +440,75 @@ const PODER_ENXAME_T := 5.0
 const PODER_ENXAME_RAIO := 90.0
 const PODER_ENXAME_DPS := 0.45      # x PODER_DANO por segundo, em cada inimigo dentro da nuvem (31 em 5 s)
 const PODER_ENXAME_SEGUE := 45.0    # a nuvem acompanha o grupo, nesta velocidade (px/s)
+# ---- Poderes diversificados (rodada 2026-10-14). Na herança, nº de alvos e durações valem a fração de apoio (HERANCA_APOIO x grau); o dano já vem da força herdada.
+# Teia (Garoto-Aranha): raiz nos que estão mais perto da torre; ainda atacam se alcançarem
+const PODER_RAIZ_N := 4
+const PODER_RAIZ_T := 4.0
+const PODER_RAIZ_CHEFE := 0.4
+const PODER_RAIZ_DANO := 0.3
+# Saque rápido (Caubói): tiros no inimigo de menor vida atual (re-mira se morrer)
+const PODER_SAQUE_N := 6
+const PODER_SAQUE_DANO := 0.8
+# Trovoada (Deus do Trovão): raios nos maiores aglomerados, atordoam
+const PODER_TROVOADA_N := 3
+const PODER_TROVOADA_RAIO := 70.0
+const PODER_TROVOADA_DANO := 1.0
+const PODER_TROVOADA_T := 1.2
+const PODER_TROVOADA_CHEFE := 0.42
+# Bala de canhão (Pirata): maior aglomerado, queima e devolve tijolos por bicho morto
+const PODER_CANHAO_RAIO := 110.0
+const PODER_CANHAO_DANO := 2.0
+const PODER_CANHAO_QUEIMA_T := 3.0
+const PODER_CANHAO_QUEIMA_DPS := 0.4   # x dano base por segundo
+const PODER_CANHAO_SAQUE_MAX := 3
+# Salva de mísseis (Armadura de Ferro): explosões na entrada da torre (distância à torre em x)
+const PODER_MISSEIS_N := 3
+const PODER_MISSEIS_ALCANCE := 700.0   # dispara com inimigo até esta distância da torre
+const PODER_MISSEIS_RAIO := 80.0
+const PODER_MISSEIS_DANO := 1.3
+# Canção do tempo (Herói do Bosque): tira segundos da recarga do poder e das heranças dos outros gatos
+const PODER_CANCAO_SEG := 3.5
+# Carga de lança (Cavaleiro): investida em linha
+const PODER_INVESTIDA_ALCANCE := 360.0
+const PODER_INVESTIDA_DANO := 1.3
+const PODER_INVESTIDA_DERRUBA := 1.0
+const PODER_INVESTIDA_PROTEGE := 1.5
+const PODER_INVESTIDA_HER_DANO := 1.0   # a herança não move o gato: dano menor, sem proteção
+# Fumaça (Homem-Morcego): aliados em volta ficam ocultos
+const PODER_FUMACA_RAIO := 130.0
+const PODER_FUMACA_T := 3.0
+const FUMACA_CHEFE_VISAO := 40.0    # chefe ainda enxerga a esta distância
+# Fúria (Viking)
+const PODER_FURIA_T := 4.0
+const PODER_FURIA_CERCO := 1.0      # fração do golpe que vaza para os vizinhos do alvo
+const PODER_FURIA_ROUBO := 0.3
+# Pisão (Encanador): cadeia de pulos
+const PODER_PISAO_N := 3
+const PODER_PISAO_ALCANCE := 300.0
+const PODER_PISAO_DANO := 1.0
+const PODER_PISAO_CRESCE := 1.2     # cada pisão seguinte vale isto x o anterior
+const PODER_PISAO_T := 0.6
+const PODER_PISAO_PROTEGE := 1.0
+# Canteiro (Jardineiro): zona parada que cura os aliados dentro e atrasa os inimigos
+const PODER_CANTEIRO_T := 6.0
+const PODER_CANTEIRO_RAIO := 110.0
+const PODER_CANTEIRO_CURA := 0.05   # fração da vida máxima por segundo
+const PODER_CANTEIRO_LENTO := 0.8   # multiplicador de velocidade dos inimigos dentro
+# Triagem (Tartaruga): cura focada no mais ferido
+const PODER_TRIAGEM_LIMIAR := 0.5
+const PODER_TRIAGEM_CURA := 0.45
+const PODER_TRIAGEM_OUTROS := 0.10
+const PODER_TRIAGEM_PROTEGE := 2.0
+# Alvo travado (Patrulheiro): laser que marca
+const PODER_MARCA_DANO := 0.8
+const PODER_MARCA_T := 5.0
+const PODER_MARCA_BONUS := 0.25     # dano recebido a mais, de qualquer fonte
+const PODER_MARCA_RECARGA := 2.0    # acertando 3 ou mais, a recarga do poder cai isto
+const PODER_MARCA_RECARGA_MIN := 3
+# Bola de espinhos (Ouriço)
+const PODER_BOLA_T := 4.0
+const PODER_BOLA_VEL := 1.8
+const PODER_BOLA_ESPINHO := 0.7     # x dano base devolvido a cada golpe corpo a corpo recebido
 
 # ---------- Geometria do campo ----------
 const TORRE_X := 175.0

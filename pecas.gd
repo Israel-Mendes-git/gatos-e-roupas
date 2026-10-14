@@ -248,38 +248,42 @@ const CONJUNTO_COR: Array[Color] = [
 const CONJUNTO_MOLDE: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 6, 6, 5, 8, 4, 0, 6, 0, 4, 1, 7, 6, 4, 7, 8]
 
 # ---------- Poder especial da fantasia completa ----------
-enum Poder { RAIO, EXPLOSAO, ATORDOA, CURA, PROTEGE, FRENESI, ATRAVESSA, RAJADA, GELO, EMPURRA, GIRO, DRENO, INVOCA, TELEPORTE, PUXA, ENXAME }
-const PODER_TIPO: Array[int] = [6, 4, 5, 2, 10, 3, 7, 1, 0, 10, 6, 2, 9, 11, 10, 3, 6, 1, 7, 8, 6, 12, 13, 14, 15]
+## Os 16 primeiros são os da primeira leva; os de baixo foram acrescentados na rodada de poderes diversos (valores novos no fim: o save grava a fantasia, não este índice).
+enum Poder { RAIO, EXPLOSAO, ATORDOA, CURA, PROTEGE, FRENESI, ATRAVESSA, RAJADA, GELO, EMPURRA, GIRO, DRENO, INVOCA, TELEPORTE, PUXA, ENXAME,
+	RAIZ, SAQUE, TROVOADA, CANHAO, MISSEIS, CANCAO, INVESTIDA, FUMACA, FURIA, PISAO, CANTEIRO, TRIAGEM, MARCA, BOLA }
+const PODER_TIPO: Array[int] = [Poder.INVESTIDA, Poder.PROTEGE, Poder.FRENESI, Poder.ATORDOA, Poder.FURIA, Poder.CANTEIRO, Poder.SAQUE, Poder.CANHAO, Poder.RAIO,
+	Poder.PISAO, Poder.FUMACA, Poder.RAIZ, Poder.EMPURRA, Poder.DRENO, Poder.CANCAO, Poder.TRIAGEM, Poder.BOLA, Poder.MISSEIS, Poder.TROVOADA, Poder.GELO, Poder.MARCA,
+	Poder.INVOCA, Poder.TELEPORTE, Poder.PUXA, Poder.ENXAME]
 const PODER_NOME: Array[String] = [
-	"Carga de lança", "Muralha", "Ordem real", "Buzina", "Giro de fúria",
-	"Chuva de pétalas", "Saraivada", "Bala de canhão", "Relâmpago", "Pisão",
-	"Bumerangue", "Teia", "Empurrão", "Aperto sombrio", "Giro da espada",
-	"Pizza para todos", "Disparada", "Míssil", "Trovoada", "Nevasca",
-	"Raio laser",
+	"Carga de lança", "Muralha", "Ordem real", "Buzina", "Fúria",
+	"Chuva de pétalas", "Saque rápido", "Bala de canhão", "Relâmpago", "Pisão",
+	"Fumaça", "Teia", "Empurrão", "Aperto sombrio", "Canção do tempo",
+	"Pizza para todos", "Bola de espinhos", "Salva de mísseis", "Trovoada", "Nevasca",
+	"Alvo travado",
 	"Clones", "Teletransporte", "Arrastão", "Enxame",
 ]
 const PODER_DICA: Array[String] = [
-	"atravessa a fileira inimiga à frente",
+	"investe pela fileira, fere quem cruza, derruba o primeiro e fica protegido",
 	"o time recebe bem menos dano por uns segundos",
 	"o time ataca em dobro por uns segundos",
 	"atordoa os inimigos em volta",
-	"golpe forte em todos em volta",
-	"cura o time inteiro",
-	"acerta vários inimigos de uma vez",
-	"explosão no meio dos inimigos",
+	"por uns segundos os golpes ferem em volta e roubam vida",
+	"um canteiro cura os aliados dentro e atrasa os inimigos",
+	"seis tiros, sempre no inimigo mais fraco",
+	"explode o maior bando, queima e devolve blocos por bicho derrotado",
 	"raio fortíssimo no inimigo mais resistente",
-	"pula e esmaga todos em volta",
-	"o bumerangue atravessa a fileira inimiga",
-	"prende os inimigos em volta",
+	"pula de inimigo em inimigo, esmagando os mais fortes",
+	"esconde os aliados em volta: os bichos trocam de alvo",
+	"prende os inimigos mais perto da torre: não andam, mas ainda atacam",
 	"joga os inimigos para longe",
 	"fere um inimigo e toma a vida dele",
-	"golpe giratório em todos em volta",
-	"cura o time inteiro",
-	"dispara atravessando a fileira inimiga",
-	"explosão no meio dos inimigos",
-	"raios em vários inimigos",
+	"adianta a recarga dos poderes dos outros gatos",
+	"cura muito o mais ferido e um pouco os outros",
+	"fica rápido, espinhento e firme contra atordoar",
+	"três explosões na entrada da torre",
+	"raios nos maiores bandos, atordoando",
 	"deixa todos os inimigos lentos",
-	"o laser atravessa a fileira inimiga",
+	"o laser marca quem atravessa: recebe mais dano de tudo",
 	"dois clones lutam ao seu lado por uns segundos",
 	"aparece junto do inimigo mais ao fundo, golpeia e fica protegido",
 	"puxa os inimigos de longe para perto e fere cada um",

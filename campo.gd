@@ -521,7 +521,7 @@ func _agenda_exec(a: Dictionary) -> void:
 			tremor = maxf(tremor, 14.0)
 			_som("trofeu", 0.9, -3.0, true)
 		"poder_fx":
-			_poder_fx(int(a["poder"]), a["po"], a["alvos"], a["cor"])
+			_poder_fx(int(a["poder"]), a["po"], a["alvos"], a["cor"], a.get("ex", {}))
 		"desaba":
 			var idx: int = randi() % 16
 			var pb: Vector2 = Vector2(randf_range(20, 150), randf_range(500, 640))
@@ -783,12 +783,37 @@ func _consumir() -> void:
 					jp["hop"] = 0.0
 				vinheta_poder = 0.45 if e.get("heranca", false) else 1.0   # herança dispara sozinha e com frequência: escurece menos
 				var snd_p: String = "poder"
+				var tom_p: float = 1.0
 				match int(e.get("poder", 0)):
 					Pecas.Poder.RAIO: snd_p = "poder_raio"
 					Pecas.Poder.EXPLOSAO: snd_p = "poder_explosao"
 					Pecas.Poder.CURA: snd_p = "poder_cura"
 					Pecas.Poder.GELO: snd_p = "poder_gelo"
-				_som(snd_p, 1.0, -1.0, true, 0.03)
+					Pecas.Poder.SAQUE: snd_p = "tiro"
+					Pecas.Poder.TROVOADA: snd_p = "poder_raio"
+					Pecas.Poder.CANHAO, Pecas.Poder.MISSEIS: snd_p = "poder_explosao"
+					Pecas.Poder.CANTEIRO, Pecas.Poder.TRIAGEM: snd_p = "poder_cura"
+					Pecas.Poder.RAIZ:
+						snd_p = "poder_gelo"
+						tom_p = 1.5
+					Pecas.Poder.INVESTIDA: snd_p = "golpe_forte"
+					Pecas.Poder.PISAO:
+						snd_p = "golpe_forte"
+						tom_p = 0.75
+					Pecas.Poder.FUMACA:
+						snd_p = "poder"
+						tom_p = 0.7
+					Pecas.Poder.FURIA:
+						snd_p = "poder"
+						tom_p = 0.6
+					Pecas.Poder.CANCAO: snd_p = "poder_pronto"
+					Pecas.Poder.MARCA:
+						snd_p = "poder_raio"
+						tom_p = 1.6
+					Pecas.Poder.BOLA:
+						snd_p = "poder"
+						tom_p = 1.4
+				_som(snd_p, tom_p, -1.0, true, 0.03)
 				# nome do poder: cor da fantasia clareada até uma luminância mínima + contorno escuro grosso
 				# empilha: se já há um nome de poder aqui perto, este sobe uma linha (sem sobrepor)
 				var nivel_nome: int = 0
@@ -802,7 +827,8 @@ func _consumir() -> void:
 					alvos_p.append(Vector2(pt.x, pt.y - 24 * ESC))
 				if int(e.get("poder", 0)) == Pecas.Poder.TELEPORTE:
 					alvos_p = [Vector2(float(e.get("x0", e["x"])), float(e.get("y0", e["y"])) - 24 * ESC)]   # no teleporte, o risco vai da origem ao destino
-				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp})
+				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp,
+					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0))}})
 			"clone_fim":
 				# clone que some (fim do tempo ou derrotado): fumacinha, sem som e sem nocaute
 				var pcl: Vector2 = Vector2(e["x"], e["y"] - 22 * ESC)
@@ -1090,7 +1116,7 @@ func _anel(c: Vector2, rx: float, ry: float, cor: Color, larg: float) -> void:
 		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
 	draw_polyline(pts, cor, larg)
 
-func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color) -> void:
+func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary = {}) -> void:
 	var dur: float = 0.9
 	var centro: Vector2 = po + Vector2(70, 20)
 	if not alvos.is_empty():
@@ -1141,10 +1167,44 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color) -> void:
 			dur = 0.8
 		Pecas.Poder.ENXAME:
 			dur = 0.4
+		Pecas.Poder.RAIZ:
+			dur = 1.2
+		Pecas.Poder.SAQUE:
+			dur = 0.12 * alvos.size() + 0.5
+		Pecas.Poder.TROVOADA:
+			dur = 0.9
+			tremor = maxf(tremor, 5.0)
+		Pecas.Poder.CANHAO:
+			dur = 1.0
+			tremor = maxf(tremor, 6.0)
+		Pecas.Poder.MISSEIS:
+			dur = 0.18 * alvos.size() + 0.9
+			tremor = maxf(tremor, 5.0)
+		Pecas.Poder.CANCAO:
+			dur = 1.4
+		Pecas.Poder.INVESTIDA:
+			dur = 0.7
+			tremor = maxf(tremor, 4.0)
+		Pecas.Poder.FUMACA:
+			dur = 1.8
+		Pecas.Poder.FURIA:
+			dur = 0.9
+			tremor = maxf(tremor, 3.0)
+		Pecas.Poder.PISAO:
+			dur = 0.2 * alvos.size() + 0.8
+			tremor = maxf(tremor, 4.0)
+		Pecas.Poder.CANTEIRO:
+			dur = 1.1
+		Pecas.Poder.TRIAGEM:
+			dur = 1.2
+		Pecas.Poder.MARCA:
+			dur = 1.0
+		Pecas.Poder.BOLA:
+			dur = 0.7
 	var sem: Array = []
 	for i in 8:
 		sem.append(randf())
-	fx.append({"poder": poder, "p": po, "c": centro, "alvos": alvos, "cor": cor, "t": 0.0, "dur": dur, "sem": sem})
+	fx.append({"poder": poder, "p": po, "c": centro, "alvos": alvos, "cor": cor, "t": 0.0, "dur": dur, "sem": sem, "ex": ex})
 
 func _desenhar_fx(f: Dictionary) -> void:
 	var t: float = f["t"]
@@ -1155,6 +1215,8 @@ func _desenhar_fx(f: Dictionary) -> void:
 	var ce: Vector2 = f["c"]
 	var alvos: Array = f["alvos"]
 	var sem: Array = f["sem"]
+	var ex: Dictionary = f.get("ex", {})
+	var gp: Vector2 = p + Vector2(0, 30.0 * ESC)   # chão sob quem usou
 	var qtd: Array = alvos if not alvos.is_empty() else [p]
 	match int(f["poder"]):
 		Pecas.Poder.RAIO:
@@ -1334,13 +1396,260 @@ func _desenhar_fx(f: Dictionary) -> void:
 			_anel(p, 140.0 * (1.0 - u) + 10.0, 50.0 * (1.0 - u) + 4.0, Color(c.r, c.g, c.b, 0.6 * a), 3.0)
 		Pecas.Poder.ENXAME:
 			_anel(p, 10.0 + 70.0 * u, 5.0 + 28.0 * u, Color(1.0, 0.85, 0.15, 0.7 * a), 3.0)
+		Pecas.Poder.RAIZ:
+			# teia: fio do gato até cada bicho e uma teia branca no chão sob ele
+			for b in qtd:
+				var pe: Vector2 = b + Vector2(0, 24 * ESC)
+				var cr: float = minf(1.0, u * 5.0)
+				var br: float = minf(1.0, a * 2.0)
+				draw_line(p, p.lerp(b, minf(1.0, u * 6.0)), Color(1, 1, 1, 0.85 * br), 2.0)
+				_elipse_cheia(pe, 34.0 * cr, 11.0 * cr, Color(0.85, 0.9, 1.0, 0.2 * br))
+				for k in 8:
+					var ang: float = k * TAU / 8.0
+					draw_line(pe, pe + Vector2(cos(ang) * 34.0, sin(ang) * 11.0) * cr, Color(1, 1, 1, 0.9 * br), 1.6)
+				for rr in [12.0, 23.0, 34.0]:
+					_anel(pe, rr * cr, rr * 0.32 * cr, Color(1, 1, 1, 0.85 * br), 1.5)
+		Pecas.Poder.SAQUE:
+			if u < 0.25:
+				draw_circle(p + Vector2(22, 0), 12.0 * (1.0 - u / 0.25) + 3.0, Color(1.0, 0.95, 0.6, 0.8))
+			for bi in qtd.size():
+				var b: Vector2 = qtd[bi]
+				var w: float = (t - bi * 0.12) / 0.14
+				if w > 0.0 and w < 1.0:
+					var bp: Vector2 = p.lerp(b, w)
+					draw_line(p.lerp(b, maxf(0.0, w - 0.3)), bp, Color(c.r, c.g, c.b, 0.7), 4.0)
+					draw_circle(bp, 4.5, Color(1, 1, 0.8))
+				elif w >= 1.0 and w < 2.0:
+					var e2: float = w - 1.0
+					draw_circle(b, 14.0 * (1.0 - e2) + 2.0, Color(1, 0.9, 0.4, 0.7 * (1.0 - e2)))
+					draw_line(b + Vector2(-8, 0) * (1.0 + e2), b + Vector2(8, 0) * (1.0 + e2), Color(1, 1, 0.8, 0.9 * (1.0 - e2)), 2.0)
+					draw_line(b + Vector2(0, -8) * (1.0 + e2), b + Vector2(0, 8) * (1.0 + e2), Color(1, 1, 0.8, 0.9 * (1.0 - e2)), 2.0)
+		Pecas.Poder.TROVOADA:
+			var quadro_t: int = int(t * 28.0)
+			var pisca_t: float = 1.0 if quadro_t % 2 == 0 else 0.55
+			if u < 0.2:
+				draw_rect(Rect2(-20, -20, 1320, 760), Color(0.75, 0.7, 1.0, 0.12 * (1.0 - u / 0.2)))
+			for k in qtd.size():
+				var b: Vector2 = qtd[k]
+				var pe: Vector2 = b + Vector2(0, 24 * ESC)
+				var rr_t: float = float(ex.get("raio", 70.0)) * minf(1.0, u * 6.0)
+				_elipse_cheia(pe, rr_t, rr_t * 0.34, Color(0.7, 0.55, 1.0, 0.25 * a))
+				_anel(pe, rr_t, rr_t * 0.34, Color(0.85, 0.75, 1.0, 0.9 * a), 3.0)
+				if u < 0.5:
+					var topo := Vector2(b.x + (sem[k % 8] - 0.5) * 50.0, -10.0)
+					var pts := PackedVector2Array()
+					for i in 11:
+						var wv: float = i / 10.0
+						var off: float = 0.0 if (i == 0 or i == 10) else sin(i * 12.9898 + sem[k % 8] * 78.2 + quadro_t * 1.7) * 24.0
+						pts.append(topo.lerp(b, wv) + Vector2(off, 0.0))
+					draw_polyline(pts, Color(0.7, 0.55, 1.0, 0.4 * pisca_t), 20.0)
+					draw_polyline(pts, Color(1, 1, 1, 0.95 * pisca_t), 5.0)
+				draw_circle(b, 16.0 * a + 3.0, Color(0.9, 0.85, 1.0, 0.5 * pisca_t))
+		Pecas.Poder.CANHAO:
+			if u < 0.28:
+				var wc: float = u / 0.28
+				var bc: Vector2 = p.lerp(ce, wc) + Vector2(0, -90.0 * sin(PI * wc))
+				draw_circle(bc, 9.0, Color(0.1, 0.1, 0.12))
+				draw_circle(bc + Vector2(-3, -3), 3.0, Color(0.55, 0.55, 0.6))
+				for k in 4:
+					var wt: float = maxf(0.0, wc - k * 0.06)
+					draw_circle(p.lerp(ce, wt) + Vector2(0, -90.0 * sin(PI * wt)), 6.0 - k, Color(0.8, 0.8, 0.8, 0.3))
+			else:
+				var we: float = (u - 0.28) / 0.72
+				var rc: float = float(ex.get("raio", 100.0)) * (1.0 - pow(1.0 - minf(1.0, we * 2.5), 3.0))
+				var ae: float = 1.0 - we
+				if we < 0.15:
+					draw_rect(Rect2(-20, -20, 1320, 760), Color(1.0, 0.85, 0.5, 0.18 * (1.0 - we / 0.15)))
+				_elipse_cheia(ce + Vector2(0, 26), rc * 1.1, rc * 0.36, Color(0.15, 0.05, 0.02, 0.3 * ae))
+				draw_circle(ce, rc, Color(1.0, 0.35, 0.08, 0.32 * ae))
+				draw_circle(ce, rc * 0.65, Color(1.0, 0.65, 0.15, 0.45 * ae))
+				draw_arc(ce, rc, 0, TAU, 36, Color(1.0, 0.9, 0.5, 0.9 * ae), 6.0 * ae + 1.0)
+				for k in 7:
+					var wf: float = fposmod(we * 1.5 + k * 0.14, 1.0)
+					var ang_f: float = k * 2.4
+					draw_circle(ce + Vector2(cos(ang_f) * rc * 0.7, sin(ang_f) * rc * 0.3 - wf * 50.0), 5.0 * (1.0 - wf) + 1.0, Color(1.0, 0.5, 0.1, 0.9 * ae))
+		Pecas.Poder.MISSEIS:
+			var raio_m: float = float(ex.get("raio", 80.0))
+			for bi in qtd.size():
+				var b: Vector2 = qtd[bi]
+				var wm: float = (t - bi * 0.18) / 0.3
+				if wm > 0.0 and wm < 1.0:
+					var cab: Vector2 = Vector2(b.x, lerpf(-40.0, b.y, wm * wm))
+					draw_line(cab + Vector2(0, -50), cab, Color(1.0, 0.6, 0.2, 0.5), 7.0)
+					draw_line(cab + Vector2(0, -36), cab, Color(1, 1, 0.85, 0.9), 2.5)
+					draw_colored_polygon(PackedVector2Array([cab + Vector2(-5, 0), cab + Vector2(5, 0), cab + Vector2(0, 14)]), Color(0.85, 0.2, 0.15))
+					draw_rect(Rect2(cab.x - 4, cab.y - 12, 8, 12), Color(0.75, 0.78, 0.85))
+				elif wm >= 1.0:
+					var em: float = (wm - 1.0) / 0.9
+					if em < 1.0:
+						var rm: float = raio_m * (1.0 - pow(1.0 - minf(1.0, em * 2.5), 2.0))
+						var am: float = 1.0 - em
+						draw_circle(b, rm, Color(1.0, 0.3, 0.1, 0.35 * am))
+						draw_circle(b, rm * 0.6, Color(1.0, 0.8, 0.3, 0.55 * am))
+						draw_arc(b, rm, 0, TAU, 28, Color(1.0, 0.9, 0.5, 0.9 * am), 5.0 * am + 1.0)
+						_anel(b + Vector2(0, 24 * ESC), rm * 1.1, rm * 0.35, Color(1.0, 0.5, 0.2, 0.7 * am), 3.0)
+		Pecas.Poder.CANCAO:
+			var fontes: Array = [p]
+			fontes.append_array(alvos)
+			for fi in fontes.size():
+				var f0: Vector2 = fontes[fi]
+				for k in 3:
+					var wn: float = fposmod(u * 1.3 + k * 0.33 + fi * 0.11, 1.0)
+					var np: Vector2 = f0 + Vector2((k - 1) * 16.0 + sin(t * 6.0 + k + fi) * 6.0, -10.0 - wn * 70.0)
+					var an: float = sin(wn * PI) * minf(1.0, a * 3.0)
+					var cn := Color(0.5, 1.0, 0.85, an)
+					draw_circle(np, 4.5, cn)
+					draw_line(np + Vector2(4, 0), np + Vector2(4, -14), cn, 2.0)
+					draw_line(np + Vector2(4, -14), np + Vector2(10, -9), cn, 2.0)
+				if fi > 0:
+					_anel(f0 + Vector2(0, 22), 8.0 + 24.0 * u, 3.0 + 9.0 * u, Color(0.5, 1.0, 0.85, 0.7 * a), 2.0)
+			_anel(gp, 10.0 + 130.0 * u, 5.0 + 44.0 * u, Color(0.5, 1.0, 0.85, 0.8 * a), 3.0)
+		Pecas.Poder.INVESTIDA:
+			var o := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 30.0 * ESC)
+			if absf(p.x - o.x) > 2.0:
+				var larg: float = 3.0 + 13.0 * a
+				var xa: float = minf(o.x, p.x)
+				var comp: float = absf(p.x - o.x)
+				draw_rect(Rect2(xa, p.y - larg * 1.5, comp, larg * 3.0), Color(c.r, c.g, c.b, 0.25 * a))
+				draw_rect(Rect2(xa, p.y - larg * 0.5, comp, larg), Color(1, 1, 1, 0.65 * a))
+				for k in 6:
+					var xk: float = o.x + (p.x - o.x) * fposmod(k / 6.0 + u * 0.4, 1.0)
+					draw_polyline(PackedVector2Array([Vector2(xk - 10, p.y - 12), Vector2(xk, p.y), Vector2(xk - 10, p.y + 12)]), Color(1, 1, 1, 0.8 * a), 3.0)
+			for b in alvos:
+				draw_colored_polygon(_pts_estrela(b, 20.0 * a + 6.0, u * 3.0), Color(1.0, 0.95, 0.5, 0.85 * a))
+			_anel(gp, 14.0 + 60.0 * u, 6.0 + 24.0 * u, Color(c.r, c.g, c.b, 0.8 * a), 4.0)
+		Pecas.Poder.FUMACA:
+			var raio_f: float = float(ex.get("raio", 130.0))
+			var cresce_f: float = minf(1.0, u * 4.0)
+			var al_f: float = minf(1.0, a * 1.6)
+			for k in 14:
+				var ang_n: float = k * 2.399
+				var rr_n: float = raio_f * (0.15 + 0.85 * fposmod(k * 0.382, 1.0)) * cresce_f
+				var pc: Vector2 = gp + Vector2(cos(ang_n) * rr_n, sin(ang_n) * rr_n * 0.38 - 6.0 * sin(t * 2.0 + k))
+				draw_circle(pc, 20.0 + 8.0 * (k % 3), Color(0.38, 0.32, 0.45, 0.42 * al_f))
+			for b in alvos:
+				draw_circle(b + Vector2(0, 8), 24.0 * cresce_f, Color(0.5, 0.45, 0.58, 0.3 * al_f))
+			_anel(gp, raio_f * cresce_f, raio_f * 0.38 * cresce_f, Color(0.7, 0.62, 0.85, 0.5 * al_f), 2.0)
+		Pecas.Poder.FURIA:
+			_anel(gp, 16.0 + 90.0 * u, 6.0 + 34.0 * u, Color(1.0, 0.25, 0.15, 0.85 * a), 4.0)
+			for k in 10:
+				var wf2: float = fposmod(u * 1.6 + k * 0.1, 1.0)
+				var xf: float = p.x + (k - 4.5) * 8.0
+				draw_line(Vector2(xf, gp.y), Vector2(xf + sin(t * 9.0 + k) * 4.0, gp.y - wf2 * 80.0), Color(1.0, 0.45, 0.12, 0.85 * (1.0 - wf2)), 4.0)
+			for k in 3:
+				var wr: float = u - k * 0.12
+				if wr > 0.0:
+					draw_arc(p, 20.0 + wr * 110.0, -0.8, 0.8, 10, Color(1, 0.8, 0.6, 0.7 * (1.0 - wr)), 4.0)
+					draw_arc(p, 20.0 + wr * 110.0, PI - 0.8, PI + 0.8, 10, Color(1, 0.8, 0.6, 0.7 * (1.0 - wr)), 4.0)
+		Pecas.Poder.PISAO:
+			var o2 := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 30.0 * ESC)
+			var ant: Vector2 = o2
+			for i in alvos.size():
+				var dest: Vector2 = alvos[i]
+				var wp: float = (t - i * 0.2) / 0.2
+				if wp > 0.0:
+					if wp < 1.0:
+						var pos_p: Vector2 = ant.lerp(dest, wp) + Vector2(0, -80.0 * sin(PI * wp))
+						draw_circle(pos_p + Vector2(0, 34), 8.0, Color(0, 0, 0, 0.2))
+						draw_circle(pos_p, 9.0, Color(c.r, c.g, c.b, 0.9))
+						draw_circle(pos_p, 4.0, Color(1, 1, 1, 0.9))
+					else:
+						var ep: float = (wp - 1.0) / 1.6
+						if ep < 1.0:
+							_anel(dest + Vector2(0, 24 * ESC), 10.0 + 60.0 * ep, 4.0 + 20.0 * ep, Color(1.0, 0.9, 0.5, 0.85 * (1.0 - ep)), 4.0)
+							draw_colored_polygon(_pts_estrela(dest + Vector2(0, -34.0 - 24.0 * ep), 9.0, ep * 4.0), Color(1.0, 0.9, 0.3, 1.0 - ep))
+				ant = dest
+		Pecas.Poder.CANTEIRO:
+			var rc2: float = float(ex.get("raio", 110.0)) * u
+			_anel(gp, rc2, rc2 * 0.34, Color(0.95, 0.55, 0.8, 0.85 * a), 3.0)
+			for k in 16:
+				var ang_c: float = k * TAU / 16.0
+				var wk: float = fposmod(u * 0.9 + k * 0.13, 1.0)
+				var pet: Vector2 = gp + Vector2(cos(ang_c) * rc2, sin(ang_c) * rc2 * 0.34) + Vector2(0, -wk * 40.0)
+				draw_circle(pet, 4.0, Color(1.0, 0.6, 0.8, a) if k % 2 == 0 else Color(1.0, 0.95, 0.5, a))
+		Pecas.Poder.TRIAGEM:
+			for bi in qtd.size():
+				var b: Vector2 = qtd[bi]
+				if bi == 0:
+					var wq: float = minf(1.0, u * 3.0)
+					var fp: Vector2 = b + Vector2(0, -90.0 * (1.0 - wq) - 40.0)
+					var af: float = minf(1.0, a * 3.0)
+					draw_colored_polygon(PackedVector2Array([fp + Vector2(-17, -14), fp + Vector2(17, -14), fp + Vector2(0, 20)]), Color(1.0, 0.8, 0.25, af))
+					draw_line(fp + Vector2(-17, -14), fp + Vector2(17, -14), Color(0.85, 0.5, 0.15, af), 5.0)
+					draw_circle(fp + Vector2(-5, -4), 3.5, Color(0.8, 0.15, 0.1, af))
+					draw_circle(fp + Vector2(5, 2), 3.5, Color(0.8, 0.15, 0.1, af))
+					var br: float = 34.0 * (0.6 + 0.4 * minf(1.0, u * 6.0))
+					draw_arc(b + Vector2(0, 2), br, 0, TAU, 32, Color(1, 1, 1, 0.8 * minf(1.0, a * 2.0)), 2.0)
+					for k in 6:
+						var wh: float = fposmod(u * 1.1 + k * 0.17, 1.0)
+						var cp2: Vector2 = b + Vector2((k - 2.5) * 11.0, 10.0 - wh * 80.0)
+						var al: float = sin(wh * PI) * minf(1.0, a * 2.5)
+						draw_rect(Rect2(cp2.x - 2.5, cp2.y - 9, 5, 18), Color(0.35, 1.0, 0.5, al))
+						draw_rect(Rect2(cp2.x - 9, cp2.y - 2.5, 18, 5), Color(0.35, 1.0, 0.5, al))
+				else:
+					var wh2: float = fposmod(u * 1.1 + bi * 0.2, 1.0)
+					var cp3: Vector2 = b + Vector2(0, 10.0 - wh2 * 60.0)
+					var al2: float = sin(wh2 * PI) * minf(1.0, a * 2.5)
+					draw_rect(Rect2(cp3.x - 1.5, cp3.y - 5, 3, 10), Color(0.5, 1.0, 0.6, al2))
+					draw_rect(Rect2(cp3.x - 5, cp3.y - 1.5, 10, 3), Color(0.5, 1.0, 0.6, al2))
+		Pecas.Poder.MARCA:
+			var alt_m: float = 2.0 + 6.0 * a
+			draw_rect(Rect2(p.x, p.y - alt_m, 1320.0 - p.x, alt_m * 2.0), Color(1.0, 0.2, 0.2, 0.55 * a))
+			draw_rect(Rect2(p.x, p.y - alt_m * 0.3, 1320.0 - p.x, alt_m * 0.6), Color(1, 0.9, 0.9, 0.95 * a))
+			for b in alvos:
+				var r_m: float = 24.0 - 10.0 * minf(1.0, u * 4.0)
+				var am2: float = minf(1.0, a * 1.5)
+				draw_arc(b, r_m, 0, TAU, 24, Color(1.0, 0.2, 0.2, 0.95 * am2), 2.5)
+				for k in 4:
+					var dv := Vector2(cos(k * PI * 0.5), sin(k * PI * 0.5))
+					draw_line(b + dv * (r_m - 6.0), b + dv * (r_m + 7.0), Color(1.0, 0.3, 0.3, 0.95 * am2), 2.5)
+				draw_circle(b, 2.5, Color(1, 0.8, 0.8, am2))
+		Pecas.Poder.BOLA:
+			for k in 12:
+				var ang_b: float = k * TAU / 12.0 + u * 3.0
+				var r0: float = 14.0 + 56.0 * u
+				var dvb := Vector2(cos(ang_b), sin(ang_b))
+				draw_line(p + dvb * r0, p + dvb * (r0 + 18.0 * a + 4.0), Color(0.9, 0.95, 1.0, 0.95 * a), 3.0)
+				draw_line(p + dvb * r0, p + dvb * (r0 + 12.0 * a + 2.0), Color(c.r, c.g, c.b, 0.9 * a), 5.0)
+			_anel(gp, 20.0 + 70.0 * u, 8.0 + 28.0 * u, Color(c.r, c.g, c.b, 0.7 * a), 3.0)
 		_:
 			_anel(p, 10.0 + 80.0 * u, 5.0 + 30.0 * u, Color(c.r, c.g, c.b, 0.7 * a), 3.0)
+
+## Canteiro (Jardineiro): chão florido com flores balançando; no chão, sob os gatos.
+func _desenhar_canteiros() -> void:
+	for zz in sim.zonas:
+		var z: Dictionary = zz
+		if z.get("tipo", "enxame") != "canteiro":
+			continue
+		var cx: float = float(z["x"])
+		var cy: float = float(z["y"])
+		var raio: float = float(z["raio"])
+		var viva: float = clampf(float(z["t"]) / 0.5, 0.0, 1.0) * clampf((float(z["dur"]) - float(z["t"])) / 0.25, 0.0, 1.0)
+		var pulso: float = 0.5 + 0.5 * sin(rel * 3.0)
+		_elipse_cheia(Vector2(cx, cy), raio, raio * 0.36, Color(0.45, 0.85, 0.35, (0.2 + 0.05 * pulso) * viva))
+		_anel(Vector2(cx, cy), raio, raio * 0.36, Color(0.95, 0.55, 0.8, 0.75 * viva), 2.5)
+		for k in 18:
+			var ang: float = k * 2.399
+			var rr: float = raio * 0.92 * sqrt((k + 0.5) / 18.0)
+			var fp := Vector2(cx + cos(ang) * rr, cy + sin(ang) * rr * 0.36)
+			var balanco: float = sin(rel * 2.0 + k) * 1.5
+			draw_line(fp, fp + Vector2(balanco, -7.0), Color(0.25, 0.6, 0.25, viva), 1.6)
+			var cor_f: Color = [Color(1.0, 0.55, 0.78), Color(1.0, 0.92, 0.45), Color(1, 1, 1)][k % 3]
+			draw_circle(fp + Vector2(balanco, -8.0), 3.2, Color(cor_f.r, cor_f.g, cor_f.b, viva))
+			draw_circle(fp + Vector2(balanco, -8.0), 1.2, Color(0.9, 0.6, 0.1, viva))
+		for k in 4:
+			var wk: float = fposmod(rel * 0.7 + k * 0.25, 1.0)
+			var sp := Vector2(cx + (k - 1.5) * raio * 0.45, cy - wk * 50.0)
+			var al: float = sin(wk * PI) * 0.8 * viva
+			draw_rect(Rect2(sp.x - 1.5, sp.y - 5, 3, 10), Color(0.4, 1.0, 0.55, al))
+			draw_rect(Rect2(sp.x - 5, sp.y - 1.5, 10, 3), Color(0.4, 1.0, 0.55, al))
 
 ## Enxame: pontinhos amarelos e pretos girando sobre a área de cada nuvem ativa (sim.zonas).
 func _desenhar_zonas() -> void:
 	for zz in sim.zonas:
 		var z: Dictionary = zz
+		if z.get("tipo", "enxame") == "canteiro":
+			continue
 		var centro: Vector2 = Vector2(float(z["x"]), float(z["y"]) - 34.0 * ESC)
 		var raio: float = float(z["raio"])
 		var viva: float = clampf(float(z["t"]) / 0.4, 0.0, 1.0)
@@ -1391,6 +1700,42 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 		for k in 3:
 			var w: float = fposmod(rel * 1.5 + k * 0.33, 1.0)
 			draw_circle(pos + Vector2((k - 1) * 22.0, -h * 0.9 - w * 14.0), 3.0 * (1.0 - w), Color(1.0, 0.4, 0.3, 0.7 * fa))
+	if uu.preso_t > 0.0:
+		var pe_t: Vector2 = pos + Vector2(0, 2)
+		_elipse_cheia(pe_t, CORPO_LARG * esc_u, 9.0 * esc_u, Color(0.9, 0.93, 1.0, 0.3))
+		for k in 8:
+			var ang_t: float = k * TAU / 8.0
+			draw_line(pe_t, pe_t + Vector2(cos(ang_t) * CORPO_LARG * esc_u, sin(ang_t) * 9.0 * esc_u), Color(1, 1, 1, 0.8), 1.4)
+		_anel(pe_t, CORPO_LARG * 0.55 * esc_u, 5.0 * esc_u, Color(1, 1, 1, 0.8), 1.2)
+		_anel(pe_t, CORPO_LARG * esc_u, 9.0 * esc_u, Color(1, 1, 1, 0.8), 1.2)
+		draw_line(pe_t + Vector2(-8, -h * 0.5), pe_t + Vector2(10, -h * 0.9), Color(1, 1, 1, 0.5), 1.2)
+	if uu.marcado_t > 0.0:
+		var pr_m: float = 0.5 + 0.5 * sin(rel * 8.0)
+		_anel(meio, (CORPO_LARG + 4.0) * esc_u, (CORPO_MEIO + 6.0) * esc_u, Color(1.0, 0.2, 0.2, 0.35 + 0.35 * pr_m), 1.6)
+	if uu.furor_t > 0.0:
+		_elipse_cheia(pos + Vector2(0, 2), CORPO_LARG * 1.15 * esc_u, 10.0 * esc_u, Color(1.0, 0.2, 0.1, 0.28 + 0.1 * sin(rel * 12.0)))
+		for k in 5:
+			var wf: float = fposmod(rel * 2.2 + k * 0.2, 1.0)
+			draw_line(pos + Vector2((k - 2) * 14.0 * esc_u, -4.0), pos + Vector2((k - 2) * 14.0 * esc_u + sin(rel * 9.0 + k) * 3.0, -h * (0.4 + wf * 0.7)), Color(1.0, 0.4, 0.1, 0.8 * (1.0 - wf)), 3.0)
+	if uu.bola_t > 0.0:
+		for k in 12:
+			var ang_s: float = rel * 6.0 + k * TAU / 12.0
+			var dv_s := Vector2(cos(ang_s) * (CORPO_LARG + 2.0) * esc_u, sin(ang_s) * (CORPO_MEIO + 4.0) * esc_u)
+			draw_line(meio + dv_s, meio + dv_s * 1.25, Color(0.92, 0.96, 1.0, 0.95), 2.4)
+	if uu.oculto_t > 0.0:
+		for k in 3:
+			var wo: float = fposmod(rel * 0.8 + k * 0.33, 1.0)
+			draw_circle(meio + Vector2((k - 1) * 20.0 * esc_u, 14.0 - wo * 30.0 * esc_u), (9.0 + 5.0 * wo) * esc_u * 0.8, Color(0.45, 0.4, 0.55, 0.45 * (1.0 - wo)))
+	# ícones pequenos de estado acima da cabeça: preso, marcado, oculto
+	var icones: Array[int] = []
+	if uu.preso_t > 0.0:
+		icones.append(0)
+	if uu.marcado_t > 0.0:
+		icones.append(1)
+	if uu.oculto_t > 0.0:
+		icones.append(2)
+	for i in icones.size():
+		_icone_estado(icones[i], Vector2(pos.x + (i - (icones.size() - 1) * 0.5) * 18.0, pos.y - h - 24.0 * esc_u / ESC))
 	if uu.atordoado_t > 0.0:
 		for k in 3:
 			var ang: float = rel * 6.0 + k * TAU / 3.0
@@ -1399,6 +1744,28 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 			draw_colored_polygon(estr, Desenho.DOURADO)
 			estr.append(estr[0])
 			draw_polyline(estr, Color(0.3, 0.18, 0.0, 0.95), 1.2)
+
+## Ícone de 16 px de um estado: 0 preso (teia), 1 marcado (mira), 2 oculto (nuvem).
+func _icone_estado(tipo: int, c: Vector2) -> void:
+	draw_circle(c, 9.0, Color(0.08, 0.08, 0.12, 0.85))
+	match tipo:
+		0:
+			draw_arc(c, 6.0, 0, TAU, 16, Color(1, 1, 1), 1.4)
+			draw_arc(c, 3.0, 0, TAU, 12, Color(1, 1, 1), 1.2)
+			draw_line(c + Vector2(-6, 0), c + Vector2(6, 0), Color(1, 1, 1), 1.2)
+			draw_line(c + Vector2(0, -6), c + Vector2(0, 6), Color(1, 1, 1), 1.2)
+			draw_line(c + Vector2(-4, -4), c + Vector2(4, 4), Color(1, 1, 1), 1.0)
+			draw_line(c + Vector2(4, -4), c + Vector2(-4, 4), Color(1, 1, 1), 1.0)
+		1:
+			draw_arc(c, 5.0, 0, TAU, 16, Color(1.0, 0.25, 0.25), 1.8)
+			for k in 4:
+				var dv := Vector2(cos(k * PI * 0.5), sin(k * PI * 0.5))
+				draw_line(c + dv * 3.0, c + dv * 8.0, Color(1.0, 0.35, 0.3), 1.8)
+			draw_circle(c, 1.4, Color(1, 0.8, 0.8))
+		2:
+			draw_circle(c + Vector2(-3, 1), 3.2, Color(0.75, 0.7, 0.85))
+			draw_circle(c + Vector2(3, 1), 3.2, Color(0.75, 0.7, 0.85))
+			draw_circle(c + Vector2(0, -2), 3.4, Color(0.85, 0.8, 0.95))
 
 func _halo(c: Vector2, r: float, cor: Color, n: int = 9) -> void:
 	for g in n:
@@ -1634,6 +2001,7 @@ func _draw() -> void:
 	Desenho.texto(self, str(estado.tijolos), Vector2(10, 686), 22, Color(1, 0.85, 0.7), 160.0, 3)
 	if prep:
 		_desenhar_prep_chao()
+	_desenhar_canteiros()
 	# unidades ordenadas por profundidade
 	var todos: Array = []
 	todos.append_array(sim.aliados)
@@ -1718,7 +2086,7 @@ func _draw() -> void:
 			sx_u -= br * 0.5
 		var esc_d: float = esc_u * sy_u
 		var dir_d: float = dir * sx_u / sy_u
-		Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else 1.0), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
+		Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
 		if uu2.barreira_int > 0.0 and uu2.barreira_cd <= 0.0:
@@ -4546,6 +4914,16 @@ func _estados_txt(u: Unidade) -> String:
 		e.append("protegido")
 	if u.frenesi_t > 0.0:
 		e.append("frenesi")
+	if u.preso_t > 0.0:
+		e.append("preso na teia %s s" % Simulacao.num(u.preso_t))
+	if u.marcado_t > 0.0:
+		e.append("marcado: +%s de dano recebido" % Simulacao.pct(u.marcado_bonus))
+	if u.oculto_t > 0.0:
+		e.append("oculto na fumaça")
+	if u.furor_t > 0.0:
+		e.append("em fúria")
+	if u.bola_t > 0.0:
+		e.append("bola de espinhos")
 	if u.bonus_dano > 1.01:
 		e.append("dano +%s" % Simulacao.pct(u.bonus_dano - 1.0))
 	if u.embalo > 0.0:

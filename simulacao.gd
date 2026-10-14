@@ -501,10 +501,10 @@ func _separar(lista: Array[Unidade], dt: float) -> void:
 			var f: float = (1.0 - d / Balanco.SEPARA_RAIO) * Balanco.SEPARA_VEL * dt
 			var sy: float = 1.0 if dy > 0.0 or (dy == 0.0 and (i + j) % 2 == 0) else -1.0
 			var sx: float = signf(dx)
-			if a.atordoado_t <= 0.0:
+			if a.atordoado_t <= 0.0 and a.preso_t <= 0.0:
 				a.x -= sx * f * 0.35
 				a.y = clampf(a.y - sy * f, Balanco.CHAO_Y0, Balanco.CHAO_Y1)
-			if b.atordoado_t <= 0.0:
+			if b.atordoado_t <= 0.0 and b.preso_t <= 0.0:
 				b.x += sx * f * 0.35
 				b.y = clampf(b.y + sy * f, Balanco.CHAO_Y0, Balanco.CHAO_Y1)
 
@@ -552,9 +552,9 @@ func _modulos_da_torre(dt: float) -> void:
 				_ev({"t": "catapulta", "x": cx, "y": cy, "raio": Torre.CATAPULTA_RAIO})
 				for v in inimigos:
 					if v.vivo and _dentro(v, cx, cy, Torre.CATAPULTA_RAIO):
-						v.vida -= Torre.CATAPULTA_DANO * v.vulneravel
+						v.vida -= Torre.CATAPULTA_DANO * _vul(v)
 						v.flash = 1.0
-						_ev({"t": "golpe", "x": v.x, "y": v.y, "dano": Torre.CATAPULTA_DANO * v.vulneravel, "eq": 1})
+						_ev({"t": "golpe", "x": v.x, "y": v.y, "dano": Torre.CATAPULTA_DANO * _vul(v), "eq": 1})
 						if v.vida <= 0.0:
 							_matar(v, null, Pecas.Marca.POLVORA)
 	if estado.tem_modulo(Torre.Modulo.SIRENE) and not sirene_usada and estado.tijolos > 0 and estado.tijolos <= int(estado.tijolos_max() * Torre.SIRENE_LIMIAR):
@@ -601,7 +601,7 @@ func _aura_dano(donos: Array[Unidade], alvos: Array[Unidade], dt: float) -> void
 			var dx: float = v.x - u.x
 			var dy: float = v.y - u.y
 			if dx * dx + dy * dy <= r2:
-				v.vida -= u.aura_dano * dt * v.vulneravel
+				v.vida -= u.aura_dano * dt * _vul(v)
 				if v.vida <= 0.0:
 					_matar(v, u, Pecas.Marca.CICATRIZ)
 
@@ -746,6 +746,18 @@ func _ameaca_torre(v: Unidade) -> bool:
 		return true
 	return v.alvo == null and v.x - Balanco.TORRE_X <= v.alcance + 40.0
 
+## Fumaça: quem está oculto só é visto por chefe bem de perto.
+func _enxerga_oculto(u: Unidade, v: Unidade) -> bool:
+	if not u.chefe:
+		return false
+	var dx: float = v.x - u.x
+	var dy: float = v.y - u.y
+	return dx * dx + dy * dy <= Balanco.FUMACA_CHEFE_VISAO * Balanco.FUMACA_CHEFE_VISAO
+
+## Multiplicador de dano recebido: fraqueza do chefe x marca do Alvo travado.
+func _vul(v: Unidade) -> float:
+	return v.vulneravel * ((1.0 + v.marcado_bonus) if v.marcado_t > 0.0 else 1.0)
+
 func _escolher(u: Unidade) -> Unidade:
 	# saltador e ladrão ignoram os bonecos e vão direto à torre
 	if u.equipe == 1 and (u.tipo == Unidade.Tipo.SALTADOR or u.tipo == Unidade.Tipo.LADRAO):
@@ -761,6 +773,8 @@ func _escolher(u: Unidade) -> Unidade:
 		if not v.vivo:
 			continue
 		if u.equipe == 0 and v.x > Balanco.VISIVEL_X:
+			continue
+		if v.oculto_t > 0.0 and not _enxerga_oculto(u, v):
 			continue
 		var dx: float = v.x - u.x
 		var dy: float = v.y - u.y
@@ -801,10 +815,17 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.cd -= dt * u.lento * (2.0 if u.frenesi_t > 0.0 else 1.0)
 	u.frenesi_t = maxf(0.0, u.frenesi_t - dt)
 	u.protegido_t = maxf(0.0, u.protegido_t - dt)
+	u.preso_t = maxf(0.0, u.preso_t - dt)
+	u.marcado_t = maxf(0.0, u.marcado_t - dt)
+	u.oculto_t = maxf(0.0, u.oculto_t - dt)
+	u.furor_t = maxf(0.0, u.furor_t - dt)
+	u.bola_t = maxf(0.0, u.bola_t - dt)
+	if u.bola_t > 0.0:
+		u.atordoado_t = 0.0   # Bola de espinhos: ninguém atordoa
 	u.barreira_cd = maxf(0.0, u.barreira_cd - dt)
 	if u.queima_t > 0.0:
 		u.queima_t -= dt
-		u.vida -= u.queima_dps * dt * u.fraq_fogo * u.vulneravel
+		u.vida -= u.queima_dps * dt * u.fraq_fogo * _vul(u)
 		if u.vida <= 0.0:
 			var fonte: Unidade = u.queima_fonte
 			_matar(u, fonte if fonte != null and fonte.vivo else null, Pecas.Marca.BRASA)
@@ -826,7 +847,8 @@ func _agir(u: Unidade, dt: float) -> void:
 		u.poder_cd -= dt
 		u.poder_pronto = u.poder_cd <= 0.0
 		if u.poder_pronto and not (poder_manual and u.equipe == 0) and _usar_poder(u):
-			u.poder_cd = Balanco.PODER_INTERVALO
+			u.poder_cd = Balanco.PODER_INTERVALO - u.poder_cd_menos
+			u.poder_cd_menos = 0.0
 			u.poder_pronto = false
 			if not u.vivo:
 				return
@@ -837,10 +859,13 @@ func _agir(u: Unidade, dt: float) -> void:
 	if u.regen > 0.0 and u.vida < u.vida_max:
 		u.vida = minf(u.vida_max, u.vida + u.regen * dt)
 	u.retarget -= dt
+	if u.alvo != null and u.alvo.oculto_t > 0.0 and not _enxerga_oculto(u, u.alvo):
+		u.alvo = null   # Fumaça: perdeu o alvo de vista
 	if u.alvo == null or not u.alvo.vivo or u.retarget <= 0.0:
 		u.alvo = _escolher(u)
 		u.retarget = Balanco.RETARGET
 	u.andando = false
+	var mvel: float = u.vel * (u.bola_vel if u.bola_t > 0.0 else 1.0) * (0.0 if u.preso_t > 0.0 else 1.0)
 	var a: Unidade = u.alvo
 	if a != null:
 		var dx: float = a.x - u.x
@@ -850,7 +875,7 @@ func _agir(u: Unidade, dt: float) -> void:
 			if u.cd <= 0.0:
 				_atacar(u, a)
 		else:
-			var passo: float = minf(u.vel * u.lento * dt, d - u.alcance * 0.85)
+			var passo: float = minf(mvel * u.lento * dt, d - u.alcance * 0.85)
 			if passo > 0.0:
 				u.x += dx / d * passo
 				u.y += dy / d * passo
@@ -861,7 +886,7 @@ func _agir(u: Unidade, dt: float) -> void:
 		var cy: float = u.casa_y - u.y
 		var cd2: float = sqrt(cx * cx + cy * cy)
 		if cd2 > Balanco.LINHA_CASA_MARGEM:
-			var pv: float = minf(u.vel * u.lento * dt * (Balanco.LINHA_CORRIDA if cd2 > Balanco.LINHA_CORRIDA_DIST else 1.0), cd2)
+			var pv: float = minf(mvel * u.lento * dt * (Balanco.LINHA_CORRIDA if cd2 > Balanco.LINHA_CORRIDA_DIST else 1.0), cd2)
 			u.x += cx / cd2 * pv
 			u.y += cy / cd2 * pv
 			u.andando = true
@@ -876,7 +901,7 @@ func _agir(u: Unidade, dt: float) -> void:
 				else:
 					_bater_torre(u)
 		else:
-			u.x -= u.vel * u.lento * dt * (Balanco.ENTRADA_VEL if u.x > Balanco.ENTRADA_X else 1.0)
+			u.x -= mvel * u.lento * dt * (Balanco.ENTRADA_VEL if u.x > Balanco.ENTRADA_X else 1.0)
 			u.andando = true
 
 func _atacar(u: Unidade, a: Unidade) -> void:
@@ -894,11 +919,15 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 		_ev({"t": "tiro", "x": u.x, "y": u.y, "eq": u.equipe})
 	else:
 		_dano(u, a, dm, true)
-		if u.cerco > 0.0 and u.vivo:
-			_golpe_em_area(u, a, dm * u.cerco)
+		var cerco: float = u.cerco + (u.furor_cerco if u.furor_t > 0.0 else 0.0)
+		if cerco > 0.0 and u.vivo:
+			_golpe_em_area(u, a, dm * cerco)
 
 ## Ladrão com a carga: corre de volta à borda direita; fora da tela, os tijolos se perdem.
 func _fugir(u: Unidade, dt: float) -> void:
+	if u.preso_t > 0.0:
+		u.andando = false   # Teia: não foge
+		return
 	u.andando = true
 	u.x += u.vel * Balanco.LADRAO_FUGA_VEL * u.lento * dt
 	if u.x >= Balanco.INIMIGO_X0:
@@ -929,9 +958,9 @@ func _bater_torre(u: Unidade) -> void:
 		return
 	if estado.tem_modulo(Torre.Modulo.RATOEIRA) and u.vivo and not u.distancia and not u.fugindo:
 		_ev({"t": "ratoeira", "x": u.x, "y": u.y})
-		u.vida -= Torre.RATOEIRA_DANO * u.vulneravel
+		u.vida -= Torre.RATOEIRA_DANO * _vul(u)
 		u.flash = 1.0
-		_ev({"t": "golpe", "x": u.x, "y": u.y, "dano": Torre.RATOEIRA_DANO * u.vulneravel, "eq": 1})
+		_ev({"t": "golpe", "x": u.x, "y": u.y, "dano": Torre.RATOEIRA_DANO * _vul(u), "eq": 1})
 		if u.vida <= 0.0:
 			_matar(u, null, Pecas.Marca.CICATRIZ)
 
@@ -997,9 +1026,10 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		d *= alvo.fraq_corpo
 	else:
 		d *= 1.0 - alvo.furo
-	d *= alvo.vulneravel
+	d *= _vul(alvo)
 	if alvo.protegido_t > 0.0:
 		d *= Balanco.PODER_PROTEGE_DANO
+	_tele_marca(alvo, d)
 	alvo.vida -= d
 	alvo.flash = 1.0
 	var sinal: float = -1.0 if alvo.equipe == 0 else 1.0
@@ -1007,8 +1037,9 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		alvo.x += sinal * 6.0
 	_ev({"t": "golpe", "x": alvo.x, "y": alvo.y, "dano": d, "eq": alvo.equipe})
 	if atk != null and atk.vivo:
-		if atk.roubo > 0.0:
-			atk.vida = minf(atk.vida_max, atk.vida + d * atk.roubo)
+		var roubo: float = atk.roubo + (atk.furor_roubo if atk.furor_t > 0.0 else 0.0)
+		if roubo > 0.0:
+			atk.vida = minf(atk.vida_max, atk.vida + d * roubo)
 		if atk.molha or (atk.gelo_chance > 0.0 and rng.randf() < atk.gelo_chance):
 			alvo.frio_t = Balanco.REGADOR_DURACAO
 	if atk != null and atk.tocha_dps > 0.0 and alvo.vida > 0.0:
@@ -1017,10 +1048,11 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		alvo.queima_fonte = atk
 	if alvo.vida <= 0.0:
 		_matar(alvo, atk, Pecas.Marca.CICATRIZ if corpo_a_corpo else Pecas.Marca.FURO)
-	if corpo_a_corpo and not em_area and alvo.espinho > 0.0 and atk.vivo:
-		atk.vida -= alvo.espinho
+	var espinho: float = alvo.espinho + (alvo.bola_espinho if alvo.bola_t > 0.0 else 0.0)
+	if corpo_a_corpo and not em_area and espinho > 0.0 and atk.vivo:
+		atk.vida -= espinho
 		atk.flash = 1.0
-		_ev({"t": "golpe", "x": atk.x, "y": atk.y, "dano": alvo.espinho, "eq": atk.equipe, "espinho": true})
+		_ev({"t": "golpe", "x": atk.x, "y": atk.y, "dano": espinho, "eq": atk.equipe, "espinho": true})
 		if atk.vida <= 0.0:
 			_matar(atk, alvo, Pecas.Marca.CICATRIZ)  # espinho conta como corpo a corpo
 
@@ -1158,7 +1190,8 @@ func disparar_poder(u: Unidade) -> bool:
 		return false
 	if not _usar_poder(u):
 		return false
-	u.poder_cd = Balanco.PODER_INTERVALO
+	u.poder_cd = Balanco.PODER_INTERVALO - u.poder_cd_menos
+	u.poder_cd_menos = 0.0
 	u.poder_pronto = false
 	return true
 
@@ -1202,8 +1235,77 @@ func carga_poder(u: Unidade) -> float:
 		return 0.0
 	return clampf(1.0 - u.poder_cd / Balanco.PODER_INTERVALO, 0.0, 1.0)
 
+## Medição por fantasia (só o simulador liga): usos, dano, abates e efeitos de cada poder.
+static var medir: bool = false
+static var tele: Dictionary = {}
+var _conj_tele: int = -1   # fantasia cujo poder está agindo agora (para a telemetria)
+
+func _tele(conj: int, chave: String, v: float) -> void:
+	if not medir or conj < 0:
+		return
+	var d: Dictionary = tele.get(conj, {})
+	d[chave] = float(d.get(chave, 0.0)) + v
+	tele[conj] = d
+
+## O dano extra de um alvo marcado (Alvo travado) conta para o poder que marcou.
+func _tele_marca(v: Unidade, d: float) -> void:
+	if medir and v.marcado_t > 0.0 and v.marcado_conj >= 0 and v.marcado_bonus > 0.0:
+		_tele(v.marcado_conj, "dano", d - d / (1.0 + v.marcado_bonus))
+
 ## Dispara o poder da fantasia completa. Devolve false se agora não há em quem usar.
 func _usar_poder(u: Unidade) -> bool:
+	_conj_tele = u.poder_conj
+	var ok: bool = _usar_poder_i(u)
+	if ok:
+		_tele(u.poder_conj, "usos_h" if em_heranca else "usos", 1.0)
+	_conj_tele = -1
+	return ok
+
+## Centros dos `n` maiores aglomerados (sem repetir bicho): cada centro é um bicho, contando quem está a `raio` dele.
+func _aglomerados(lista: Array, raio: float, n: int) -> Array:
+	var livres: Array = []
+	for v in lista:
+		if v.vivo:
+			livres.append(v)
+	var centros: Array = []
+	for k in n:
+		var melhor: Unidade = null
+		var mn: int = 0
+		for c in livres:
+			var cnt: int = 0
+			for v in livres:
+				if _dentro(v, c.x, c.y, raio):
+					cnt += 1
+			if cnt > mn:
+				mn = cnt
+				melhor = c
+		if melhor == null:
+			break
+		centros.append(Vector2(melhor.x, melhor.y))
+		var resto: Array = []
+		for v in livres:
+			if not _dentro(v, melhor.x, melhor.y, raio):
+				resto.append(v)
+		livres = resto
+	return centros
+
+## Canteiro (Jardineiro): cura os aliados dentro e atrasa os inimigos dentro.
+func _zona_canteiro(z: Dictionary, dt: float) -> void:
+	var eq: int = int(z["eq"])
+	var raio: float = float(z["raio"])
+	var cx: float = float(z["x"])
+	var cy: float = float(z["y"])
+	var so: Variant = z.get("so", null)
+	for v in (aliados if eq == 0 else inimigos):
+		if v.vivo and _dentro(v, cx, cy, raio) and (so == null or v == so):
+			var antes: float = v.vida
+			v.vida = minf(v.vida_max, v.vida + v.vida_max * float(z["cura"]) * dt)
+			_tele(int(z.get("conj", -1)), "cura", v.vida - antes)
+	for v in (inimigos if eq == 0 else aliados):
+		if v.vivo and _dentro(v, cx, cy, raio):
+			v.lento = minf(v.lento, Balanco.PODER_CANTEIRO_LENTO)
+
+func _usar_poder_i(u: Unidade) -> bool:
 	var meus: Array[Unidade] = aliados if u.equipe == 0 else inimigos
 	var outros: Array[Unidade] = []
 	for v in (inimigos if u.equipe == 0 else aliados):
@@ -1377,6 +1479,251 @@ func _usar_poder(u: Unidade) -> bool:
 			pontos.append(Vector2(z["x"], z["y"]))
 			extra["raio"] = z["raio"]
 			extra["dur"] = z["dur"]
+		Pecas.Poder.RAIZ:
+			if outros.is_empty():
+				return false
+			var ord: Array[Unidade] = outros.duplicate()
+			if u.equipe == 0:
+				ord.sort_custom(func(a: Unidade, b: Unidade) -> bool: return a.x < b.x)   # os mais perto da torre
+			else:
+				ord.sort_custom(func(a: Unidade, b: Unidade) -> bool: return (a.x - u.x) * (a.x - u.x) + (a.y - u.y) * (a.y - u.y) < (b.x - u.x) * (b.x - u.x) + (b.y - u.y) * (b.y - u.y))
+			for k in mini(ceili(Balanco.PODER_RAIZ_N * _frac_apoio()), ord.size()):
+				var v: Unidade = ord[k]
+				v.preso_t = maxf(v.preso_t, Balanco.PODER_RAIZ_T * _frac_apoio() * (Balanco.PODER_RAIZ_CHEFE if v.chefe else 1.0))
+				pontos.append(Vector2(v.x, v.y))
+				_tele(u.poder_conj, "presos", 1.0)
+				_dano_poder(u, v, base * Balanco.PODER_RAIZ_DANO)
+		Pecas.Poder.SAQUE:
+			if outros.is_empty():
+				return false
+			for k in ceili(Balanco.PODER_SAQUE_N * _frac_apoio()):
+				var fraco: Unidade = null
+				for v in outros:
+					if v.vivo and (fraco == null or v.vida < fraco.vida):
+						fraco = v
+				if fraco == null:
+					break
+				pontos.append(Vector2(fraco.x, fraco.y))
+				_dano_poder(u, fraco, base * Balanco.PODER_SAQUE_DANO)
+		Pecas.Poder.TROVOADA:
+			var raios: Array = _aglomerados(outros, Balanco.PODER_TROVOADA_RAIO, ceili(Balanco.PODER_TROVOADA_N * _frac_apoio()))
+			if raios.is_empty():
+				return false
+			for c in raios:
+				pontos.append(c)
+				for v in outros:
+					if v.vivo and _dentro(v, c.x, c.y, Balanco.PODER_TROVOADA_RAIO):
+						v.atordoado_t = maxf(v.atordoado_t, Balanco.PODER_TROVOADA_T * _frac_apoio() * (Balanco.PODER_TROVOADA_CHEFE if v.chefe else 1.0))
+						_dano_poder(u, v, base * Balanco.PODER_TROVOADA_DANO)
+			extra["raio"] = Balanco.PODER_TROVOADA_RAIO
+		Pecas.Poder.CANHAO:
+			var alvos_c: Array = _aglomerados(outros, Balanco.PODER_CANHAO_RAIO, 1)
+			if alvos_c.is_empty():
+				return false
+			var cc: Vector2 = alvos_c[0]
+			pontos.append(cc)
+			var mortos: int = 0
+			for v in outros:
+				if v.vivo and _dentro(v, cc.x, cc.y, Balanco.PODER_CANHAO_RAIO):
+					_dano_poder(u, v, base * Balanco.PODER_CANHAO_DANO)
+					if not v.vivo:
+						mortos += 1
+					elif not em_heranca:
+						v.queima_t = Balanco.PODER_CANHAO_QUEIMA_T
+						v.queima_dps = base * Balanco.PODER_CANHAO_QUEIMA_DPS
+						v.queima_fonte = u
+			extra["raio"] = Balanco.PODER_CANHAO_RAIO
+			if not em_heranca and u.equipe == 0 and mortos > 0:
+				var saque: int = mini(mortos, Balanco.PODER_CANHAO_SAQUE_MAX)
+				saque = mini(saque, maxi(0, estado.tijolos_max() - estado.tijolos))
+				if saque > 0:
+					estado.tijolos += saque
+					_tele(u.poder_conj, "tijolos", saque)
+					_ev({"t": "devolve", "x": cc.x, "y": cc.y, "n": saque})
+		Pecas.Poder.MISSEIS:
+			# qualquer inimigo na metade da torre dispara; as explosões caem nos maiores bandos dessa metade
+			var perto_t: Array = []
+			for v in outros:
+				if v.x - Balanco.TORRE_X <= Balanco.PODER_MISSEIS_ALCANCE:
+					perto_t.append(v)
+			var centros_m: Array = _aglomerados(perto_t, Balanco.PODER_MISSEIS_RAIO, ceili(Balanco.PODER_MISSEIS_N * _frac_apoio()))
+			if centros_m.is_empty():
+				return false
+			for c in centros_m:
+				pontos.append(c)
+				for v in outros:
+					if v.vivo and _dentro(v, c.x, c.y, Balanco.PODER_MISSEIS_RAIO):
+						_dano_poder(u, v, base * Balanco.PODER_MISSEIS_DANO)
+			extra["raio"] = Balanco.PODER_MISSEIS_RAIO
+		Pecas.Poder.CANCAO:
+			if outros.is_empty():
+				return false
+			var seg: float = Balanco.PODER_CANCAO_SEG * _frac_apoio()
+			for v in meus:
+				if v == u or not v.vivo:
+					continue
+				var mexeu: bool = false
+				if v.poder >= 0 and v.poder_cd > 0.0:
+					v.poder_cd = maxf(0.0, v.poder_cd - seg)
+					mexeu = true
+					_tele(u.poder_conj, "segundos", seg)
+				for i in v.heranca_cd.size():
+					if v.heranca_cd[i] > 0.0:
+						v.heranca_cd[i] = maxf(0.0, v.heranca_cd[i] - seg)
+						mexeu = true
+						_tele(u.poder_conj, "segundos", seg)
+				if mexeu:
+					pontos.append(Vector2(v.x, v.y))
+			if pontos.is_empty():
+				return false
+		Pecas.Poder.INVESTIDA:
+			var si: float = 1.0 if u.equipe == 0 else -1.0
+			var linha_i: Array = []
+			for v in outros:
+				var dxi: float = (v.x - u.x) * si
+				if dxi >= -20.0 and dxi <= Balanco.PODER_INVESTIDA_ALCANCE + 30.0 and absf(v.y - u.y) <= Balanco.PODER_ATRAVESSA_LARGURA:
+					linha_i.append(v)
+			if linha_i.is_empty():
+				return false
+			var primeiro: Unidade = null
+			var longe: float = 0.0
+			for v in linha_i:
+				var dxv: float = (v.x - u.x) * si
+				if primeiro == null or dxv < (primeiro.x - u.x) * si:
+					primeiro = v
+				longe = maxf(longe, dxv)
+			for v in linha_i:
+				pontos.append(Vector2(v.x, v.y))
+			extra["x0"] = u.x
+			extra["y0"] = u.y
+			primeiro.atordoado_t = maxf(primeiro.atordoado_t, Balanco.PODER_INVESTIDA_DERRUBA * _frac_apoio() * (Balanco.PODER_RAIZ_CHEFE if primeiro.chefe else 1.0))
+			for v in linha_i:
+				_dano_poder(u, v, base * (Balanco.PODER_INVESTIDA_HER_DANO if em_heranca else Balanco.PODER_INVESTIDA_DANO))
+			if not em_heranca:
+				u.x = clampf(u.x + si * minf(longe + 30.0, Balanco.PODER_INVESTIDA_ALCANCE), Balanco.TORRE_X + 20.0, Balanco.VISIVEL_X)
+				u.protegido_t = maxf(u.protegido_t, Balanco.PODER_INVESTIDA_PROTEGE)
+				u.alvo = null
+				u.retarget = 0.0
+		Pecas.Poder.FUMACA:
+			if outros.is_empty():
+				return false
+			if em_heranca:
+				u.oculto_t = maxf(u.oculto_t, Balanco.PODER_FUMACA_T * _frac_apoio())
+				pontos.append(Vector2(u.x, u.y))
+				_tele(u.poder_conj, "ocultos", 1.0)
+			else:
+				for v in meus:
+					if v.vivo and _dentro(v, u.x, u.y, Balanco.PODER_FUMACA_RAIO):
+						v.oculto_t = maxf(v.oculto_t, Balanco.PODER_FUMACA_T)
+						pontos.append(Vector2(v.x, v.y))
+						_tele(u.poder_conj, "ocultos", 1.0)
+			for e in (inimigos if u.equipe == 0 else aliados):
+				if e.alvo != null and e.alvo.oculto_t > 0.0 and not _enxerga_oculto(e, e.alvo):
+					e.alvo = null
+					e.retarget = 0.0
+			extra["raio"] = Balanco.PODER_FUMACA_RAIO
+		Pecas.Poder.FURIA:
+			if outros.is_empty():
+				return false
+			u.furor_t = Balanco.PODER_FURIA_T * _frac_apoio()
+			u.furor_cerco = Balanco.PODER_FURIA_CERCO * _frac_apoio()
+			u.furor_roubo = 0.0 if em_heranca else Balanco.PODER_FURIA_ROUBO
+			pontos.append(Vector2(u.x, u.y))
+		Pecas.Poder.PISAO:
+			if outros.is_empty():
+				return false
+			var sp_i: float = 1.0 if u.equipe == 0 else -1.0
+			var cand: Array = outros.duplicate()
+			var px: float = u.x
+			var py: float = u.y
+			extra["x0"] = u.x
+			extra["y0"] = u.y
+			for k in ceili(Balanco.PODER_PISAO_N * _frac_apoio()):
+				var forte: Unidade = null
+				for v in cand:
+					if v.vivo and _dentro(v, px, py, Balanco.PODER_PISAO_ALCANCE) and (forte == null or v.vida > forte.vida):
+						forte = v
+				if forte == null:
+					break
+				cand.erase(forte)
+				pontos.append(Vector2(forte.x, forte.y))
+				forte.atordoado_t = maxf(forte.atordoado_t, Balanco.PODER_PISAO_T * (Balanco.PODER_RAIZ_CHEFE if forte.chefe else 1.0))
+				var fx_x: float = forte.x
+				var fx_y: float = forte.y
+				_dano_poder(u, forte, base * Balanco.PODER_PISAO_DANO * pow(Balanco.PODER_PISAO_CRESCE, k))
+				if not em_heranca:
+					px = fx_x - sp_i * 30.0
+					py = fx_y
+			if pontos.is_empty():
+				return false
+			if not em_heranca:
+				u.x = clampf(px, Balanco.TORRE_X + 20.0, Balanco.VISIVEL_X)
+				u.y = clampf(py, Balanco.CHAO_Y0, Balanco.CHAO_Y1)
+				u.protegido_t = maxf(u.protegido_t, Balanco.PODER_PISAO_PROTEGE)
+				u.alvo = null
+				u.retarget = 0.0
+		Pecas.Poder.CANTEIRO:
+			var ferido_c: bool = false
+			for v in meus:
+				if v.vivo and v.vida < v.vida_max * 0.9:
+					ferido_c = true
+			if not ferido_c:
+				return false
+			var fr_c: float = _frac_apoio()
+			zonas.append({"tipo": "canteiro", "x": u.x, "y": u.y, "t": Balanco.PODER_CANTEIRO_T * fr_c, "dur": Balanco.PODER_CANTEIRO_T * fr_c,
+				"raio": Balanco.PODER_CANTEIRO_RAIO, "cura": Balanco.PODER_CANTEIRO_CURA * fr_c, "dono": u, "eq": u.equipe, "so": u if em_heranca else null, "conj": u.poder_conj})
+			pontos.append(Vector2(u.x, u.y))
+			extra["raio"] = Balanco.PODER_CANTEIRO_RAIO
+			extra["dur"] = Balanco.PODER_CANTEIRO_T * fr_c
+		Pecas.Poder.TRIAGEM:
+			var pior: Unidade = null
+			for v in meus:
+				if v.vivo and not v.clone and v.vida < v.vida_max * Balanco.PODER_TRIAGEM_LIMIAR and (pior == null or v.vida / v.vida_max < pior.vida / pior.vida_max):
+					pior = v
+			if pior == null:
+				return false
+			var fr_t: float = _frac_apoio()
+			for v in meus:
+				if not v.vivo or v.clone:
+					continue
+				var antes_t: float = v.vida
+				v.vida = minf(v.vida_max, v.vida + v.vida_max * (Balanco.PODER_TRIAGEM_CURA if v == pior else Balanco.PODER_TRIAGEM_OUTROS) * fr_t)
+				_tele(u.poder_conj, "cura", v.vida - antes_t)
+				if v == pior:
+					pontos.push_front(Vector2(v.x, v.y))
+				else:
+					pontos.append(Vector2(v.x, v.y))
+			if not em_heranca:
+				pior.protegido_t = maxf(pior.protegido_t, Balanco.PODER_TRIAGEM_PROTEGE)
+		Pecas.Poder.MARCA:
+			var sg: float = 1.0 if u.equipe == 0 else -1.0
+			var alvos_m: Array = []
+			for v in outros:
+				var dxm: float = (v.x - u.x) * sg
+				if dxm >= -20.0 and dxm <= Balanco.PODER_ATRAVESSA_ALCANCE and absf(v.y - u.y) <= Balanco.PODER_ATRAVESSA_LARGURA:
+					alvos_m.append(v)
+					pontos.append(Vector2(v.x, v.y))
+			if alvos_m.is_empty():
+				return false
+			var fr_m: float = _frac_apoio()
+			var bonus_m: float = minf(Balanco.PODER_MARCA_BONUS, Balanco.PODER_MARCA_BONUS * fr_m * 1.2)
+			for v in alvos_m:
+				_dano_poder(u, v, base * Balanco.PODER_MARCA_DANO)
+				if v.vivo:
+					v.marcado_bonus = maxf(bonus_m, v.marcado_bonus if v.marcado_t > 0.0 else 0.0)
+					v.marcado_t = maxf(v.marcado_t, Balanco.PODER_MARCA_T * fr_m)
+					v.marcado_conj = u.poder_conj
+					_tele(u.poder_conj, "marcados", 1.0)
+			if not em_heranca and alvos_m.size() >= Balanco.PODER_MARCA_RECARGA_MIN:
+				u.poder_cd_menos = Balanco.PODER_MARCA_RECARGA
+		Pecas.Poder.BOLA:
+			if outros.is_empty():
+				return false
+			u.bola_t = Balanco.PODER_BOLA_T * _frac_apoio()
+			u.bola_vel = 1.0 if em_heranca else Balanco.PODER_BOLA_VEL
+			u.bola_espinho = base * Balanco.PODER_BOLA_ESPINHO
+			u.atordoado_t = 0.0
+			pontos.append(Vector2(u.x, u.y))
 		Pecas.Poder.ATORDOA, Pecas.Poder.EMPURRA, Pecas.Poder.GIRO:
 			var raio: float = Balanco.PODER_GIRO_RAIO
 			if u.poder == Pecas.Poder.ATORDOA:
@@ -1417,6 +1764,9 @@ func _zonas(dt: float) -> void:
 		if float(z["t"]) <= 0.0:
 			zonas.remove_at(i)
 			continue
+		if z.get("tipo", "enxame") == "canteiro":
+			_zona_canteiro(z, dt)
+			continue
 		var dono: Unidade = z["dono"]
 		var alvos: Array[Unidade] = inimigos if int(z["eq"]) == 0 else aliados
 		var raio: float = float(z["raio"])
@@ -1438,7 +1788,7 @@ func _zonas(dt: float) -> void:
 		for v in alvos:
 			if not v.vivo or not _dentro(v, float(z["x"]), float(z["y"]), raio):
 				continue
-			v.vida -= float(z["dps"]) * dt * v.vulneravel * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0)
+			v.vida -= float(z["dps"]) * dt * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0)
 			v.flash = maxf(v.flash, 0.4)
 			if v.vida <= 0.0:
 				_matar(v, dono if dono != null and dono.vivo else null, Pecas.Marca.CICATRIZ)
@@ -1447,11 +1797,14 @@ func _zonas(dt: float) -> void:
 func _dano_poder(u: Unidade, v: Unidade, dano: float) -> float:
 	if not v.vivo:
 		return 0.0
-	var d: float = dano * v.vulneravel * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0)
+	var d: float = dano * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0)
+	_tele_marca(v, d)
+	_tele(_conj_tele, "dano", d)
 	v.vida -= d
 	v.flash = 1.0
 	_ev({"t": "golpe", "x": v.x, "y": v.y, "dano": d, "eq": v.equipe})
 	if v.vida <= 0.0:
+		_tele(_conj_tele, "abates", 1.0)
 		_matar(v, u if u.vivo else null, Pecas.Marca.CICATRIZ)
 	return d
 
@@ -1576,7 +1929,7 @@ func _explodir(u: Unidade) -> void:
 		var dy: float = v.y - u.y
 		if dx * dx + dy * dy > r2:
 			continue
-		var d: float = u.barril_dano * v.fraq_explosao * v.vulneravel
+		var d: float = u.barril_dano * v.fraq_explosao * _vul(v)
 		v.vida -= d
 		v.flash = 1.0
 		_ev({"t": "golpe", "x": v.x, "y": v.y, "dano": d, "eq": v.equipe})
