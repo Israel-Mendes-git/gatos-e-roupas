@@ -654,6 +654,7 @@ func _aula(id: String) -> Dictionary:
 			d["balaos"] = [["Agora existe a Invasão sem fim: ondas e mais ondas até a torre cair. Ela fica na vista da casa; este botão alterna as vistas.", "mapa_vista"], ["Na casa, escolha um cômodo e aperte I. O seu recorde fica gravado.", ""]]
 		"a_prep":
 			d["modos"] = [M_COMBATE]
+			d["prep"] = true
 			d["balaos"] = [["Antes de cada onda você arruma o time. Arraste os gatos para escolher onde ficam.", "prep_gatos"], ["Dê ordens: Avançar, Segurar ou Recuar (teclas Q, W, E). Com um gato escolhido, vale só para ele.", "prep_ordens"], ["Clique num bicho da onda que vem para marcar o alvo. Espaço começa a onda.", "prep_previa"]]
 		"a_poder":
 			d["modos"] = [M_COMBATE]
@@ -665,6 +666,7 @@ func _aula(id: String) -> Dictionary:
 				for g in p.campo.prep_previa:
 					if int(g["prio"]) == pr:
 						d["modos"] = [M_COMBATE]
+						d["prep"] = true
 						d["balaos"] = [["%s: %s" % [g["nome"], str(g["dica"]).to_lower()], "tipo:%d" % pr]]
 				if (d["balaos"] as Array).is_empty():
 					return {}
@@ -680,6 +682,13 @@ func _poder_pronto() -> int:
 
 ## Procura, a cada instante, o que merece uma aula (só quando nada guiado está rolando).
 func _vigiar_aulas(delta: float) -> void:
+	# aula da preparação só vale enquanto a preparação dura (a prévia some quando a onda começa): descarta sem marcar
+	if int(p.modo) == M_COMBATE and p.campo.sim != null and not p.campo.prep:
+		if not aula.is_empty() and bool(aula.get("prep", false)):
+			aula = {}
+		for i in range(fila.size() - 1, -1, -1):
+			if bool(fila[i].get("prep", false)):
+				fila.remove_at(i)
 	if not aula.is_empty():
 		_t_aula += delta
 		if not _ambiente_livre() or not (int(p.modo) in (aula["modos"] as Array)):
@@ -695,7 +704,11 @@ func _vigiar_aulas(delta: float) -> void:
 		return
 	if int(p.modo) == M_GUARDA and (not p.arrasto.is_empty() or p.menus.espera_dica > 0.0):
 		return
+	if int(p.modo) == M_COMBATE and not p.campo.faixas.is_empty():
+		return   # espera o anúncio "Onda N" acabar
 	for i in fila.size():
+		if bool(fila[i].get("prep", false)) and not (p.campo.sim != null and p.campo.prep):
+			continue
 		if int(p.modo) in (fila[i]["modos"] as Array):
 			aula = fila[i]
 			fila.remove_at(i)
@@ -734,8 +747,8 @@ func _gatilhos() -> void:
 			pedir("a_prep")
 			for g in p.campo.prep_previa:
 				var pr: int = int(g["prio"])
-				if pr != Unidade.Tipo.COMUM and pr != Simulacao.PRIO_CHEFE:
-					pedir("a_bicho_%d" % pr)
+				if pr != Unidade.Tipo.COMUM and pr != Simulacao.PRIO_CHEFE and (g["pos"] as Vector2).x < 1180.0:
+					pedir("a_bicho_%d" % pr)   # só com o bicho à vista na prévia
 		elif p.campo.sim.poder_manual and not p.campo.sim.terminada:
 			for b2 in p.campo.poder_btns:
 				if bool(b2["pronto"]):
