@@ -23,45 +23,51 @@ static var _cache: Dictionary = {}
 # js = primeira linha da mandíbula; ms = coluna onde começa a boca; ab = linhas que a boca aberta acrescenta;
 # ct = coluna do meio do alto do crânio; ex/ey = olho (canto de cima à esquerda); ny = linha de cima do nariz
 const _CAB: Dictionary = {
-	"A": {"js": 6, "ms": 8, "ab": 2, "ct": 6.5, "ex": 8, "ey": 3, "ny": 3, "rows": [
-		"...llllllll.....",
-		"..lllllllllllf..",
-		".lllllllfffffff.",
-		"lllmmmaaaaaaffnn",
-		"mmmmaaaawyaaffnn",
-		"mmmmffaaaaaaffff",
-		".dmmfffffffffff.",
-		"..ddfffffffd....",
+	"A": {"js": 7, "ms": 10, "ab": 2, "ct": 5.5, "ex": 5, "ey": 5, "ny": 5, "rows": [
+		"...llllll.......",
+		".llllllllll.....",
+		"llllllllllllm...",
+		"lllffffffffmm...",
+		"lmaaaaaaaffmmm..",
+		"mmaaawyaaaffffnn",
+		"mmaaaaaaaafffffn",
+		"mmmfaaafffffff..",
+		".dmmfffffffffd..",
+		"..ddddffffdd....",
 	]},
-	"B": {"js": 6, "ms": 8, "ab": 2, "ct": 6.5, "ex": 8, "ey": 3, "ny": 3, "rows": [
-		"...llllllll......",
-		"..lllllllllllf...",
-		".lllllllffffffff.",
-		"lllmmmaaaaaafffnn",
-		"mmmmaaaawyaafffnn",
-		"mmmmffaaaaaffffff",
-		".dmmfffffffffff..",
-		"..ddfffffffffd...",
+	"B": {"js": 7, "ms": 10, "ab": 2, "ct": 5.5, "ex": 5, "ey": 5, "ny": 5, "rows": [
+		"...llllll.......",
+		".llllllllll.....",
+		"llllllllllllm...",
+		"lllffffffffmm...",
+		"lmaaaaaaaffmmm..",
+		"mmaaawyaaaffffnn",
+		"mmaaaaaaaafffffn",
+		"mmmfaaafffffff..",
+		".dmmfffffffffd..",
+		"..ddddffffdd....",
 	]},
-	"C": {"js": 6, "ms": 8, "ab": 2, "ct": 6.5, "ex": 8, "ey": 3, "ny": 3, "rows": [   # = A com cenho (sobrancelha preta)
-		"...llllllll.....",
-		"..lllllllllllf..",
-		".llllllaaaaffff.",
-		"lllmmmaaaaaaffnn",
-		"mmmmaaaawyaaffnn",
-		"mmmmffaaaaaaffff",
-		".dmmfffffffffff.",
-		"..ddfffffffd....",
+	"C": {"js": 7, "ms": 10, "ab": 2, "ct": 5.5, "ex": 5, "ey": 5, "ny": 5, "rows": [
+		"...llllll.......",
+		".llllllllll.....",
+		"llllllllllllm...",
+		"lllaaaaaaffmm...",
+		"lmaaaaaaaffmmm..",
+		"mmaaawyaaaffffnn",
+		"mmaaaaaaaafffffn",
+		"mmmfaaafffffff..",
+		".dmmfffffffffd..",
+		"..ddddffffdd....",
 	]},
-	"D": {"js": 6, "ms": 5, "ab": 2, "ct": 4.5, "ex": 6, "ey": 3, "ny": 3, "rows": [
-		"..llllll....",
-		".lllllllfff.",
-		"llllffffffff",
-		"mmmaaaaaffnn",
-		"mmaaaawyaffn",
-		"mmmffaaafff.",
-		".mmmffffff..",
-		"..dddddd....",
+	"D": {"js": 6, "ms": 9, "ab": 2, "ct": 4.5, "ex": 4, "ey": 4, "ny": 4, "rows": [
+		"..llllll.....",
+		".lllllllll...",
+		"lllffffffmm..",
+		"lmaaaaaffmm..",
+		"maaawyaaffmnn",
+		"mmaaaaaffffnn",
+		".mmffffffff..",
+		"..dddfffd....",
 	]},
 }
 
@@ -69,11 +75,11 @@ const _CAB: Dictionary = {
 # bx = coluna da esquerda do tronco; bw/bh = largura/altura; pe = altura das patas; hx = coluna da cabeça; hoff = linha da cabeça
 # em relação ao topo do tronco; cab = qual cabeça; pf/pt = x das patas da frente/de trás (a de perto; a de longe fica 3 ao lado)
 const _ESP: Array = [
-	{"bx": -10, "bw": 18, "bh": 7, "pe": 5, "hx": 2, "hoff": -1, "cab": "A", "pf": 4, "pt": -7, "arq": 3, "rc": 14, "rw": 4},     # COMUM
+	{"bx": -9, "bw": 16, "bh": 8, "pe": 5, "hx": 2, "hoff": -3, "cab": "A", "pf": 4, "pt": -6, "arq": 4, "rc": 14, "rw": 4},     # COMUM
 	{"bx": -9, "bw": 16, "bh": 8, "pe": 3, "hx": 4, "hoff": 1, "cab": "B", "pf": 4, "pt": -6, "arq": 2, "rc": 15, "rw": 4},      # SALTADOR
-	{"bx": -10, "bw": 18, "bh": 8, "pe": 5, "hx": 3, "hoff": 1, "cab": "A", "pf": 3, "pt": -7, "arq": 3, "rc": 13, "rw": 4},     # LADRAO
-	{"bx": -10, "bw": 19, "bh": 10, "pe": 5, "hx": 3, "hoff": 0, "cab": "C", "pf": 4, "pt": -7, "arq": 3, "rc": 13, "rw": 5},    # GIGANTE
-	{"bx": -11, "bw": 21, "bh": 9, "pe": 5, "hx": 5, "hoff": 0, "cab": "A", "pf": 4, "pt": -8, "arq": 3, "rc": 13, "rw": 4},     # GEMEO (mãe)
+	{"bx": -9, "bw": 16, "bh": 9, "pe": 5, "hx": 2, "hoff": -1, "cab": "A", "pf": 3, "pt": -6, "arq": 4, "rc": 13, "rw": 4},     # LADRAO
+	{"bx": -10, "bw": 18, "bh": 11, "pe": 5, "hx": 3, "hoff": -2, "cab": "C", "pf": 4, "pt": -7, "arq": 4, "rc": 13, "rw": 5},    # GIGANTE
+	{"bx": -10, "bw": 19, "bh": 10, "pe": 5, "hx": 4, "hoff": -2, "cab": "A", "pf": 4, "pt": -7, "arq": 4, "rc": 13, "rw": 4},     # GEMEO (mãe)
 ]
 
 # ---------------------------------------------------------------- paleta
@@ -309,14 +315,15 @@ static func _cab_rows(ch: Dictionary, boca: bool) -> Array:
 		r.append(rows[j])
 	return r
 
-static func _pata(L: PackedInt32Array, x: int, ytop: int, xf: int, yf: int, ch: String, dedo: String) -> void:
-	# perna fina de 2 px do quadril (x, ytop) ao pé (xf, yf = linha de baixo); o pé é uma "luva" preta de 3 px
+static func _pata(L: PackedInt32Array, x: int, ytop: int, xf: int, yf: int, ch: String, dedo: String, pelo: String = "") -> void:
+	# perna de 2 px do quadril (x, ytop) ao pé (xf, yf = linha de baixo): pelo do corpo em cima, "luva" preta nos 3 px de baixo
 	var n: int = maxi(1, yf - ytop)
 	for i in n + 1:
 		var y: int = ytop + i
 		var x0: int = roundi(lerpf(x, xf, float(i) / float(n)))
-		_px(L, x0, y, ch)
-		_px(L, x0 + 1, y, ch)
+		var c2: String = pelo if pelo != "" and y < yf - 2 else ch
+		_px(L, x0, y, c2)
+		_px(L, x0 + 1, y, c2)
 	_px(L, xf, yf, ch)
 	_px(L, xf + 1, yf, dedo)
 	_px(L, xf + 2, yf, dedo)
@@ -341,7 +348,7 @@ static func _pernas(L1: PackedInt32Array, L2: PackedInt32Array, g: Dictionary) -
 		if int(g["ei"]) > 0 and d[1] == 0.5 and d[2] == "u" and x == pf:
 			xf = x + 2 + int(g["ei"])   # golpe: pata dianteira de perto sobe e avança
 			yf = maxi(hip + 1, -2 - 2 * int(g["ei"]))
-		_pata(d[3], x, hip, xf, yf, d[2], "a")
+		_pata(d[3], x, hip, xf, yf, d[2], "a", "d" if d[2] == "a" else "m")
 
 static func _pernas_sal(L1: PackedInt32Array, L2: PackedInt32Array, g: Dictionary) -> void:
 	var bx: int = g["bx"]
@@ -420,8 +427,9 @@ static func _orelha(L: PackedInt32Array, x: int, y: int, w: int, h: int, longe: 
 		_elip(L, x, y, w, h, "d", "d", "d")
 		_tinta(L, x + 1, y + 1, w - 2, h - 2, "a")
 	else:
-		_elip(L, x, y, w, h, "f", "m", "m")   # borda de cima clara, miolo escuro
-		_tinta(L, x + 1, y + 2, w - 2, h - 2, "a")
+		_elip(L, x, y, w, h, "f", "m", "m")   # borda de cima clara, miolo cinza escuro com o fundo preto
+		_tinta(L, x + 1, y + 1, w - 2, h - 2, "d")
+		_px(L, x + w / 2, y + h - 2, "a")
 
 ## Tronco: duas elipses (anca alta atrás, peito mais baixo) + miolo, com o sombreado dado coluna a coluna (arco do dorso claro,
 ## barriga escura). x, y = canto de cima à esquerda do ombro; `arq` = quanto a anca sobe acima do ombro.
@@ -474,7 +482,7 @@ static func _pup(G: PackedInt32Array, x: int, y: int) -> void:
 
 # ---------------------------------------------------------------- montagem do quadro
 static func _chave(g: Dictionary, tipo: int, filhote: bool, carregando: bool) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [int(g["andando"]), tipo, int(filhote), int(carregando), g["q"], g["ei"], int(g["boca"]), g["aire"], g["salto"], g["resp"], g["pt"]]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [int(g["andando"]), tipo, int(filhote), int(carregando), g["q"], g["ei"], int(g["boca"]), g["aire"], g["salto"], g["resp"], g["pt"], int(BichoPx.cabeca_coberta)]
 
 static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) -> Dictionary:
 	var G := _nova()
@@ -529,11 +537,11 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 		if sal:
 			_orelha(OL, hx + 9, hy - 3, 4, 5, true)
 		elif gig:
-			_orelha(OL, hx + 8, hy - 2, 4, 4, true)
+			_orelha(OL, hx + 6, hy - 2, 4, 4, true)
 		elif filhote:
 			_orelha(OL, hx + 6, hy - 3, 4, 4, true)
 		else:
-			_orelha(OL, hx + 8, hy - 2, 4, 4, true)
+			_orelha(OL, hx + 6, hy - 2, 4, 4, true)
 	_comp(G, OL)
 
 	# corpo + pescoço + cabeça numa camada só
@@ -563,11 +571,11 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 		if sal:
 			_orelha(OP, hx + 3, hy - 5, 5, 6, false)
 		elif gig:
-			_orelha(OP, hx + 3, hy - 3, 5, 5, false)
+			_orelha(OP, hx + 2, hy - 3, 5, 5, false)
 		elif filhote:
 			_orelha(OP, hx + 1, hy - 3, 4, 4, false)
 		else:
-			_orelha(OP, hx + 3, hy - 3, 5, 5, false)
+			_orelha(OP, hx + 2, hy - 3, 5, 5, false)
 	_comp(G, OP)
 
 	# adereços
@@ -592,7 +600,8 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 			_elip(S, sx + 1, sy - 1, 8, 6, "S", "s", "t")
 			_rect(S, sx + 7, sy - 2, 2, 2, "t")
 		_comp(G, S)
-		# gorro listrado de bandido (verde-azulado e creme) com pompom
+	# gorro listrado de bandido (verde-azulado e creme) com pompom; sai se o guaxinim veste peça de cabeça
+	if lad and not BichoPx.cabeca_coberta:
 		var Z := _nova()
 		_bmp(Z, hx + 1, hy - 4, [
 			"....rr......",
