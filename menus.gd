@@ -166,6 +166,8 @@ func iniciar(d: Variant) -> void:
 	dono = d
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
+var _tela_desenhada: int = -1   # tela do último redesenho pedido (ver o fim de _process)
+
 func _process(delta: float) -> void:
 	t += delta
 	tela_t += delta
@@ -196,7 +198,10 @@ func _process(delta: float) -> void:
 			rolagem_cred = minf(maxr, rolagem_cred + 28.0 * delta)
 	_tocar_dicas(delta)
 	_tocar_metas(delta)
-	if tela != Tela.NENHUMA or tr_t >= 0.0 or not dica_atual.is_empty() or not meta_atual.is_empty() or acorda_t > 0.0 or not faiscas.vazio():
+	# redesenha também no quadro em que a tela muda: sem isto, fechar uma caixa (ex.: confirmar a herança) deixava a imagem
+	# dela congelada por cima do jogo, que parecia travado
+	if tela != Tela.NENHUMA or tr_t >= 0.0 or not dica_atual.is_empty() or not meta_atual.is_empty() or acorda_t > 0.0 or not faiscas.vazio() or int(tela) != _tela_desenhada:
+		_tela_desenhada = int(tela)
 		queue_redraw()
 
 ## Animação dos botões, sons de foco, pulinhos dos gatos do título, faíscas.
@@ -352,6 +357,7 @@ func _bt(id: String, txt: String, r: Rect2, cor: Color, tam: int = 22, extra: Di
 
 func _montar() -> void:
 	botoes.clear()
+	queue_redraw()
 	tela_t = 0.0
 	match tela:
 		Tela.TITULO:
