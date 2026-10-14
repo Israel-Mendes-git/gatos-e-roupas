@@ -22,7 +22,7 @@ const COMODOS: Array[Rect2] = [
 ]
 const ESCADA := Rect2(472, 364, 200, 100)
 const PAINEL := Rect2(860, 100, 388, 492)
-const PONTE := Rect2(684, 100, 176, 492)       # faixa entre a casa e o painel: o destaque não some ao atravessá-la
+const PONTE := Rect2(460, 100, 400, 492)       # faixa entre a casa e o painel: o destaque não some ao atravessá-la
 # Botões do painel lateral (só depois de zerar a campanha) e o botão discreto "Final"
 const BT_JOGAR := Rect2(1044, 294, 180, 34)
 const BT_INVASAO := Rect2(1044, 332, 180, 34)
@@ -125,6 +125,7 @@ var p                       # o `principal` (Control); sem tipo para não depend
 var cv: CanvasItem
 var foco: int = 0           # cômodo escolhido pelo teclado (0 = nenhum: vale o próximo a jogar)
 var usar_mouse: bool = false
+var escolhido: int = 0         # cômodo clicado (depois de zerar a campanha): fica escolhido até outro clique
 var _ult: int = 0           # último cômodo sob o mouse (fica enquanto o mouse está na ponte/painel)
 var _o: Vector2 = Vector2.ZERO   # canto do interior do cômodo em desenho
 var _iw: float = 0.0
@@ -176,6 +177,7 @@ func _init(dono: Object = null) -> void:
 
 func reiniciar() -> void:
 	foco = 0
+	escolhido = 0
 	usar_mouse = false
 	_ult = 0
 	_ato = p.estado.ato_atual() if p != null and p.estado != null else 1
@@ -212,15 +214,29 @@ static func _sob(pos: Vector2) -> int:
 
 ## Lugar clicável sob o ponto (-1 se nenhum). Na casa do segundo ato nada é clicável: ela só mostra.
 static func comodo_em(pos: Vector2) -> int:
-	if _casa_so_para_ver():
-		return -1
 	return _sob(pos)
+
+## Clique num cômodo com a campanha vencida: escolhe (destaque que fica) em vez de entrar; os botões do painel agem nele.
+func escolher(f: int) -> void:
+	if f < 1 or f > Fases.TOTAL:
+		return
+	escolhido = f
+	foco = f
+	_ult = f
+	usar_mouse = true
+	Som.tocar("clique", 1.1, 0.04, -6.0)
+
+## Na casa depois do 1º ato, "Jogar de novo" repete o cômodo com a força do 1º ato (o 2º ato é lá fora).
+func casa_rejogo() -> bool:
+	_sincronizar()
+	return _ato > 1 and not _fora
 
 func alternar_vista() -> void:
 	if _ato <= 1:
 		return
 	_fora = not _fora
 	foco = 0
+	escolhido = 0
 	_ult = 0
 	_d_ant = -1
 	Som.tocar("hover", 1.0, 0.05, -10.0)
@@ -231,7 +247,7 @@ func botao_troca_vista(bt: int) -> bool:
 	_sincronizar()
 	if _ato <= 1:
 		return false
-	if bt == BOTAO_VISTA or (not _fora and bt == BOTAO_JOGAR):
+	if bt == BOTAO_VISTA:
 		alternar_vista()
 		return true
 	# lá fora, a invasão só existe para o lugar já vencido no 2º ato: nos outros o clique é engolido
@@ -283,6 +299,8 @@ func destaque() -> int:
 		if h > 0:
 			_ult = h
 			return h
+		if escolhido > 0:
+			return escolhido
 		if _ult > 0 and (PAINEL.has_point(m) or PONTE.has_point(m)):
 			return _ult
 		_ult = 0
@@ -305,9 +323,6 @@ func tecla(k: int) -> int:
 	if _ato > 1 and k == KEY_V:
 		alternar_vista()
 		return 0
-	if _casa_so_para_ver() and (k == KEY_ENTER or k == KEY_KP_ENTER or k == KEY_SPACE):
-		alternar_vista()
-		return 0
 	var d := Vector2i.ZERO
 	match k:
 		KEY_LEFT, KEY_A:
@@ -325,6 +340,7 @@ func tecla(k: int) -> int:
 	var n: int = vizinho(cur, d, est.fase_liberada)
 	usar_mouse = false
 	_ult = 0
+	escolhido = 0
 	foco = n if n > 0 else cur
 	return 0
 
@@ -426,6 +442,23 @@ func _cena_casa(t: float, est: Estado, d: int) -> void:
 		var rd: Rect2 = COMODOS[d - 1]
 		var bloq: bool = d > est.fase_liberada
 		_moldura(rd.grow(4.0), 4.0, Color(0.7, 0.7, 0.78, 0.8) if bloq else Color(0.97, 0.97, 1.0))
+	_marca_escolhido(COMODOS, t)
+
+## Cômodo escolhido por clique: moldura dourada grossa e etiqueta, bem mais forte que o simples destaque do mouse.
+func _marca_escolhido(rs: Array[Rect2], t: float) -> void:
+	if escolhido < 1 or escolhido > Fases.TOTAL:
+		return
+	var r: Rect2 = rs[escolhido - 1]
+	var pu: float = 0.5 + 0.5 * sin(t * 5.0)
+	_moldura(r.grow(6.0), 6.0, C_OURO.lerp(Color(1.0, 0.97, 0.7), pu))
+	_moldura(r.grow(12.0), 4.0, Color(1.0, 0.82, 0.3, 0.25 + 0.3 * pu))
+	var w: float = ceilf((_largura("Escolhido", 14) + 16.0) / 4.0) * 4.0
+	var x: float = r.position.x + 8.0
+	var y: float = r.end.y - 36.0
+	_r(x, y, w, 28, C_CONTORNO)
+	_r(x + 4, y + 4, w - 8, 20, C_OURO)
+	_r(x + 4, y + 4, w - 8, 4, Color(1.0, 0.94, 0.6))
+	Desenho.texto(cv, "Escolhido", Vector2(x + 8, y + 19), 14, Color(0.22, 0.12, 0.06))
 
 ## Entrar num cômodo: a luz dele acende e o quarto cresce sobre o mapa antes de a cortina fechar.
 func _entrada_comodo(d: int) -> void:
@@ -445,10 +478,10 @@ func _cabecalho() -> void:
 	if _fora:
 		sub = "Segundo ato: escolha um lugar, na ordem que quiser. Cada um tem %d ondas e um chefe." % Balanco.ONDAS_TOTAIS
 		if est.tudo_vencido():
-			sub = "Tudo vencido! Rejogue o que quiser para caçar peças."
+			sub = "Tudo vencido! Clique num lugar e escolha: Jogar de novo ou Invasão sem fim."
 			cor = Desenho.DOURADO
 	elif _ato > 1:
-		sub = "Primeiro ato vencido. Aqui só a Invasão sem fim; os desafios do 2º ato estão lá fora."
+		sub = "Clique num cômodo e escolha: Jogar de novo ou Invasão sem fim. O 2º ato fica lá fora."
 		cor = Desenho.DOURADO
 	elif est.campanha_vencida():
 		sub = "Campanha vencida! Cace peças nos cômodos ou encare a Invasão sem fim."
@@ -888,6 +921,7 @@ func _cena_fora(t: float, est: Estado, d: int) -> void:
 		_lugar_fora(f, t, est, d)
 	if d >= 1:
 		_moldura(FORA[d - 1].grow(4.0), 4.0, Color(0.97, 0.97, 1.0))
+	_marca_escolhido(FORA, t)
 
 ## Cada lugar: escurece se ainda falta, acende se está feito, bicho da família, plaquinha e selo.
 func _lugar_fora(f: int, t: float, est: Estado, d: int) -> void:
@@ -1266,8 +1300,8 @@ func _painel_lateral(f: int) -> void:
 				for k in mini(lv.size(), 2):
 					Desenho.texto(cv, lv[k], Vector2(xr, 348.0 + 14.0 * k), 12, Color(1, 1, 1, 0.5))
 		elif _ato > 1:
-			# a casa no segundo ato: os cômodos não se jogam daqui; leva para fora, e a invasão continua
-			_botao_painel(BT_JOGAR, "Ir lá fora", UIComum.B_AZUL)
+			# a casa depois do 1º ato: repetir o cômodo (força do 1º ato) ou a invasão sem fim; o 2º ato fica lá fora
+			_botao_painel(BT_JOGAR, "Jogar de novo", UIComum.B_VERDE)
 			_botao_painel(BT_INVASAO, "Invasão sem fim", UIComum.B_LARANJA)
 		else:
 			# campanha zerada: o jogador escolhe entre o cômodo de sempre e a invasão sem fim
