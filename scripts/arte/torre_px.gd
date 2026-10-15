@@ -222,24 +222,40 @@ const ENGR_B: Array[String] = [
 ]
 
 # ---------------------------------------------------------------- utilidades
-static func _r(c: CanvasItem, x: float, y: float, w: float, h: float, cor: Color) -> void:
+static func _r(c: Object, x: float, y: float, w: float, h: float, cor: Color) -> void:
 	c.draw_rect(Rect2(x, y, w, h), cor)
 
 ## Desenha um bitmap de texto com pixels de G px; (x, y) é o canto de cima à esquerda.
 static func spr(c: CanvasItem, x: float, y: float, linhas: Array, pal: Dictionary, f: float = 0.0, cel: float = G) -> void:
+	for r in _corridas(linhas):
+		var ch: String = r[3]
+		if pal.has(ch):
+			c.draw_rect(Rect2(x + int(r[0]) * cel, y + int(r[1]) * cel, int(r[2]) * cel, cel), Desenho.b(pal[ch], f))
+
+static var _corridas_cache: Dictionary = {}
+
+## Corridas horizontais de pixels iguais do bitmap, [coluna, linha, tamanho, letra], calculadas uma vez por bitmap.
+static func _corridas(linhas: Array) -> Array:
+	var chave: int = linhas.hash()
+	var lista: Variant = _corridas_cache.get(chave)
+	if lista != null:
+		return lista
+	var out: Array = []
 	for j in linhas.size():
 		var l: String = linhas[j]
 		var i: int = 0
 		while i < l.length():
 			var ch: String = l[i]
-			if ch == "." or not pal.has(ch):
+			if ch == ".":
 				i += 1
 				continue
 			var n: int = 1
 			while i + n < l.length() and l[i + n] == ch:
 				n += 1
-			c.draw_rect(Rect2(x + i * cel, y + j * cel, n * cel, cel), Desenho.b(pal[ch], f))
+			out.append([i, j, n, ch])
 			i += n
+	_corridas_cache[chave] = out
+	return out
 
 static func nivel(melhorias: Array, m: int) -> int:
 	return clampi(int(melhorias[m]), 0, 5) if melhorias.size() > m else 0
@@ -331,6 +347,112 @@ static func desenhar(c: CanvasItem, base: Vector2, tijolos: int, tijolos_max: in
 	var novo_i: int = int(op.get("novo_idx", -1))
 	var novo_s: float = float(op.get("novo_s", -1.0))
 
+	# Camada fixa (sombra, caixa, ameias, tábuas, blocos, reforços): vira malha em cache quando não há brilho
+	# de pulso nem bloco novo assentando. O tremor do golpe entra na chave (deslocamento arredondado por fileira).
+	if pulso <= 0.0 and not (novo_i >= 0 and novo_s >= 0.0 and novo_s < 1.4):
+		_tocar(c, _camada_cache(base, n, nmax, nf, lv_est, lv_cad, lv_enf, t, golpe), t, luta, lv_est, lv_cad, lv_enf)
+	else:
+		_camada(c, base, n, nmax, nf, lv_est, lv_cad, lv_enf, t, golpe, luta, pulso, novo_i, novo_s)
+	_bandeira(c, base.x + dxp, ys, t, lv_est)
+	if bool(op.get("vigia", true)):
+		_vigia(c, base.x + dxp + 8.0, ys, t, golpe, bool(op.get("vitoria", false)))
+	_canhao(c, base, n, nmax, melhorias, t, golpe, recuo)
+	for i in mini(modulos.size(), 2):
+		_modulo(c, int(modulos[i]), rect_encaixe(base, i), t, op)
+	if golpe > 0.02:
+		_poeira(c, base, golpe)
+
+# ---------------------------------------------------------------- camada fixa em cache
+## Grava as chamadas de desenho (retângulos e letras) da camada fixa para virarem malhas.
+## Tem os mesmos métodos de desenho que o CanvasItem usa aqui, então `_r`/`_bloco` servem aos dois.
+## Os blocos animados (engrenagem, cruz) cortam a gravação em segmentos: cada um vira uma malha e
+## entre eles o gancho é desenhado ao vivo, na mesma ordem de antes.
+class Grav extends RefCounted:
+	var vs: PackedVector2Array = PackedVector2Array()
+	var cs: PackedColorArray = PackedColorArray()
+	var letras: Array = []
+	var segmentos: Array = []   # {"malha": ArrayMesh, "letras": Array, "gancho": [tipo, posição, dy] ou null}
+
+	func draw_rect(r: Rect2, cor: Color) -> void:
+		if r.size.x <= 0.0 or r.size.y <= 0.0:
+			return
+		vs.append(r.position)
+		vs.append(Vector2(r.end.x, r.position.y))
+		vs.append(r.end)
+		vs.append(Vector2(r.position.x, r.end.y))
+		for _k in 4:
+			cs.append(cor)
+
+	func draw_string(fonte: Font, pos: Vector2, txt: String, alin: int, larg: float, tam: int, cor: Color) -> void:
+		letras.append([fonte, pos, txt, alin, larg, tam, cor])
+
+	func cortar(gancho: Variant) -> void:
+		var malha: ArrayMesh = null
+		if vs.size() > 0:
+			var idx: PackedInt32Array = PackedInt32Array()
+			for q in vs.size() / 4:
+				var b: int = q * 4
+				idx.append_array(PackedInt32Array([b, b + 1, b + 2, b, b + 2, b + 3]))
+			var arr: Array = []
+			arr.resize(Mesh.ARRAY_MAX)
+			arr[Mesh.ARRAY_VERTEX] = vs
+			arr[Mesh.ARRAY_COLOR] = cs
+			arr[Mesh.ARRAY_INDEX] = idx
+			malha = ArrayMesh.new()
+			malha.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		segmentos.append({"malha": malha, "letras": letras, "gancho": gancho})
+		vs = PackedVector2Array()
+		cs = PackedColorArray()
+		letras = []
+
+static var _cache_camada: Dictionary = {}
+
+static func _camada_cache(base: Vector2, n: int, nmax: int, nf: int, lv_est: int, lv_cad: int, lv_enf: int, t: float, golpe: float) -> Grav:
+	var chave: String = "%s|%d|%d|%d|%d|%d" % [base, n, nmax, lv_est, int(lv_cad > 0), int(lv_enf > 0)]
+	for r in range(1, nf + 1):
+		chave += "|%d" % int(desl(r, n, nmax, t, golpe))
+	var g: Grav = _cache_camada.get(chave)
+	if g == null:
+		if _cache_camada.size() > 48:
+			_cache_camada.clear()
+		g = Grav.new()
+		_camada(g, base, n, nmax, nf, lv_est, lv_cad, lv_enf, t, golpe, true, 0.0, -1, -1.0)
+		g.cortar(null)
+		_cache_camada[chave] = g
+	return g
+
+static func _tocar(c: CanvasItem, g: Grav, t: float, luta: bool, lv_est: int, lv_cad: int, lv_enf: int) -> void:
+	for s in g.segmentos:
+		var malha: ArrayMesh = s["malha"]
+		if malha != null:
+			c.draw_mesh(malha, null)
+		for l in s["letras"]:
+			c.draw_string(l[0], l[1], l[2], l[3], l[4], l[5], l[6])
+		var gancho: Variant = s["gancho"]
+		if gancho != null:
+			_gancho(c, int(gancho[0]), gancho[1], float(gancho[2]), t, luta, lv_est, lv_cad, lv_enf)
+
+## Parte animada de um bloco especial (engrenagem da Cadência, cruz da Enfermaria): sempre ao vivo.
+static func _gancho(c: CanvasItem, tipo: int, pos: Vector2, dy: float, t: float, luta: bool, lv_est: int, lv_cad: int, lv_enf: int) -> void:
+	if tipo == 3:
+		var cel: int = int(t * (2.0 + 1.6 * lv_cad)) % 2
+		var pg: Dictionary = {"g": METAL[maxi(lv_est, 1)].lerp(Color(0.85, 0.85, 0.9), 0.2), "k": COR_CONTORNO}
+		spr(c, pos.x + 4.0, pos.y - 4.0 + dy, ENGR_A if cel == 0 else ENGR_B, pg)
+	elif tipo == 2 and luta:
+		var pg2: float = 0.10 + 0.07 * sin(t * 3.0) + 0.02 * lv_enf
+		_r(c, pos.x - 4.0, pos.y - 4.0, BW + 8.0, BH + 8.0, Color(0.4, 1.0, 0.5, pg2))
+		var w: float = fposmod(t * 0.6, 1.0)   # + verde que sobe da cruz
+		var cy: float = pos.y - 4.0 - w * 24.0
+		var ax: float = roundf((pos.x + 28.0) / G) * G
+		_r(c, ax, roundf(cy / G) * G, 4.0, 12.0, Color(0.5, 1.0, 0.6, 1.0 - w))
+		_r(c, ax - 4.0, roundf(cy / G) * G + 4.0, 12.0, 4.0, Color(0.5, 1.0, 0.6, 1.0 - w))
+
+## Sombra, caixa, ameias, tábuas, blocos e reforços. `c` é o CanvasItem (desenho direto) ou um Grav (gravação).
+static func _camada(c: Object, base: Vector2, n: int, nmax: int, nf: int, lv_est: int, lv_cad: int, lv_enf: int, t: float, golpe: float, luta: bool, pulso: float, novo_i: int, novo_s: float) -> void:
+	var dano: float = clampf(1.0 - float(n) / float(nmax), 0.0, 1.0)
+	var dxp: float = desl(nf, n, nmax, t, golpe)
+	var ys: float = y_piso(base, n)
+	var gravando: bool = c is Grav
 	_r(c, base.x - 4.0, base.y, 184.0, 8.0, Color(0, 0, 0, 0.22))   # sombra no chão
 	_caixa(c, base)
 	_caidos(c, base, dano, n)
@@ -362,29 +484,14 @@ static func desenhar(c: CanvasItem, base: Vector2, tijolos: int, tijolos_max: in
 			elif i == ENGRENAGEM_I and lv_cad > 0:
 				tipo = 3
 		_bloco(c, rb.position + Vector2(0, dy), Desenho.b(Desenho.cor_tijolo(i), br), Desenho.letra_tijolo(i), tipo)
-		if tipo == 3:
-			var cel: int = int(t * (2.0 + 1.6 * lv_cad)) % 2
-			var pg: Dictionary = {"g": METAL[maxi(lv_est, 1)].lerp(Color(0.85, 0.85, 0.9), 0.2), "k": COR_CONTORNO}
-			spr(c, rb.position.x + 4.0, rb.position.y - 4.0 + dy, ENGR_A if cel == 0 else ENGR_B, pg)
-		elif tipo == 2 and luta:
-			var pg2: float = 0.10 + 0.07 * sin(t * 3.0) + 0.02 * lv_enf
-			_r(c, rb.position.x - 4.0, rb.position.y - 4.0, BW + 8.0, BH + 8.0, Color(0.4, 1.0, 0.5, pg2))
-			var w: float = fposmod(t * 0.6, 1.0)   # + verde que sobe da cruz
-			var cy: float = rb.position.y - 4.0 - w * 24.0
-			var ax: float = roundf((rb.position.x + 28.0) / G) * G
-			_r(c, ax, roundf(cy / G) * G, 4.0, 12.0, Color(0.5, 1.0, 0.6, 1.0 - w))
-			_r(c, ax - 4.0, roundf(cy / G) * G + 4.0, 12.0, 4.0, Color(0.5, 1.0, 0.6, 1.0 - w))
+		if tipo >= 2:
+			if gravando:
+				c.cortar([tipo, rb.position, dy])
+			else:
+				_gancho(c, tipo, rb.position, dy, t, luta, lv_est, lv_cad, lv_enf)
 	_reforcos(c, base, n, nmax, nf, lv_est, t, golpe)
-	_bandeira(c, base.x + dxp, ys, t, lv_est)
-	if bool(op.get("vigia", true)):
-		_vigia(c, base.x + dxp + 8.0, ys, t, golpe, bool(op.get("vitoria", false)))
-	_canhao(c, base, n, nmax, melhorias, t, golpe, recuo)
-	for i in mini(modulos.size(), 2):
-		_modulo(c, int(modulos[i]), rect_encaixe(base, i), t, op)
-	if golpe > 0.02:
-		_poeira(c, base, golpe)
 
-static func _caixa(c: CanvasItem, base: Vector2) -> void:
+static func _caixa(c: Object, base: Vector2) -> void:
 	var x: float = base.x - 8.0
 	var y: float = base.y - CAIXA_H
 	_r(c, x, y, 176.0, CAIXA_H, COR_CONTORNO)
@@ -396,7 +503,7 @@ static func _caixa(c: CanvasItem, base: Vector2) -> void:
 	_r(c, x + 12.0, y + 8.0, 16.0, 4.0, KRAFT_ESCURO)    # etiqueta
 	_r(c, x + 140.0, y + 8.0, 12.0, 4.0, KRAFT_ESCURO)
 
-static func _bloco(c: CanvasItem, p: Vector2, cor: Color, letra: String, tipo: int = 0) -> void:
+static func _bloco(c: Object, p: Vector2, cor: Color, letra: String, tipo: int = 0) -> void:
 	_r(c, p.x, p.y, BW, BH, cor.darkened(0.55))
 	_r(c, p.x + G, p.y + G, BW - 2.0 * G, BH - 2.0 * G, cor)
 	_r(c, p.x + G, p.y + G, BW - 2.0 * G, G, cor.lightened(0.3))
@@ -405,7 +512,7 @@ static func _bloco(c: CanvasItem, p: Vector2, cor: Color, letra: String, tipo: i
 		0:
 			_r(c, p.x + 16.0, p.y + 4.0, 8.0, 12.0, Color(0.99, 0.95, 0.82))
 			_r(c, p.x + 12.0, p.y + 8.0, 16.0, 4.0, Color(0.99, 0.95, 0.82))
-			Desenho.texto(c, letra, Vector2(p.x + 20.0 - 6.6, p.y + 10.0 + 4.2), 12, cor.darkened(0.4), 13.2)
+			c.draw_string(ThemeDB.fallback_font, Vector2(p.x + 20.0 - 6.6, p.y + 10.0 + 4.2), letra, HORIZONTAL_ALIGNMENT_CENTER, 13.2, 12, cor.darkened(0.4))
 		1:  # janelinha acesa
 			_r(c, p.x + 12.0, p.y + 4.0, 16.0, 12.0, Color(0.30, 0.18, 0.10))
 			_r(c, p.x + 16.0, p.y + 8.0, 8.0, 4.0, Color(1.0, 0.90, 0.50))
@@ -415,12 +522,12 @@ static func _bloco(c: CanvasItem, p: Vector2, cor: Color, letra: String, tipo: i
 			_r(c, p.x + 12.0, p.y + 8.0, 16.0, 4.0, Color(0.30, 0.85, 0.45))
 			_r(c, p.x + 16.0, p.y + 4.0, 8.0, 4.0, Color(0.55, 1.0, 0.65))
 
-static func _meio(c: CanvasItem, x: float, y: float, w: float, h: float, cor: Color) -> void:
+static func _meio(c: Object, x: float, y: float, w: float, h: float, cor: Color) -> void:
 	_r(c, x, y, w, h, cor.darkened(0.55))
 	_r(c, x + G, y + G, w - 2.0 * G, h - 2.0 * G, cor)
 
 ## Blocos caídos no chão, na frente da caixa: aparecem conforme a torre perde vida.
-static func _caidos(c: CanvasItem, base: Vector2, dano: float, n: int) -> void:
+static func _caidos(c: Object, base: Vector2, dano: float, n: int) -> void:
 	if n <= 0 or dano < 0.12:
 		return
 	var y: float = base.y + 4.0
@@ -429,7 +536,7 @@ static func _caidos(c: CanvasItem, base: Vector2, dano: float, n: int) -> void:
 		_meio(c, base.x + 124.0, y + 4.0, 20.0, 16.0, Desenho.cor_tijolo(6))
 		_meio(c, base.x + 144.0, y, 20.0, 16.0, Desenho.cor_tijolo(6))
 
-static func _reforcos(c: CanvasItem, base: Vector2, n: int, nmax: int, nf: int, lv: int, t: float, golpe: float) -> void:
+static func _reforcos(c: Object, base: Vector2, n: int, nmax: int, nf: int, lv: int, t: float, golpe: float) -> void:
 	if lv <= 0 or nf <= 0:
 		return
 	var cor: Color = METAL[lv]

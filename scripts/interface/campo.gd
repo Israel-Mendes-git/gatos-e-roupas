@@ -1026,6 +1026,25 @@ func _centro_modulo(m: int) -> Vector2:
 		return _base_f() + Vector2(80, -40)
 	return TorrePx.rect_encaixe(_base_f(), s).get_center()
 
+## Aliados e inimigos do fundo para a frente (menor vy primeiro; empate: aliados antes, na ordem da lista).
+## Ordena uma chave numérica (vy em 1/64 px * 65536 + posição) com o sort nativo: sem lambda, sem comparação em GDScript.
+var _ord_unid: Array[Unidade] = []
+var _ord_chaves: PackedFloat64Array = PackedFloat64Array()
+var _ord_saida: Array = []
+func _ordem_profundidade() -> Array:
+	_ord_unid.clear()
+	_ord_unid.append_array(sim.aliados)
+	_ord_unid.append_array(sim.inimigos)
+	var n: int = _ord_unid.size()
+	_ord_chaves.resize(n)
+	for i in n:
+		_ord_chaves[i] = floorf(_ord_unid[i].vy * 64.0) * 65536.0 + float(i)
+	_ord_chaves.sort()
+	_ord_saida.resize(n)
+	for i in n:
+		_ord_saida[i] = _ord_unid[int(_ord_chaves[i]) & 65535]
+	return _ord_saida
+
 func _op_torre() -> Dictionary:
 	return {
 		"recuo": recuo_canhao, "pulso": torre_pulso * 0.6, "vitoria": sim.terminada and sim.vitoria,
@@ -2003,10 +2022,7 @@ func _draw() -> void:
 		_desenhar_prep_chao()
 	_desenhar_canteiros()
 	# unidades ordenadas por profundidade
-	var todos: Array = []
-	todos.append_array(sim.aliados)
-	todos.append_array(sim.inimigos)
-	todos.sort_custom(func(a: Unidade, b: Unidade) -> bool: return a.vy < b.vy)
+	var todos: Array = _ordem_profundidade()
 	# auras e sombras primeiro
 	for u in todos:
 		var uu: Unidade = u
