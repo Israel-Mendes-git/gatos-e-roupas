@@ -159,6 +159,8 @@ const AJUDA_REGRAS: Array[String] = [
 var sel: int = -1                      # gato selecionado (-1 = nenhum)
 var filtro_cj: int = -1                # fantasia que filtra o guarda-roupa (-1 = todas)
 var desfazer: Dictionary = {}          # {"foto": roupas de cada gato, "rotulo": texto} da última montagem automática
+var derrota_info: Dictionary = {}      # causa e dica da última derrota (ver _causa_derrota)
+var derrota_chefe: int = -1
 var aviso_cursor: String = ""          # recado junto do cursor (motivo de uma ação negada ou resultado)
 var aviso_cursor_t: float = 0.0
 var aviso_cursor_cor: Color = Color(1.0, 0.5, 0.45)
@@ -911,11 +913,64 @@ func _on_campo_terminou(vitoria: bool) -> void:
 		else:
 			menus.ir(_entrar_guarda)
 	else:
+		derrota_info = _causa_derrota(campo.sim)
 		estado.encerrar_derrota(campo.sim)
 		fim_invasao = era_invasao
 		aviso = ""
 		aviso_t = 0.0
 		menus.ir(_fim_fase.bind(false))
+
+## Por que a onda foi perdida: {"causa": frase, "dica": conselho}. Lê o que a simulação deixa no fim da luta.
+## Se a simulação tiver `perdas` ({Unidade.Tipo ou "chefe": blocos tirados da torre}), usa a contagem exata;
+## senão, deduz pelos bichos que sobraram junto da torre.
+func _causa_derrota(sim: Simulacao) -> Dictionary:
+	derrota_chefe = -1
+	var vivos: int = 0
+	for a in sim.aliados:
+		if a.vivo and not a.clone:
+			vivos += 1
+	if estado.tijolos > 0:
+		return {"causa": "A onda demorou demais e o tempo acabou.", "dica": "Mais dano ajuda: treine Força, vista armas melhores e use os poderes das fantasias."}
+	if vivos == 0:
+		return {"causa": "Todos os gatos caíram e a torre ficou sozinha.", "dica": "Treine Vida e vista peças de corpo. Gatos fortes na frente protegem os de trás."}
+	var perdas: Variant = sim.get("perdas")
+	var chave: Variant = null
+	var blocos: int = 0
+	if perdas is Dictionary and not (perdas as Dictionary).is_empty():
+		for k in perdas:
+			if int(perdas[k]) > blocos:
+				blocos = int(perdas[k])
+				chave = k
+	else:
+		var cont: Dictionary = {}
+		for u in sim.inimigos:
+			if u.vivo and u.x < Balanco.TORRE_X + 170.0:
+				var kk: Variant = "chefe" if u.chefe else u.tipo
+				cont[kk] = int(cont.get(kk, 0)) + 1
+				if u.chefe:
+					cont[kk] = 99
+					derrota_chefe = u.chefe_tipo
+		for k in cont:
+			if int(cont[k]) > blocos:
+				blocos = int(cont[k])
+				chave = k
+		blocos = 0   # sem contagem exata de blocos: a frase fica sem número
+	if chave is String and chave == "chefe":
+		var ct: int = clampi(derrota_chefe if derrota_chefe >= 0 else estado.lugar(), 0, Fases.CHEFE_NOME.size() - 1)
+		return {"causa": "%s acabou com a torre." % Fases.CHEFE_NOME[ct], "dica": Fases.CHEFE_FRAQUEZA[ct] + "."}
+	var q: String = " (%d bloco%s)" % [blocos, "" if blocos == 1 else "s"] if blocos > 0 else ""
+	match chave:
+		Unidade.Tipo.LADRAO:
+			return {"causa": ("Os ladrões levaram %d blocos." % blocos) if blocos > 0 else "Os ladrões levaram os blocos da torre.", "dica": "Marque o Ladrão como alvo na preparação e deixe gatos na linha da frente."}
+		Unidade.Tipo.SALTADOR:
+			return {"causa": "Os saltadores pularam os gatos e chegaram à torre" + q + ".", "dica": "Recuar deixa gatos perto da torre para pegar os saltadores."}
+		Unidade.Tipo.GIGANTE:
+			return {"causa": "O Grandalhão derrubou a torre" + q + ".", "dica": "Marque o Grandalhão como alvo: o time inteiro foca nele. Dano alto e poderes ajudam."}
+		Unidade.Tipo.BOMBA:
+			return {"causa": "Os bichos-bomba explodiram na torre" + q + ".", "dica": "Gatos de longe derrubam as bombas antes de elas chegarem."}
+		Unidade.Tipo.ATIRADOR:
+			return {"causa": "Os atiradores derrubaram a torre de longe" + q + ".", "dica": "Deixe gatos em Avançar para alcançá-los, ou marque o Atirador como alvo."}
+	return {"causa": "Os bichos chegaram à torre e a derrubaram" + q + ".", "dica": "Mais gatos na linha da frente seguram o bando. Treine Força e Vida."}
 
 ## Dicas no balão do gato ao entrar no guarda-roupa: herança (aviso, pendente, feita), números e segundo ato.
 func _dicas_do_gato() -> void:
@@ -1007,6 +1062,12 @@ func _fim_fase(vitoria: bool) -> void:
 		fim_titulo.text = "Derrota"
 		fim_titulo.add_theme_color_override("font_color", Color(1, 0.4, 0.35))
 		fim_sub.text = "Desta vez, %s resistiu. O time se levantou; as peças de quem caiu ganharam marcas e o que caiu ficou com você." % (ARTIGO[fi] + " " + nome)
+	fim_time.add_theme_color_override("font_color", Color(0.65, 1.0, 0.7))
+	if not vitoria and not derrota_info.is_empty():
+		# causa e dica (ver _causa_derrota), no topo do bloco de texto, em tom de aviso
+		fim_time.add_theme_color_override("font_color", Color(1.0, 0.86, 0.6))
+		linhas_time.insert(0, "Dica: " + str(derrota_info.get("dica", "")))
+		linhas_time.insert(0, "O que houve: " + str(derrota_info.get("causa", "")))
 	var subiram: Array[String] = _subiram(niveis_ini)
 	if subiram.size() > 0:
 		linhas_time.append("Subiram de nível: %s. Gaste os pontos de treino." % _lista_nomes(subiram))
