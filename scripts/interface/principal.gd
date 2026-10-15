@@ -3155,6 +3155,27 @@ func _icone_gui(ico: Rect2, centro: Vector2, esc: float, cor: Color = Color.WHIT
 	draw_texture_rect_region(GUI_TEX, Rect2((centro - tam * 0.5).round(), tam), ico, cor)
 
 ## Estrelinha de 4 pontas na grade (braços de ~r px). `cont` com alfa > 0 põe contorno escuro (só em cor opaca).
+## Lado do selo de herança (12 pixels da grade): aro de 1 + ícone de poder de 10 (IconesPoder na escala 3) + aro de 1.
+const SELO_HER := 36.0
+const SELO_MIOLO := Color(0.16, 0.08, 0.26)
+
+## Selo de herança: o ícone do poder (IconesPoder, escala 3 = a grade de 3 px) num miolo escuro opaco, dentro de um aro
+## de cantos cortados na cor `aro` (roxo = herança; o mesmo ícone sem aro é o poder da fantasia vestida). `c` = centro.
+func _selo_heranca(c: Vector2, poder: int, aro: Color) -> void:
+	var x: float = _sn(c.x - SELO_HER * 0.5 + PX * 0.5)
+	var y: float = _sn(c.y - SELO_HER * 0.5 + PX * 0.5)
+	var l: float = SELO_HER
+	# aro de 1 pixel com os cantos cortados, brilho em cima à esquerda e sombra embaixo à direita (lê como um selo)
+	_c.draw_rect(Rect2(x + PX, y, l - PX * 2.0, l), aro)
+	_c.draw_rect(Rect2(x, y + PX, l, l - PX * 2.0), aro)
+	_c.draw_rect(Rect2(x + PX, y, PX * 4.0, PX), aro.lightened(0.55))
+	_c.draw_rect(Rect2(x, y + PX, PX, PX * 3.0), aro.lightened(0.55))
+	_c.draw_rect(Rect2(x + l - PX * 5.0, y + l - PX, PX * 4.0, PX), aro.darkened(0.45))
+	_c.draw_rect(Rect2(x + l - PX, y + l - PX * 4.0, PX, PX * 3.0), aro.darkened(0.45))
+	# miolo escuro opaco (o ícone não soma alfa com a caixa) e o ícone (8 + contorno = 10 pixels) cobrindo o miolo
+	_c.draw_rect(Rect2(x + PX, y + PX, l - PX * 2.0, l - PX * 2.0), SELO_MIOLO)
+	IconesPoder.desenhar(_c, poder, Vector2(x + l * 0.5, y + l * 0.5), 3, 1.0, PX)
+
 func _estrela4(p: Vector2, r: float, cor: Color, cont: Color = Color(0, 0, 0, 0)) -> void:
 	var n: int = maxi(1, int(r / PX + 0.5))
 	var cx: float = _sn(p.x)
@@ -4196,32 +4217,49 @@ func _fantasias_boneco(b: Boneco, base: Vector2) -> void:
 		y += alt + 4.0
 	# heranças: poderes que o gato solta sozinho, com qualquer roupa (e o aviso de herança pronta)
 	var roxo := Color(0.72, 0.56, 1.0)
+	if b.herancas.size() >= 3:
+		# muitas heranças: uma fileira só de selos (o nome e a explicação vêm na dica do mouse); grau II+ em algarismo no canto
+		var x0: float = _sn(base.x - SELO_HER * 0.5 * b.herancas.size() + PX * 0.5)
+		for hi in b.herancas.size():
+			var h: int = b.herancas[hi]
+			var rs := Rect2(x0 + hi * SELO_HER, y, SELO_HER, SELO_HER)
+			_rect_her_feita.append([rs, estado.bonecos.find(b), h])
+			var sob: bool = rs.has_point(mouse) and arrasto.is_empty()
+			_selo_heranca(rs.get_center(), Pecas.PODER_TIPO[h], roxo.lightened(0.35) if sob else roxo)
+			var g_h: int = b.grau_de(h)
+			if g_h > 1:
+				IconesPoder.texto(_c, str(g_h), Vector2(rs.end.x - PX * 4.0, rs.end.y - PX * 6.0), Color(1, 1, 1), 3)
+		y += SELO_HER + 4.0
 	for h in b.herancas:
-		# uma linha: estrelinha e o nome do poder (a explicação vem na dica do mouse)
-		var rh := Rect2(base.x - 74, y, 148, 26.0)
+		if b.herancas.size() >= 3:
+			break   # já foram na fileira de selos
+		# uma linha: selo roxo com o ícone do poder herdado e o nome (a explicação vem na dica do mouse)
+		var rh := Rect2(base.x - 74, y, 148, SELO_HER)
 		draw_rect(rh, Color(0.12, 0.06, 0.2, 0.78))
 		draw_rect(rh, _com_alfa(roxo, 0.9), false, 2.0)
-		draw_rect(Rect2(rh.position.x, rh.position.y, 5, rh.size.y), roxo)
 		if rh.has_point(mouse) and arrasto.is_empty():
 			draw_rect(rh, Color(1, 1, 1, 0.12))
 		_rect_her_feita.append([rh, estado.bonecos.find(b), h])
-		_estrela4(Vector2(rh.position.x + 18.0, rh.get_center().y), 5.0, roxo.lightened(0.3))
+		_selo_heranca(Vector2(rh.position.x + SELO_HER * 0.5, rh.get_center().y), Pecas.PODER_TIPO[h], roxo)
 		var nome_h: String = Simulacao.heranca_nome_curto(h, b.grau_de(h))
-		Desenho.texto(self, nome_h, Vector2(rh.position.x + 28, rh.position.y + 19), _tam_cabe(nome_h, [16, 14, 13, 12], 114.0), Color(1, 1, 1), -1.0, 3)
-		y += 30.0
+		Desenho.texto(self, nome_h, Vector2(rh.position.x + SELO_HER + 5.0, rh.position.y + 24), _tam_cabe(nome_h, [16, 14, 13, 12], 148.0 - SELO_HER - 8.0), Color(1, 1, 1), -1.0, 3)
+		y += SELO_HER + 4.0
 	if b.herancas_pendentes() > 0:
-		var rp := Rect2(base.x - 74, y, 148, 28.0)
 		var pu_h: float = 0.5 + 0.5 * sin(t * 5.0)
-		var pronta_h: bool = b.fantasia_completa() >= 0
+		var fc_h: int = b.fantasia_completa()
+		var pronta_h: bool = fc_h >= 0
+		var rp := Rect2(base.x - 74, y, 148, SELO_HER if pronta_h else 28.0)
 		draw_rect(rp, Color(0.12, 0.06, 0.2, 0.78 if pronta_h else 0.5))
 		draw_rect(rp, _com_alfa(Desenho.DOURADO, 0.55 + 0.45 * pu_h) if pronta_h else Color(0.6, 0.55, 0.5, 0.45), false, 2.0)
 		if rp.has_point(mouse) and arrasto.is_empty():
 			draw_rect(rp, Color(1, 1, 1, 0.16))
 		_rect_heranca.append([rp, estado.bonecos.find(b)])
-		_estrela4(Vector2(rp.position.x + 18.0, rp.get_center().y), 5.0 + pu_h if pronta_h else 4.0, Desenho.DOURADO if pronta_h else Color(0.55, 0.5, 0.42))
 		if pronta_h:
-			Desenho.texto(self, "Herança pronta!", Vector2(rp.position.x + 28.0, rp.position.y + 19), 15, Desenho.DOURADO, -1.0, 3)
+			# o poder da fantasia vestida, que vai ser herdado: selo com o aro piscando entre o dourado e o roxo
+			_selo_heranca(Vector2(rp.position.x + SELO_HER * 0.5, rp.get_center().y), Pecas.PODER_TIPO[fc_h], Desenho.DOURADO if pu_h > 0.5 else roxo)
+			Desenho.texto(self, "Herança pronta!", Vector2(rp.position.x + SELO_HER + 5.0, rp.position.y + 24), _tam_cabe("Herança pronta!", [15, 14, 13], 148.0 - SELO_HER - 8.0), Desenho.DOURADO, -1.0, 3)
 		else:
+			_estrela4(Vector2(rp.position.x + 18.0, rp.get_center().y), 4.0, Color(0.55, 0.5, 0.42))
 			# o poder está à espera, mas só se incorpora com a fantasia completa: tom apagado, sem prometer "pronta"
 			Desenho.texto(self, "Herança: vista 4/4", Vector2(rp.position.x + 28.0, rp.position.y + 19), 13, Color(0.78, 0.73, 0.65, 0.85), -1.0, 3)
 
@@ -4760,11 +4798,20 @@ func _caixa_dica(itens: Array, larg: float, cor_faixa: Color, cor_borda: Color, 
 			y += 6.0
 			continue
 		var tam: int = it[2]
-		var ml: float = 0.0 if tipo == "t" else 26.0
 		var ic: Variant = it[5] if it.size() > 5 else null
+		# Vector2i(poder, 0) = selo de herança (ícone do poder no aro roxo) à esquerda do texto; (poder, 1) = aro dourado
+		var selo: bool = ic is Vector2i
+		var ml: float = 0.0 if tipo == "t" else (SELO_HER + 8.0 if selo else 26.0)
+		var y_selo: float = y
+		if selo:
+			lin.append(["selo", y, ic, it[4] if it.size() > 4 else Color(0.72, 0.56, 1.0)])
+			ic = null
 		var passo: float = float(tam) + 4.0
 		var primeira: bool = true
-		for l in _quebrar(it[1], tam, interno - ml):
+		var quebradas: Array = _quebrar(it[1], tam, interno - ml)
+		if selo:
+			y += maxf(0.0, (SELO_HER - passo * quebradas.size()) * 0.5)   # texto curto fica no meio da altura do selo
+		for l in quebradas:
 			if primeira and ic is int:
 				y += 3.0   # a plaquinha da peça é mais alta que a linha de texto
 			lin.append([tipo, y + tam * 0.9, l, tam, it[3], it[4] if it.size() > 4 else Color.WHITE, ml, ic if primeira else null])
@@ -4772,6 +4819,8 @@ func _caixa_dica(itens: Array, larg: float, cor_faixa: Color, cor_borda: Color, 
 			if primeira and ic is int:
 				y += 3.0
 			primeira = false
+		if selo:
+			y = maxf(y, y_selo + SELO_HER + 4.0)
 	var alt: float = y + 2.0 * pad_y
 	var caixa := Rect2(ancora + desl, Vector2(larg, alt))
 	if caixa.end.x > 1272.0:
@@ -4802,6 +4851,10 @@ func _pintar_dica(caixa: Rect2, lin: Array, cor_faixa: Color, cor_borda: Color) 
 			while xs + PX <= caixa.end.x - pad_x:
 				_c.draw_rect(Rect2(xs, ys, PX, PX), Color(1, 1, 1, 0.2))
 				xs += PX * 2.0
+			continue
+		if l[0] == "selo":
+			var iv: Vector2i = l[2]
+			_selo_heranca(Vector2(ox + SELO_HER * 0.5, oy + float(l[1]) + SELO_HER * 0.5), Pecas.PODER_TIPO[iv.x], Desenho.DOURADO if iv.y == 1 else l[3])
 			continue
 		if l[0] == "m" and l[7] != null:
 			var base_y: float = oy + float(l[1])
@@ -4975,11 +5028,11 @@ func _dica_ficha(i: int) -> void:
 	itens.append(["t", "Duplo clique no nome (ou no lápis) troca o nome.", 12, Color(1, 1, 1, 0.55)])
 	itens.append(["t", "Heranças (%d de %d)" % [b.incorporacoes(), Balanco.BONECO_NIVEL_MAX / Balanco.HERANCA_NIVEIS], 16, Color(0.8, 0.7, 1.0)])
 	for h in b.herancas:
-		itens.append(["t", "%s: %s; %s" % [Simulacao.heranca_nome(h, b.grau_de(h)), Pecas.PODER_DICA[h], _efeito_heranca(b.grau_de(h))], 13, Color(0.9, 0.85, 1.0)])
+		itens.append(["m", "%s: %s; %s" % [Simulacao.heranca_nome(h, b.grau_de(h)), Pecas.PODER_DICA[h], _efeito_heranca(b.grau_de(h))], 13, Color(0.9, 0.85, 1.0), Color(0.72, 0.56, 1.0), Vector2i(h, 0)])
 	if b.herancas_pendentes() > 0:
 		var fc: int = b.fantasia_completa()
 		if fc >= 0:
-			itens.append(["t", "Pronto para incorporar %s: clique em \"Herança pronta!\"." % Simulacao.heranca_nome(fc), 13, Color(0.7, 1.0, 0.7)])
+			itens.append(["m", "Pronto para incorporar %s: clique em \"Herança pronta!\"." % Simulacao.heranca_nome(fc), 13, Color(0.7, 1.0, 0.7), Desenho.DOURADO, Vector2i(fc, 1)])
 		else:
 			itens.append(["t", "Pronto para incorporar um poder: vista uma fantasia completa.", 13, Color(1.0, 0.8, 0.5)])
 	elif b.herancas.size() < Balanco.BONECO_NIVEL_MAX / Balanco.HERANCA_NIVEIS:
@@ -5071,7 +5124,7 @@ func _efeito_heranca(grau: int) -> String:
 ## Dica de uma herança já incorporada.
 func _dica_heranca_feita(bi: int, h: int) -> void:
 	var itens: Array = [
-		["t", "Herança: " + Simulacao.heranca_nome_curto(h, estado.bonecos[bi].grau_de(h)), 22, Color(0.8, 0.7, 1.0)],
+		["m", "Herança: " + Simulacao.heranca_nome_curto(h, estado.bonecos[bi].grau_de(h)), 22, Color(0.8, 0.7, 1.0), Color(0.72, 0.56, 1.0), Vector2i(h, 0)],
 		["t", "%s; %s" % [Pecas.PODER_DICA[h], _efeito_heranca(estado.bonecos[bi].grau_de(h))], 13, Color(1, 1, 1)],
 		["t", "Grau %s de %s. A mesma fantasia incorporada de novo sobe o grau." % [Balanco.heranca_grau_romano(estado.bonecos[bi].grau_de(h)), Balanco.heranca_grau_romano(Balanco.HERANCA_GRAU_MAX)], 13, Color(0.85, 0.78, 1.0)],
 		["t", "%s solta sozinho na luta, com qualquer roupa." % estado.bonecos[bi].nome, 13, Color(1, 1, 1, 0.6)],
@@ -5082,7 +5135,7 @@ func _dica_heranca_feita(bi: int, h: int) -> void:
 func _dica_heranca_pronta(bi: int) -> void:
 	var b: Boneco = estado.bonecos[bi]
 	var fc: int = b.fantasia_completa()
-	var itens: Array = [["t", "Herança pronta!", 22, Desenho.DOURADO]]
+	var itens: Array = [["m", "Herança pronta!", 22, Desenho.DOURADO, Desenho.DOURADO, Vector2i(fc, 1)] if fc >= 0 else ["t", "Herança pronta!", 22, Desenho.DOURADO]]
 	if fc >= 0:
 		itens.append(["t", "Clique para incorporar %s: %s solta sozinho na luta, para sempre." % [_txt_incorporar(b, fc), b.nome], 13, Color(0.7, 1.0, 0.7)])
 	else:

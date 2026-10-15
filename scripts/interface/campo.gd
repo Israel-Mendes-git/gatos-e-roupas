@@ -297,6 +297,7 @@ var lento_t: float = 0.0           # câmera lenta do último bicho (s reais)
 var sons_quadro: int = 0           # sons fortes já tocados neste quadro
 var ju: Dictionary = {}            # Unidade -> {sq, forte, clar, andava, poeira, antecip, hop}
 var fantasmas: Array = []          # bichos derrotados voando para trás: {u, x, y, vx, t, dur, forte}
+var her_fx: Array = []             # selinho da herança que acabou de disparar, sobre o gato: {u, poder, t}
 var agenda: Array = []             # ações atrasadas (clarões do chefe etc.): {t, k, p, ...}
 var faixas: Array = []             # faixas que cruzam a tela: {txt, sub, cor, t, dur}
 var ant_inim: Array = []           # inimigos vivos antes do último passo (para achar quem morreu)
@@ -395,6 +396,7 @@ func iniciar(e: Estado) -> void:
 	lento_t = 0.0
 	ju.clear()
 	fantasmas.clear()
+	her_fx.clear()
 	agenda.clear()
 	faixas.clear()
 	ant_inim.clear()
@@ -853,7 +855,15 @@ func _consumir() -> void:
 				for on in numeros:
 					if on.get("placa", false) and absf(on["p"].x - clampf(e["x"], 140.0, 1140.0)) < 280.0 and on["vida"] > 0.3:
 						nivel_nome += 1
-				numeros.append({"p": Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 92 * ESC - nivel_nome * 46.0), "txt": ("Herança: " if e.get("heranca", false) else "") + Simulacao.heranca_nome_curto(e["conj"], int(e.get("grau", 1))) + "!", "cor": _cor_legivel(Pecas.CONJUNTO_COR[e["conj"]], 0.78), "vida": 1.5, "tam": 28, "larg": 380.0, "ct": 8, "placa": true})
+				# herança: a placa leva o selo com o ícone do poder (pela fantasia herdada: na Carga de lança o evento sai com poder -1)
+				var her_p: int = Pecas.PODER_TIPO[clampi(int(e["conj"]), 0, Pecas.PODER_TIPO.size() - 1)] if e.get("heranca", false) else -1
+				numeros.append({"p": Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 92 * ESC - nivel_nome * 46.0), "txt": ("Herança: " if e.get("heranca", false) else "") + Simulacao.heranca_nome_curto(e["conj"], int(e.get("grau", 1))) + "!", "cor": _cor_legivel(Pecas.CONJUNTO_COR[e["conj"]], 0.78), "vida": 1.5, "tam": 28, "larg": 380.0, "ct": 8, "placa": true, "her": her_p})
+				if her_p >= 0 and gato_p != null:
+					var her_k: int = 0   # duas heranças do mesmo gato juntas: o selinho novo vai ao lado, sem cobrir o outro
+					for hf0 in her_fx:
+						if hf0["u"] == gato_p:
+							her_k += 1
+					her_fx.append({"u": gato_p, "poder": her_p, "t": 0.0, "k": her_k})
 				particulas.append({"p": po, "v": Vector2.ZERO, "vida": 0.4, "max": 0.4, "cor": Color(cp.r, cp.g, cp.b, 0.5), "r": 22.0, "g": 0.0, "tipo": 1})
 				var alvos_p: Array = []
 				for pt in e["pontos"]:
@@ -2262,6 +2272,11 @@ func _atualizar_visual(dt: float, delta_real: float) -> void:
 				particulas.append({"p": ppos, "v": Vector2.ZERO, "vida": 0.22, "max": 0.22, "cor": Color(0.7, 0.85, 1.0, 0.6), "r": 3.2, "g": 0.0, "tipo": 0})
 			else:
 				particulas.append({"p": ppos, "v": Vector2(randf_range(-10, 10), randf_range(-14, 6)), "vida": 0.3, "max": 0.3, "cor": Color(1.0, 0.4, 0.25, 0.6), "r": 3.0, "g": 0.0, "tipo": 0})
+	for i in range(her_fx.size() - 1, -1, -1):
+		var hf: Dictionary = her_fx[i]
+		hf["t"] = float(hf["t"]) + dt
+		if float(hf["t"]) >= HER_FX_DUR:
+			her_fx.remove_at(i)
 	for i in range(numeros.size() - 1, -1, -1):
 		var n: Dictionary = numeros[i]
 		n["vida"] -= dt
@@ -2551,6 +2566,8 @@ func _draw() -> void:
 		var mk_v: int = v["marca"]
 		var marcas_v: Array = [mk_v] if mk_v >= 0 else []
 		Desenho.icone(self, v["tipo"], pos2, 34.0 * (1.0 + 0.2 * sin(PI * t)), 0, 0.0, 0.0, marcas_v, rar_v)
+	for hf in her_fx:
+		_selo_heranca_gato(hf)
 	# números (tamanho proporcional ao dano; "ct" é a espessura do contorno)
 	for nu in numeros:
 		var n: Dictionary = nu
@@ -2568,15 +2585,25 @@ func _draw() -> void:
 		var p2_real: Vector2 = p2
 		draw_set_transform(p2_real, 0.0, Vector2(esc_n, esc_n))
 		p2 = Vector2.ZERO
+		var her_n: int = int(n.get("her", -1))
+		var selo_c: Vector2 = Vector2.ZERO
 		if n.get("placa", false):
 			# placa escura semitransparente atrás do nome do poder (legível sobre qualquer parede)
 			var tw: float = UIComum.FONTE.get_string_size(n["txt"], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(int(n["tam"]))).x + 20.0
+			if her_n >= 0:
+				tw += HER_SELO + V.Q   # herança: espaço para o selo à esquerda do nome
 			var pl: Rect2 = Rect2(p2.x - tw * 0.5, p2.y - float(n["tam"]) - 2.0, tw, float(n["tam"]) + 12.0)
 			draw_rect(pl.grow(2.0), Color(0, 0, 0, 0.35 * a2))
 			draw_rect(pl, Color(0.04, 0.03, 0.08, 0.72 * a2))
 			draw_rect(Rect2(pl.position, Vector2(pl.size.x, 2.0)), Color(c2.r, c2.g, c2.b, 0.7 * a2))
+			if her_n >= 0:
+				p2.x += (HER_SELO + V.Q) * 0.5
+				selo_c = p2_real + Vector2(pl.position.x + V.Q + HER_SELO * 0.5, pl.get_center().y) * esc_n
 		_texto_c(n["txt"], p2 - Vector2(lg * 0.5, 0), n["tam"], c2, lg, int(n.get("ct", 4)))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		if her_n >= 0 and a2 > 0.5 and id_n >= 0.2:
+			# selo fora da escala do pulo da placa: entra quando ela assenta, fica inteiro na grade da luta e some de uma vez no fim (sem alfa)
+			_selo_heranca(selo_c, her_n, false)
 	# vinhetas: poder (escurece as bordas), torre em perigo (vermelho que pulsa)
 	_vinheta(Color(0.02, 0.0, 0.05), 0.5 * vinheta_poder * vinheta_poder, 170.0)
 	var frac_p: float = float(estado.tijolos) / maxf(1.0, float(estado.tijolos_max()))
@@ -4673,6 +4700,44 @@ func _anel_poder_chao(u: Unidade) -> void:
 	if destaque:
 		V.aro(self, pe_u, 50.0 * esc_u, 15.0 * esc_u, V.CONT, 1.0, 3.0)
 		V.aro(self, pe_u, 50.0 * esc_u, 15.0 * esc_u, Color(1.0, 0.97, 0.8), 1.0, 2.0)
+
+const HER_SELO := 36.0               # selo de herança: aro de 1 + ícone de 10 + aro de 1 quadradinhos de V.Q
+const HER_FX_DUR := 0.9              # quanto o selinho fica sobre o gato quando a herança dispara (s)
+const HER_ROXO := Color(0.72, 0.56, 1.0)
+const HER_MIOLO := Color(0.16, 0.08, 0.26)
+
+## Selo de herança (o mesmo do guarda-roupa): ícone do poder no miolo escuro, aro roxo de cantos cortados com brilho
+## e sombra; `contorno` põe a borda escura de fora (sobre o cenário). Tudo na grade V.Q, opaco.
+func _selo_heranca(c: Vector2, poder: int, contorno: bool) -> void:
+	var q: float = V.Q
+	var l: float = HER_SELO
+	var x: float = V.sn(c.x - l * 0.5 + q * 0.5)
+	var y: float = V.sn(c.y - l * 0.5 + q * 0.5)
+	if contorno:
+		draw_rect(Rect2(x, y - q, l, l + q * 2.0), V.CONT)
+		draw_rect(Rect2(x - q, y, l + q * 2.0, l), V.CONT)
+	draw_rect(Rect2(x + q, y, l - q * 2.0, l), HER_ROXO)
+	draw_rect(Rect2(x, y + q, l, l - q * 2.0), HER_ROXO)
+	draw_rect(Rect2(x + q, y, q * 4.0, q), V.tom(HER_ROXO, 1.55))
+	draw_rect(Rect2(x, y + q, q, q * 3.0), V.tom(HER_ROXO, 1.55))
+	draw_rect(Rect2(x + l - q * 5.0, y + l - q, q * 4.0, q), V.tom(HER_ROXO, 0.55))
+	draw_rect(Rect2(x + l - q, y + l - q * 4.0, q, q * 3.0), V.tom(HER_ROXO, 0.55))
+	draw_rect(Rect2(x + q, y + q, l - q * 2.0, l - q * 2.0), HER_MIOLO)
+	IconesPoder.desenhar(self, poder, Vector2(x + l * 0.5, y + l * 0.5), 3, 1.0, q)
+
+## Selinho da herança que acabou de disparar: nasce rente à cabeça do gato, sobe um pouco, atrás do balão do poder
+## carregado (para não cobri-lo), e pisca antes de sumir (sem alfa).
+func _selo_heranca_gato(hf: Dictionary) -> void:
+	var u: Unidade = hf["u"]
+	if u == null or not u.vivo:
+		return
+	var tt: float = float(hf["t"])
+	if tt > HER_FX_DUR - 0.25 and int(tt / 0.06) % 2 == 1:
+		return
+	var esc_u: float = ESC * u.escala()
+	var sobe: float = minf(tt / 0.14, 1.0)
+	var p := Vector2(u.vx - 40.0 - (HER_SELO + V.Q * 3.0) * int(hf.get("k", 0)), u.vy - (CORPO_ALT + 6.0) * esc_u - 12.0 - 16.0 * sobe - 9.0 * tt)
+	_selo_heranca(p, int(hf["poder"]), true)
 
 ## Ícone sobre a cabeça do gato com poder carregado: o número da tecla, na cor da fantasia.
 func _icone_poder_gato(u: Unidade, pos: Vector2, esc_u: float) -> void:
