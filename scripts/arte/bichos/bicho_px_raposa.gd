@@ -521,6 +521,8 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	_elip(B, hx - 2, py0, 8, maxi(5, by0 + bh - py0 - 1))   # pescoço
 	_bmp(B, hx, hy, cab_rows)
 	_bmp(B, hx + int(ore["nx"]), oy, orows)
+	BichoPx.tirar(TR, _W, _H, hx, hy, cab_rows)   # a roupa de corpo fica atrás da cabeça
+	BichoPx.tirar(TR, _W, _H, hx + int(ore["nx"]), oy, orows)
 	if sal and g["aire"] == 0:
 		_tinta(B, bx + 7, -14, 5, 9, "v")
 	elif gig:

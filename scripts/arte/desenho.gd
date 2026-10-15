@@ -1103,7 +1103,9 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 			if cont[i] > cont[melhor]:
 				melhor = i
 		_aura_px(c, Pecas.CONJUNTO_COR[melhor], alfa)
-	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null
+	# chefe de coroa (ver BichoPx.coroa_fixa) não veste peça de cabeça: a coroa fica
+	var sem_chapeu: bool = chefe and BichoPx.coroa_fixa(ct)
+	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null and not sem_chapeu
 	BichoPx.ultimo_quadro = {}
 	BichoPx.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando and tipo == Unidade.Tipo.LADRAO, filhote, ct, parte, parado)
 	BichoPx.cabeca_coberta = false
@@ -1114,7 +1116,7 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	BichoPx.ultimo_quadro = {}
 	for s in [1, 3, 0, 2]:
 		var p: Peca = pecas[s]
-		if p == null:
+		if p == null or (s == 0 and sem_chapeu):
 			continue
 		var onde: int = RoupaGato.onde(p.tipo)
 		if onde == RoupaGato.Onde.PATAS:
@@ -1143,12 +1145,12 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		_tr(c, pos, esc, dir, o * GATO_K, rot, k_mao)
 		if onde == RoupaGato.Onde.CORPO and Pecas.SLOT[p.tipo] == Pecas.SLOT_CORPO and not q.is_empty() and not Dictionary(q["t"]).is_empty():
 			# roupa de corpo (não acessório preso ao tronco, como cinto ou reator): o tronco do bicho é maior e de outro formato,
-			# então a peça cresce até cobri-lo e é aparada pelo molde dele,
-			# centrada no meio do tronco (mesmo tamanho de pixel)
+			# então a peça é refeita sobre o molde dele (RoupaGato._alfaiate), centrada no meio do tronco (mesmo tamanho de pixel)
 			var ct_r: Rect2i = BichoPx.caixa_tronco(q)
 			o = Vector2(ct_r.position) + Vector2(ct_r.size) * 0.5
 			_tr(c, pos, esc, dir, o * GATO_K, rot, k_mao)
-			RoupaGato.esticar = BichoPx.esticar_corpo(q)
+			RoupaGato.cobre = float(q.get("cobre", RoupaGato.COBRE_BICHO))
+			RoupaGato.molde_quadro = q
 			RoupaGato.mascara = q["t"]
 			RoupaGato.mascara_origem = o
 			RoupaGato.mascara_id = q["id"]
@@ -1157,8 +1159,8 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 			RoupaGato.desenhar_esticada(c, p.tipo, f, anim, BichoPx.esticar_cabeca(q))
 		else:
 			RoupaGato.desenhar(c, p.tipo, f, anim)
-		RoupaGato.esticar = Vector2i.ZERO
 		RoupaGato.mascara = {}
+		RoupaGato.molde_quadro = {}
 	if not chefe:
 		_tr(c, pos, esc, dir)
 		_adereco_tipo(c, tipo, alfa)

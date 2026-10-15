@@ -567,6 +567,7 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	var TR: PackedInt32Array = B.duplicate()   # só o tronco: molde das peças de corpo (BichoPx.quadro)
 	_elip(B, hx - 2, py0, 8, maxi(5, by0 + bh - py0 - 1))   # pescoço
 	_bmp(B, hx, hy, cab_rows)
+	BichoPx.tirar(TR, _W, _H, hx, hy, cab_rows)   # a roupa de corpo fica atrás da cabeça
 	if sal and g["aire"] == 0:
 		# braços curtos no peito, na mesma camada do corpo (sem contorno por dentro): só as mãos pretas aparecem, juntas na frente;
 		# no golpe a de perto avança

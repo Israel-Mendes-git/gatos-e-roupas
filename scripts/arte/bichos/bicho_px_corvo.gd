@@ -505,6 +505,7 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	_brilho(B, bx, bx + bw, by0, by0 + 3, 3)
 	var cab_rows: Array = _cab_rows(ch, g["boca"])
 	_bmp(B, hx, hy, cab_rows)
+	BichoPx.tirar(TR, _W, _H, hx, hy, cab_rows)   # a roupa de corpo fica atrás da cabeça
 	if gig:
 		# penas do pescoço arrepiadas
 		for i in 4:

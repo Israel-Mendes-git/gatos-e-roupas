@@ -388,6 +388,7 @@ static func _monta(tipo: int, mk: int, carregando: bool, g: Dictionary) -> Dicti
 				t += c1
 			rows2.append(t)
 	_bmp(B, hx, hy, rows2)
+	BichoPx.tirar(TR, _W, _H, hx, hy, rows2)   # a roupa de corpo fica atrás da cabeça
 	# marcas de cada espécie
 	if sal:
 		for i in range(2, bw - 2):

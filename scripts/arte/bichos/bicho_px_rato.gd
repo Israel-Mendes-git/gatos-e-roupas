@@ -505,6 +505,7 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	var TR: PackedInt32Array = B.duplicate()   # só o tronco: molde das peças de corpo (BichoPx.quadro)
 	_elip(B, hx - 2, py0, 8, maxi(5, by0 + bh - py0 - 1))   # pescoço
 	_bmp(B, hx, hy, cab_rows)
+	BichoPx.tirar(TR, _W, _H, hx, hy, cab_rows)   # a roupa de corpo fica atrás da cabeça
 	if gig:
 		_tinta(B, bx + 5, by0 + bh - 7, bw - 10, 7, "v")   # barrigão claro
 	elif mae:

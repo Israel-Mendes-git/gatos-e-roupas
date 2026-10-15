@@ -64,9 +64,6 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 static func _truque(tipo: int) -> bool:
 	return tipo >= Unidade.Tipo.ATIRADOR and tipo <= Unidade.Tipo.BOMBA
 
-## Tronco do gato que as peças de corpo cobrem (largura e altura em pixels): nos bichos a peça estica até cobrir o tronco deles.
-const TRONCO_GATO := Vector2i(12, 8)
-
 ## Pixels pintados de uma camada da grade de letras, em coordenadas do bicho (y = 0 no chão): {Vector2i: true}.
 static func recorte(L: PackedInt32Array, w: int, h: int, ox: int, oy: int) -> Dictionary:
 	var m: Dictionary = {}
@@ -127,11 +124,44 @@ static func caixa_tronco(q: Dictionary) -> Rect2i:
 	q["caixa"] = r
 	return r
 
-## Colunas e linhas que a peça de corpo ganha (RoupaGato.esticar): sobra um pouco além do tronco, e o molde apara o excesso.
-static func esticar_corpo(q: Dictionary) -> Vector2i:
-	var r: Rect2i = caixa_tronco(q)
-	var m: Vector2i = q.get("max", Vector2i(16, 8))   # os chefes, bem maiores, deixam crescer mais
-	return Vector2i(clampi(r.size.x + 2 - TRONCO_GATO.x, 0, m.x), clampi(r.size.y + 2 - TRONCO_GATO.y, 0, m.y))
+## Tira do molde do tronco `TR` (grade de largura `w` e altura `h`) os pixels que as linhas `rows` pintam em (x, y): a cabeça e o
+## que mais fica por cima do tronco. A roupa de corpo é desenhada depois do bicho; sem isso ela cobriria a cabeça.
+static func tirar(TR: PackedInt32Array, w: int, h: int, x: int, y: int, rows: Array) -> void:
+	for j in rows.size():
+		var s: String = rows[j]
+		for i in s.length():
+			if s[i] != "." and x + i >= 0 and x + i < w and y + j >= 0 and y + j < h:
+				TR[(y + j) * w + x + i] = 0
+
+## Tira do molde `TR` (grade de largura `w`) as manchas grandes (12 pixels ou mais) que mudaram na camada `B` depois dele (chefes):
+## cabeça, barriga e adereços pintados depois ficam por cima da roupa de corpo, à mostra. Marquinhas pequenas (pintas, pelos)
+## ficam no molde: furar a manta nelas deixava a roupa em retalhos.
+static func manter_iguais(TR: PackedInt32Array, B: PackedInt32Array, w: int) -> void:
+	var visto: Dictionary = {}
+	for k in TR.size():
+		if TR[k] == 0 or B[k] == TR[k] or visto.has(k):
+			continue
+		var comp: Array = []
+		var pilha: Array = [k]
+		visto[k] = true
+		while not pilha.is_empty():
+			var p: int = pilha.pop_back()
+			comp.append(p)
+			for d in [1, -1, w, -w]:
+				var q: int = p + d
+				if q < 0 or q >= TR.size() or visto.has(q) or (absi(d) == 1 and q / w != p / w):
+					continue
+				if TR[q] != 0 and B[q] != TR[q]:
+					visto[q] = true
+					pilha.append(q)
+		if comp.size() >= 12:
+			for p2 in comp:
+				TR[p2] = 0
+
+## Chefes cuja coroa ou capacete é a identidade (Rei dos Ratos, Sapo-Rei, Toupeira, Texugo-Rei): não vestem peça de cabeça.
+## A coroa fica; o chapéu da fantasia por cima dela tapava o rei, e um do lado do outro não cabe na cabeça.
+static func coroa_fixa(chefe_tipo: int) -> bool:
+	return chefe_tipo == 0 or chefe_tipo == 4 or chefe_tipo == 5 or chefe_tipo == 9
 
 ## Largura do crânio do gato (as três primeiras linhas da cabeça, sem orelhas): o tamanho para o qual as peças de cabeça foram feitas.
 const CRANIO_GATO := 10
