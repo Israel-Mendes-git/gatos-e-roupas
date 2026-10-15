@@ -925,6 +925,7 @@ func _on_campo_terminou(vitoria: bool) -> void:
 ## senão, deduz pelos bichos que sobraram junto da torre.
 func _causa_derrota(sim: Simulacao) -> Dictionary:
 	derrota_chefe = -1
+	var dica_poder: String = "Atordoe o bicho durante o aviso (!) para cancelar o poder."
 	var vivos: int = 0
 	for a in sim.aliados:
 		if a.vivo and not a.clone:
@@ -932,6 +933,8 @@ func _causa_derrota(sim: Simulacao) -> Dictionary:
 	if estado.tijolos > 0:
 		return {"causa": "A onda demorou demais e o tempo acabou.", "dica": "Mais dano ajuda: treine Força, vista armas melhores e use os poderes das fantasias."}
 	if vivos == 0:
+		if sim.gatos_por_poder_bicho > 0:
+			return {"causa": "Todos os gatos caíram e a torre ficou sozinha (%d por poder de bicho)." % sim.gatos_por_poder_bicho, "dica": dica_poder + " Vida e peças de corpo seguram o resto."}
 		return {"causa": "Todos os gatos caíram e a torre ficou sozinha.", "dica": "Treine Vida e vista peças de corpo. Gatos fortes na frente protegem os de trás."}
 	var perdas: Variant = sim.get("perdas")
 	var chave: Variant = null
@@ -957,7 +960,7 @@ func _causa_derrota(sim: Simulacao) -> Dictionary:
 		blocos = 0   # sem contagem exata de blocos: a frase fica sem número
 	if chave is String and chave == "chefe":
 		var ct: int = clampi(derrota_chefe if derrota_chefe >= 0 else estado.lugar(), 0, Fases.CHEFE_NOME.size() - 1)
-		return {"causa": "O chefe %s acabou com a torre." % Fases.CHEFE_NOME[ct], "dica": Fases.CHEFE_FRAQUEZA[ct] + "."}
+		return {"causa": "O chefe %s acabou com a torre." % Fases.CHEFE_NOME[ct], "dica": Fases.CHEFE_FRAQUEZA[ct] + "." + ((" " + dica_poder) if sim.gatos_por_poder_bicho > 0 else "")}
 	var q: String = " (%d bloco%s)" % [blocos, "" if blocos == 1 else "s"] if blocos > 0 else ""
 	match chave:
 		Unidade.Tipo.LADRAO:
@@ -970,6 +973,8 @@ func _causa_derrota(sim: Simulacao) -> Dictionary:
 			return {"causa": "Os bichos-bomba explodiram na torre" + q + ".", "dica": "Gatos de longe derrubam as bombas antes de elas chegarem."}
 		Unidade.Tipo.ATIRADOR:
 			return {"causa": "Os atiradores derrubaram a torre de longe" + q + ".", "dica": "Deixe gatos em Avançar para alcançá-los, ou marque o Atirador como alvo."}
+	if sim.gatos_por_poder_bicho > 0:
+		return {"causa": "Os bichos chegaram à torre e a derrubaram" + q + ", e poderes de bicho derrubaram %d gato%s." % [sim.gatos_por_poder_bicho, "" if sim.gatos_por_poder_bicho == 1 else "s"], "dica": dica_poder + " Mais gatos na linha da frente seguram o bando."}
 	return {"causa": "Os bichos chegaram à torre e a derrubaram" + q + ".", "dica": "Mais gatos na linha da frente seguram o bando. Treine Força e Vida."}
 
 ## Dicas no balão do gato ao entrar no guarda-roupa: herança (aviso, pendente, feita), números e segundo ato.

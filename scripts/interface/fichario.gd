@@ -1379,7 +1379,7 @@ const TIPO_ENFRENTAR: Array[String] = [
 	"Explode ao encostar: derrube de longe antes que chegue aos gatos ou à torre.",
 	"Larga uma peça da fantasia que veste: vale a pena derrubá-lo.",
 ]
-const FANTASIADO_OQUE := "Um bicho comum vestido com uma fantasia do lugar. Também usa os bônus dela."
+const FANTASIADO_OQUE := "Um bicho comum vestido com uma fantasia do lugar. Também usa os bônus dela. Com a fantasia completa, solta o poder dela, com aviso: atordoe para cancelar."
 const BICHO_RETRATO_ESC := 1.45
 
 static var _entradas_c: Array = []
@@ -1413,7 +1413,7 @@ static func entradas() -> Array:
 		for c in Fases.CONJUNTOS[i]:
 			vest.append(Pecas.CONJUNTO_NOME[c])
 		l.append({"k": "chefe", "i": i, "chave": "c%d" % i, "nome": Fases.CHEFE_NOME[i], "cor": Desenho.COR_CHEFES[i],
-			"oque": Fases.CHEFE_ATAQUE[i], "dica": Fases.CHEFE_FRAQUEZA[i],
+			"oque": Fases.CHEFE_ATAQUE[i] + ". Solta o poder com aviso de %d s: atordoe o chefe para cancelar." % int(Balanco.PODER_AVISO_T), "dica": Fases.CHEFE_FRAQUEZA[i],
 			"ficha": ["Larga uma peça Rara ou Lendária e dá %d troféus" % Torre.TROFEU_CHEFE, "Veste: " + ", ".join(vest)],
 			"onde": "Última onda %s%s." % [_do(i), "" if i < Fases.TOTAL else " (segundo ato)"]})
 	_entradas_c = l

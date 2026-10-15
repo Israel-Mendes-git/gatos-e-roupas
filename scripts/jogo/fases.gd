@@ -55,16 +55,16 @@ const CHEFE_NOME: Array[String] = [
 	"Texugo-Rei",
 ]
 const CHEFE_ATAQUE: Array[String] = [
-	"Chama ratos de reforço",
-	"Cada patada fere todos em volta",
-	"Dispara em direção à torre",
-	"Atira penas de longe em quem está atrás",
-	"Regenera e se desfaz em sapinhos ao cair",
-	"Cava e some; reaparece em cima do gato mais atrás",
-	"O fedor deixa os gatos lentos e, de tempos em tempos, tontos",
-	"Atira de longe e dá rasantes que ferem a fileira inteira",
-	"Late e joga os gatos para trás; chama a matilha",
-	"Couro grosso: golpe fraco não fere. Ferido, ataca em dobro",
+	"Chama ratos de reforço. Poder: Ordem real (os ratos atacam em dobro)",
+	"Cada patada fere todos em volta. Poder: Pisão no gato mais forte",
+	"Dispara em direção à torre. Poder: Carga de lança",
+	"Atira penas de longe em quem está atrás. Poder: Trovoada",
+	"Regenera e se desfaz em sapinhos ao cair. Poder: Teia (prende os gatos mais perto)",
+	"Cava e some; reaparece em cima do gato mais atrás. Poder: Arrastão (puxa os gatos para o buraco)",
+	"O fedor deixa os gatos lentos e, de tempos em tempos, tontos. Poder: Enxame",
+	"Atira de longe e dá rasantes que ferem a fileira inteira. Poder: Relâmpago",
+	"Late e joga os gatos para trás; chama a matilha. Poder: Fúria",
+	"Couro grosso: golpe fraco não fere. Ferido, ataca em dobro. Poder: Bola de espinhos",
 ]
 const CHEFE_FRAQUEZA: Array[String] = [
 	"Lento: tiros de longe têm tempo de sobra",
