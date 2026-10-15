@@ -265,35 +265,136 @@ static func _tecido(linhas: Array) -> String:
 			melhor = ch
 	return melhor
 
-## Quanto a coluna `i` destoa das vizinhas e do tecido (0 = lisa e de tecido, boa para repetir). Vazio no meio da peça conta caro,
-## e cada letra que não é o tecido também (para não repetir o cinto ou a faixa de botões).
-static func _rugosidade_col(linhas: Array, i: int) -> int:
-	var n: int = 0
-	var tec: String = _tecido(linhas)
+## Letras de faixa: as que enchem uma linha de dentro da peça (o cinto dourado, a barra da armadura) — linha que começa e acaba no
+## contorno `o`. Repetir uma coluna com elas só alonga a faixa.
+static func _letras_faixa(linhas: Array) -> Dictionary:
+	var r: Dictionary = {}
 	for l in linhas:
-		var lt: String = l
-		if lt[i] != tec and lt[i] != "o" and lt[i] != ".":
-			n += 2
 		var s: String = l
-		var ch: String = s[i]
-		if ch == "." and s.substr(0, i).strip_edges().replace(".", "") != "" and s.substr(i + 1).replace(".", "") != "":
-			n += 3
-		if i > 0 and s[i - 1] != ch:
-			n += 1
-		if i < s.length() - 1 and s[i + 1] != ch:
+		var t: String = s.strip_edges().replace(".", " ").strip_edges()
+		if t.length() < 2 or t[0] != "o" or t[t.length() - 1] != "o":
+			continue
+		var cont: Dictionary = {}
+		var n: int = 0
+		for ch in s:
+			if ch != "." and ch != " " and ch != "o":
+				cont[ch] = int(cont.get(ch, 0)) + 1
+				n += 1
+		for ch in cont.keys():
+			if int(cont[ch]) >= maxi(3, int(s.length() * 0.5)) and float(cont[ch]) >= 0.75 * n:
+				r[ch] = true
+	return r
+
+## A peça sem os pontinhos soltos (estrela, rebite, brilho de um pixel no meio do pano): cada um vira a cor do pano em volta.
+## É dela que se escolhe e se copia o trecho repetido — repetir o pontinho fazia fileira de pontos (listra).
+static func _limpo(pad: Array) -> Array:
+	var h: int = pad.size()
+	var w: int = String(pad[0]).length() if h > 0 else 0
+	var r: Array = []
+	for j in h:
+		var s: String = pad[j]
+		var o: String = ""
+		for i in w:
+			var ch: String = s[i]
+			if ch == "." or ch == " " or ch == "o":
+				o += ch
+				continue
+			var cont: Dictionary = {}
+			var igual: bool = false
+			var pano: int = 0
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var x: int = i + d.x
+				var y: int = j + d.y
+				if x < 0 or y < 0 or x >= w or y >= h:
+					continue
+				var v: String = String(pad[y])[x]
+				if v == ch:
+					igual = true
+				elif v != "." and v != " " and v != "o":
+					cont[v] = int(cont.get(v, 0)) + 1
+					pano += 1
+			if igual or pano < 3:
+				o += ch
+				continue
+			var melhor: String = ch
+			for k in cont.keys():
+				if melhor == ch or int(cont[k]) > int(cont[melhor]):
+					melhor = k
+			o += melhor
+		r.append(o)
+	return r
+
+## Fração de cada letra entre os pixels da peça (fora vazio e contorno `o`).
+static func _mistura(linhas: Array) -> Dictionary:
+	var cont: Dictionary = {}
+	var tot: int = 0
+	var raras: Dictionary = _letras_raras(linhas)
+	for l in linhas:
+		for ch in String(l):
+			if ch != "o" and ch != "." and ch != " " and not raras.has(ch):
+				cont[ch] = int(cont.get(ch, 0)) + 1
+				tot += 1
+	for ch in cont.keys():
+		cont[ch] = float(cont[ch]) / float(maxi(1, tot))
+	return cont
+
+## Quantos pixels mudam entre duas colunas (ou duas linhas).
+static func _dif(a: String, b: String) -> int:
+	var n: int = absi(a.length() - b.length())
+	for k in mini(a.length(), b.length()):
+		if a[k] != b[k]:
 			n += 1
 	return n
 
-## A coluna mais lisa entre `de` e `ate` (inclusive); no empate, a mais perto de `meio`.
-static func _col_lisa(linhas: Array, de: int, ate: int, meio: float) -> int:
-	var melhor: int = de
-	var nota: int = 1 << 30
-	for i in range(de, ate + 1):
-		var r: int = _rugosidade_col(linhas, i)
-		if r < nota or (r == nota and absf(i - meio) < absf(melhor - meio)):
-			melhor = i
-			nota = r
+## Melhor trecho [a, a + L) de `cols` (colunas do desenho) para repetir, dentro de [de, ate]. Devolve [a, L, custo].
+## Custo: (1) a emenda — repetir só fica liso quando o desenho fecha um período ali (a coluna depois do trecho igual à primeira
+## dele, ou a de antes igual à última); repetir um trecho que não fecha (placa + rebite, meio círculo de luz) é o que fazia
+## listras; (2) emblema — cores raras concentradas na coluna; (3) a mistura de cores do trecho longe da da peça inteira (repetir
+## só a faixa preta da abelha, ou só a placa sem escama do casco, muda a cara da peça). Desempate: o trecho mais perto do `meio`.
+static func _trecho(cols: Array, de: int, ate: int, raras: Dictionary, mistura: Dictionary, meio: float, max_l: int = 6) -> Array:
+	var w: int = cols.size()
+	var melhor: Array = [clampi(de, 1, maxi(1, w - 2)), 1, 1 << 20]
+	var nota_m: int = 1 << 30
+	for L in range(1, mini(max_l, maxi(1, (w - 2) / 2)) + 1):
+		for a in range(maxi(1, de), mini(ate - L + 1, w - 1 - L) + 1):
+			var b: int = a + L
+			var emenda: int = mini(_dif(cols[a], cols[b]), _dif(cols[a - 1], cols[b - 1]))
+			var em: int = 0
+			var cont: Dictionary = {}
+			var tot: int = 0
+			for i in range(a, b):
+				var na: int = 0
+				for ch in String(cols[i]):
+					if raras.has(ch):
+						na += 1
+					if ch != "o" and ch != "." and ch != " ":
+						cont[ch] = int(cont.get(ch, 0)) + 1
+						tot += 1
+				em += na * na * 5
+			var desvio: float = 0.0
+			for ch in mistura.keys():
+				desvio += absf(float(cont.get(ch, 0)) / float(maxi(1, tot)) - float(mistura[ch]))
+			var custo: int = emenda * 3 + em + roundi(desvio * 4.0)
+			var nota: int = custo * 10 + int(absf(a + L * 0.5 - meio))
+			if nota < nota_m:
+				nota_m = nota
+				melhor = [a, L, custo]
 	return melhor
+
+## Insere `extra` colunas depois do trecho [a, a + L), repetindo-o (em todas as linhas); as cópias saem de `fonte` (a peça limpa).
+static func _inserir(linhas: Array, a: int, L: int, extra: int, fonte: Array = []) -> Array:
+	if extra <= 0:
+		return linhas
+	var f: Array = fonte if fonte.size() == linhas.size() else linhas
+	var r: Array = []
+	for j in linhas.size():
+		var s: String = linhas[j]
+		var t: String = String(f[j]).substr(a, L)
+		var rep: String = ""
+		while rep.length() < extra:
+			rep += t if t != "" else "."
+		r.append(s.substr(0, a + L) + rep.substr(0, extra) + s.substr(a + L))
+	return r
 
 ## Transposta de um desenho em linhas (para escolher e repetir linhas com o mesmo código das colunas).
 static func _transposta(linhas: Array) -> Array:
@@ -309,9 +410,15 @@ static func _transposta(linhas: Array) -> Array:
 		t.append(s)
 	return t
 
-## Na largura (`colunas`) repete um trecho do meio, para a estampa seguir; na altura repete linhas lisas de tecido, metade numa linha
-## da metade de cima e metade numa da de baixo (cinto e barras ficam com a altura de sempre).
-static func _alargado(linhas: Array, extra: int, colunas: bool = false) -> Array:
+## Onde _alargado inseriu na última chamada: [[b, n], ...] = n colunas novas logo antes da coluna original b.
+static var _ins: Array = []
+
+## Repete, nas colunas do desenho, o trecho que fecha o período dele (ver _trecho; `max_l` = largura máxima do trecho); para crescer
+## na altura, chamar com a transposta.
+## Quando os dois lados do meio têm um trecho tão bom quanto, a sobra se divide entre eles e o que fica no meio continua no meio.
+## Grava as inserções em _ins.
+static func _alargado(linhas: Array, extra: int, max_l: int = 6) -> Array:
+	_ins = []
 	if extra <= 0:
 		return linhas
 	var w: int = 0
@@ -322,71 +429,189 @@ static func _alargado(linhas: Array, extra: int, colunas: bool = false) -> Array
 		pad.append(String(l).rpad(w, "."))
 	if w < 4:
 		return pad
-	if colunas:
-		# largura: repete um trecho do meio, então estrelas, pelos e botões continuam; o trecho foge de emblemas (cores raras
-		# concentradas, como o reator ou a fivela), que ficam um só
-		var a: int = maxi(1, int(w * 0.25))
-		var b: int = mini(w - 1, maxi(a + 1, int(ceil(w * 0.7))))
-		var raras: Dictionary = _letras_raras(pad)
-		var tec: String = _tecido(pad)
-		var larg: int = clampi((w - 2) / 3, 2, 4)
-		var melhor_a: int = a
-		var nota_a: int = 1 << 30
-		for ia in range(1, w - larg):
-			var nota: int = 0
-			for i in range(ia, ia + larg):
-				var na: int = 0
-				var nn: int = 0
-				for l in pad:
-					var ch: String = String(l)[i]
-					if raras.has(ch):
-						na += 1
-					elif ch != tec and ch != "o" and ch != ".":
-						nn += 1
-				# pixel raro solto (estrela) não pesa; vários na coluna (emblema) pesam muito; cor grande que não é o tecido
-				# (o círculo de luz da armadura) também pesa
-				nota += maxi(0, na - 1) * maxi(0, na - 1) + nn
-			nota = nota * 10 + int(absf(ia + larg * 0.5 - w * 0.5))
-			if nota < nota_a:
-				nota_a = nota
-				melhor_a = ia
-		a = melhor_a
-		b = melhor_a + larg
-		var r2: Array = []
-		for l in pad:
-			var s2: String = l
-			var trecho: String = s2.substr(a, b - a)
-			var meio2: String = ""
-			while meio2.length() < extra:
-				meio2 += trecho
-			r2.append(s2.substr(0, b) + meio2.substr(0, extra) + s2.substr(b))
-		return r2
-	var meio: float = (w - 1) * 0.5
-	var ce: int = _col_lisa(pad, maxi(1, int(w * 0.2)), maxi(1, int(meio)), meio)
-	var cd: int = _col_lisa(pad, mini(w - 2, int(ceil(meio))), mini(w - 2, int(ceil(w * 0.8))), meio)
-	var ne: int = int(ceil(extra * 0.5))
-	var nd: int = extra - ne
-	if cd == ce:
-		ne = extra
-		nd = 0
-	var r: Array = []
-	for l in pad:
-		var s: String = l
-		var o: String = ""
+	var lp: Array = _limpo(pad)
+	var cols: Array = _transposta(lp)
+	var raras: Dictionary = _letras_raras(lp)
+	var mistura: Dictionary = _mistura(lp)
+	var meio: float = w * 0.5
+	var tudo: Array = _trecho(cols, 1, w - 2, raras, mistura, meio, max_l)
+	var partes: Array = [[tudo[0], tudo[1], extra]]
+	if extra >= 2:
+		var esq: Array = _trecho(cols, 1, int(floor(meio)) - 1, raras, mistura, meio, max_l)
+		var dir: Array = _trecho(cols, int(ceil(meio)), w - 2, raras, mistura, meio, max_l)
+		if int(esq[2]) <= int(tudo[2]) + 1 and int(dir[2]) <= int(tudo[2]) + 1:
+			var ne: int = extra / 2
+			partes = [[dir[0], dir[1], extra - ne], [esq[0], esq[1], ne]]   # a da direita antes: os índices da esquerda não mudam
+	var r2: Array = pad
+	var ins: Array = []
+	for p in partes:
+		r2 = _inserir(r2, p[0], p[1], p[2], lp)
+		lp = _inserir(lp, p[0], p[1], p[2])
+		ins.append([int(p[0]) + int(p[1]), int(p[2])])
+	_ins = ins
+	return r2
+
+## Tecido e faixas contados só nos pixels de dentro da peça (os quatro vizinhos pintados): o contorno das asas da abelha não conta.
+static func _neutras(pad: Array) -> Dictionary:
+	var h: int = pad.size()
+	var w: int = String(pad[0]).length() if h > 0 else 0
+	var dentro: Array = []
+	for j in h:
+		var s: String = ""
 		for i in w:
-			o += s[i]
-			if i == ce:
-				o += s[i].repeat(ne)
-			elif i == cd:
-				o += s[i].repeat(nd)
-		r.append(o)
+			var ch: String = String(pad[j])[i]
+			var ok: bool = ch != "." and ch != " " and i > 0 and j > 0 and i < w - 1 and j < h - 1
+			if ok:
+				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					var c2: String = String(pad[j + d.y])[i + d.x]
+					if c2 == "." or c2 == " ":
+						ok = false
+						break
+			s += ch if ok else "."
+		dentro.append(s)
+	var r: Dictionary = _letras_faixa(pad)
+	var tec: String = _tecido(dentro)
+	if tec != "":
+		r[tec] = true
 	return r
 
+## Emblemas da peça: manchas de cor que não é tecido nem faixa e que não se repetem (o círculo de luz da armadura, a aranha, o
+## painel do traje, as asas da abelha). Manchas cuja combinação de cores aparece de novo (listras, escamas, xadrez) são estampa e
+## ficam no pano; mancha larga dentro do pano (as placas do casco) também. Devolve [base, emblemas]: base = a peça com cada
+## emblema trocado pela cor que o cerca; emblema = [{Vector2i: letra}, Rect2i].
+static func _emblemas(pad: Array) -> Array:
+	var h: int = pad.size()
+	var w: int = String(pad[0]).length() if h > 0 else 0
+	var neutras: Dictionary = _neutras(pad)
+	var total: int = 0
+	for l in pad:
+		total += String(l).replace(".", "").replace(" ", "").length()
+	var visto: Dictionary = {}
+	var manchas: Array = []
+	for j in h:
+		for i in w:
+			var ch: String = String(pad[j])[i]
+			if ch == "." or ch == " " or ch == "o" or neutras.has(ch) or visto.has(Vector2i(i, j)):
+				continue
+			var px: Dictionary = {}
+			var letras: Dictionary = {}
+			var pilha: Array = [Vector2i(i, j)]
+			visto[Vector2i(i, j)] = true
+			while not pilha.is_empty():
+				var p: Vector2i = pilha.pop_back()
+				var cp: String = String(pad[p.y])[p.x]
+				px[p] = cp
+				letras[cp] = true
+				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					var q: Vector2i = p + d
+					if q.x < 0 or q.y < 0 or q.x >= w or q.y >= h or visto.has(q):
+						continue
+					var c2: String = String(pad[q.y])[q.x]
+					if c2 == "." or c2 == " " or c2 == "o" or neutras.has(c2):
+						continue
+					visto[q] = true
+					pilha.append(q)
+			var ks: Array = letras.keys()
+			ks.sort()
+			manchas.append([px, "".join(ks)])
+	var g: Array = []
+	for l in pad:
+		g.append(Array(String(l).split("")))
+	var r: Array = []
+	for m in manchas:
+		var px: Dictionary = m[0]
+		var n: int = px.size()
+		if n < 3 or n > total * 0.6:
+			continue
+		var repete: bool = false
+		for m2 in manchas:
+			if m2 != m and m2[1] == m[1]:
+				repete = true
+				break
+		if repete:
+			continue
+		# fundo: a letra mais comum em volta da mancha (pano dentro da peça, vazio quando a mancha sai dela, como as asas)
+		var cont: Dictionary = {}
+		var caixa := Rect2i()
+		var primeiro: bool = true
+		for p in px.keys():
+			var v: Vector2i = p
+			caixa = Rect2i(v, Vector2i.ONE) if primeiro else caixa.expand(v).expand(v + Vector2i.ONE)
+			primeiro = false
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var q: Vector2i = v + d
+				if px.has(q):
+					continue
+				var c3: String = "." if (q.x < 0 or q.y < 0 or q.x >= w or q.y >= h) else String(pad[q.y])[q.x]
+				if c3 != "o":
+					cont[c3] = int(cont.get(c3, 0)) + 1
+		var fundo: String = "."
+		var melhor: int = -1
+		for k in cont.keys():
+			if k != "." and int(cont[k]) > melhor:
+				melhor = int(cont[k])
+				fundo = k
+		if int(cont.get(".", 0)) > melhor:
+			fundo = "."
+		if fundo != "." and caixa.size.x > w * 0.6:
+			continue   # mancha larga dentro do pano: é estampa (placas do casco), fica e estica com ele
+		for p in px.keys():
+			var v2: Vector2i = p
+			g[v2.y][v2.x] = fundo
+		r.append([px, caixa])
+	if r.is_empty():
+		return [pad, []]
+	var base: Array = []
+	for linha in g:
+		base.append("".join(linha))
+	return [base, r]
+
+## Quanto um emblema anda com as inserções `ins` ([[b, n], ...]) num eixo, sendo [de, ate) a faixa dele nesse eixo:
+## inserção antes dele leva tudo, inserção no meio dele leva metade (o emblema segue inteiro, centrado no que cresceu).
+static func _anda(ins: Array, de: int, ate: int) -> int:
+	var s: int = 0
+	for it in ins:
+		var b: int = it[0]
+		if b <= de:
+			s += int(it[1])
+		elif b < ate:
+			s += int(it[1]) / 2
+	return s
+
+## Peça esticada: o pano (sem os emblemas) cresce repetindo trechos lisos; os emblemas voltam inteiros, no lugar correspondente.
 static func _esticado(linhas: Array, e: Vector2i) -> Array:
-	var r: Array = _alargado(linhas, e.x, true)
+	var w: int = 0
+	for l in linhas:
+		w = maxi(w, String(l).length())
+	var pad: Array = []
+	for l in linhas:
+		pad.append(String(l).rpad(w, "."))
+	var em: Array = _emblemas(pad)
+	var r: Array = _alargado(em[0], e.x)
+	var insx: Array = _ins
+	var insy: Array = []
 	if e.y > 0:
-		r = _transposta(_alargado(_transposta(r), e.y))
-	return r
+		r = _transposta(_alargado(_transposta(r), e.y, 1))   # na altura, uma linha lisa por vez: faixas repetidas viravam listras
+		insy = _ins
+	if Array(em[1]).is_empty():
+		return r
+	var g: Array = []
+	for l in r:
+		g.append(Array(String(l).split("")))
+	for it in em[1]:
+		var cx: Rect2i = it[1]
+		var dx: int = _anda(insx, cx.position.x, cx.end.x)
+		var dy: int = _anda(insy, cx.position.y, cx.end.y)
+		for p in Dictionary(it[0]).keys():
+			var v: Vector2i = p
+			var y: int = v.y + dy
+			var x: int = v.x + dx
+			if y >= 0 and y < g.size() and x >= 0 and x < Array(g[y]).size():
+				g[y][x] = it[0][p]
+	var out: Array = []
+	for linha in g:
+		out.append("".join(linha))
+	return out
 
 static func _montar_sprite(linhas: Array, paleta: Dictionary) -> Array:
 	var rs: Array = []
