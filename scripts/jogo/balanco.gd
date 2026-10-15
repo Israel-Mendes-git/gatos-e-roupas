@@ -380,8 +380,8 @@ const ATO_VIDA: Array[float] = [1.0, 1.45, 2.6]      # força dos bichos no prim
 const ATO_DANO: Array[float] = [1.0, 1.0, 1.3]
 const ATO_VIDA_DEGRAU := 0.10       # cada cômodo já vencido no ato deixa os que faltam mais fortes
 const ATO_DANO_DEGRAU := 0.05
-const ATO_COMODO_VIDA: Array[float] = [1.1, 0.78, 0.97, 0.98, 0.89]   # acerto por cômodo (chefe e família da casa pesam diferente)
-const ATO_COMODO_DANO: Array[float] = [1.06, 0.7, 0.92, 0.98, 0.89]
+const ATO_COMODO_VIDA: Array[float] = [1.06, 0.78, 0.97, 0.98, 0.89]   # acerto por cômodo (chefe e família da casa pesam diferente)
+const ATO_COMODO_DANO: Array[float] = [1.03, 0.7, 0.92, 0.98, 0.89]
 const ATO_FAMILIA_DA_CASA := 0.4    # fração dos bichos que ainda é da família do cômodo; o resto vem misturado
 const XP_ONDA_NOCAUTE := 1          # por onda vencida tendo caído
 const NOCAUTE_SAUDE := 0.25         # quem caiu volta na onda seguinte com esta fração da vida
@@ -456,16 +456,16 @@ const PODER_TROVOADA_DANO := 1.0
 const PODER_TROVOADA_T := 1.2
 const PODER_TROVOADA_CHEFE := 0.42
 # Bala de canhão (Pirata): maior aglomerado, queima e devolve tijolos por bicho morto
-const PODER_CANHAO_RAIO := 110.0
-const PODER_CANHAO_DANO := 2.0
+const PODER_CANHAO_RAIO := 130.0
+const PODER_CANHAO_DANO := 3.0
 const PODER_CANHAO_QUEIMA_T := 3.0
 const PODER_CANHAO_QUEIMA_DPS := 0.4   # x dano base por segundo
-const PODER_CANHAO_SAQUE_MAX := 3
+const PODER_CANHAO_SAQUE_MAX := 4
 # Salva de mísseis (Armadura de Ferro): explosões na entrada da torre (distância à torre em x)
 const PODER_MISSEIS_N := 3
-const PODER_MISSEIS_ALCANCE := 700.0   # dispara com inimigo até esta distância da torre
-const PODER_MISSEIS_RAIO := 80.0
-const PODER_MISSEIS_DANO := 1.3
+const PODER_MISSEIS_ALCANCE := 800.0   # dispara com inimigo até esta distância da torre
+const PODER_MISSEIS_RAIO := 100.0
+const PODER_MISSEIS_DANO := 2.6
 # Canção do tempo (Herói do Bosque): tira segundos da recarga do poder e das heranças dos outros gatos
 const PODER_CANCAO_SEG := 3.5
 # Carga de lança (Cavaleiro): investida em linha
@@ -484,8 +484,9 @@ const PODER_FURIA_CERCO := 1.0      # fração do golpe que vaza para os vizinho
 const PODER_FURIA_ROUBO := 0.3
 # Pisão (Encanador): cadeia de pulos
 const PODER_PISAO_N := 3
+const PODER_PISAO_N_HER := 2        # pulos na herança
 const PODER_PISAO_ALCANCE := 300.0
-const PODER_PISAO_DANO := 1.0
+const PODER_PISAO_DANO := 0.7
 const PODER_PISAO_CRESCE := 1.2     # cada pisão seguinte vale isto x o anterior
 const PODER_PISAO_T := 0.6
 const PODER_PISAO_PROTEGE := 1.0

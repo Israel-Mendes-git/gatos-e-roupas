@@ -1546,7 +1546,18 @@ func _usar_poder_i(u: Unidade) -> bool:
 			for v in outros:
 				if v.x - Balanco.TORRE_X <= Balanco.PODER_MISSEIS_ALCANCE:
 					perto_t.append(v)
-			var centros_m: Array = _aglomerados(perto_t, Balanco.PODER_MISSEIS_RAIO, ceili(Balanco.PODER_MISSEIS_N * _frac_apoio()))
+			# cada salva cai no grupo mais perto da torre, depois no seguinte
+			var centros_m: Array = []
+			perto_t.sort_custom(func(a: Unidade, b: Unidade) -> bool: return a.x < b.x)
+			for vm in perto_t:
+				if not vm.vivo or centros_m.size() >= ceili(Balanco.PODER_MISSEIS_N * _frac_apoio()):
+					continue
+				var livre_m: bool = true
+				for c0 in centros_m:
+					if _dentro(vm, c0.x, c0.y, Balanco.PODER_MISSEIS_RAIO):
+						livre_m = false
+				if livre_m:
+					centros_m.append(Vector2(vm.x, vm.y))
 			if centros_m.is_empty():
 				return false
 			for c in centros_m:
@@ -1638,7 +1649,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 			var py: float = u.y
 			extra["x0"] = u.x
 			extra["y0"] = u.y
-			for k in ceili(Balanco.PODER_PISAO_N * _frac_apoio()):
+			for k in (Balanco.PODER_PISAO_N_HER if em_heranca else Balanco.PODER_PISAO_N):
 				var forte: Unidade = null
 				for v in cand:
 					if v.vivo and _dentro(v, px, py, Balanco.PODER_PISAO_ALCANCE) and (forte == null or v.vida > forte.vida):
