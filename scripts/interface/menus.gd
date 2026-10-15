@@ -910,24 +910,81 @@ func _fundo_confirma() -> void:
 	_pop_fim()
 
 # ------------------------------------------------------------------ título
+## Grade de pixels do cenário do título: 4 px, a mesma dos gatos (escala 1.25 x GATO_K 3.2).
+const QT := 4.0
+## Tons da parede, do alto para o rodapé (o antigo degradê virou faixas com uma fileira pontilhada entre elas).
+const PAREDE: Array[Color] = [Color(0.2, 0.14, 0.24), Color(0.245, 0.167, 0.26), Color(0.29, 0.193, 0.28), Color(0.34, 0.22, 0.3)]
+
+## Disco em faixas na grade `q` (centro e raio em px de tela); com `r2` > 0 tira a "mordida" do disco
+## centrado em `c2` (lua crescente). Só draw_rect, uma ou duas por fileira.
+func _disco_px(ce: Vector2, r: float, cor: Color, q: float, c2: Vector2 = Vector2.ZERO, r2: float = 0.0) -> void:
+	var n: int = int(ceilf(r / q))
+	var cx: float = roundf(ce.x / q) * q
+	var cy: float = roundf(ce.y / q) * q
+	for j in range(-n, n):
+		var yc: float = cy + (j + 0.5) * q
+		var dy: float = yc - cy
+		if absf(dy) > r:
+			continue
+		var h: float = roundf(sqrt(r * r - dy * dy) / q) * q
+		if h <= 0.0:
+			continue
+		var x0: float = cx - h
+		var x1: float = cx + h
+		if r2 > 0.0 and absf(yc - c2.y) < r2:
+			var h2: float = roundf(sqrt(r2 * r2 - (yc - c2.y) * (yc - c2.y)) / q) * q
+			var m0: float = maxf(x0, roundf(c2.x / q) * q - h2)
+			var m1: float = minf(x1, roundf(c2.x / q) * q + h2)
+			if m1 > m0:
+				if m0 > x0:
+					draw_rect(Rect2(x0, cy + j * q, m0 - x0, q), cor)
+				if x1 > m1:
+					draw_rect(Rect2(m1, cy + j * q, x1 - m1, q), cor)
+				continue
+		draw_rect(Rect2(x0, cy + j * q, x1 - x0, q), cor)
+
+## Losango de pixel com fileiras de 1, 3, 5, 3, 1 quadradinhos de `q` px, centrado em `p`.
+func _losango_px(p: Vector2, q: float, cor: Color) -> void:
+	var x: float = roundf(p.x / q) * q
+	var y: float = roundf(p.y / q) * q
+	for k in 5:
+		var w: int = 2 - absi(k - 2)
+		draw_rect(Rect2(x - w * q, y + (k - 2) * q, (2 * w + 1) * q, q), cor)
+
+## Trapézio (o tapete) em fileiras de `q` px: largura de cima x0..x1 em `y0`, de baixo x2..x3 em `y1`.
+func _trapezio_px(y0: float, y1: float, x0: float, x1: float, x2: float, x3: float, cor: Color, q: float) -> void:
+	var n: int = int(roundf((y1 - y0) / q))
+	for k in n:
+		var f: float = (k + 0.5) / n
+		var a: float = roundf(lerpf(x0, x2, f) / q) * q
+		var b: float = roundf(lerpf(x1, x3, f) / q) * q
+		draw_rect(Rect2(a, y0 + k * q, b - a, q), cor)
+
 func _cena_titulo(com_placa: bool = true, final: bool = false) -> void:
-	# parede com papel de parede
-	var c1: Color = Color(0.2, 0.14, 0.24)
-	var c2: Color = Color(0.34, 0.22, 0.3)
-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(1280, 0), Vector2(1280, 560), Vector2(0, 560)]), PackedColorArray([c1, c1, c2, c2]))
+	# parede com papel de parede: 4 faixas de tom, com uma fileira em xadrez de 4 px na emenda
+	var fx: float = 560.0 / PAREDE.size()
+	for k in PAREDE.size():
+		draw_rect(Rect2(0, k * fx, 1280, fx), PAREDE[k])
+		if k > 0:
+			for i in int(1280.0 / (QT * 2.0)):
+				draw_rect(Rect2(i * QT * 2.0, k * fx - QT, QT, QT), PAREDE[k])
+				draw_rect(Rect2(i * QT * 2.0 + QT, k * fx, QT, QT), PAREDE[k - 1])
 	for row in 7:
 		for col in 12:
 			var q: Vector2 = Vector2(40.0 + col * 120.0 + (row % 2) * 60.0, 30.0 + row * 84.0)
-			draw_colored_polygon(PackedVector2Array([q + Vector2(0, -7), q + Vector2(6, 0), q + Vector2(0, 7), q + Vector2(-6, 0)]), Color(0.95, 0.75, 0.5, 0.08))
+			_losango_px(q, 2.0, Color(0.95, 0.75, 0.5, 0.08))
 	# janela com lua
 	var jan := Rect2(70, 110, 190, 250)
 	draw_rect(jan.grow(-14), Color(0.1, 0.12, 0.3))
 	for k in 14:
 		var sx: float = jan.position.x + 24 + fposmod(sin(k * 91.7) * 977.0, jan.size.x - 48)
 		var sy: float = jan.position.y + 24 + fposmod(sin(k * 53.3) * 733.0, jan.size.y - 120)
-		draw_rect(Rect2(sx, sy, 3, 3), Color(1, 1, 0.85, 0.5 + 0.4 * sin(t * 2.0 + k)))
-	draw_circle(jan.position + Vector2(130, 80), 24.0, Color(1.0, 0.96, 0.78))
-	draw_circle(jan.position + Vector2(139, 74), 21.0, Color(0.1, 0.12, 0.3))
+		# estrelinhas na grade de 2 px, piscando em dois degraus
+		var acesa: bool = sin(t * 2.0 + k) > -0.2
+		draw_rect(Rect2(roundf(sx / 2.0) * 2.0, roundf(sy / 2.0) * 2.0, 4, 4) if acesa else Rect2(roundf(sx / 2.0) * 2.0 + 2.0, roundf(sy / 2.0) * 2.0 + 2.0, 2, 2), Color(1, 1, 0.85, 0.9 if acesa else 0.55))
+	# lua crescente em pixels de 4 px: disco claro menos a mordida do céu
+	var cl: Vector2 = jan.position + Vector2(130, 80)
+	_disco_px(cl, 24.0, Color(1.0, 0.96, 0.78), QT, jan.position + Vector2(139, 72), 21.0)
 	draw_rect(Rect2(jan.position.x + jan.size.x * 0.5 - 3, jan.position.y + 14, 6, jan.size.y - 28), Color(0.3, 0.18, 0.1))
 	draw_rect(Rect2(jan.position.x + 14, jan.position.y + 110, jan.size.x - 28, 6), Color(0.3, 0.18, 0.1))
 	_nove(R_MADEIRA, M_MADEIRA, jan, 0.5, Color.WHITE, false)
@@ -940,18 +997,20 @@ func _cena_titulo(com_placa: bool = true, final: bool = false) -> void:
 	for k in 13:
 		var xj: float = k * 110.0 + (k % 3) * 25.0
 		draw_rect(Rect2(xj, 570 + (k % 7) * 22.0, 2, 20), Color(0, 0, 0, 0.14))
-	# tapete
-	var tp: PackedVector2Array = PackedVector2Array([Vector2(190, 596), Vector2(1090, 596), Vector2(1190, 712), Vector2(90, 712)])
-	draw_colored_polygon(tp, Color(0.45, 0.14, 0.17))
-	draw_colored_polygon(PackedVector2Array([Vector2(206, 604), Vector2(1074, 604), Vector2(1166, 704), Vector2(114, 704)]), Color(0.62, 0.22, 0.22))
-	draw_colored_polygon(PackedVector2Array([Vector2(230, 612), Vector2(1050, 612), Vector2(1136, 698), Vector2(144, 698)]), Color(0.52, 0.17, 0.2))
+	# tapete: três trapézios em degraus de 4 px e losangos de pixel na barra do meio
+	_trapezio_px(596, 712, 190, 1090, 90, 1190, Color(0.45, 0.14, 0.17), QT)
+	_trapezio_px(604, 704, 206, 1074, 114, 1166, Color(0.62, 0.22, 0.22), QT)
+	_trapezio_px(612, 698, 230, 1050, 144, 1136, Color(0.52, 0.17, 0.2), QT)
 	for k in 12:
-		var xr: float = 260.0 + k * 66.0
-		draw_colored_polygon(PackedVector2Array([Vector2(xr, 655), Vector2(xr + 10, 646), Vector2(xr + 20, 655), Vector2(xr + 10, 664)]), Color(0.95, 0.75, 0.45, 0.55))
-	# lâmpada de teto com luz
+		_losango_px(Vector2(270.0 + k * 66.0, 654.0), QT, Color(0.95, 0.75, 0.45, 0.55))
+	# lâmpada de teto com luz: halo em duas faixas de 4 px (pulsando de degrau em degrau) e bulbo de pixel
 	draw_rect(Rect2(638, 0, 4, 40), Color(0.15, 0.1, 0.1))
-	draw_circle(Vector2(640, 52), 16.0, Color(1.0, 0.9, 0.55))
-	draw_circle(Vector2(640, 52), 60.0, Color(1.0, 0.9, 0.55, 0.06 + 0.02 * sin(t * 2.0)))
+	var pl: float = 0.06 + (0.02 if sin(t * 2.0) > 0.0 else 0.0)
+	_disco_px(Vector2(640, 52), 60.0, Color(1.0, 0.9, 0.55, pl), QT, Vector2(640, 52), 40.0)
+	_disco_px(Vector2(640, 52), 40.0, Color(1.0, 0.9, 0.55, pl + 0.04), QT, Vector2(640, 52), 16.0)
+	_disco_px(Vector2(640, 52), 16.0, Color(1.0, 0.9, 0.55), QT)
+	draw_rect(Rect2(632, 40, 8, 4), Color(1.0, 0.97, 0.8))
+	draw_rect(Rect2(628, 44, 4, 8), Color(1.0, 0.97, 0.8))
 	if final:
 		return
 	# bichos espiando pelas bordas (sobem e descem)
@@ -962,9 +1021,10 @@ func _cena_titulo(com_placa: bool = true, final: bool = false) -> void:
 	var p2 := Vector2(-60.0 + 105.0 * vis2, 700.0)
 	Desenho.boneco(self, p1, 1.5, -1.0, 1, vazio, 0.0, t * 2.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1)
 	Desenho.boneco(self, p2, 1.5, 1.0, 1, vazio, 0.0, t * 2.0 + 1.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 1, false, -1)
-	# os gatos do time, sobre o tapete
+	# os gatos do time, sobre o tapete (a sombra fica no chão quando pulam: o boneco não desenha a dele)
 	var bonecos: Array = dono.estado.bonecos
 	var n: int = bonecos.size()
+	Desenho.sem_sombra = true
 	for i in n:
 		var b: Boneco = bonecos[i]
 		var base_x: float = 250.0 + i * (780.0 / maxf(1.0, n - 1.0)) if n > 1 else 640.0
@@ -978,13 +1038,20 @@ func _cena_titulo(com_placa: bool = true, final: bool = false) -> void:
 			hop = sin(clampf(pulo_gato[i] / 0.38, 0.0, 1.0) * PI) * 26.0
 		_sombra(Vector2(x, y + 3), 34.0 - hop * 0.3, 7.0)
 		Desenho.boneco(self, Vector2(x, y - hop), 1.25, dir, 0, b.pecas, 0.0, t * 3.0 + i, anda, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
+	Desenho.sem_sombra = false
 	if com_placa:
 		_placa_titulo()
 
+## Sombra no chão em pixel art: elipse em fileiras de 4 px (a grade dos gatos), sem sobreposição.
 func _sombra(p: Vector2, rx: float, ry: float) -> void:
-	UIComum.trans(self, p, 0.0, Vector2(1.0, ry / rx))
-	draw_circle(Vector2.ZERO, rx, Color(0, 0, 0, 0.35))
-	UIComum.trans_fim(self)
+	var ny: int = maxi(1, int(roundf(ry / QT)))
+	var cx: float = roundf(p.x / QT) * QT
+	var cy: float = roundf(p.y / QT) * QT
+	for j in range(-ny, ny):
+		var dy: float = (j + 0.5) / ny
+		var w: float = roundf(rx * sqrt(maxf(0.0, 1.0 - dy * dy)) / QT) * QT
+		if w > 0.0:
+			draw_rect(Rect2(cx - w, cy + j * QT, w * 2.0, QT), Color(0, 0, 0, 0.35))
 
 func _placa_titulo() -> void:
 	var fonte: Font = UIComum.FONTE
@@ -1024,19 +1091,35 @@ func _placa_titulo() -> void:
 	for k in letras.length():
 		draw_string(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color(1.0, 0.62, 0.68) if (letras[k] == "-" or (letras[k] == "e" and k > 0 and k < letras.length() - 1 and letras[k - 1] == " " and letras[k + 1] == " ")) else C_CREME)
 		x += largs[k]
-	# novelo de lã rolando ao lado do nome, com a ponta do fio solta
-	var cn: Vector2 = Vector2(x0 + total + 66.0, base - 30.0)
-	var fio: PackedVector2Array = PackedVector2Array()
+	# novelo de lã rolando ao lado do nome, com a ponta do fio solta: pixels de 5 px, como as orelhas do logo
+	var u: float = 5.0
+	var cn: Vector2 = (Vector2(x0 + total + 66.0, base - 30.0) / u).round() * u
+	var rosa_fio := Color(1.0, 0.6, 0.66)
+	# fio: uma fileira de quadradinhos que sobe e desce em degraus, com o contorno escuro por baixo
+	var y_ant: float = cn.y + 25.0
 	for k in 22:
-		fio.append(cn + Vector2(16.0 + k * 5.0, 26.0 + sin(k * 0.45 + t * 2.0) * 5.0 * minf(1.0, k / 6.0)))
-	draw_polyline(fio, C_CONT, 7.0)
-	draw_polyline(fio, Color(1.0, 0.6, 0.66), 3.0)
-	draw_circle(cn, 35.0, C_CONT)
-	draw_circle(cn, 31.0, Color(1.0, 0.6, 0.66))
+		var xf: float = cn.x + 15.0 + k * u
+		var yf: float = roundf((cn.y + 26.0 + sin(k * 0.45 + t * 2.0) * 5.0 * minf(1.0, k / 6.0)) / u) * u
+		var ya: float = minf(yf, y_ant)
+		var yb: float = maxf(yf, y_ant)
+		draw_rect(Rect2(xf, ya - u, u, yb - ya + 3.0 * u), C_CONT)
+		draw_rect(Rect2(xf, ya, u, yb - ya + u), rosa_fio)
+		y_ant = yf
+	draw_rect(Rect2(cn.x + 15.0 + 22.0 * u, y_ant - u, u, 3.0 * u), C_CONT)
+	_disco_px(cn, 35.0, C_CONT, u)
+	_disco_px(cn, 30.0, rosa_fio, u)
+	# voltas da lã girando, de quadradinho em quadradinho
 	var rot: float = t * 1.2
-	for k in 4:
-		draw_arc(cn, 12.0 + k * 5.0, rot + k * 1.1, rot + k * 1.1 + 2.3, 14, Color(0.82, 0.38, 0.5), 3.0)
-	draw_arc(cn, 24.0, rot + 3.6, rot + 4.6, 8, Color(1.0, 0.85, 0.88), 3.0)
+	for k in 3:
+		var ra: float = 8.0 + k * 7.5
+		var a0: float = rot + k * 2.1
+		var na: int = int(2.3 * ra / (u * 0.7)) + 1
+		for i in na:
+			var a: float = a0 + 2.3 * i / na
+			draw_rect(Rect2(floorf((cn.x + cos(a) * ra) / u) * u, floorf((cn.y + sin(a) * ra) / u) * u, u, u), Color(0.82, 0.38, 0.5))
+	for i in 3:
+		var a2: float = rot + 3.6 + i * 0.22
+		draw_rect(Rect2(floorf((cn.x + cos(a2) * 24.0) / u) * u, floorf((cn.y + sin(a2) * 24.0) / u) * u, u, u), Color(1.0, 0.85, 0.88))
 	# faixa com o subtítulo
 	var sw: float = 470.0
 	var rf: Rect2 = Rect2(640.0 - sw * 0.5, base + 34.0, sw, 34.0)
@@ -1358,7 +1441,9 @@ func _cena_final() -> void:
 		var pulo: float = absf(sin(t * 4.2 + i * 1.1)) * 34.0
 		var y: float = 676.0 + (i % 2) * 8.0 - 6.0
 		_sombra(Vector2(x, y + 3), 34.0 - pulo * 0.3, 7.0)
+		Desenho.sem_sombra = true   # a sombra já está no chão (_sombra)
 		Desenho.boneco(self, Vector2(x, y - pulo), 1.25, 1.0 if i % 2 == 0 else -1.0, 0, b.pecas, 0.0, t * 3.0 + i, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
+		Desenho.sem_sombra = false
 	_confete()
 	# título
 	var rt := Rect2(300, 30, 680, 82)
@@ -1396,7 +1481,9 @@ func _cena_final() -> void:
 		var cx: float = rg.position.x + 90.0
 		var pulo2: float = absf(sin(t * 3.0)) * 8.0
 		_sombra(Vector2(cx, rg.end.y - 28.0), 36.0, 7.0)
+		Desenho.sem_sombra = true   # a sombra já está no chão (_sombra)
 		Desenho.boneco(self, Vector2(cx, rg.end.y - 30.0 - pulo2), 1.5, 1.0, 0, melhor.pecas, 0.0, t * 3.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, 0, false)
+		Desenho.sem_sombra = false
 		_t(melhor.nome, Vector2(rg.position.x + 150.0, rg.position.y + 100.0), 26, C_TEXTO)
 		_t("Nível %d" % melhor.nivel, Vector2(rg.position.x + 150.0, rg.position.y + 132.0), 20, C_TEXTO2)
 	# o que se abriu

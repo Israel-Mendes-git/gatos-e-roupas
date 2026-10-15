@@ -393,30 +393,96 @@ static func _forma_nova(c: CanvasItem, tipo: int, f: float, anim: float) -> void
 
 const PIP_BORDA := Color(0.25, 0.15, 0.0, 0.9)
 
+const PIP_CONT := Color(0.25, 0.15, 0.0)          # contorno opaco (as fileiras encostam sem alfa sobre alfa)
+const PIP_CIANO := Color(0.75, 1.0, 1.0)
+
+## Pontinhos de nível em pixel art: uma régua escura de cantos cortados com um quadradinho de 3x3 por nível
+## (dourado até NIVEL_BASE; os níveis 11 a 15, que valem menos, numa segunda fileira ciano por cima).
+## Quadradinho de `u` px de tela, inteiro: u = 1 até passo 10 (cartões e ícones), 2 nos maiores. `raio` só
+## é usado para não deixar a régua mais alta que o original em ícones muito pequenos.
 static func pips(c: CanvasItem, centro: Vector2, nivel: int, raio: float = 2.2, passo: float = 5.6) -> void:
 	if nivel <= 0:
 		return
-	var n: int = mini(nivel, Balanco.NIVEL_BASE)
-	var r2: float = raio + 0.9
-	for i in n:
-		var p := Vector2(centro.x + (i - (n - 1) * 0.5) * passo, centro.y)
-		c.draw_circle(p, r2, PIP_BORDA)
-		c.draw_circle(p, raio, DOURADO)
-	# níveis 11 a 15 (valem menos): uma segunda fileira de pontinhos claros, por cima
+	var u: float = maxf(1.0, floorf(minf(passo / 5.0, raio)))
+	var y0: float = roundf(centro.y - 2.5 * u)
+	_pips_fila(c, centro.x, y0, mini(nivel, Balanco.NIVEL_BASE), u, DOURADO)
 	var n2: int = nivel - Balanco.NIVEL_BASE
-	for i in maxi(n2, 0):
-		var p2 := Vector2(centro.x + (i - (n2 - 1) * 0.5) * passo, centro.y - (r2 * 2.0 + 0.5))
-		c.draw_circle(p2, r2, PIP_BORDA)
-		c.draw_circle(p2, raio, Color(0.75, 1.0, 1.0))
+	if n2 > 0:
+		_pips_fila(c, centro.x, y0 - 4.0 * u, n2, u, PIP_CIANO)
 
-## Pontinhos coloridos das marcas (uma cor por tipo), com contorno escuro.
+## Uma fileira: régua de (4n+1) x 5 quadradinhos com os cantos cortados, e n pips de 3x3 (luz em cima à
+## esquerda, sombra embaixo à direita). Só draw_rect, sem alocar nada.
+static func _pips_fila(c: CanvasItem, cx: float, y0: float, n: int, u: float, cor: Color) -> void:
+	var w: float = (4 * n + 1) * u
+	var x0: float = roundf(cx - w * 0.5)
+	c.draw_rect(Rect2(x0 + u, y0, w - 2.0 * u, 5.0 * u), PIP_CONT)
+	c.draw_rect(Rect2(x0, y0 + u, w, 3.0 * u), PIP_CONT)
+	var claro: Color = cor.lerp(Color(1.0, 1.0, 0.92), 0.6)
+	var escuro: Color = cor.darkened(0.25)
+	for i in n:
+		var x: float = x0 + u + i * 4.0 * u
+		c.draw_rect(Rect2(x, y0 + u, 3.0 * u, 3.0 * u), cor)
+		c.draw_rect(Rect2(x, y0 + u, u, u), claro)
+		c.draw_rect(Rect2(x + 2.0 * u, y0 + 3.0 * u, u, u), escuro)
+
+## Emblemas das marcas em 5x5 (para os cartões pequenos do guarda-roupa), mesmas letras de UIComum.EMBLEMAS:
+## o = contorno escuro, c = cor da marca, l = cor clara. Os de 7x7 são os próprios UIComum.EMBLEMAS["marcaN"].
+const MARCA_MINI: Array = [
+	["...oo", "..olo", ".olo.", "olo..", "oo..."],   # cicatriz: um risco
+	["..o..", ".oco.", "oclco", ".oco.", "..o.."],   # estilhaço: lasca em losango
+	["ooooo", "oclco", "occco", ".oco.", "..o.."],   # couraça: escudo
+	["..o..", ".oco.", "occlo", "occco", ".ooo."],   # brasa: chama
+	["...l.", ".oo..", "occco", "oclco", ".ooo."],   # pólvora: bomba com pavio aceso
+]
+## Corridas horizontais dos emblemas, montadas uma vez: [tamanho 5 ou 7][marca] -> PackedInt32Array de
+## (x, y, largura, tinta) com tinta 0 = contorno, 1 = cor, 2 = claro.
+static var _marcas_cache: Dictionary = {}
+
+static func _corridas_marca(tam: int, m: int) -> PackedInt32Array:
+	var chave: int = tam * 16 + m
+	if _marcas_cache.has(chave):
+		return _marcas_cache[chave]
+	var g: Array = MARCA_MINI[m] if tam == 5 else UIComum.EMBLEMAS.get("marca%d" % m, [])
+	var r := PackedInt32Array()
+	for y in g.size():
+		var lin: String = g[y]
+		var x: int = 0
+		while x < lin.length():
+			var ch: String = lin[x]
+			var tinta: int = 0 if ch == "o" else (1 if ch == "c" else (2 if ch == "l" else -1))
+			var x1: int = x + 1
+			while x1 < lin.length() and lin[x1] == ch:
+				x1 += 1
+			if tinta >= 0:
+				r.append_array([x, y, x1 - x, tinta])
+			x = x1
+	_marcas_cache[chave] = r
+	return r
+
+## Emblemas das marcas (uma forma e uma cor por tipo, os mesmos da legenda da ficha), em pixel art no lugar
+## das antigas bolinhas. `passo` escolhe o tamanho: 5x5 até 7.5 px, senão o de 7x7 em quadradinhos de
+## floor(passo / 7.5) px. `raio` fica na assinatura por compatibilidade.
 static func pontos_marcas(c: CanvasItem, centro: Vector2, marcas: Array, raio: float, passo: float, vertical: bool = false) -> void:
 	var n: int = marcas.size()
+	if n == 0:
+		return
+	var tam: int = 5 if passo < 7.5 else 7
+	var e: float = 1.0 if tam == 5 else maxf(1.0, floorf(passo / 7.5))
+	var lado: float = tam * e
+	var st: float = maxf(roundf(passo), lado)
+	var cont := Color(0.1, 0.05, 0.08)
 	for i in n:
-		var d: float = (i - (n - 1) * 0.5) * passo
-		var p: Vector2 = centro + (Vector2(0, d) if vertical else Vector2(d, 0))
-		c.draw_circle(p, raio + 1.0, Color(0.05, 0.03, 0.08, 0.9))
-		c.draw_circle(p, raio, Pecas.MARCA_COR[marcas[i]])
+		var m: int = clampi(int(marcas[i]), 0, Pecas.MARCA_COR.size() - 1)
+		var d: float = (i - (n - 1) * 0.5) * st
+		var p: Vector2 = (centro + (Vector2(0, d) if vertical else Vector2(d, 0)) - Vector2(lado, lado) * 0.5).round()
+		var cor: Color = Pecas.MARCA_COR[m]
+		var clara: Color = cor.lightened(0.55)
+		var cr: PackedInt32Array = _corridas_marca(tam, m)
+		var k: int = 0
+		while k < cr.size():
+			var tinta: int = cr[k + 3]
+			c.draw_rect(Rect2(p.x + cr[k] * e, p.y + cr[k + 1] * e, cr[k + 2] * e, e), cont if tinta == 0 else (cor if tinta == 1 else clara))
+			k += 4
 
 # ------------------------------------------------------------------ boneco
 ## Estrelas de patente (polígonos de 5 pontas) centradas em `centro`.
@@ -1025,8 +1091,10 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	var ct: int = (chefe_tipo % BICHO_CHEFES_DESENHADOS) if chefe else -1
 	var fam: int = 4 if parte else familia % 5
 	var filhote: bool = tipo == Unidade.Tipo.GEMEO and carregando
-	_tr(c, pos, esc, dir)
-	c.draw_colored_polygon(_elipse(0, 0, 26.0, 5.0, 14), Color(0, 0, 0, 0.22 * alfa))
+	# sombra e aura na grade de pixels do sprite (GATO_K), a mesma do bicho
+	_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+	if _com_sombra(c, false):
+		_sombra_px(c, alfa)
 	if elite:
 		# fantasiado: aura pulsando na cor da fantasia que mais veste
 		var cont: Array[int] = Pecas.contar_conjuntos(pecas)
@@ -1034,12 +1102,7 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		for i in cont.size():
 			if cont[i] > cont[melhor]:
 				melhor = i
-		var ca: Color = Pecas.CONJUNTO_COR[melhor]
-		var pu: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * 4.0)
-		var el := _elipse(0, -28, 40.0 + pu * 2.0, 34.0 + pu * 2.0, 24)
-		c.draw_colored_polygon(el, Color(ca.r, ca.g, ca.b, 0.08 + 0.06 * pu))
-		c.draw_polyline(_fechado(el), Color(ca.r, ca.g, ca.b, 0.5 + 0.3 * pu), 2.0)
-	_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+		_aura_px(c, Pecas.CONJUNTO_COR[melhor], alfa)
 	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null
 	BichoPx.ultimo_quadro = {}
 	BichoPx.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando and tipo == Unidade.Tipo.LADRAO, filhote, ct, parte, parado)
@@ -1136,15 +1199,19 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 	var tinta := Color(1.0, 1.0 - 0.45 * f, 1.0 - 0.45 * f, alfa)
 	if furia > 0.0:
 		tinta = tinta.lerp(Color(1.0, 0.35, 0.3, alfa), clampf(furia, 0.0, 1.0) * 0.7)
+	if _com_sombra(c, nocaute):
+		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+		_sombra_px(c, alfa)
 	_tr(c, pos, esc, dir)
-	c.draw_colored_polygon(_elipse(0, 0, 26.0, 5.0, 14), Color(0, 0, 0, 0.22 * alfa))
 	var pel: Array = PELAGENS[posmod(variante, PELAGENS.size())]
 	var tp: Color = pel[1]
 	c.draw_texture_rect_region(GATO_TEX[int(pel[0])], dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
 	if fantasma_slots:
+		# espaços vazios na grade de pixels do sprite
+		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
 		for s in Pecas.SLOTS:
 			if pecas[s] == null:
-				_slot_fantasma(c, ponto_gato(s, q), s, destaque_slot == s)
+				_slot_fantasma(c, ponto_gato(s, q) / GATO_K, s, destaque_slot == s)
 	if nocaute:
 		resetar(c)
 		return  # dormindo: sem roupa por cima, para o gato enrolado aparecer
@@ -1170,41 +1237,154 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 			# raridade: cintilação discreta acima da cabeça
 			var tw: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * 5.0 + s)
 			var cr: Color = Pecas.cor_rar(p.raridade)
-			c.draw_rect(Rect2(-6.0, -9.0 - tw, 1.0, 1.0), Color(cr.r, cr.g, cr.b, 0.5 + 0.5 * tw))
+			c.draw_rect(Rect2(-6.0, -9.0 - roundf(tw), 1.0, 1.0), Color(cr.r, cr.g, cr.b, 0.5 + 0.5 * tw))
 	resetar(c)
 
-## Brilho de raridade centrado em `centro` (coordenadas locais do transform atual).
+## Sombra, aura e fantasma em pixel: valem para a grade de pixels do sprite do gato/bicho (transform com GATO_K).
+## `sem_sombra`: quem desenha a própria sombra no chão (a tela título, com o gato pulando) desliga a do boneco.
+static var sem_sombra: bool = false
+
+## A luta (Campo) já desenha a sombra de cada unidade no chão (V.elipse, que acompanha o salto); lá o boneco
+## não repete a dele, exceto o gato dormindo (nocaute), que não é mais unidade e fica sem a sombra do Campo.
+static func _com_sombra(c: CanvasItem, nocaute: bool) -> bool:
+	if sem_sombra:
+		return false
+	return nocaute or not (c is Campo)
+
+## Meias-larguras da sombra (em pixels do sprite), de cima para baixo, centrada no pé (x = 0 é a divisa
+## entre dois pixels, então espelhar o boneco não tira a sombra da grade).
+const SOMBRA_FAIXAS: Array[int] = [5, 8, 8, 5]
+
+static func _sombra_px(c: CanvasItem, alfa: float) -> void:
+	var cor := Color(0, 0, 0, 0.22 * alfa)
+	for i in SOMBRA_FAIXAS.size():
+		var h: int = SOMBRA_FAIXAS[i]
+		c.draw_rect(Rect2(-h, i - 2, h * 2, 1), cor)
+
+## Aura do bicho fantasiado: anel de 1 pixel e um segundo anel mais fraco por dentro, pulsando em degraus de
+## 1 pixel (sem miolo cheio, para não somar alfa com a sombra e o corpo).
+static func _aura_px(c: CanvasItem, ca: Color, alfa: float) -> void:
+	var pu: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * 4.0)
+	var d: float = 1.0 if pu > 0.5 else 0.0
+	var forte: Color = Color(ca.r, ca.g, ca.b, (0.55 + 0.3 * d) * alfa)
+	var fraco: Color = Color(ca.r, ca.g, ca.b, (0.18 + 0.08 * d) * alfa)
+	_halo(c, Vector2(0, -9), 13.0 + d, forte, 12.0 + d, fraco, 11.0 + d, Color(0, 0, 0, 0), 0.0, Color(0, 0, 0, 0), 0.85)
+
+## Limites [x0, x1) da fileira `y` (grade de 1 unidade) de um disco de raio `r` centrado em `ce`; achatado na
+## vertical por `ach` (elipse). Centro inteiro ou meio-inteiro dá fileiras simétricas. x0 >= x1 = fileira vazia.
+static func _lim(ce: Vector2, r: float, y: int, ach: float = 1.0) -> Vector2i:
+	if r <= 0.0:
+		return Vector2i(1, 0)
+	var dy: float = (y + 0.5 - ce.y) / ach
+	var k: float = r * r - dy * dy
+	if k < 0.0:
+		return Vector2i(1, 0)
+	var h: float = sqrt(k)
+	return Vector2i(int(floorf(ce.x - h + 0.5)), int(floorf(ce.x + h + 0.5)))
+
+## Encaixa a fileira `e` dentro de `fora`, deixando pelo menos 1 unidade de cada lado (anel sem furo).
+static func _dentro(e: Vector2i, fora: Vector2i) -> Vector2i:
+	if e.x >= e.y:
+		return e
+	return Vector2i(maxi(e.x, fora.x + 1), mini(e.y, fora.y - 1))
+
+static func _seg(c: CanvasItem, x0: int, x1: int, y: int, cor: Color) -> void:
+	if x1 > x0 and cor.a > 0.004:
+		c.draw_rect(Rect2(x0, y, x1 - x0, 1), cor)
+
+## Halo em faixas concêntricas na grade de 1 unidade do transform atual: c0 entre r0 e r1, c1 entre r1 e r2,
+## c2 entre r2 e r3 e c3 dentro de r3 (raio 0 encerra antes). As faixas nunca se sobrepõem (sem alfa sobre
+## alfa) e cada fileira é desenhada com no máximo 7 draw_rect; nada é alocado.
+static func _halo(c: CanvasItem, ce: Vector2, r0: float, c0: Color, r1: float, c1: Color, r2: float = 0.0, c2: Color = Color(0, 0, 0, 0), r3: float = 0.0, c3: Color = Color(0, 0, 0, 0), ach: float = 1.0) -> void:
+	var ya: int = int(floorf(ce.y - r0 * ach))
+	var yb: int = int(ceilf(ce.y + r0 * ach))
+	for y in range(ya, yb + 1):
+		var fora: Vector2i = _lim(ce, r0, y, ach)
+		if fora.x >= fora.y:
+			continue
+		var fim: bool = false
+		for k in 3:
+			var r: float = r1 if k == 0 else (r2 if k == 1 else r3)
+			var cb: Color = c0 if k == 0 else (c1 if k == 1 else c2)
+			var e: Vector2i = _dentro(_lim(ce, r, y, ach), fora)
+			if e.x >= e.y:
+				_seg(c, fora.x, fora.y, y, cb)
+				fim = true
+				break
+			_seg(c, fora.x, e.x, y, cb)
+			_seg(c, e.y, fora.y, y, cb)
+			fora = e
+		if not fim:
+			_seg(c, fora.x, fora.y, y, c3)
+
+## Cintila em cruz de quadradinhos: `n` 0 = só o miolo, 1 ou 2 = braços; miolo branco, braços na cor.
+static func _cintila(c: CanvasItem, p: Vector2, n: int, cor: Color) -> void:
+	var x: float = floorf(p.x)
+	var y: float = floorf(p.y)
+	if n > 0:
+		c.draw_rect(Rect2(x - n, y, n, 1), cor)
+		c.draw_rect(Rect2(x + 1, y, n, 1), cor)
+		c.draw_rect(Rect2(x, y - n, 1, n), cor)
+		c.draw_rect(Rect2(x, y + 1, 1, n), cor)
+	c.draw_rect(Rect2(x, y, 1, 1), Color(1.0, 0.98, 0.9, cor.a))
+
+## Brilho de raridade em pixel art, na grade de 1 unidade do transform atual (o ícone o chama na grade de
+## pixels da própria peça): halo em faixas com anel de 1 pixel e cintilas em cruz que crescem e encolhem
+## em degraus (sem alfa piscando por cima). `centro` e `raio` em pixels dessa grade.
 ## 1 = rara (azul discreto), 2 = épica (roxo, anel duplo), 3 = lendária (dourado com cintilação), 4 = mítica (arco-íris girando), 5 = miaujestosa (branco-pérola e rosa pulsando, estrelinhas e anel duplo).
 static func brilho_raridade(c: CanvasItem, centro: Vector2, raio: float, raridade: int, suave: bool = false) -> void:
 	if raridade <= 0:
 		return
 	var t: float = Time.get_ticks_msec() / 1000.0
 	var cor: Color = Pecas.cor_rar(raridade)
-	var pu: float = 0.5 + 0.5 * sin(t * 3.0)
+	var pu: float = floorf((0.5 + 0.5 * sin(t * 3.0)) * 2.99) * 0.5   # pulso em 3 degraus
+	var ce: Vector2 = (centro * 2.0).round() * 0.5
+	var r: float = maxf(3.0, roundf(raio))
+	var nada := Color(0, 0, 0, 0)
 	if suave:
 		# vestida no boneco: só um anel fino e um pontinho cintilando na lendária
-		c.draw_arc(centro, raio * 0.8, 0.0, TAU, 20, Color(cor.r, cor.g, cor.b, 0.12 + 0.08 * pu), 1.0)
+		_halo(c, ce, r * 0.8, Color(cor.r, cor.g, cor.b, 0.12 + 0.08 * pu), r * 0.8 - 1.0, nada)
 		if raridade >= 3:
 			var a2: float = t * 1.5
 			var tw: float = 0.5 + 0.5 * sin(t * 7.0)
-			c.draw_circle(centro + Vector2(cos(a2), sin(a2)) * raio * 0.8, 0.8 + 0.8 * tw, Color(1.0, 0.95, 0.7, 0.4 + 0.4 * tw) if raridade == 3 else Color(cor.r, cor.g, cor.b, 0.5 + 0.4 * tw))
+			_cintila(c, ce + Vector2(cos(a2), sin(a2)) * r * 0.8, 1 if tw > 0.6 else 0, Color(1.0, 0.95, 0.7) if raridade == 3 else cor)
 		return
-	c.draw_circle(centro, raio, Color(cor.r, cor.g, cor.b, 0.12 + 0.06 * pu))
-	c.draw_arc(centro, raio, 0.0, TAU, 24, Color(cor.r, cor.g, cor.b, 0.35 + 0.2 * pu), 1.4)
-	if raridade == 2:
-		c.draw_arc(centro, raio * 0.78, 0.0, TAU, 24, Color(cor.r, cor.g, cor.b, 0.25 + 0.2 * pu), 1.0)
-	if raridade >= 3:
-		c.draw_circle(centro, raio * 0.7, Color(1.0, 0.9, 0.5, 0.12) if raridade == 3 else Color(cor.r, cor.g, cor.b, 0.16))
-		if raridade >= 5:
-			c.draw_arc(centro, raio * 1.12, 0.0, TAU, 24, Color(1.0, 1.0, 1.0, 0.25 + 0.3 * pu), 1.0)
-		for k in (3 if raridade < 5 else 5):
-			var a: float = t * 1.2 + k * TAU / (3.0 if raridade < 5 else 5.0)
-			var q: Vector2 = centro + Vector2(cos(a), sin(a) * 0.9) * raio
-			var tw: float = 0.5 + 0.5 * sin(t * 7.0 + k * 2.1)
-			var r: float = 1.4 + 2.2 * tw
-			var cs: Color = Color(1.0, 0.95, 0.7, 0.5 + 0.5 * tw) if raridade == 3 else (Color(1.0, 1.0, 1.0, 0.6 + 0.4 * tw).lerp(Color(1.0, 0.7, 0.88, 0.8), 0.5 * (0.5 + 0.5 * sin(t * 2.0 + k))) if raridade >= 5 else Color.from_hsv(fposmod(t * 0.4 + k / 3.0, 1.0), 0.5, 1.0, 0.6 + 0.4 * tw))
-			c.draw_line(q - Vector2(r, 0), q + Vector2(r, 0), cs, 1.2)
-			c.draw_line(q - Vector2(0, r), q + Vector2(0, r), cs, 1.2)
+	var anel := Color(cor.r, cor.g, cor.b, 0.5 + 0.2 * pu)
+	var miolo := Color(cor.r, cor.g, cor.b, 0.12 + 0.04 * pu)
+	match raridade:
+		1:
+			_halo(c, ce, r, anel, r - 1.0, miolo)
+		2:
+			_halo(c, ce, r, anel, r - 1.0, miolo, roundf(r * 0.78), Color(cor.r, cor.g, cor.b, 0.3 + 0.2 * pu), roundf(r * 0.78) - 1.0, miolo)
+		_:
+			var luz: Color = Color(1.0, 0.9, 0.5, 0.2) if raridade == 3 else Color(cor.r, cor.g, cor.b, 0.22)
+			_halo(c, ce, r, anel, r - 1.0, miolo, roundf(r * 0.7), luz)
+	if raridade < 3:
+		return
+	if raridade >= 5:
+		# anel de fora pontilhado, girando de pixel em pixel
+		var rf: float = r + 2.0
+		var fase: int = int(t * 4.0)
+		var cf := Color(1.0, 1.0, 1.0, 0.35 + 0.3 * pu)
+		for i in 16:
+			if (i + fase) % 2 == 0:
+				continue
+			var a: float = TAU * i / 16.0
+			c.draw_rect(Rect2(floorf(ce.x + cos(a) * rf), floorf(ce.y + sin(a) * rf), 1, 1), cf)
+	var nk: int = 3 if raridade < 5 else 5
+	for k in nk:
+		var a: float = t * 1.2 + k * TAU / nk
+		var q: Vector2 = ce + Vector2(cos(a), sin(a) * 0.9) * r
+		var tw: float = 0.5 + 0.5 * sin(t * 7.0 + k * 2.1)
+		var n: int = 0 if tw < 0.35 else 1   # cresce e encolhe em degraus (só miolo / cruz de 3)
+		var cs: Color
+		if raridade == 3:
+			cs = Color(1.0, 0.95, 0.7)
+		elif raridade >= 5:
+			cs = Color(1.0, 1.0, 1.0).lerp(Color(1.0, 0.7, 0.88), 0.5 * (0.5 + 0.5 * sin(t * 2.0 + k)))
+		else:
+			cs = Color.from_hsv(fposmod(t * 0.4 + k / 3.0, 1.0), 0.5, 1.0)
+		_cintila(c, q, n, cs)
 
 static func _peca_no_boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, p: Peca, s: int, f: float, anim: float, rot: float = 0.0, dy: float = 0.0, mini: float = 1.0, giro: float = 0.0, alto: float = 1.0) -> void:
 	var extra: float = (1.0 + 0.05 * p.nivel) * mini
@@ -1238,23 +1418,43 @@ static func _peca_no_boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float,
 		_tr(c, pos, esc, dir)
 		pontos_marcas(c, moff, p.marcas, 2.5, 6.2)
 
+## Espaço vazio no boneco, em pixel art na grade do sprite (o chamador já pôs o transform com GATO_K):
+## anel tracejado de 1 pixel, miolo verde no destaque e um glifo pequeno do espaço (chapéu, roupa, ponto).
 static func _slot_fantasma(c: CanvasItem, pos: Vector2, s: int, destaque: bool) -> void:
 	var cor: Color = Color(0.5, 1.0, 0.6, 0.95) if destaque else Color(1, 1, 1, 0.3)
-	# desenha no espaço local atual (o chamador já definiu o transform)
-	var r: float = 14.0 if s != 1 else 15.0
-	for i in 10:
-		var a: float = TAU * i / 10.0
-		c.draw_arc(pos, r, a, a + 0.38, 5, cor, 1.8)
-	if destaque:
-		c.draw_circle(pos, r - 1.0, Color(0.5, 1.0, 0.6, 0.25))
+	var ce: Vector2 = pos.round()
+	var r: float = 5.0 if s != 1 else 5.5
+	var ya: int = int(floorf(ce.y - r))
+	for y in range(ya, int(ceilf(ce.y + r)) + 1):
+		var fora: Vector2i = _lim(ce, r, y)
+		if fora.x >= fora.y:
+			continue
+		var dentro: Vector2i = _dentro(_lim(ce, r - 1.0, y), fora)
+		for x in range(fora.x, fora.y):
+			if dentro.x < dentro.y and x >= dentro.x and x < dentro.y:
+				continue
+			# tracejado: 10 traços, como o anel antigo
+			var ang: float = atan2(y + 0.5 - ce.y, x + 0.5 - ce.x)
+			if fposmod(ang / TAU * 10.0, 1.0) < 0.6:
+				c.draw_rect(Rect2(x, y, 1, 1), cor)
+		if destaque and dentro.x < dentro.y:
+			c.draw_rect(Rect2(dentro.x, y, dentro.y - dentro.x, 1), Color(0.5, 1.0, 0.6, 0.25))
 	var g: Color = Color(cor.r, cor.g, cor.b, cor.a * 0.8)
+	var x0: float = ce.x
+	var y0: float = ce.y
 	match s:
 		0:
-			c.draw_arc(pos + Vector2(0, 2), 6.0, PI, TAU, 8, g, 1.8)
+			# chapéu: copa de 2 e aba de 4
+			c.draw_rect(Rect2(x0 - 1, y0 - 1, 2, 1), g)
+			c.draw_rect(Rect2(x0 - 2, y0, 4, 1), g)
 		1:
-			c.draw_rect(Rect2(pos + Vector2(-5, -6), Vector2(10, 12)), g, false, 1.6)
+			# roupa: quadradinho vazado 4x4
+			c.draw_rect(Rect2(x0 - 2, y0 - 2, 4, 1), g)
+			c.draw_rect(Rect2(x0 - 2, y0 + 1, 4, 1), g)
+			c.draw_rect(Rect2(x0 - 2, y0 - 1, 1, 2), g)
+			c.draw_rect(Rect2(x0 + 1, y0 - 1, 1, 2), g)
 		_:
-			c.draw_circle(pos, 3.0, g)
+			c.draw_rect(Rect2(x0 - 1, y0 - 1, 2, 2), g)
 
 ## false volta aos ícones antigos, em traço liso (Desenho.forma).
 const ICONE_PIXEL := true
@@ -1265,10 +1465,11 @@ static func icone(c: CanvasItem, tipo: int, centro: Vector2, tam: float, nivel: 
 		# o ícone é a própria roupa em pixel art que o gato veste (RoupaGato), ampliada para caber
 		var cx: Rect2 = IconeDados.CAIXA[tipo] if tipo < IconeDados.CAIXA.size() else RoupaGatoE.caixa(tipo)
 		var px: float = tam * 0.92 / maxf(9.0, maxf(cx.size.x, cx.size.y))
+		var meio: Vector2 = cx.position + cx.size * 0.5
+		c.draw_set_transform(centro - meio * px, 0.0, Vector2(px, px))
 		if raridade > 0:
-			c.draw_set_transform(centro, 0.0, Vector2(tam / 30.0, tam / 30.0))
-			brilho_raridade(c, Vector2.ZERO, 17.0, raridade)
-		c.draw_set_transform(centro - (cx.position + cx.size * 0.5) * px, 0.0, Vector2(px, px))
+			# brilho na mesma grade de pixels da peça (raio de 17/30 do ícone, como antes)
+			brilho_raridade(c, meio, 17.0 * tam / 30.0 / px, raridade)
 		RoupaGato.desenhar(c, tipo, f, anim)
 		resetar(c)
 	else:
@@ -1299,25 +1500,44 @@ static func cor_tijolo(i: int) -> Color:
 static func letra_tijolo(i: int) -> String:
 	return LETRAS[(i * 7) % 26]
 
-## Bloco de madeira pintado, com disco creme e letra.
+## Tijolinho de brinquedo em pixel art, igual aos da torre (TorrePx._bloco): 10x5 quadradinhos de
+## r.size.y / 5 px (4 px no tijolo de 40x20), contorno escuro, faixa clara em cima e escura embaixo, a placa
+## creme em cruz no meio e a letra na fonte de pixel. As peças não se sobrepõem, então `alfa` (o tijolo
+## sumindo) não soma alfa sobre alfa. Gira junto com o transform de quem chama (o Campo o gira no voo).
 static func bloco(c: CanvasItem, r: Rect2, cor: Color, letra: String, alfa: float = 1.0) -> void:
 	var k: float = r.size.y / TIJ_H
+	var g: float = maxf(1.0, roundf(4.0 * k))
+	var x: float = roundf(r.position.x)
+	var y: float = roundf(r.position.y)
+	var nx: int = maxi(4, int(roundf(r.size.x / g)))
 	var ctn: Color = cor.darkened(0.55)
+	var claro: Color = cor.lightened(0.3)
+	var esc: Color = cor.darkened(0.22)
+	var creme := Color(0.99, 0.95, 0.82, alfa)
 	ctn.a = alfa
+	claro.a = alfa
+	esc.a = alfa
 	cor.a = alfa
-	c.draw_rect(r, ctn)
-	var ri: Rect2 = r.grow(-1.6 * k)
-	c.draw_rect(ri, cor)
-	c.draw_rect(Rect2(ri.position, Vector2(ri.size.x, ri.size.y * 0.2)), Color(1, 1, 1, 0.28 * alfa))
-	c.draw_rect(Rect2(ri.position.x, ri.end.y - ri.size.y * 0.18, ri.size.x, ri.size.y * 0.18), Color(0, 0, 0, 0.2 * alfa))
-	var ce: Vector2 = r.get_center()
-	var rr: float = r.size.y * 0.33
-	c.draw_circle(ce, rr, Color(0.99, 0.95, 0.82, alfa))
+	var w: float = nx * g
+	# contorno: fileira de cima, de baixo e as duas colunas
+	c.draw_rect(Rect2(x, y, w, g), ctn)
+	c.draw_rect(Rect2(x, y + 4.0 * g, w, g), ctn)
+	c.draw_rect(Rect2(x, y + g, g, 3.0 * g), ctn)
+	c.draw_rect(Rect2(x + w - g, y + g, g, 3.0 * g), ctn)
+	# miolo em três fileiras, com a placa creme em cruz (2 de largura no meio, 4 na fileira do meio)
+	var m: float = x + floorf(nx * 0.5) * g          # coluna logo à direita do meio
+	for f in 3:
+		var yy: float = y + (f + 1) * g
+		var a0: float = m - (2.0 * g if f == 1 else g)
+		var a1: float = m + (2.0 * g if f == 1 else g)
+		var lc: Color = claro if f == 0 else (cor if f == 1 else esc)
+		c.draw_rect(Rect2(x + g, yy, a0 - x - g, g), lc)
+		c.draw_rect(Rect2(a1, yy, x + w - g - a1, g), lc)
+		c.draw_rect(Rect2(a0, yy, a1 - a0, g), creme)
 	if letra != "":
-		var tam: int = maxi(8, int(r.size.y * 0.6))
 		var tc: Color = cor.darkened(0.4)
 		tc.a = alfa
-		texto(c, letra, Vector2(ce.x - rr, ce.y + tam * 0.35), tam, tc, rr * 2.0)
+		c.draw_string(UIComum.FONTE, Vector2(m - 6.6 * k, y + 14.2 * k), letra, HORIZONTAL_ALIGNMENT_CENTER, 13.2 * k, UIComum.tam(maxi(8, int(roundf(12.0 * k)))), tc)
 
 static func torre(c: CanvasItem, base: Vector2, n: int, esc: float, pulso: float = 0.0) -> void:
 	for i in n:
