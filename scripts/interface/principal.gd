@@ -298,6 +298,7 @@ func _ready() -> void:
 	for f in range(1, Fases.NOME.size() + 1):
 		_chefes_mapa.append(Balanco.fantasia(f, 0, Pecas.SLOTS, rng_m))
 	mapa_casa = MapaCasa.new(self)
+	_preparar_fundo()
 	campo = Campo.new()
 	campo.visible = false
 	campo.terminou.connect(_on_campo_terminou)
@@ -422,6 +423,9 @@ func _aquecer_mapa() -> void:
 
 ## Ao fechar o jogo, grava o que a gravação adiada ainda não escreveu.
 func _exit_tree() -> void:
+	if _fundo_tarefa >= 0:
+		WorkerThreadPool.wait_for_task_completion(_fundo_tarefa)
+		_fundo_tarefa = -1
 	Estado.gravar_pendente()
 
 func _rotulo_fim(r: Rect2, tam: int, cor: Color) -> Label:
@@ -2560,9 +2564,12 @@ func _pintar_botao_fichario(bt: BotaoArte) -> void:
 	bt.draw_rect(Rect2(o.x + 10, o.y + 2, 2, 14), Color(0.22, 0.12, 0.08))
 	if not metas_selo.is_empty():
 		# selo: há meta cumprida que o jogador ainda não viu na aba "Metas"
+		# disco de pixel: contorno escuro, miolo vermelho, sombra embaixo e um brilho em cima
 		var c: Vector2 = Vector2(bt.size.x - 8.0, 6.0)
-		bt.draw_circle(c, 12.0, Color(0.2, 0.08, 0.08))
-		bt.draw_circle(c, 10.0, Color(0.95, 0.3, 0.3))
+		VFX.disco(bt, c, 12.0, Color(0.2, 0.08, 0.08))
+		VFX.disco(bt, c, 9.0, Color(0.72, 0.16, 0.18))
+		VFX.disco(bt, c, 6.0, Color(0.95, 0.3, 0.3))
+		VFX.ponto(bt, c + Vector2(-PX * 2.0, -PX * 2.0), Color(1.0, 0.68, 0.62))
 		Desenho.texto(bt, str(metas_selo.size()), Vector2(c.x - 12.0, c.y + 5.0), 14, Color.WHITE, 24.0)
 
 ## Abre a oficina da torre (só no mapa e no guarda-roupa, sem menu nem cortina por cima).
@@ -2935,26 +2942,190 @@ func _pintar_botao(bt: BotaoArte) -> void:
 	bt.draw_string_outline(fonte, Vector2(0, y), bt.text, HORIZONTAL_ALIGNMENT_CENTER, bt.size.x, UIComum.tam(tam), 7, Color(0.16, 0.07, 0.05, 0.95))
 	bt.draw_string(fonte, Vector2(0, y), bt.text, HORIZONTAL_ALIGNMENT_CENTER, bt.size.x, UIComum.tam(tam), ct)
 
-## Barra com contorno escuro, brilho no topo e miolo `cor`.
+## Barra em pixel: contorno escuro de um quadradinho com as quinas cortadas, trilho escuro e miolo `cor`
+## com faixa clara em cima e escura embaixo. Altura e preenchimento andam de PX em PX.
 func _barra(r: Rect2, frac: float, cor: Color, atras: float = -1.0, cor_atras: Color = Color(0.55, 0.8, 1.0, 0.75)) -> void:
-	draw_rect(r.grow(2.0), Color(0.07, 0.04, 0.08))
-	draw_rect(r, Color(0.2, 0.14, 0.16))
+	var rr := Rect2(roundf(r.position.x), roundf(r.position.y), maxf(PX * 2.0, roundf(r.size.x / PX) * PX), maxf(PX * 2.0, roundf(r.size.y / PX) * PX))
+	UIComum.forma(self, rr.grow(PX), Color(0.07, 0.04, 0.08), PX)
+	draw_rect(rr, Color(0.2, 0.14, 0.16))
+	draw_rect(Rect2(rr.position.x, rr.end.y - PX, rr.size.x, PX), Color(0.14, 0.09, 0.11))
 	if atras > 0.0:
-		draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(atras, 0.0, 1.0), r.size.y)), cor_atras)
+		var wa: float = minf(rr.size.x, _sn(rr.size.x * clampf(atras, 0.0, 1.0) + PX * 0.5))
+		if wa > 0.0:
+			draw_rect(Rect2(rr.position, Vector2(wa, rr.size.y)), cor_atras)
 	var f: float = clampf(frac, 0.0, 1.0)
 	if f > 0.0:
-		var w: float = maxf(2.0, r.size.x * f)
-		draw_rect(Rect2(r.position, Vector2(w, r.size.y)), cor)
-		draw_rect(Rect2(r.position, Vector2(w, maxf(2.0, r.size.y * 0.35))), cor.lightened(0.35))
-		draw_rect(Rect2(r.position.x, r.end.y - 2.0, w, 2.0), cor.darkened(0.3))
+		var w: float = clampf(_sn(rr.size.x * f + PX * 0.5), PX, rr.size.x)
+		draw_rect(Rect2(rr.position, Vector2(w, rr.size.y)), cor)
+		draw_rect(Rect2(rr.position, Vector2(w, PX)), cor.lightened(0.35))
+		if rr.size.y >= PX * 3.0:
+			draw_rect(Rect2(rr.position.x, rr.end.y - PX, w, PX), cor.darkened(0.3))
 
 func _ruido(n: float) -> float:
 	return fposmod(sin(n * 12.9898) * 43758.5453, 1.0)
 
+# ------------------------------------------------------------------ pixel art da interface (grade de 3 px)
+## O guarda-roupa é desenhado na grade de 3 px da moldura de madeira (gui_4x a 0,75) e dos efeitos (VfxPx):
+## nada de círculo liso, linha fina ou degradê contínuo. Formas em faixas de PX, sem alocar nada por quadro.
+const PX := 3.0
+const VFX := preload("res://scripts/interface/vfx_px.gd")
+const CONT_PX := Color(0.16, 0.08, 0.06)   # contorno escuro dos ícones de grade
+
+func _sn(v: float) -> float:
+	return floorf(v / PX) * PX
+
+## Meia largura (já na grade) da linha `j` de uma elipse de `n` linhas e raio horizontal `rx`.
+func _meia_px(j: int, n: int, rx: float) -> float:
+	if j < 0 or j >= n:
+		return 0.0
+	var fy: float = ((j + 0.5) / n) * 2.0 - 1.0
+	return maxf(PX, _sn(rx * sqrt(maxf(0.0, 1.0 - fy * fy)) + PX * 0.5))
+
+## Elipse cheia em faixas de PX (as faixas não se sobrepõem: aceita alfa).
+func _elipse_px(ce: Vector2, rx: float, ry: float, cor: Color) -> void:
+	var n: int = maxi(1, int(roundf(ry * 2.0 / PX)))
+	var cx: float = _sn(ce.x)
+	var y0: float = _sn(ce.y - n * PX * 0.5 + PX * 0.5)
+	for j in n:
+		var w: float = _meia_px(j, n, rx)
+		_c.draw_rect(Rect2(cx - w, y0 + j * PX, w * 2.0, PX), cor)
+
+## Duas elipses concêntricas sem sobreposição: a de fora em `cor`, a de dentro em `cor2` (luz de pedestal).
+func _elipse2_px(ce: Vector2, rx: float, ry: float, cor: Color, rx2: float, ry2: float, cor2: Color) -> void:
+	var n: int = maxi(1, int(roundf(ry * 2.0 / PX)))
+	var n2: int = maxi(1, int(roundf(ry2 * 2.0 / PX)))
+	if (n - n2) % 2 != 0:
+		n2 -= 1
+	var d: int = (n - n2) / 2
+	var cx: float = _sn(ce.x)
+	var y0: float = _sn(ce.y - n * PX * 0.5 + PX * 0.5)
+	for j in n:
+		var w: float = _meia_px(j, n, rx)
+		var y: float = y0 + j * PX
+		var j2: int = j - d
+		if n2 <= 0 or j2 < 0 or j2 >= n2:
+			_c.draw_rect(Rect2(cx - w, y, w * 2.0, PX), cor)
+			continue
+		var w2: float = minf(_meia_px(j2, n2, rx2), w - PX)
+		_c.draw_rect(Rect2(cx - w, y, w - w2, PX), cor)
+		_c.draw_rect(Rect2(cx - w2, y, w2 * 2.0, PX), cor2)
+		_c.draw_rect(Rect2(cx + w2, y, w - w2, PX), cor)
+
+## Aro de elipse contínuo, um quadradinho de espessura: cada linha desenha só a borda que a separa das vizinhas.
+func _aro_px(ce: Vector2, rx: float, ry: float, cor: Color) -> void:
+	var n: int = maxi(1, int(roundf(ry * 2.0 / PX)))
+	var cx: float = _sn(ce.x)
+	var y0: float = _sn(ce.y - n * PX * 0.5 + PX * 0.5)
+	for j in n:
+		var w: float = _meia_px(j, n, rx)
+		var lo: float = minf(minf(_meia_px(j - 1, n, rx), _meia_px(j + 1, n, rx)), w - PX)
+		var y: float = y0 + j * PX
+		if j == 0 or j == n - 1 or lo <= 0.0:
+			_c.draw_rect(Rect2(cx - w, y, w * 2.0, PX), cor)
+		else:
+			_c.draw_rect(Rect2(cx - w, y, w - lo, PX), cor)
+			_c.draw_rect(Rect2(cx + lo, y, w - lo, PX), cor)
+
+## Feixe de luz em degraus: trapézio da base (y0, meia largura m0) até o topo (y1, m1), com o alfa
+## caindo de a0 para a1 em `bandas` faixas. Linhas iguais seguidas viram um retângulo só.
+func _feixe_px(cx: float, y0: float, m0: float, y1: float, m1: float, cor: Color, a0: float, a1: float, bandas: int = 4) -> void:
+	var yb: float = _sn(y0)
+	var n: int = int((yb - _sn(y1)) / PX)
+	if n <= 0:
+		return
+	var cxs: float = _sn(cx)
+	var run_j: int = 0
+	var run_w: float = -1.0
+	var run_b: int = -1
+	for j in n + 1:
+		var w: float = 0.0
+		var b: int = -1
+		if j < n:
+			var k: float = (j + 0.5) / n
+			w = _sn(lerpf(m0, m1, k) + PX * 0.5)
+			b = mini(bandas - 1, int(k * bandas))
+		if j == n or w != run_w or b != run_b:
+			if run_b >= 0 and j > run_j:
+				var a: float = lerpf(a0, a1, (run_b + 0.5) / bandas)
+				if a > 0.004:
+					_c.draw_rect(Rect2(cxs - run_w, yb - j * PX, run_w * 2.0, (j - run_j) * PX), Color(cor.r, cor.g, cor.b, cor.a * a))
+			run_j = j
+			run_w = w
+			run_b = b
+
+## Sombra/luz achatada no chão (elipse em faixas de pixel).
 func _ellipse_sombra(p: Vector2, rx: float, ry: float, cor: Color) -> void:
-	_c.draw_set_transform(p, 0.0, Vector2(1.0, ry / rx))
-	_c.draw_circle(Vector2.ZERO, rx, cor)
-	_c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_elipse_px(p, rx, ry, cor)
+
+## Estrela de 4 pontas em pixel (astroide em faixas): braços de `n` quadradinhos, sem sobreposição.
+## Com `losango` (as miúdas, até 2 quadradinhos de braço) vira um losango: a astroide pequena virava um "+".
+func _astro_px(cx: float, cy: float, n: int, cor: Color, losango: bool = false) -> void:
+	for j in range(-n, n + 1):
+		var w: int
+		if losango:
+			w = n - absi(j)
+		else:
+			var f: float = absf(j) / float(n)
+			w = int(n * pow(maxf(0.0, 1.0 - pow(f, 0.6667)), 1.5) + 0.4)
+		_c.draw_rect(Rect2(cx - w * PX, cy + j * PX, (2 * w + 1) * PX, PX), cor)
+
+## Ícone de grade: cada letra é um quadradinho de `esc` px; letras iguais seguidas viram um retângulo só.
+## k contorno, c cor, l cor clara, d cor escura, w creme, p rosa, m/n madeira clara/escura,
+## r/R/q linha vermelha (média/escura/clara), y/Y ouro (claro/escuro). Ponto é transparente.
+func _grade_px(cv: CanvasItem, g: Array[String], pos: Vector2, esc: float, cor: Color, alfa: float = 1.0) -> void:
+	var x0: float = roundf(pos.x)
+	var y0: float = roundf(pos.y)
+	for y in g.size():
+		var lin: String = g[y]
+		var tam: int = lin.length()
+		var x: int = 0
+		while x < tam:
+			var ch: int = lin.unicode_at(x)
+			var x1: int = x + 1
+			while x1 < tam and lin.unicode_at(x1) == ch:
+				x1 += 1
+			if ch != 46:   # "."
+				var col: Color
+				match ch:
+					107: col = CONT_PX                       # k
+					99: col = cor                            # c
+					108: col = cor.lightened(0.45)           # l
+					100: col = cor.darkened(0.35)            # d
+					119: col = COR_TINTA                     # w
+					112: col = Color(0.95, 0.55, 0.6)        # p
+					109: col = Color(0.78, 0.58, 0.34)       # m
+					110: col = Color(0.5, 0.33, 0.17)        # n
+					114: col = Color(0.85, 0.2, 0.25)        # r
+					82: col = Color(0.55, 0.08, 0.14)        # R
+					113: col = Color(1.0, 0.5, 0.5)          # q
+					121: col = Desenho.DOURADO               # y
+					89: col = Color(0.72, 0.45, 0.08)        # Y
+					_: col = cor
+				cv.draw_rect(Rect2(x0 + x * esc, y0 + y * esc, (x1 - x) * esc, esc), Color(col.r, col.g, col.b, col.a * alfa))
+			x = x1
+
+const ICO_X: Array[String] = ["c...c", ".c.c.", "..c..", ".c.c.", "c...c"]
+const ICO_MAIS: Array[String] = ["..lc..", "..lc..", "lllccc", "cccddd", "..cd..", "..dd.."]
+const ICO_SETA: Array[String] = ["....c...", "....cc..", "lllllcc.", "cccccccc", "dddddcd.", "....cd..", "....d..."]
+const ICO_NOVA: Array[String] = [".kkk.", "klcck", "kccck", "kccdk", ".kkk."]
+const ICO_LAPIS: Array[String] = [".kkkkkk", "kwcccpk", "kkwddpk", ".kkkkkk"]
+const ICO_CARRETEL: Array[String] = [
+	"kkkkkkkkkkkk",
+	"kmmmmmmmmmmk",
+	"knnnnnnnnnnk",
+	"kkkkkkkkkkkk",
+	".kqrrRrrrRk.",
+	".kqrRrrrRrk.",
+	".kqRrrrRrrk.",
+	".kRrrrRrrrk.",
+	".kqrrRrrrRk.",
+	".kqrRrrrRrk.",
+	".kqRrrrRrrk.",
+	"kkkkkkkkkkkk",
+	"kmmmmmmmmmmk",
+	"knnnnnnnnnnk",
+	"kkkkkkkkkkkk",
+]
 
 func _texto_dir(txt: String, x_dir: float, y: float, tam: int, cor: Color, contorno: int = 0) -> void:
 	var fonte: Font = UIComum.FONTE
@@ -2983,8 +3154,17 @@ func _icone_gui(ico: Rect2, centro: Vector2, esc: float, cor: Color = Color.WHIT
 	var tam: Vector2 = ico.size * esc
 	draw_texture_rect_region(GUI_TEX, Rect2((centro - tam * 0.5).round(), tam), ico, cor)
 
-func _estrela4(p: Vector2, r: float, cor: Color) -> void:
-	_c.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -r), p + Vector2(r * 0.28, -r * 0.28), p + Vector2(r, 0), p + Vector2(r * 0.28, r * 0.28), p + Vector2(0, r), p + Vector2(-r * 0.28, r * 0.28), p + Vector2(-r, 0), p + Vector2(-r * 0.28, -r * 0.28)]), cor)
+## Estrelinha de 4 pontas na grade (braços de ~r px). `cont` com alfa > 0 põe contorno escuro (só em cor opaca).
+func _estrela4(p: Vector2, r: float, cor: Color, cont: Color = Color(0, 0, 0, 0)) -> void:
+	var n: int = maxi(1, int(r / PX + 0.5))
+	var cx: float = _sn(p.x)
+	var cy: float = _sn(p.y)
+	var los: bool = n == 2
+	if cont.a > 0.0 and cor.a >= 0.99:
+		_astro_px(cx, cy, n + 1, cont, los)
+	_astro_px(cx, cy, n, cor, los)
+	if n >= 2:
+		_c.draw_rect(Rect2(cx, cy, PX, PX), Color(1.0, 1.0, 0.92, cor.a))
 
 # ------------------------------------------------------------------ desenho
 func _draw() -> void:
@@ -3244,17 +3424,15 @@ func _anel_sel(base: Vector2, foco: int = SEL_FORTE) -> void:
 	var luz: Color = Color(1.0, 0.93, 0.62)
 	var a_base: float = (0.46 + 0.08 * pu) * forca
 	var a_topo: float = 0.12 * forca
-	draw_polygon(PackedVector2Array([Vector2(base.x - 74, base.y + 2), Vector2(base.x + 74, base.y + 2), Vector2(base.x + 60, 66), Vector2(base.x - 60, 66)]),
-			PackedColorArray([_com_alfa(luz, a_base), _com_alfa(luz, a_base), _com_alfa(luz, a_topo), _com_alfa(luz, a_topo)]))
+	# feixe em degraus (4 faixas de luz) e, no escolhido, pedestal de luz em dois tons
+	_feixe_px(base.x, base.y + 3.0, 74.0, 66.0, 60.0, luz, a_base, a_topo, 4)
+	var pe: Vector2 = base + Vector2(0, 3)
 	if foco == SEL_FORTE:
-		_ellipse_sombra(base + Vector2(0, 3), 72.0, 16.0, Color(1.0, 0.85, 0.3, 0.3 + 0.1 * pu))
-		_ellipse_sombra(base + Vector2(0, 3), 54.0, 12.0, Color(1.0, 0.95, 0.6, 0.3 + 0.1 * pu))
-	var pts := PackedVector2Array()
-	for k in 33:
-		var a: float = TAU * k / 32.0
-		pts.append(base + Vector2(cos(a) * 74.0, 3.0 + sin(a) * 16.0))
-	var cor_anel: Color = Color(1.0, 0.9, 0.4, 0.95) if foco == SEL_FORTE else Color(1.0, 0.9, 0.5, 0.55 if foco == SEL_PRE else 0.5)
-	draw_polyline(pts, cor_anel, 4.0 if foco == SEL_FORTE else 2.0)
+		_elipse2_px(pe, 72.0, 16.0, Color(1.0, 0.85, 0.3, 0.3 + 0.1 * pu), 54.0, 12.0, Color(1.0, 0.95, 0.6, 0.45 + 0.12 * pu))
+		_aro_px(pe, 74.0, 16.0, Color(1.0, 0.97, 0.7))
+		_aro_px(pe, 71.0, 13.0, Color(0.85, 0.6, 0.18, 0.95))
+	else:
+		_aro_px(pe, 74.0, 16.0, Color(1.0, 0.9, 0.5, 0.55 if foco == SEL_PRE else 0.5))
 
 func _titulo_ou_filtro() -> void:
 	if filtro_cj < 0:
@@ -3270,8 +3448,7 @@ func _titulo_ou_filtro() -> void:
 	var nome: String = "Só " + Pecas.CONJUNTO_NOME[filtro_cj]
 	Desenho.texto(self, nome, FILTRO_R.position + Vector2(12, 18), _tam_cabe(nome, [15, 13], 112.0), COR_TINTA_ESC)
 	var xc: Vector2 = Vector2(FILTRO_R.end.x - 18, FILTRO_R.position.y + 13)
-	draw_line(xc + Vector2(-5, -5), xc + Vector2(5, 5), COR_TINTA_ESC, 2.5)
-	draw_line(xc + Vector2(-5, 5), xc + Vector2(5, -5), COR_TINTA_ESC, 2.5)
+	_grade_px(self, ICO_X, xc - Vector2(7.5, 7.5), PX, COR_TINTA_ESC)
 
 ## Clarões, peças voando e textos flutuantes (por cima de tudo, abaixo das dicas).
 func _camada_voos() -> void:
@@ -3279,10 +3456,12 @@ func _camada_voos() -> void:
 		var k: float = clampf(float(c["t"]), 0.0, 1.0)
 		var base: Vector2 = pos_boneco(int(c["bi"]))
 		var cor: Color = c["cor"]
-		_ellipse_sombra(base + Vector2(0, 3), 40.0 + 90.0 * k, 9.0 + 20.0 * k, _com_alfa(cor.lightened(0.3), 0.5 * (1.0 - k)))
-		var luz: Color = _com_alfa(cor.lightened(0.4), 0.45 * (1.0 - k))
-		draw_polygon(PackedVector2Array([Vector2(base.x - 46, base.y), Vector2(base.x + 46, base.y), Vector2(base.x + 30, base.y - 150), Vector2(base.x - 30, base.y - 150)]), PackedColorArray([luz, luz, _com_alfa(luz, 0.0), _com_alfa(luz, 0.0)]))
-		draw_arc(base + Vector2(0, -50), 30.0 + 110.0 * k, 0.0, TAU, 40, _com_alfa(Color(1, 0.95, 0.7), 1.0 - k), 4.0 * (1.0 - k) + 1.0)
+		# poça de luz que se abre no chão, feixe em faixas acima dela e onda de quadradinhos que some pontilhando
+		var ry_c: float = 9.0 + 20.0 * k
+		_elipse_px(base + Vector2(0, 3), 40.0 + 90.0 * k, ry_c, _com_alfa(cor.lightened(0.3), 0.5 * (1.0 - k)))
+		_feixe_px(base.x, base.y + 3.0 - ry_c, 46.0, base.y - 150.0, 30.0, cor.lightened(0.4), 0.45 * (1.0 - k), 0.0, 4)
+		var rc: float = 30.0 + 110.0 * k
+		VFX.aro(_c, base + Vector2(0, -50), rc, rc, Color(1, 0.95, 0.7), 1.0 - k, 2.0 if k < 0.35 else 1.0)
 	for v in voos:
 		var k2: float = clampf(float(v["t"]), 0.0, 1.0)
 		var e: float = 1.0 - pow(1.0 - k2, 3.0)
@@ -3349,8 +3528,8 @@ func _tela_resumo() -> void:
 		if p.raridade > 0:
 			var cc: Color = Pecas.cor_rar(p.raridade)
 			var pu: float = 0.5 + 0.5 * sin(t * 5.0 + j)
-			_c.draw_circle(Vector2(cx, cy), 30.0, _com_alfa(cc, 0.16 + 0.14 * pu))
-			_c.draw_arc(Vector2(cx, cy), 30.0, 0.0, TAU, 28, _com_alfa(cc, 0.9), 2.0)
+			_elipse_px(Vector2(cx, cy), 27.0, 27.0, _com_alfa(cc, 0.16 + 0.14 * pu))
+			_aro_px(Vector2(cx, cy), 30.0, 30.0, _com_alfa(cc, 0.9))
 			if age < 0.6:
 				_estrela4(Vector2(cx, cy - 24.0 - age * 30.0), 8.0 * (1.0 - age / 0.6) + 2.0, Color(1, 0.95, 0.5))
 			Desenho.texto(_c, Pecas.RARIDADE_NOME[p.raridade], Vector2(cx - 31, cy + 40), 13, cc.lightened(0.3), 62.0, 3)
@@ -3430,97 +3609,260 @@ func _aviso_lista() -> void:
 		for i in mini(2, linhas.size()):
 			Desenho.texto(_c, linhas[i], Vector2(rl.position.x + 8, yl + i * 15.0), 13, COR_TINTA)
 
-func _fundo() -> void:
-	# parede (papel de parede) e rodapé
-	var c1: Color = Color(0.3, 0.2, 0.3)
-	var c2: Color = Color(0.4, 0.27, 0.32)
-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(1280, 0), Vector2(1280, 420), Vector2(0, 420)]), PackedColorArray([c1, c1, c2, c2]))
-	for i in 21:
-		draw_rect(Rect2(i * 64.0, 0, 32, 420), Color(1, 1, 1, 0.025))
-	for row in 4:
-		for col in 11:
-			var q: Vector2 = Vector2(32.0 + col * 120.0 + (row % 2) * 60.0, 70.0 + row * 90.0)
-			draw_colored_polygon(PackedVector2Array([q + Vector2(0, -6), q + Vector2(5, 0), q + Vector2(0, 6), q + Vector2(-5, 0)]), Color(0.95, 0.75, 0.5, 0.09))
-	draw_rect(Rect2(0, 412, 1280, 28), Color(0.62, 0.5, 0.42))
-	draw_rect(Rect2(0, 412, 1280, 4), Color(0.78, 0.66, 0.55))
-	# assoalho
-	var w1: Color = Color(0.46, 0.3, 0.19)
-	var w2: Color = Color(0.3, 0.19, 0.14)
-	draw_polygon(PackedVector2Array([Vector2(0, 440), Vector2(1280, 440), Vector2(1280, 720), Vector2(0, 720)]), PackedColorArray([w1, w1, w2, w2]))
-	var ys: Array[float] = [440.0, 462.0, 490.0, 524.0, 566.0, 616.0, 676.0, 740.0]
-	for r in range(1, ys.size()):
-		draw_line(Vector2(0, ys[r]), Vector2(1280, ys[r]), Color(0, 0, 0, 0.22), 2.0)
-		var passo: float = 140.0 + (ys[r] - ys[r - 1]) * 3.0
-		var xj: float = float((r * 83) % int(passo))
-		while xj < 1280.0:
-			draw_line(Vector2(xj, ys[r - 1]), Vector2(xj, ys[r]), Color(0, 0, 0, 0.15), 1.5)
-			xj += passo
-	_armario()
+# ------------------------------------------------------------------ fundo do guarda-roupa (pixel art pintada uma vez)
+## Parede, assoalho e closet não se mexem: são pintados uma vez numa imagem de 427 x 240 pixels, em que cada pixel
+## vira um quadradinho de PX (3 px) na tela, e desenhados com uma chamada só. Os degradês viram 4 a 6 faixas com
+## pontilhado ordenado só na emenda; tábuas, veios, nós, luz do teto, cabides, tapete e rodapés são pixels da grade.
+const FUNDO_W := 427
+const FUNDO_H := 240
+const BAYER4: Array[int] = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+const CL_X0 := 69     # closet, em pixels da imagem (208 a 980 px na tela)
+const CL_X1 := 327
+const CL_Y1 := 149    # base do closet (446 px)
+## Cabide com a roupa pendurada (11 x 20): w arame, k contorno, c pano, l pano claro, d pano escuro.
+const CABIDE: Array[String] = [
+	"......w....",
+	".....w.w...",
+	".....w.....",
+	".....w.....",
+	".....w.....",
+	".....w.....",
+	"....w.w....",
+	"...w...w...",
+	"..w.....w..",
+	".kkkkkkkkk.",
+	".klcccccdk.",
+	".klccdccdk.",
+	".klccdccdk.",
+	".klccdccdk.",
+	"kllccdcccdk",
+	"klcccdcccdk",
+	"klcccdcccdk",
+	"klcccdcccdk",
+	"klcccdcccdk",
+	"kkkkkkkkkkk",
+]
+var _fundo_tex: ImageTexture = null
+var _fundo_img: Image = null
+var _fundo_tarefa: int = -1
 
-## O closet: fundo de tábuas com veios, luz quente de cima, cabideiro com cabides, tapete e moldura.
-func _armario() -> void:
-	var x0: float = 208.0
-	var x1: float = 980.0
-	var alt: float = 446.0
-	var n: int = 15
-	var larg: float = (x1 - x0) / n
-	for k in n:
-		var tom: float = 0.88 + 0.24 * _ruido(k + 1.0)
-		var rx: float = x0 + k * larg
-		draw_rect(Rect2(rx, 0, larg + 1.0, alt), Color(0.40 * tom, 0.25 * tom, 0.145 * tom))
-		for g in 10:
-			var gx: float = rx + 5.0 + _ruido(k * 5.0 + g * 1.7) * (larg - 12.0)
-			var gy: float = _ruido(k * 13.0 + g * 3.1) * alt
-			var gl: float = 14.0 + _ruido(k * 7.0 + g) * 46.0
-			var dx: float = (_ruido(k + g * 2.2) - 0.5) * 4.0
-			draw_polyline(PackedVector2Array([Vector2(gx, gy), Vector2(gx + dx, gy + gl * 0.5), Vector2(gx, gy + gl)]), Color(0, 0, 0, 0.11), 1.5)
-		if _ruido(k * 3.3) > 0.5:
-			var ny: float = 90.0 + _ruido(k * 9.1) * 240.0
-			var nx: float = rx + larg * (0.3 + 0.4 * _ruido(k * 2.7))
-			_ellipse_sombra(Vector2(nx, ny), 6.0, 3.0, Color(0.15, 0.08, 0.04, 0.5))
-			_ellipse_sombra(Vector2(nx, ny), 3.5, 1.8, Color(0.1, 0.05, 0.03, 0.6))
-		draw_line(Vector2(rx, 0), Vector2(rx, alt), Color(0, 0, 0, 0.38), 2.0)
-		draw_line(Vector2(rx + 2.0, 0), Vector2(rx + 2.0, alt), Color(1, 0.8, 0.5, 0.07), 2.0)
-	# sombra nas bordas
-	var esc_c: Color = Color(0.06, 0.03, 0.02, 0.5)
-	var nada: Color = Color(0.06, 0.03, 0.02, 0.0)
-	draw_polygon(PackedVector2Array([Vector2(x0, 0), Vector2(x0 + 90, 0), Vector2(x0 + 90, alt), Vector2(x0, alt)]), PackedColorArray([esc_c, nada, nada, esc_c]))
-	draw_polygon(PackedVector2Array([Vector2(x1 - 90, 0), Vector2(x1, 0), Vector2(x1, alt), Vector2(x1 - 90, alt)]), PackedColorArray([nada, esc_c, esc_c, nada]))
-	# luz quente de cima
-	var luz: Color = Color(1.0, 0.82, 0.45)
-	draw_polygon(PackedVector2Array([Vector2(540, 0), Vector2(640, 0), Vector2(930, 420), Vector2(250, 420)]), PackedColorArray([_com_alfa(luz, 0.2), _com_alfa(luz, 0.2), _com_alfa(luz, 0.0), _com_alfa(luz, 0.0)]))
-	draw_polygon(PackedVector2Array([Vector2(570, 0), Vector2(610, 0), Vector2(780, 420), Vector2(400, 420)]), PackedColorArray([_com_alfa(luz, 0.18), _com_alfa(luz, 0.18), _com_alfa(luz, 0.0), _com_alfa(luz, 0.0)]))
-	for k in 5:
-		_ellipse_sombra(Vector2(590, 0), 40.0 + k * 34.0, 14.0 + k * 10.0, _com_alfa(luz, 0.07))
-	# cabideiro e cabides
-	var cores_pano: Array[Color] = [Color(0.5, 0.6, 0.78), Color(0.78, 0.4, 0.38), Color(0.5, 0.72, 0.5), Color(0.86, 0.72, 0.4), Color(0.7, 0.55, 0.78)]
-	for k in range(1, 5):
-		var hx: float = 289.0 - 76.5 + k * 153.0
-		var pano: Color = cores_pano[(k * 2) % cores_pano.size()]
-		draw_colored_polygon(PackedVector2Array([Vector2(hx - 11, 28), Vector2(hx + 11, 28), Vector2(hx + 15, 60), Vector2(hx - 15, 60)]), _com_alfa(pano, 0.85))
-		draw_polyline(PackedVector2Array([Vector2(hx - 11, 28), Vector2(hx + 11, 28), Vector2(hx + 15, 60), Vector2(hx - 15, 60), Vector2(hx - 11, 28)]), Color(0, 0, 0, 0.35), 1.5)
-		draw_line(Vector2(hx, 30), Vector2(hx, 58), Color(0, 0, 0, 0.15), 1.5)
-		draw_arc(Vector2(hx, 15), 4.0, PI * 0.9, PI * 2.4, 8, Color(0.85, 0.85, 0.9, 0.85), 2.0)
-		draw_line(Vector2(hx, 19), Vector2(hx - 13, 28), Color(0.85, 0.85, 0.9, 0.85), 2.0)
-		draw_line(Vector2(hx, 19), Vector2(hx + 13, 28), Color(0.85, 0.85, 0.9, 0.85), 2.0)
-	draw_rect(Rect2(x0, 6, x1 - x0, 7), Color(0.72, 0.56, 0.33))
-	draw_rect(Rect2(x0, 6, x1 - x0, 2), Color(0.95, 0.82, 0.55))
-	draw_rect(Rect2(x0, 11, x1 - x0, 2), Color(0.4, 0.28, 0.14))
-	# tapete onde os gatos pisam
-	var tp := Rect2(226, 394, 730, 36)
-	draw_rect(Rect2(tp.position.x - 6, tp.position.y + 2, tp.size.x + 12, tp.size.y), Color(0, 0, 0, 0.3))
-	draw_rect(tp, Color(0.55, 0.2, 0.22))
-	draw_rect(tp.grow(-4), Color(0.45, 0.15, 0.2))
-	draw_rect(tp.grow(-4), Color(0.95, 0.82, 0.55, 0.9), false, 2.0)
-	for k in 36:
-		var qx: float = tp.position.x + 18.0 + k * 20.0
-		draw_colored_polygon(PackedVector2Array([Vector2(qx, tp.position.y + 18), Vector2(qx + 6, tp.position.y + 12), Vector2(qx + 12, tp.position.y + 18), Vector2(qx + 6, tp.position.y + 24)]), Color(0.95, 0.75, 0.45, 0.5))
-	# rodapé de madeira clara
-	draw_rect(Rect2(x0, 430, x1 - x0, 16), Color(0.6, 0.42, 0.26))
-	draw_rect(Rect2(x0, 430, x1 - x0, 3), Color(0.82, 0.62, 0.4))
-	draw_rect(Rect2(x0, 443, x1 - x0, 3), Color(0.3, 0.19, 0.1))
+func _fundo() -> void:
+	if _fundo_tex == null:
+		if _fundo_tarefa >= 0:
+			WorkerThreadPool.wait_for_task_completion(_fundo_tarefa)
+			_fundo_tarefa = -1
+		if _fundo_img == null:
+			_fundo_img = _gerar_fundo()
+		_fundo_tex = ImageTexture.create_from_image(_fundo_img)
+		_fundo_img = null
+	draw_texture_rect(_fundo_tex, Rect2(0, 0, FUNDO_W * PX, FUNDO_H * PX), false)
 	# moldura (as laterais descem por trás do painel do guarda-roupa)
 	nove(self, GUI_TEX, R_MADEIRA, M_MADEIRA, Rect2(184, -100, 812, 845), 0.75, Color.WHITE, false)
+
+## Começa a pintar o fundo numa linha de trabalho (no _ready); o primeiro desenho só espera se ela ainda não acabou.
+func _preparar_fundo() -> void:
+	if _fundo_tex == null and _fundo_tarefa < 0:
+		_fundo_tarefa = WorkerThreadPool.add_task(_pintar_fundo_tarefa)
+
+func _pintar_fundo_tarefa() -> void:
+	_fundo_img = _gerar_fundo()
+
+static func _ruido_s(n: float) -> float:
+	return fposmod(sin(n * 12.9898) * 43758.5453, 1.0)
+
+## Degrau de `v` (0..1) em `n` tons; só a emenda de cada faixa (os últimos 35%) pontilha, pela matriz de Bayer 4x4.
+static func _degrau(v: float, n: int, x: int, y: int) -> float:
+	var l: float = clampf(v, 0.0, 1.0) * (n - 1)
+	var b: int = int(l)
+	var fr: float = l - b
+	if b < n - 1 and (fr - 0.65) / 0.35 > (BAYER4[(y & 3) * 4 + (x & 3)] + 0.5) / 16.0:
+		b += 1
+	return float(b) / (n - 1)
+
+## Mistura um pixel da imagem com `cor` (k = quanto da cor nova).
+static func _tingir(im: Image, x: int, y: int, cor: Color, k: float) -> void:
+	if x < 0 or y < 0 or x >= FUNDO_W or y >= FUNDO_H:
+		return
+	im.set_pixel(x, y, im.get_pixel(x, y).lerp(cor, k))
+
+static func _escurecer(im: Image, x: int, y: int, k: float) -> void:
+	if x < 0 or y < 0 or x >= FUNDO_W or y >= FUNDO_H:
+		return
+	im.set_pixel(x, y, im.get_pixel(x, y).darkened(k))
+
+static func _gerar_fundo() -> Image:
+	var im := Image.create(FUNDO_W, FUNDO_H, false, Image.FORMAT_RGB8)
+	# --- parede: roxo em cima, rosado embaixo, em 4 faixas; listras do papel e losangos claros (o closet cobre o meio)
+	var c1 := Color(0.3, 0.2, 0.3)
+	var c2 := Color(0.4, 0.27, 0.32)
+	for y in 137:
+		for x in FUNDO_W:
+			if x >= CL_X0 and x < CL_X1:
+				continue
+			var cor: Color = c1.lerp(c2, _degrau(y / 136.0, 4, x, y))
+			if x % 21 < 11:
+				cor = cor.lerp(Color.WHITE, 0.035)
+			im.set_pixel(x, y, cor)
+	var losango := Color(0.95, 0.75, 0.5)
+	for row in 4:
+		for col in 11:
+			var qx: int = int((32.0 + col * 120.0 + (row % 2) * 60.0) / PX)
+			var qy: int = int((70.0 + row * 90.0) / PX)
+			if qx >= CL_X0 - 1 and qx <= CL_X1:
+				continue
+			_tingir(im, qx, qy - 1, losango, 0.13)
+			_tingir(im, qx - 1, qy, losango, 0.13)
+			_tingir(im, qx, qy, losango, 0.22)
+			_tingir(im, qx + 1, qy, losango, 0.13)
+			_tingir(im, qx, qy + 1, losango, 0.13)
+	# rodapé da parede: friso claro, faixa, sombra
+	im.fill_rect(Rect2i(0, 137, FUNDO_W, 1), Color(0.78, 0.66, 0.55))
+	im.fill_rect(Rect2i(0, 138, FUNDO_W, 7), Color(0.62, 0.5, 0.42))
+	im.fill_rect(Rect2i(0, 145, FUNDO_W, 1), Color(0.47, 0.36, 0.3))
+	im.fill_rect(Rect2i(0, 146, FUNDO_W, 1), Color(0.24, 0.15, 0.12))
+	# --- assoalho: fileiras de tábuas, cada fileira num tom (5 tons, do claro junto da parede ao escuro embaixo)
+	var w1 := Color(0.46, 0.3, 0.19)
+	var w2 := Color(0.3, 0.19, 0.14)
+	var ys: Array[float] = [440.0, 462.0, 490.0, 524.0, 566.0, 616.0, 676.0, 740.0]
+	for r in range(1, ys.size()):
+		var ya: int = roundi(ys[r - 1] / PX)
+		var yb: int = mini(FUNDO_H, roundi(ys[r] / PX))
+		if ya >= FUNDO_H:
+			break
+		var tom: Color = w1.lerp(w2, roundf(clampf(((ya + yb) * 0.5 - 147.0) / 93.0, 0.0, 1.0) * 4.0) / 4.0)
+		var passo: float = 140.0 + (ys[r] - ys[r - 1]) * 3.0
+		var xj: float = float((r * 83) % int(passo))
+		var x_ant: int = 0
+		var tab: int = 0
+		while x_ant < FUNDO_W:
+			var xf: int = mini(FUNDO_W, int(xj / PX))
+			var f: float = 0.95 + 0.09 * _ruido_s(r * 31.0 + tab * 7.3)
+			var tt := Color(tom.r * f, tom.g * f, tom.b * f)
+			if xf > x_ant:
+				im.fill_rect(Rect2i(x_ant, ya, xf - x_ant, yb - ya), tt)
+			if xf >= FUNDO_W:
+				break
+			im.fill_rect(Rect2i(xf, ya, 1, yb - ya), tt.darkened(0.2))   # junta entre tábuas
+			x_ant = xf + 1
+			xj += passo
+			tab += 1
+		im.fill_rect(Rect2i(0, ya, FUNDO_W, 1), tom.darkened(0.3))      # vão escuro entre fileiras
+		if ya + 1 < FUNDO_H:
+			for x in FUNDO_W:
+				_tingir(im, x, ya + 1, Color.WHITE, 0.06)               # quina clara da fileira
+	# --- closet: tábuas em pé, sombra nas bordas e a luz quente do teto (cones e halo), tudo em degraus
+	var luz := Color(1.0, 0.82, 0.45)
+	var sombra := Color(0.06, 0.03, 0.02)
+	var n: int = 15
+	for k in n:
+		var bx0: int = CL_X0 + roundi(k * (CL_X1 - CL_X0) / float(n))
+		var bx1: int = CL_X0 + roundi((k + 1) * (CL_X1 - CL_X0) / float(n))
+		var tm: float = 0.88 + 0.24 * _ruido_s(k + 1.0)
+		var base := Color(0.40 * tm, 0.25 * tm, 0.145 * tm)
+		for y in CL_Y1:
+			var ysc: float = (y + 0.5) * PX
+			var fy: float = ysc / 420.0
+			var xa: float = lerpf(540.0, 250.0, fy)
+			var xb: float = lerpf(640.0, 930.0, fy)
+			var xa2: float = lerpf(570.0, 400.0, fy)
+			var xb2: float = lerpf(610.0, 780.0, fy)
+			for x in range(bx0, bx1):
+				var xsc: float = (x + 0.5) * PX
+				var l: float = 0.0
+				if fy <= 1.0:
+					if xsc >= xa and xsc <= xb:
+						l += 0.2 * (1.0 - fy)
+					if xsc >= xa2 and xsc <= xb2:
+						l += 0.18 * (1.0 - fy)
+				if ysc < 54.0:
+					for e in 5:
+						var dx: float = (xsc - 590.0) / (40.0 + e * 34.0)
+						var dy: float = ysc / (14.0 + e * 10.0)
+						if dx * dx + dy * dy <= 1.0:
+							l += 0.07
+				var d: int = mini(x - CL_X0, CL_X1 - 1 - x)
+				var sq: float = 0.0
+				if d < 30:
+					sq = _degrau(1.0 - d / 30.0, 4, x, y) * 0.5
+				im.set_pixel(x, y, base.lerp(sombra, sq).lerp(luz, _degrau(l / 0.6, 6, x, y) * 0.6))
+		# veios: riscos de um pixel com um degrau no meio
+		for g in 10:
+			var gx: int = bx0 + 2 + int(_ruido_s(k * 5.0 + g * 1.7) * maxf(1.0, bx1 - bx0 - 4))
+			var gy: int = int(_ruido_s(k * 13.0 + g * 3.1) * CL_Y1)
+			var gl: int = 5 + int(_ruido_s(k * 7.0 + g) * 15.0)
+			var ddx: int = 1 if _ruido_s(k + g * 2.2) > 0.5 else -1
+			for j in gl:
+				var xx: int = gx + (ddx if (j > gl / 3 and j < gl * 2 / 3) else 0)
+				var yy: int = gy + j
+				if yy < CL_Y1 and xx > bx0 + 1 and xx < bx1:
+					_escurecer(im, xx, yy, 0.14)
+		# nó da madeira: oval escuro com miolo mais escuro
+		if _ruido_s(k * 3.3) > 0.5:
+			var ny: int = int((90.0 + _ruido_s(k * 9.1) * 240.0) / PX)
+			var nx: int = bx0 + int((bx1 - bx0) * (0.3 + 0.4 * _ruido_s(k * 2.7)))
+			for kx in range(-1, 2):
+				_escurecer(im, nx + kx, ny, 0.35)
+				_escurecer(im, nx + kx, ny + 1, 0.3)
+			_escurecer(im, nx, ny, 0.45)
+			_escurecer(im, nx - 2, ny + 1, 0.15)
+			_escurecer(im, nx + 2, ny, 0.15)
+			_escurecer(im, nx, ny - 1, 0.12)
+			_escurecer(im, nx, ny + 2, 0.12)
+		# emenda das tábuas: vão escuro e quina clara
+		for y in CL_Y1:
+			_escurecer(im, bx0, y, 0.38)
+			_tingir(im, bx0 + 1, y, Color(1.0, 0.8, 0.5), 0.08)
+	# varão do cabideiro
+	im.fill_rect(Rect2i(CL_X0, 2, CL_X1 - CL_X0, 1), Color(0.95, 0.82, 0.55))
+	im.fill_rect(Rect2i(CL_X0, 3, CL_X1 - CL_X0, 1), Color(0.72, 0.56, 0.33))
+	im.fill_rect(Rect2i(CL_X0, 4, CL_X1 - CL_X0, 1), Color(0.4, 0.28, 0.14))
+	for x in range(CL_X0, CL_X1):
+		_escurecer(im, x, 5, 0.25)
+	# cabides com roupa (entre as plaquinhas dos nomes)
+	var cores_pano: Array[Color] = [Color(0.5, 0.6, 0.78), Color(0.78, 0.4, 0.38), Color(0.5, 0.72, 0.5), Color(0.86, 0.72, 0.4), Color(0.7, 0.55, 0.78)]
+	for k in range(1, 5):
+		var hx: int = int((289.0 - 76.5 + k * 153.0) / PX)
+		var pano: Color = cores_pano[(k * 2) % cores_pano.size()].darkened(0.08)
+		for yy in CABIDE.size():
+			var lin: String = CABIDE[yy]
+			for xx in lin.length():
+				var ch: int = lin.unicode_at(xx)
+				var px_x: int = hx - 5 + xx
+				var px_y: int = 1 + yy
+				match ch:
+					119: im.set_pixel(px_x, px_y, Color(0.85, 0.85, 0.9))   # w
+					107: im.set_pixel(px_x, px_y, Color(0.14, 0.08, 0.06))  # k
+					99: im.set_pixel(px_x, px_y, pano)                      # c
+					108: im.set_pixel(px_x, px_y, pano.lightened(0.25))     # l
+					100: im.set_pixel(px_x, px_y, pano.darkened(0.25))      # d
+	# tapete onde os gatos pisam: borda, friso dourado e losangos
+	var tx0: int = 75
+	var tx1: int = 319
+	var ty0: int = 131
+	var ty1: int = 143
+	for y in range(ty0 + 1, ty1):
+		_escurecer(im, tx1, y, 0.3)
+		_escurecer(im, tx1 + 1, y, 0.3)
+	var miolo := Color(0.45, 0.15, 0.2)
+	im.fill_rect(Rect2i(tx0, ty0, tx1 - tx0, ty1 - ty0), Color(0.55, 0.2, 0.22))
+	im.fill_rect(Rect2i(tx0 + 1, ty0 + 1, tx1 - tx0 - 2, ty1 - ty0 - 2), miolo)
+	var friso: Color = miolo.lerp(Color(0.95, 0.82, 0.55), 0.9)
+	im.fill_rect(Rect2i(tx0 + 2, ty0 + 2, tx1 - tx0 - 4, 1), friso)
+	im.fill_rect(Rect2i(tx0 + 2, ty1 - 3, tx1 - tx0 - 4, 1), friso)
+	im.fill_rect(Rect2i(tx0 + 2, ty0 + 2, 1, ty1 - ty0 - 4), friso)
+	im.fill_rect(Rect2i(tx1 - 3, ty0 + 2, 1, ty1 - ty0 - 4), friso)
+	var los: Color = miolo.lerp(Color(0.95, 0.75, 0.45), 0.5)
+	var lx: int = tx0 + 5
+	while lx + 4 < tx1 - 3:
+		im.fill_rect(Rect2i(lx + 1, 135, 2, 1), los)
+		im.fill_rect(Rect2i(lx, 136, 4, 2), los)
+		im.fill_rect(Rect2i(lx + 1, 138, 2, 1), los)
+		lx += 7
+	# rodapé do closet: madeira clara com friso e sombra
+	im.fill_rect(Rect2i(CL_X0, 143, CL_X1 - CL_X0, 1), Color(0.82, 0.62, 0.4))
+	im.fill_rect(Rect2i(CL_X0, 144, CL_X1 - CL_X0, 4), Color(0.6, 0.42, 0.26))
+	im.fill_rect(Rect2i(CL_X0, 148, CL_X1 - CL_X0, 1), Color(0.3, 0.19, 0.1))
+	return im
 
 ## Quantas peças da fantasia da peça `p` o boneco tem antes e depois de vesti-la.
 func _efeito_conjunto(b: Boneco, p: Peca) -> Vector2i:
@@ -3642,10 +3984,8 @@ func _bonecos() -> void:
 ## Luz dourada no chão do gato que tem ponto de treino.
 func _brilho_treino(base: Vector2) -> void:
 	var pu: float = 0.5 + 0.5 * sin(t * 5.0)
-	_ellipse_sombra(base + Vector2(0, 2), 76.0, 17.0, Color(1.0, 0.8, 0.2, 0.16 + 0.14 * pu))
-	_ellipse_sombra(base + Vector2(0, 2), 54.0, 12.0, Color(1.0, 0.92, 0.45, 0.22 + 0.2 * pu))
-	var ouro: Color = Color(1.0, 0.85, 0.35)
-	draw_polygon(PackedVector2Array([Vector2(base.x - 40, base.y), Vector2(base.x + 40, base.y), Vector2(base.x + 28, base.y - 130), Vector2(base.x - 28, base.y - 130)]), PackedColorArray([_com_alfa(ouro, 0.22 + 0.12 * pu), _com_alfa(ouro, 0.22 + 0.12 * pu), _com_alfa(ouro, 0.0), _com_alfa(ouro, 0.0)]))
+	_elipse2_px(base + Vector2(0, 2), 76.0, 17.0, Color(1.0, 0.8, 0.2, 0.16 + 0.14 * pu), 54.0, 12.0, Color(1.0, 0.92, 0.45, 0.32 + 0.24 * pu))
+	_feixe_px(base.x, base.y + 2.0, 40.0, base.y - 130.0, 28.0, Color(1.0, 0.85, 0.35), 0.22 + 0.12 * pu, 0.0, 4)
 
 ## Faíscas girando em volta do gato e selo "+N" saltitando sobre a cabeça.
 func _estrelas_treino(base: Vector2, pontos: int) -> void:
@@ -3653,12 +3993,15 @@ func _estrelas_treino(base: Vector2, pontos: int) -> void:
 	for k in 6:
 		var a: float = t * 1.6 + k * TAU / 6.0
 		var p: Vector2 = c + Vector2(cos(a) * 64.0, sin(a) * 52.0)
-		_estrela4(p, 5.0 + 3.5 * sin(t * 6.0 + k * 1.7), Color(1.0, 0.95, 0.55, 0.9))
-	var bp: Vector2 = Vector2(base.x + 54.0, base.y - 118.0 - absf(sin(t * 4.0)) * 9.0)
-	draw_circle(bp, 22.0, Color(0.1, 0.05, 0.02, 0.9))
-	draw_circle(bp, 19.0, Color(1.0, 0.8, 0.2))
-	draw_arc(bp, 19.0, 0.0, TAU, 24, Color(1.0, 0.97, 0.7), 2.0)
-	Desenho.texto(self, "+%d" % pontos, bp + Vector2(-20, 6), 18, COR_TINTA_ESC, 40.0)
+		_estrela4(p, 5.0 + 3.5 * sin(t * 6.0 + k * 1.7), Color(1.0, 0.95, 0.55))
+	# selo de moeda em pixel: contorno escuro, aro claro, miolo dourado com sombra embaixo e brilho em cima
+	var bp: Vector2 = Vector2(base.x + 54.0, _sn(base.y - 118.0 - absf(sin(t * 4.0)) * 9.0))
+	VFX.disco(self, bp, 22.0, Color(0.1, 0.05, 0.02))
+	VFX.disco(self, bp, 19.0, Color(1.0, 0.97, 0.7))
+	VFX.disco(self, bp, 16.0, Color(0.86, 0.58, 0.1))
+	VFX.disco(self, bp + Vector2(-PX, -PX), 13.0, Color(1.0, 0.8, 0.2))
+	VFX.ponto(self, bp + Vector2(-PX * 3.0, -PX * 3.0), Color(1.0, 0.97, 0.7))
+	Desenho.texto(self, "+%d" % pontos, bp + Vector2(-18, 7), 18, COR_TINTA_ESC, 40.0)
 
 ## Nome grande, nível e barra de experiência no alto do vão do boneco.
 func _cabecalho_boneco(b: Boneco, base: Vector2, i: int, foco: int = SEL_NENHUM) -> void:
@@ -3699,14 +4042,11 @@ func _cabecalho_boneco(b: Boneco, base: Vector2, i: int, foco: int = SEL_NENHUM)
 
 ## Abinha com um lápis desenhado (renomear o gato).
 func _lapis(r: Rect2, forte: bool, alfa: float = 1.0) -> void:
-	draw_rect(r, Color(0.25, 0.14, 0.04, 0.95 * alfa))
-	draw_rect(r.grow(-2.0), Color(1.0, 0.92, 0.6, alfa) if forte else Color(0.95, 0.8, 0.45, alfa))
+	# abinha de quinas cortadas e um lápis de grade (ponta de grafite, madeira, corpo laranja, borracha rosa)
+	UIComum.forma(self, r, Color(0.25, 0.14, 0.04, 0.95 * alfa), PX)
+	UIComum.forma(self, r.grow(-PX), Color(1.0, 0.92, 0.6, alfa) if forte else Color(0.95, 0.8, 0.45, alfa), PX)
 	var c: Vector2 = r.get_center()
-	var pts := PackedVector2Array([c + Vector2(-8, 5), c + Vector2(-6, 7), c + Vector2(-1, 5), c + Vector2(7, -3), c + Vector2(4, -6), c + Vector2(-4, 2)])
-	draw_colored_polygon(pts, Color(0.85, 0.45, 0.15, alfa))
-	pts.append(pts[0])
-	draw_polyline(pts, Color(0.25, 0.14, 0.04, alfa), 1.5)
-	draw_line(c + Vector2(4, -6), c + Vector2(7, -3), Color(0.95, 0.5, 0.55, alfa), 3.0)
+	_grade_px(self, ICO_LAPIS, c - Vector2(10.5, 6.0), PX, Color(0.85, 0.45, 0.15), alfa)
 
 ## Treino: botões grandes com ganho escrito quando há ponto; fichinhas com os valores quando não há.
 func _treino_boneco(b: Boneco, i: int, base: Vector2) -> void:
@@ -3759,14 +4099,14 @@ func _botao_promover_tudo(b: Boneco, i: int) -> void:
 	if sob_r and sr["ok"]:
 		cor_r = cor_r.lightened(0.2)
 	_botao_arte(rr, cor_r, sob_r and sr["ok"] and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT))
-	_estrela4(Vector2(rr.position.x + 12.0, rr.get_center().y), 6.5, Color(1.0, 0.95, 0.6) if sr["ok"] else Color(0.4, 0.38, 0.4))
+	_estrela4(Vector2(rr.position.x + 12.0, rr.get_center().y), 6.5, Color(1.0, 0.8, 0.22) if sr["ok"] else Color(0.4, 0.38, 0.4))
 	Desenho.texto(self, "(%d)" % sr["custo"] if sr["custo"] > 0 else "máx.", Vector2(rr.position.x + 22.0, rr.position.y + 15), 12, COR_TINTA_ESC if sr["ok"] else Color(0.3, 0.28, 0.3), rr.size.x - 24.0)
 
 ## Anel verde que pulsa em volta de uma peça que a arrastada pode fundir.
 func _destaque_fusao(c: Vector2, raio: float) -> void:
 	var pulso: float = 0.5 + 0.5 * sin(t * 7.0)
-	draw_arc(c, raio, 0.0, TAU, 28, Color(0.5, 1.0, 0.6, 0.55 + 0.4 * pulso), 3.0)
-	draw_circle(c, raio, Color(0.5, 1.0, 0.6, 0.1 + 0.08 * pulso))
+	_elipse_px(c, raio - PX, raio - PX, Color(0.5, 1.0, 0.6, 0.1 + 0.08 * pulso))
+	_aro_px(c, raio, raio, Color(0.5, 1.0, 0.6, 0.55 + 0.4 * pulso))
 
 ## Fantasias ativas (2 ou mais peças): nome, quantas peças, o bônus e, completa, o poder.
 ## Clique na caixa "Herança pronta!": pede confirmação e só então o poder da fantasia vestida fica com o gato.
@@ -4086,9 +4426,7 @@ func _painel_guarda() -> void:
 		if p.nova:
 			var pulso: float = 0.5 + 0.5 * sin(t * 6.0)
 			draw_rect(r.grow(1), Color(1, 1, 0.5, 0.25 + 0.45 * pulso), false, 1.0)
-			var sc: Vector2 = r.position + Vector2(r.size.x - 6, 6)
-			draw_circle(sc, 5.0, Color(0.2, 0.1, 0.0))
-			draw_circle(sc, 3.5, Desenho.DOURADO)
+			_grade_px(self, ICO_NOVA, r.position + Vector2(r.size.x - 13.0, -2.0), PX, Desenho.DOURADO)
 	# barra de rolagem
 	var total: int = int(ceil(lista.size() / float(TILE_COLS)))
 	if total > TILE_LINHAS:
@@ -4237,6 +4575,21 @@ func _bigorna() -> void:
 		c2 = "%d a %d troféus" % [Balanco.REFORCO_CUSTO[0], Balanco.REFORCO_CUSTO[-1]]
 	_alvo_promover(ALVO_ESTRELA, pc, m2, "Raridade", c2, true)
 
+## Borda tracejada de pixel: traços de 2 quadradinhos com 2 de vão, de PX de espessura.
+func _tracejado_px(r: Rect2, cor: Color) -> void:
+	var x: float = r.position.x
+	while x < r.end.x - 0.5:
+		var w: float = minf(PX * 2.0, r.end.x - x)
+		draw_rect(Rect2(x, r.position.y, w, PX), cor)
+		draw_rect(Rect2(x, r.end.y - PX, w, PX), cor)
+		x += PX * 4.0
+	var y: float = r.position.y + PX * 4.0
+	while y < r.end.y - PX - 0.5:
+		var h: float = minf(PX * 2.0, r.end.y - PX - y)
+		draw_rect(Rect2(r.position.x, y, PX, h), cor)
+		draw_rect(Rect2(r.end.x - PX, y, PX, h), cor)
+		y += PX * 4.0
+
 ## Um dos dois alvos do painel: apagado com o motivo quando a peça arrastada não pode, aceso com o custo quando pode.
 func _alvo_promover(r: Rect2, pc: Peca, motivo: String, nome: String, custo: String, estrela: bool) -> void:
 	var ativo: bool = pc != null
@@ -4251,31 +4604,19 @@ func _alvo_promover(r: Rect2, pc: Peca, motivo: String, nome: String, custo: Str
 		borda = Desenho.DOURADO
 	elif bloqueado:
 		borda = Color(0.7, 0.4, 0.4, 0.5)
-	draw_dashed_line(r.position, Vector2(r.end.x, r.position.y), borda, 2.0, 7.0)
-	draw_dashed_line(Vector2(r.position.x, r.end.y), r.end, borda, 2.0, 7.0)
-	draw_dashed_line(r.position, Vector2(r.position.x, r.end.y), borda, 2.0, 7.0)
-	draw_dashed_line(Vector2(r.end.x, r.position.y), r.end, borda, 2.0, 7.0)
+	_tracejado_px(r, borda)
 	var alfa: float = 0.4 if bloqueado else 1.0
 	var c: Vector2 = Vector2(r.get_center().x, r.position.y + 38.0)
+	var vivo: bool = sobre and not bloqueado
 	if estrela:
-		var giro: float = (sin(t * 5.0) * 0.1) if (sobre and not bloqueado) else 0.0
-		draw_set_transform(c, giro, Vector2.ONE)
-		_estrela4(Vector2.ZERO, 26.0, Color(1.0, 0.82, 0.25, alfa))
-		_estrela4(Vector2(15, -17), 8.0, Color(1.0, 0.95, 0.6, alfa))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		# com a peça em cima, a estrela pula um quadradinho em vez de girar (giro tira o desenho da grade)
+		var pulo: float = -PX if (vivo and fposmod(t, 0.4) < 0.2) else 0.0
+		var cont: Color = CONT_PX if alfa >= 1.0 else Color(0, 0, 0, 0)
+		_estrela4(c + Vector2(0, pulo), 26.0, Color(1.0, 0.82, 0.25, alfa), cont)
+		_estrela4(c + Vector2(15, -17 + pulo), 8.0, Color(1.0, 0.95, 0.6, alfa), cont)
 	else:
-		draw_set_transform(c, 0.0, Vector2(0.62, 0.62))
-		var mad: Color = Color(0.78, 0.58, 0.34, alfa)
-		var linha: Color = Color(0.85, 0.2, 0.25, alfa)
-		var cont: Color = Color(0.3, 0.18, 0.08, alfa)
-		draw_rect(Rect2(-24, -32, 48, 8), mad)
-		draw_rect(Rect2(-24, 24, 48, 8), mad)
-		draw_rect(Rect2(-24, -32, 48, 8), cont, false, 1.5)
-		draw_rect(Rect2(-24, 24, 48, 8), cont, false, 1.5)
-		draw_rect(Rect2(-17, -24, 34, 48), linha)
-		for k in 6:
-			draw_line(Vector2(-17, -20 + k * 8.0), Vector2(17, -16 + k * 8.0), Color(0.55, 0.08, 0.14, alfa), 1.5)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		var pulo_c: float = -PX if (vivo and fposmod(t, 0.4) < 0.2) else 0.0
+		_grade_px(self, ICO_CARRETEL, c - Vector2(18.0, 22.0 - pulo_c), PX, Color.WHITE, alfa)
 	Desenho.texto(self, nome, Vector2(r.position.x, r.position.y + 76.0), 17, Color(1, 1, 1, alfa + 0.1 if not bloqueado else 0.55), r.size.x, 3)
 	if bloqueado:
 		Desenho.texto(self, motivo, Vector2(r.position.x, r.position.y + 94.0), 13, Color(1.0, 0.6, 0.55), r.size.x, 3)
@@ -4294,9 +4635,9 @@ func _confirma_fusao() -> void:
 	Desenho.texto(_c, "Fundir peças iguais?", Vector2(FUSAO_R.position.x, FUSAO_R.position.y + 46.0), 26, Desenho.DOURADO, FUSAO_R.size.x, 5)
 	var y: float = FUSAO_R.position.y + 62.0
 	_ladrilho(Rect2(512, y, 56, 56), base)
-	Desenho.texto(_c, "+", Vector2(568, y + 38.0), 30, COR_TINTA, 44.0, 4)
+	_grade_px(_c, ICO_MAIS, Vector2(590.0 - 9.0, y + 28.0 - 9.0), PX, COR_TINTA)
 	_ladrilho(Rect2(612, y, 56, 56), outra)
-	Desenho.texto(_c, "→", Vector2(668, y + 38.0), 30, Desenho.DOURADO, 44.0, 4)
+	_grade_px(_c, ICO_SETA, Vector2(690.0 - 12.0, y + 28.0 - 10.5), PX, Desenho.DOURADO)
 	_ladrilho(Rect2(712, y, 56, 56), res)
 	var texto: String = "%s + %s → %s, %s" % [_rot_peca(base), _rot_peca(outra), _rot_peca(res), _rot_marcas(res.marcas.size())]
 	var yt: float = _paragrafo(texto, Vector2(FUSAO_R.position.x + 30.0, y + 88.0), 18, Color(1, 0.95, 0.85), FUSAO_R.size.x - 60.0, 23.0, true, 3)
@@ -4321,10 +4662,15 @@ func _efeitos() -> void:
 		var pe: Vector2 = _pos_peca(efeito_peca["peca"])
 		if pe.x >= 0.0:
 			var k: float = clampf(float(efeito_peca["t"]) / 0.8, 0.0, 1.0)
-			draw_arc(pe, 18.0 + 40.0 * k, 0.0, TAU, 32, Color(1.0, 0.95, 0.6, 1.0 - k), 4.0 * (1.0 - k) + 1.0)
-			draw_arc(pe, 10.0 + 24.0 * k, 0.0, TAU, 24, Color(0.6, 1.0, 0.75, 0.8 * (1.0 - k)), 2.0)
-			draw_circle(pe, 24.0, Color(1, 1, 0.8, 0.5 * (1.0 - k)))
-			_estrela4(pe + Vector2(0, -30.0 * k), 6.0 + 8.0 * (1.0 - k), Color(1.0, 0.95, 0.5, 1.0 - k))
+			# clarão que encolhe, duas ondas de quadradinhos que somem pontilhando e uma estrelinha subindo
+			if k < 0.6:
+				_elipse_px(pe, 24.0 * (1.0 - k / 0.6), 24.0 * (1.0 - k / 0.6), Color(1, 1, 0.8, 0.45))
+			var r1: float = 18.0 + 40.0 * k
+			var r2: float = 10.0 + 24.0 * k
+			VFX.aro(_c, pe, r1, r1, Color(1.0, 0.95, 0.6), 1.0 - k, 2.0 if k < 0.4 else 1.0)
+			VFX.aro(_c, pe, r2, r2, Color(0.6, 1.0, 0.75), 0.8 * (1.0 - k))
+			if k < 0.85:
+				_estrela4(pe + Vector2(0, -30.0 * k), 6.0 + 8.0 * (1.0 - k), Color(1.0, 0.95, 0.5), CONT_PX)
 	for tv in tijolos_voando:
 		var d: Dictionary = tv
 		var k: float = d["t"]
@@ -4334,19 +4680,51 @@ func _efeitos() -> void:
 		var fim: Vector2 = d["fim"]
 		var e: float = k * k
 		var p: Vector2 = ini.lerp(fim, e) + Vector2(0, -90.0 * sin(PI * k))
-		var cor: Color = d["cor"]
-		cor.a = 1.0 - k * 0.8
-		draw_set_transform(p, float(d["rot"]) * k * 6.0, Vector2.ONE * (1.0 - k * 0.5))
-		draw_rect(Rect2(-20, -10, 40, 20), cor)
-		draw_rect(Rect2(-20, -10, 40, 20), Color(0.25, 0.12, 0.1, cor.a), false, 2.0)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		_tijolo_px(p, d["cor"], float(d["rot"]) * k * 6.0, 1.0 - k * 0.5)
 	for fa in faiscas:
+		# faísca quadrada: encolhe de 2 para 1 quadradinho e some pontilhando (sem alfa)
 		var f: Dictionary = fa
 		var a: float = clampf(f["vida"] / f["max"], 0.0, 1.0)
+		var raio: float = float(f["r"]) * (0.4 + 0.6 * a)
+		if a < 0.25 and int(float(f["r"]) * 97.0) % 2 == 0:
+			continue
+		var s: float = PX * 2.0 if raio > 2.6 else PX
+		var pf: Vector2 = f["p"]
 		var c: Color = f["cor"]
-		c.a = a
-		draw_circle(f["p"], f["r"] * (0.4 + 0.6 * a), c)
+		draw_rect(Rect2(_sn(pf.x - s * 0.5), _sn(pf.y - s * 0.5), s, s), Color(c.r, c.g, c.b, 1.0))
 	_camada_voos()
+
+## Tijolo voando em pixel: em vez de girar (o giro tira da grade), troca entre deitado, inclinado e em pé,
+## e encolhe de PX em PX. Contorno escuro, miolo na cor do bloco e uma faixa clara em cima.
+func _tijolo_px(p: Vector2, cor: Color, ang: float, esc: float) -> void:
+	var fr: int = posmod(int(roundf(ang / (PI * 0.25))), 4)
+	var w: float = maxf(PX * 4.0, _sn(40.0 * esc))
+	var h: float = maxf(PX * 2.0, _sn(20.0 * esc))
+	var cont: Color = Color(0.25, 0.12, 0.1)
+	var x: float = _sn(p.x)
+	var y: float = _sn(p.y)
+	if fr == 0 or fr == 2:
+		if fr == 2:
+			var tr: float = w
+			w = h
+			h = tr
+		var rr := Rect2(_sn(x - w * 0.5), _sn(y - h * 0.5), w, h)
+		draw_rect(rr.grow(PX), cont)
+		draw_rect(rr, cor)
+		draw_rect(Rect2(rr.position, Vector2(rr.size.x, PX)), cor.lightened(0.3))
+		return
+	# inclinado: três degraus quadrados em diagonal (primeiro todos os contornos, depois os miolos)
+	var dir: float = 1.0 if fr == 1 else -1.0
+	var passo: float = _sn(h * 0.5 + PX * 0.5)
+	for camada in 2:
+		for q in 3:
+			var o := Vector2((q - 1) * passo, -(q - 1) * passo * dir)
+			var rq := Rect2(_sn(x - h * 0.5) + o.x, _sn(y - h * 0.5) + o.y, h, h)
+			if camada == 0:
+				draw_rect(rq.grow(PX), cont)
+			else:
+				draw_rect(rq, cor)
+				draw_rect(Rect2(rq.position, Vector2(h, PX)), cor.lightened(0.3))
 
 func _arrasto() -> void:
 	if not arrasto.has("peca"):
@@ -4354,9 +4732,9 @@ func _arrasto() -> void:
 			Desenho.boneco(_c, mouse + Vector2(0, 50), 1.3, 1.0, 0, (arrasto["boneco"] as Boneco).pecas, 0.0, 0.0, false, 0.0, 0.8, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, estado.bonecos.find(arrasto["boneco"]), false)
 		return
 	var p: Peca = arrasto["peca"]
-	_ellipse_sombra(mouse + Vector2(4, 36), 30.0, 8.0, Color(0, 0, 0, 0.35))
-	_c.draw_circle(mouse, 36.0, Color(1, 1, 1, 0.16))
-	_c.draw_arc(mouse, 36.0, 0.0, TAU, 28, Color(1.0, 0.9, 0.5, 0.7), 2.0)
+	_ellipse_sombra(mouse + Vector2(4, 40), 30.0, 8.0, Color(0, 0, 0, 0.35))
+	_elipse_px(mouse, 33.0, 33.0, Color(1, 1, 1, 0.16))
+	_aro_px(mouse, 36.0, 36.0, Color(1.0, 0.9, 0.5, 0.7))
 	Desenho.icone(_c, p.tipo, mouse, 62.0, p.nivel, 0.0, 0.0, p.marcas, p.raridade)
 	var bi_c: int = _boneco_em(mouse)
 	if bi_c >= 0:
@@ -4418,7 +4796,12 @@ func _pintar_dica(caixa: Rect2, lin: Array, cor_faixa: Color, cor_borda: Color) 
 	var oy: float = caixa.position.y + pad_y
 	for l in lin:
 		if l[0] == "sep":
-			_c.draw_line(Vector2(ox, oy + float(l[1])), Vector2(caixa.end.x - pad_x, oy + float(l[1])), Color(1, 1, 1, 0.16), 1.0)
+			# separador pontilhado: quadradinhos de PX com um de vão
+			var ys: float = roundf(oy + float(l[1]) - PX * 0.5)
+			var xs: float = ox
+			while xs + PX <= caixa.end.x - pad_x:
+				_c.draw_rect(Rect2(xs, ys, PX, PX), Color(1, 1, 1, 0.2))
+				xs += PX * 2.0
 			continue
 		if l[0] == "m" and l[7] != null:
 			var base_y: float = oy + float(l[1])
