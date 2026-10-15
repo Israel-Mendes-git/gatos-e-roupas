@@ -744,22 +744,22 @@ func _orelha(x: float, y: float, esq: bool, ue: float, miolo: Color) -> void:
 ## contornos das letras; 1: borda creme e miolo rosa, depois do contorno escuro e antes do contorno rosa e do miolo
 ## da letra (o pé da orelha fica escondido atrás do "G", como se saísse dele).
 func _orelha_logo(x: float, y: float, esq: bool, fase: int) -> void:
-	var u: float = 4.0
-	for r in 10:
-		var i: int = mini(r, 6)   # as 3 últimas linhas são o pé, reto, escondido atrás da letra
-		var w: float = (i + 2) * u
-		var rx: float = x if esq else x + 7.0 * u - w
+	# Orelha de gato em pixels de 5 px: 6 fileiras da ponta à base (borda de fora reta, a de dentro em diagonal)
+	# mais 2 de pé escondidas atrás do "G". Contorno escuro, borda rosa-clara e miolo rosa forte.
+	var u: float = 5.0
+	var cols: int = 5
+	var alt: int = 6
+	for r in alt + 2:
+		var wc: int = cols if r >= alt else 1 + int(ceilf(r * (cols - 1.0) / (alt - 1.0)))
+		var rx: float = x if esq else x + (cols - wc) * u
 		if fase == 0:
-			draw_rect(Rect2(rx, y + r * u, w, u), C_CONT)
+			draw_rect(Rect2(rx, y + r * u, wc * u, u), C_CONT)
 			continue
-		if i >= 1:
-			var w2: float = i * u
-			var rx2: float = rx + u if esq else rx + w - u - w2
-			draw_rect(Rect2(rx2, y + r * u, w2, u), C_CREME)
-		if i >= 3 and r <= 6:
-			var w3: float = (i - 2) * u
-			var rx3: float = rx + 2.0 * u if esq else rx + w - 2.0 * u - w3
-			draw_rect(Rect2(rx3, y + r * u, w3, u), Color(1.0, 0.5, 0.62))
+		if wc < 3:
+			continue
+		draw_rect(Rect2(rx + u, y + r * u, (wc - 2) * u, u), Color(1.0, 0.72, 0.8))
+		if r >= 3 and wc >= 4:
+			draw_rect(Rect2(rx + u, y + r * u, (wc - 3) * u if esq else (wc - 3) * u, u), Color(0.96, 0.4, 0.56))
 
 ## Painel pastel com borda rosa, contorno escuro e orelhinhas nos cantos de cima.
 func _painel_gato(r: Rect2, orelhas: bool = true, fundo: Color = C_CREME) -> void:
@@ -1003,9 +1003,9 @@ func _placa_titulo() -> void:
 		ys.append(base + roundf(sin(t * 2.4 + k * 0.55) * 3.0))
 	# orelhas de gato saindo do topo do "G": o pé fica por baixo do contorno e do miolo da letra
 	var topo: float = ys[0] - 0.72 * tam
-	var oy: float = topo - 27.0
-	var ox_e: float = x0 + 12.0
-	var ox_d: float = x0 + largs[0] - 8.0 - 28.0
+	var oy: float = topo - 6.0 * 5.0 + 6.0
+	var ox_e: float = x0 - 3.0
+	var ox_d: float = x0 + largs[0] - 22.0
 	_orelha_logo(ox_e, oy, true, 0)
 	_orelha_logo(ox_d, oy, false, 0)
 	# contorno escuro com sombra, depois contorno rosa
