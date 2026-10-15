@@ -274,17 +274,17 @@ const TEXUGO_FURIA := 0.5           # abaixo desta fração da vida ataca em dob
 # ---------- Invasão sem fim (depois de zerar) ----------
 const INVASAO_VIDA_ONDA2 := 0.010    # ...e mais isto vezes o quadrado das ondas vencidas: time forte também encontra o teto
 const INVASAO_DANO_ONDA2 := 0.003
-const INVASAO_FORA_VIDA := 0.45        # a invasão num lugar de fora começa abaixo da força do segundo ato...
-const INVASAO_FORA_DANO := 0.6        # ...porque o time já entra nela no degrau mais alto
-const INVASAO_VIDA_ONDA := 0.22     # +vida dos bichos por onda de invasão vencida
-const INVASAO_DANO_ONDA := 0.10     # +dano dos bichos por onda de invasão vencida
+const INVASAO_FORA_VIDA := 0.38        # a invasão num lugar de fora começa abaixo da força do segundo ato...
+const INVASAO_FORA_DANO := 0.5        # ...porque o time já entra nela no degrau mais alto
+const INVASAO_VIDA_ONDA := 0.30     # +vida dos bichos por onda de invasão vencida
+const INVASAO_DANO_ONDA := 0.13     # +dano dos bichos por onda de invasão vencida
 
 # ---------- Campanha e inimigos fantasiados ----------
 const PROG_POR_FASE := 3            # cada fase começa 3 ondas "à frente" da anterior em força
 # o guarda-roupa do jogador cresce depressa nas primeiras fases e depois estabiliza:
 # a força dos inimigos acompanha com um multiplicador por fase
-const FASE_VIDA: Array[float] = [0.68, 1.2, 3.7, 2.62, 1.7]
-const FASE_DANO: Array[float] = [0.72, 0.95, 1.75, 1.38, 1.05]
+const FASE_VIDA: Array[float] = [0.8, 1.3, 4.1, 2.8, 2.25]
+const FASE_DANO: Array[float] = [0.85, 1.05, 2.0, 1.5, 1.4]
 const INIMIGOS_POR_FASE := 1.0      # inimigos a mais por onda, por fase
 const ELITE_ONDA_MIN := 2           # primeira onda da fase com inimigo fantasiado
 const ELITE_ONDA_DOIS := 4          # a partir desta onda vêm dois (menos na onda do chefe)
@@ -376,12 +376,12 @@ const XP_ONDA_ATO: Array[int] = [2, 5, 5]   # ...por ato: cada ato leva o time u
 # ---------- Atos: depois do Porão a casa é invadida de novo, na ordem que o jogador quiser ----------
 const ATOS := 2
 const ATO_NOME: Array[String] = ["Primeiro ato", "Segundo ato", "Terceiro ato"]
-const ATO_VIDA: Array[float] = [1.0, 1.45, 2.6]      # força dos bichos no primeiro cômodo vencido do ato
-const ATO_DANO: Array[float] = [1.0, 1.0, 1.3]
+const ATO_VIDA: Array[float] = [1.0, 2.0, 2.6] # força dos bichos no primeiro cômodo vencido do ato
+const ATO_DANO: Array[float] = [1.0, 1.3, 1.3]
 const ATO_VIDA_DEGRAU := 0.10       # cada cômodo já vencido no ato deixa os que faltam mais fortes
 const ATO_DANO_DEGRAU := 0.05
-const ATO_COMODO_VIDA: Array[float] = [1.06, 0.78, 0.97, 0.98, 0.89]   # acerto por cômodo (chefe e família da casa pesam diferente)
-const ATO_COMODO_DANO: Array[float] = [1.03, 0.7, 0.92, 0.98, 0.89]
+const ATO_COMODO_VIDA: Array[float] = [1.06, 0.78, 0.97, 1.1, 1.0] # acerto por cômodo (chefe e família da casa pesam diferente)
+const ATO_COMODO_DANO: Array[float] = [1.03, 0.7, 0.92, 1.1, 1.0]
 const ATO_FAMILIA_DA_CASA := 0.4    # fração dos bichos que ainda é da família do cômodo; o resto vem misturado
 const XP_ONDA_NOCAUTE := 1          # por onda vencida tendo caído
 const NOCAUTE_SAUDE := 0.25         # quem caiu volta na onda seguinte com esta fração da vida
@@ -511,13 +511,14 @@ const PODER_BOLA_T := 4.0
 const PODER_BOLA_VEL := 1.8
 const PODER_BOLA_ESPINHO := 0.7     # x dano base devolvido a cada golpe corpo a corpo recebido
 # Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
-const PODER_INIMIGO_FATOR := 0.75       # dano, duração e quantidade, sobre o poder do gato
+const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato
 const PODER_INIMIGO_FATOR_ATO := 0.08   # soma por ato depois do primeiro
 const PODER_INIMIGO_FATOR_CHEFE := 0.1  # o chefe usa o poder um pouco mais forte
+const PODER_INIMIGO_PISAO := 0.7        # o Pisão do bicho fere menos (era o que mais derrubava gatos)
 const PODER_AVISO_T := 1.0              # segundos de aviso (o bicho para e carrega)
-const PODER_INIMIGO_INTERVALO := 12.0   # fantasiado
+const PODER_INIMIGO_INTERVALO := 10.0   # fantasiado
 const PODER_INIMIGO_PRIMEIRO := 5.0     # primeiro uso do fantasiado (mais um sorteio de 0 a 4 s)
-const PODER_CHEFE_INTERVALO := 10.0
+const PODER_CHEFE_INTERVALO := 8.0
 const PODER_CHEFE_PRIMEIRO := 5.0
 const PODER_INIMIGO_SEM_ALVO := 1.5     # sem ninguém para atingir: tenta de novo daqui a pouco
 const PODER_INIMIGO_INTERROMPIDO := 4.0 # atordoado durante o aviso: perde a carga e espera isto

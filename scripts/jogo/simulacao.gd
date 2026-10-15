@@ -7,6 +7,7 @@ var aliados: Array[Unidade] = []
 var inimigos: Array[Unidade] = []
 var fila: Array = []
 var nascidos: Array[Unidade] = []
+var gatos_por_poder_bicho: int = 0   # gatos derrubados por poder de bicho (dica da tela de derrota)
 var perdas: Dictionary = {}   # blocos tirados da torre por tipo de bicho ("chefe" para chefe), para a tela de derrota
 var nascidos_aliados: Array[Unidade] = []   # clones dos gatos: entram fora dos laços
 var zonas: Array = []   # nuvens do Enxame: {x, y, t, dur, raio, dps, dono, eq}
@@ -1899,7 +1900,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 				forte.atordoado_t = maxf(forte.atordoado_t, Balanco.PODER_PISAO_T * _fi * (Balanco.PODER_RAIZ_CHEFE if forte.chefe else 1.0))
 				var fx_x: float = forte.x
 				var fx_y: float = forte.y
-				_dano_poder(u, forte, base * Balanco.PODER_PISAO_DANO * pow(Balanco.PODER_PISAO_CRESCE, k))
+				_dano_poder(u, forte, base * Balanco.PODER_PISAO_DANO * pow(Balanco.PODER_PISAO_CRESCE, k) * (Balanco.PODER_INIMIGO_PISAO if u.equipe != 0 else 1.0))
 				if not em_heranca:
 					px = fx_x - sp_i * 30.0
 					py = fx_y
@@ -2053,6 +2054,8 @@ func _dano_poder(u: Unidade, v: Unidade, dano: float) -> float:
 	v.flash = 1.0
 	_ev({"t": "golpe", "x": v.x, "y": v.y, "dano": d, "eq": v.equipe})
 	if v.vida <= 0.0:
+		if u.equipe != 0 and v.equipe == 0 and not v.clone:
+			gatos_por_poder_bicho += 1
 		_tele(_conj_tele, "abates", 1.0)
 		_matar(v, u if u.vivo else null, Pecas.Marca.CICATRIZ)
 	return d
