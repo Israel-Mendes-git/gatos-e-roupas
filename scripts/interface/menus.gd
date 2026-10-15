@@ -740,6 +740,22 @@ func _orelha(x: float, y: float, esq: bool, ue: float, miolo: Color) -> void:
 			var ix: float = rx + ue if esq else rx + w - ue - iw
 			draw_rect(Rect2(ix, y + i * ue, iw, ue), miolo)
 
+## Orelha do logotipo: contorno escuro, borda creme e miolo rosa (degraus de 4 px, 7 de largura por 7 de altura).
+func _orelha_logo(x: float, y: float, esq: bool) -> void:
+	var u: float = 4.0
+	for i in 7:
+		var w: float = (i + 2) * u
+		var rx: float = x if esq else x + 7.0 * u - w
+		draw_rect(Rect2(rx, y + i * u, w, u), C_CONT)
+		if i >= 1:
+			var w2: float = (i + 2 - 2) * u
+			var rx2: float = rx + u if esq else rx + w - u - w2
+			draw_rect(Rect2(rx2, y + i * u, w2, u), C_CREME)
+		if i >= 3:
+			var w3: float = (i - 2) * u
+			var rx3: float = rx + 2.0 * u if esq else rx + w - 2.0 * u - w3
+			draw_rect(Rect2(rx3, y + i * u, w3, u), C_ROSA)
+
 ## Painel pastel com borda rosa, contorno escuro e orelhinhas nos cantos de cima.
 func _painel_gato(r: Rect2, orelhas: bool = true, fundo: Color = C_CREME) -> void:
 	var u: float = 3.0
@@ -975,11 +991,15 @@ func _placa_titulo() -> void:
 		var w: float = fonte.get_string_size(c, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
 		largs.append(w)
 		total += w
-	var x0: float = roundf(640.0 - total * 0.5 - 30.0)
+	var x0: float = roundf(640.0 - total * 0.5 - 52.0)
 	var base: float = 134.0
 	var ys: Array[float] = []
 	for k in letras.length():
 		ys.append(base + roundf(sin(t * 2.4 + k * 0.55) * 3.0))
+	# orelhas de gato inteiras sobre o "G": desenhadas ANTES dos contornos, que escondem só o pé delas
+	var topo: float = ys[0] - 0.72 * tam
+	_orelha_logo(x0 + 4.0, topo - 31.0, true)
+	_orelha_logo(x0 + largs[0] - 4.0 - 28.0, topo - 31.0, false)
 	# contorno escuro com sombra, depois contorno rosa
 	var x: float = x0
 	for k in letras.length():
@@ -990,16 +1010,12 @@ func _placa_titulo() -> void:
 	for k in letras.length():
 		draw_string_outline(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 11, C_ROSA)
 		x += largs[k]
-	# orelhas de gato na primeira letra
-	var topo: float = ys[0] - 0.72 * tam
-	_orelha(x0 + 2.0, topo - 18.0, true, 4.0, C_ROSA)
-	_orelha(x0 + largs[0] - 34.0, topo - 18.0, false, 4.0, C_ROSA)
 	x = x0
 	for k in letras.length():
 		draw_string(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, Color(1.0, 0.62, 0.68) if (letras[k] == "-" or (letras[k] == "e" and k > 0 and k < letras.length() - 1 and letras[k - 1] == " " and letras[k + 1] == " ")) else C_CREME)
 		x += largs[k]
 	# novelo de lã rolando ao lado do nome, com a ponta do fio solta
-	var cn: Vector2 = Vector2(x0 + total + 40.0, base - 30.0)
+	var cn: Vector2 = Vector2(x0 + total + 66.0, base - 30.0)
 	var fio: PackedVector2Array = PackedVector2Array()
 	for k in 22:
 		fio.append(cn + Vector2(16.0 + k * 5.0, 26.0 + sin(k * 0.45 + t * 2.0) * 5.0 * minf(1.0, k / 6.0)))
