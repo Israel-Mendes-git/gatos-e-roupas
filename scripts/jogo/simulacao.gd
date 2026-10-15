@@ -25,6 +25,8 @@ var poder_manual: bool = false
 var catapulta_cd: float = Torre.CATAPULTA_INTERVALO
 var caldeirao_cd: float = Torre.CALDEIRAO_INTERVALO
 var sirene_usada: bool = false
+var fosso_cd: float = Torre.FOSSO_INTERVALO
+var reforco_usados: int = 0   # golpes na torre já absorvidos pelo Reforço nesta onda
 ## Alvo prioritário do time, escolhido na preparação: -1 nenhum, 0..4 um Unidade.Tipo, ou PRIO_ELITE / PRIO_CHEFE.
 const PRIO_ELITE := 10
 const PRIO_CHEFE := 11
@@ -70,6 +72,25 @@ func iniciar(e: Estado, semente: int = 0) -> void:
 		calcular(u)
 		u.vida = u.vida_max * (b.saude if Balanco.FERIDA_PERSISTE else 1.0)
 		aliados.append(u)
+	if e.tem_modulo(Torre.Modulo.CASINHA):
+		var cao := Unidade.new()
+		cao.equipe = 0
+		cao.clone = true
+		cao.cao = true
+		cao.clone_t = 99999.0
+		cao.postura = Boneco.Postura.SEGURAR
+		cao.vida_max = Torre.CASINHA_VIDA
+		cao.vida = Torre.CASINHA_VIDA
+		cao.dano = Torre.CASINHA_DANO
+		cao.intervalo = Torre.CASINHA_INTERVALO
+		cao.vel = Torre.CASINHA_VEL
+		cao.alcance = Balanco.BASE_ALCANCE
+		cao.x = Balanco.TORRE_X + 40.0
+		cao.y = (Balanco.CHAO_Y0 + Balanco.CHAO_Y1) * 0.5
+		cao.casa_x = Balanco.RECUAR_X + 40.0
+		cao.casa_y = cao.y
+		cao.linha = Boneco.Linha.MEIO
+		aliados.append(cao)
 	var t: float = Balanco.SPAWN_INICIO
 	for spec in e.plano:
 		t += rng.randf_range(Balanco.SPAWN_MIN, Balanco.SPAWN_MAX)
@@ -528,13 +549,30 @@ func _torre_atira(dt: float) -> void:
 	if torre_cd > 0.0:
 		return
 	var alvo: Unidade = null
+	var luneta: bool = estado.tem_modulo(Torre.Modulo.LUNETA)
+	var alvo_prio: Unidade = null
 	for v in inimigos:
-		if v.vivo and v.x - Balanco.TORRE_X <= Balanco.TORRE_TIRO_ALCANCE and (alvo == null or v.x < alvo.x):
-			alvo = v
+		if v.vivo and v.x - Balanco.TORRE_X <= Balanco.TORRE_TIRO_ALCANCE:
+			if alvo == null or v.x < alvo.x:
+				alvo = v
+			if luneta and prioritario(v) and (alvo_prio == null or v.x < alvo_prio.x):
+				alvo_prio = v
 	if alvo == null:
 		return
+	if alvo_prio != null:
+		alvo = alvo_prio   # Luneta: a torre também enxerga a ordem de alvo prioritário
 	torre_cd = Balanco.TORRE_TIRO_INTERVALO
-	projeteis.append({"x": Balanco.TORRE_X - 70.0, "y": Balanco.CHAO_Y0 + 20.0, "alvo": alvo, "dono": null, "dano": estado.torre_dano(), "torre": true})
+	var dano: float = estado.torre_dano()
+	if luneta:
+		if rng.randf() < Torre.LUNETA_CRITICO:
+			dano *= 2.0
+			_ev({"t": "luneta_crit", "x": alvo.x, "y": alvo.y})
+		if alvo.marcado_t <= 0.0:
+			alvo.marcado_t = Torre.LUNETA_MARCA_T
+			alvo.marcado_bonus = Torre.LUNETA_MARCA
+			alvo.marcado_conj = -1
+			_ev({"t": "luneta", "x": alvo.x, "y": alvo.y})
+	projeteis.append({"x": Balanco.TORRE_X - 70.0, "y": Balanco.CHAO_Y0 + 20.0, "alvo": alvo, "dono": null, "dano": dano, "torre": true})
 
 func _aplicar_auras(donos: Array[Unidade], alvos: Array[Unidade]) -> void:
 	for u in donos:
@@ -550,6 +588,26 @@ func _aplicar_auras(donos: Array[Unidade], alvos: Array[Unidade]) -> void:
 func _modulos_da_torre(dt: float) -> void:
 	if estado.modulos.is_empty():
 		return
+	if estado.tem_modulo(Torre.Modulo.FOSSO):
+		fosso_cd -= dt
+		if fosso_cd <= 0.0:
+			var perto: Unidade = null
+			for v in inimigos:
+				if v.vivo and not v.chefe and v.tipo != Unidade.Tipo.GIGANTE and not v.fugindo and v.x <= Balanco.VISIVEL_X and (perto == null or v.x < perto.x):
+					perto = v
+			if perto != null:
+				fosso_cd = Torre.FOSSO_INTERVALO
+				perto.atordoado_t = maxf(perto.atordoado_t, Torre.FOSSO_T)
+				perto.vida -= Torre.FOSSO_DANO * _vul(perto)
+				perto.flash = 1.0
+				_ev({"t": "fosso", "x": perto.x, "y": perto.y})
+				_ev({"t": "golpe", "x": perto.x, "y": perto.y, "dano": Torre.FOSSO_DANO * _vul(perto), "eq": 1})
+				if perto.vida <= 0.0:
+					_matar(perto, null, Pecas.Marca.CICATRIZ)
+	if estado.tem_modulo(Torre.Modulo.REPELENTE):
+		for v in inimigos:
+			if v.vivo and v.x - Balanco.TORRE_X <= Torre.REPELENTE_RAIO:
+				v.lento = minf(v.lento, Torre.REPELENTE_LENTO)
 	if estado.tem_modulo(Torre.Modulo.CATAPULTA):
 		catapulta_cd -= dt
 		if catapulta_cd <= 0.0:
@@ -968,9 +1026,17 @@ func _bater_torre(u: Unidade) -> void:
 		n = Balanco.LADRAO_ROUBO  # rouba num golpe só e foge
 		u.fugindo = true
 		u.alvo = null
-		u.carga = mini(n, estado.tijolos)
 		u.golpe = 0.0
+	if estado.tem_modulo(Torre.Modulo.REFORCO) and n > 0:
+		if reforco_usados < Torre.REFORCO_GOLPES:
+			reforco_usados += 1
+			n = 0
+			_ev({"t": "reforco", "x": u.x, "y": u.y})
+		elif u.chefe:
+			n = mini(n, Torre.REFORCO_CHEFE_MAX)
 	n = mini(n, estado.tijolos)
+	if u.tipo == Unidade.Tipo.LADRAO and not u.chefe:
+		u.carga = n
 	var kp: Variant = "chefe" if u.chefe else u.tipo
 	perdas[kp] = int(perdas.get(kp, 0)) + n
 	estado.tijolos -= n
@@ -1130,7 +1196,7 @@ func _matar(u: Unidade, killer: Unidade, base: int = Pecas.Marca.CICATRIZ) -> vo
 			_creditar(killer)
 		estado.estat["abates"] = int(estado.estat.get("abates", 0)) + 1
 		if u.chefe or u.elite:
-			var tr: int = Torre.TROFEU_CHEFE if u.chefe else Torre.TROFEU_ELITE
+			var tr: int = Torre.trofeu_chefe(estado.ato) if u.chefe else Torre.TROFEU_ELITE
 			estado.trofeus += tr  # moeda das melhorias da torre
 			_ev({"t": "trofeu", "x": u.x, "y": u.y, "n": tr})
 		_largar(u, causa)

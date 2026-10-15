@@ -25,13 +25,17 @@ const COL_D_W := 508.0
 const LISTA_Y := 180.0
 const LIN_H := 100.0
 const LIN_GAP := 6.0
-const CARD_H := 78.0
-const CARD_GAP := 7.0
+const ABA_Y := 180.0              # abas dos módulos (da casa / de fora)
+const ABA_H := 28.0
+const CARDS_Y := 214.0
+const CARD_H := 76.0
+const CARD_GAP := 5.0
 const BTN_FECHAR := Rect2(540, 624, 200, 44)
 const BTN_X := Rect2(1124.0, 38.0, 42.0, 42.0)
 const BTN_MELHORAR_W := 136.0
 const TEXTO_DESLOC := 84.0        # x do texto numa linha de melhoria, a partir da borda dela
-const QUADRADOS_DESLOC := 214.0   # x dos cinco quadradinhos de nível, a partir da borda da linha
+const QUADRADOS_DESLOC := 214.0   # x dos oito quadradinhos de nível, a partir da borda da linha
+const COR_NIVEL_ALTO := Color(1.0, 0.58, 0.22)   # níveis 6 a 8 (custam mais)
 
 # ---- ícones em pixel: 12 linhas de 12 letras (a cor de cada letra está em PALETA) ----
 const PALETA: Dictionary = {
@@ -84,6 +88,29 @@ const ICO_MODULO: Array = [
 	],
 ]
 
+const ICO_MODULO_FORA: Array = [
+	[ # fosso: buraco na terra
+		"............", "............", "............", "............", "............", "............",
+		"...oooooo...", ".oonnnnnnoo.", "onnooooooonno", "onoookkkkoono", "onokkkkkkkono", ".ooooooooooo.",
+	],
+	[ # repelente: frasco com nuvem
+		"..v..v......", ".v.v..v.....", "....oooo....", "....oyyo....", "...oooooo...", "...ovvvvo...",
+		"...ovwwvo...", "...ovvvvo...", "...ovvvvo...", "...oVVVVo...", "...oooooo...", "............",
+	],
+	[ # luneta
+		"........oo..", ".......osso.", "......osyso.", ".....osSso..", "....osSso...", "...osSso....",
+		"..ooSsoo....", "....onoo....", "...o.n.o....", "..o..n..o...", ".oo..N..oo..", "............",
+	],
+	[ # casinha
+		"....oooo....", "...orrrro...", "..orrrrrRo..", ".orrrrrrrRo.", "oRRRRRRRRRRo", "onnnoooonnno",
+		"onnokkkkonno", "onnokkkkonno", "onnokkkkonno", "oNNokkkkoNNo", "oooooooooooo", "............",
+	],
+	[ # reforço: escudo de ferro
+		"oooooooooooo", "osssssssssso", "osSssssssSso", "ossSssssSsso", "osssSssSssso", "osssssSsssso",
+		"osssSssSssso", "ossSssssSsso", ".osSssssSso.", "..osSssSso..", "...ossso....", "....oo......",
+	],
+]
+
 const ICO_TROFEU: Array = [
 	".oooooooo.", "ooghggggoo", "o.gggggg.o", "o.oggggo.o", ".ooggggoo.",
 	"...oggo...", "....gg....", "....GG....", "..oGGGGo..", "..oooooo..",
@@ -108,6 +135,7 @@ var faiscas := UIComum.Faiscas.new()
 var tr_exib: float = 0.0                  # troféus mostrados (contam até o valor real)
 var pulso_tr: float = 0.0
 var centro_cont: Vector2 = Vector2(640, 108)
+var aba: int = 0                          # módulos mostrados: 0 = da casa, 1 = de fora
 var compra_t: Array[float] = [9.0, 9.0, 9.0, 9.0]   # < 0: troféus ainda voando; 0..0.7: valores contando
 var compra_ant: Array = [[], [], [], []]            # textos de antes da compra
 var mont_t: Dictionary = {}               # módulo -> segundos desde que foi montado/desmontado
@@ -140,12 +168,16 @@ static func rect_quadrado(i: int, k: int) -> Rect2:
 	var r: Rect2 = rect_linha(i)
 	return Rect2(r.position.x + QUADRADOS_DESLOC + k * 20.0, r.position.y + 14.0, 16.0, 16.0)
 
+## Cartão do módulo `i` (0 a 9) na sua aba: cinco por aba.
 static func rect_card(i: int) -> Rect2:
-	return Rect2(COL_D_X, LISTA_Y + i * (CARD_H + CARD_GAP), COL_D_W, CARD_H)
+	return Rect2(COL_D_X, CARDS_Y + (i % Torre.MODULOS_POR_ABA) * (CARD_H + CARD_GAP), COL_D_W, CARD_H)
+
+static func rect_aba(a: int) -> Rect2:
+	return Rect2(COL_D_X + a * 260.0, ABA_Y, 248.0, ABA_H)
 
 static func rect_btn_modulo(i: int) -> Rect2:
 	var c: Rect2 = rect_card(i)
-	return Rect2(c.end.x - 118.0, c.position.y + 19.0, 108.0, 40.0)
+	return Rect2(c.end.x - 118.0, c.position.y + 18.0, 108.0, 40.0)
 
 ## Largura disponível para o texto de uma linha de melhoria (até o botão).
 static func larg_texto_linha() -> float:
@@ -173,7 +205,7 @@ static func valores(m: int, n: int) -> Array:
 		Torre.Melhoria.CADENCIA:
 			return ["Tiros por segundo", "+%d%%" % int(round(Torre.CADENCIA_RAPIDEZ * n * 100.0)), "+%d%%" % int(round(Torre.CADENCIA_RAPIDEZ * (n + 1) * 100.0))]
 		Torre.Melhoria.ENFERMARIA:
-			return ["Cura entre ondas", "%d%%" % int(round((Balanco.CURA_MAX + Torre.ENFERMARIA_CURA * n) * 100.0)), "%d%%" % int(round((Balanco.CURA_MAX + Torre.ENFERMARIA_CURA * (n + 1)) * 100.0))]
+			return ["Cura entre ondas", "%d%%" % int(round((Balanco.CURA_MAX + Torre.enfermaria_cura(n)) * 100.0)), "%d%%" % int(round((Balanco.CURA_MAX + Torre.enfermaria_cura(n + 1)) * 100.0))]
 	return ["", "", ""]
 
 static func _maiuscula(s: String) -> String:
@@ -183,13 +215,13 @@ static func _maiuscula(s: String) -> String:
 static func motivo_melhoria(e: Estado, m: int) -> String:
 	if e.melhorias[m] >= Torre.MELHORIA_NIVEL_MAX:
 		return "Máximo"
-	var falta: int = Torre.MELHORIA_CUSTO - e.trofeus
+	var falta: int = Torre.custo_melhoria(e.melhorias[m]) - e.trofeus
 	if falta > 0:
 		return "Falta 1 troféu" if falta == 1 else "Faltam %d troféus" % falta
 	return ""
 
 static func requisito_modulo(m: int) -> String:
-	return "Vença o chefe %s, %s" % [Fases.CHEFE_NOME[m], ("na " if m in [1, 2, 6, 8, 9] else "no ") + Fases.NOME[m]]
+	return "Vença o chefe %s, %s%s" % [Fases.CHEFE_NOME[m], ("na " if m in [1, 2, 6, 8, 9] else "no ") + Fases.NOME[m], " (2º ato)" if m >= Torre.MODULOS_POR_ABA else ""]
 
 # ------------------------------------------------------------------ ícones em pixel
 ## Desenha uma arte de letras: cada letra é uma célula `cel` x `cel`; runs da mesma cor viram um retângulo só.
@@ -217,7 +249,7 @@ static func icone_melhoria(c: CanvasItem, m: int, pos: Vector2, cel: float, cinz
 	arte(c, ICO_MELHORIA[m], pos, cel, cinza)
 
 static func icone_modulo(c: CanvasItem, m: int, pos: Vector2, cel: float, cinza: bool = false, alfa: float = 1.0) -> void:
-	arte(c, ICO_MODULO[m], pos, cel, cinza, alfa)
+	arte(c, ICO_MODULO[m] if m < ICO_MODULO.size() else ICO_MODULO_FORA[m - ICO_MODULO.size()], pos, cel, cinza, alfa)
 
 ## Troféu de 10 x 10 células (com cel = 2, mede 20 x 20).
 static func trofeu(c: CanvasItem, pos: Vector2, cel: float, alfa: float = 1.0) -> void:
@@ -257,6 +289,17 @@ func abrir() -> void:
 	flash_t = 0.0
 	if dono.menus != null:
 		dono.menus.dica_cumprida("trofeu")
+	aba = 0
+	var e0: Estado = dono.estado
+	if e0.modulos.size() < e0.vagas_modulos():
+		var casa_livre: bool = false
+		for m in Torre.MODULOS_POR_ABA:
+			if e0.modulo_liberado(m) and not e0.tem_modulo(m):
+				casa_livre = true
+		if not casa_livre:
+			for m in range(Torre.MODULOS_POR_ABA, Torre.MODULO_NOME.size()):
+				if e0.modulo_liberado(m) and not e0.tem_modulo(m):
+					aba = 1
 	_montar()
 	foco = _foco_inicial()
 	_foco_som = foco
@@ -280,7 +323,7 @@ func _foco_inicial() -> int:
 			return k
 	for k in itens.size():
 		var id: String = itens[k]["id"]
-		if id.begins_with("d") and not e.tem_modulo(int(id.substr(1))) and e.modulos.size() < Torre.MODULOS_EQUIPADOS_MAX:
+		if id.begins_with("d") and not e.tem_modulo(int(id.substr(1))) and e.modulos.size() < e.vagas_modulos():
 			return k
 	return itens.size() - 1
 
@@ -292,13 +335,16 @@ func _montar() -> void:
 	itens.clear()
 	for m in Torre.MELHORIA_NOME.size():
 		var maximo: bool = e.melhorias[m] >= Torre.MELHORIA_NIVEL_MAX
-		itens.append({"id": "m%d" % m, "r": rect_melhorar(m), "on": e.pode_melhorar(m), "txt": "Máximo" if maximo else "Melhorar (%d)" % Torre.MELHORIA_CUSTO,
+		itens.append({"id": "m%d" % m, "r": rect_melhorar(m), "on": e.pode_melhorar(m), "txt": "Máximo" if maximo else "Melhorar (%d)" % Torre.custo_melhoria(e.melhorias[m]),
 			"cor": Color(1.0, 0.82, 0.4), "tam": 16, "custo": not maximo})
-	for m in Torre.MODULO_NOME.size():
+	for a in 2:
+		itens.append({"id": "a%d" % a, "r": rect_aba(a), "on": true, "txt": ("Da casa" if a == 0 else "De fora") + "  (%d/%d)" % [_montados_na_aba(e, a), Torre.MODULOS_POR_ABA],
+			"cor": Color(1.0, 0.82, 0.4) if a == aba else Color(0.55, 0.5, 0.5), "tam": 15, "custo": false})
+	for m in range(aba * Torre.MODULOS_POR_ABA, (aba + 1) * Torre.MODULOS_POR_ABA):
 		if not e.modulo_liberado(m):
 			continue
 		var monta: bool = e.tem_modulo(m)
-		var cheio: bool = not monta and e.modulos.size() >= Torre.MODULOS_EQUIPADOS_MAX
+		var cheio: bool = not monta and e.modulos.size() >= e.vagas_modulos()
 		var cor: Color = Color(0.95, 0.55, 0.4) if monta else (Color(0.55, 0.65, 0.55) if cheio else Color(0.55, 0.9, 0.5))
 		itens.append({"id": "d%d" % m, "r": rect_btn_modulo(m), "on": true, "txt": "Desmontar" if monta else "Montar", "cor": cor, "tam": 16, "custo": false})
 	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true, "txt": "Fechar", "cor": UIComum.B_MARROM, "tam": 22, "custo": false})
@@ -306,6 +352,14 @@ func _montar() -> void:
 	for k in itens.size():
 		if itens[k]["id"] == id_foco:
 			foco = k
+
+## Quantos módulos liberados há na aba.
+func _montados_na_aba(e: Estado, a: int) -> int:
+	var n: int = 0
+	for m in range(a * Torre.MODULOS_POR_ABA, (a + 1) * Torre.MODULOS_POR_ABA):
+		if e.modulo_liberado(m):
+			n += 1
+	return n
 
 func _item_em(p: Vector2) -> int:
 	for k in itens.size():
@@ -321,6 +375,13 @@ func acionar(id: String) -> void:
 	if id == "fechar" or id == "x":
 		Som.tocar("clique")
 		fechar()
+		return
+	if id.begins_with("a"):
+		var na: int = int(id.substr(1))
+		if na != aba:
+			aba = na
+			Som.tocar("aba", 1.1)
+		_montar()
 		return
 	if id.begins_with("m"):
 		var m: int = int(id.substr(1))
@@ -350,8 +411,8 @@ func acionar(id: String) -> void:
 		elif not e.modulo_liberado(m):
 			_avisar(requisito_modulo(m))
 			_recusar(id)
-		elif e.modulos.size() >= Torre.MODULOS_EQUIPADOS_MAX:
-			_avisar("Desmonte um módulo primeiro")
+		elif e.modulos.size() >= e.vagas_modulos():
+			_avisar("Desmonte um módulo primeiro" if e.vagas_modulos() >= Torre.MODULOS_EQUIPADOS_MAX else "Sem vaga: desmonte um módulo (mais vagas ao vencer o ato)")
 			_recusar(id)
 		else:
 			e.alternar_modulo(m)
@@ -545,15 +606,16 @@ func _draw() -> void:
 	_previa_torre(e)
 	# cabeçalhos das colunas
 	_texto("Melhorias da torre", Vector2(COL_E_X, 172), 18, COR_TINTA, -1.0, 4)
-	_texto("Módulos montados: %d de %d" % [e.modulos.size(), Torre.MODULOS_EQUIPADOS_MAX], Vector2(COL_D_X, 172), 18, COR_TINTA, -1.0, 4)
+	_texto("Módulos montados: %d de %d vagas" % [e.modulos.size(), e.vagas_modulos()], Vector2(COL_D_X, 172), 18, COR_TINTA, -1.0, 4)
+	_vagas(e)
 	draw_line(Vector2(COL_E_X, 177), Vector2(COL_E_X + COL_E_W, 177), Color(1, 1, 1, 0.16), 1.0)
 	draw_line(Vector2(COL_D_X, 177), Vector2(COL_D_X + COL_D_W, 177), Color(1, 1, 1, 0.16), 1.0)
 	for m in Torre.MELHORIA_NOME.size():
 		UIComum.ini_cascata(self, UIComum.cascata(abrir_t, m), -1.0)
 		_linha_melhoria(e, m)
 		UIComum.fim_cascata(self)
-	for m in Torre.MODULO_NOME.size():
-		UIComum.ini_cascata(self, UIComum.cascata(abrir_t, m + 2), 1.0)
+	for m in range(aba * Torre.MODULOS_POR_ABA, (aba + 1) * Torre.MODULOS_POR_ABA):
+		UIComum.ini_cascata(self, UIComum.cascata(abrir_t, m % Torre.MODULOS_POR_ABA + 2), 1.0)
 		var sc: float = 1.0
 		if mont_t.has(m) and float(mont_t[m]) < 0.34:
 			sc = 1.0 + 0.07 * sin(float(mont_t[m]) / 0.34 * PI)   # o módulo montado encaixa com um salto
@@ -570,6 +632,8 @@ func _draw() -> void:
 	if aviso != "" and aviso_t > 0.0:
 		UIComum.aviso(self, aviso, 640.0, 134.0, clampf(aviso_t / 0.5, 0.0, 1.0), UIComum.C_NOME)
 	_texto("Setas e Enter  |  Esc fecha", Vector2(COL_E_X, 652), 13, Color(1, 1, 1, 0.45), -1.0, 3)
+	if e.vagas_modulos() < Torre.MODULOS_EQUIPADOS_MAX:
+		_texto(proxima_vaga(e), Vector2(COL_D_X + 150.0, 652), 13, Color(1.0, 0.85, 0.55, 0.8), COL_D_W - 150.0, 3)
 	for k in itens.size():
 		_botao(k)
 	UIComum.fechar(self, BTN_X, {"on": true, "foco": x_sobre, "h": UIComum.anim_h(anim, "x"), "p": UIComum.anim_p(anim, "x")}, t)
@@ -593,7 +657,26 @@ func _previa_torre(e: Estado) -> void:
 		draw_rect(cx, Color(1.0, 0.92, 0.5, 0.25 * prev_pulso), false, 3.0)
 
 static func explicacao_trofeus() -> String:
-	return "Chefes dão %d, bichos fantasiados dão %d" % [Torre.TROFEU_CHEFE, Torre.TROFEU_ELITE]
+	return "Chefes dão %d (%d no 2º ato, %d no 3º), bichos fantasiados dão %d" % [Torre.TROFEU_CHEFE_ATO[0], Torre.TROFEU_CHEFE_ATO[1], Torre.TROFEU_CHEFE_ATO[2], Torre.TROFEU_ELITE]
+
+## Texto de como ganhar a próxima vaga de módulo.
+static func proxima_vaga(e: Estado) -> String:
+	var v: int = e.vagas_modulos()
+	return "%dª vaga: vença o %dº ato inteiro" % [v + 1, v]
+
+## Quadradinhos das vagas: cheia (módulo montado), livre ou ainda trancada.
+func _vagas(e: Estado) -> void:
+	var v: int = e.vagas_modulos()
+	for k in Torre.MODULOS_EQUIPADOS_MAX:
+		var q := Rect2(COL_D_X + COL_D_W - (Torre.MODULOS_EQUIPADOS_MAX - k) * 26.0, 156.0, 22.0, 22.0)
+		draw_rect(q, Color(0.08, 0.05, 0.07))
+		if k < v:
+			draw_rect(q, Color(1.0, 0.85, 0.4, 0.8) if k < e.modulos.size() else Color(1, 1, 1, 0.3), false, 2.0)
+			if k < e.modulos.size():
+				icone_modulo(self, e.modulos[k], q.position + Vector2(1, 1), 1.5)
+		else:
+			draw_rect(q, Color(1, 1, 1, 0.1), false, 2.0)
+			cadeado(self, q.get_center() + Vector2(0, 1), Color(0.7, 0.65, 0.75, 0.7))
 
 func _linha_melhoria(e: Estado, m: int) -> void:
 	var r: Rect2 = rect_linha(m)
@@ -618,7 +701,8 @@ func _linha_melhoria(e: Estado, m: int) -> void:
 		if novo:
 			q = q.grow(5.0 * sin(compra_t[m] / 0.5 * PI))   # estufa e assenta
 		draw_rect(q, Color(0.07, 0.04, 0.06))
-		draw_rect(q.grow(-2.0), Color(1.0, 0.82, 0.25) if cheio else Color(0.25, 0.18, 0.16))
+		var alto: bool = k >= Torre.NIVEL_BASE
+		draw_rect(q.grow(-2.0), (COR_NIVEL_ALTO if alto else Color(1.0, 0.82, 0.25)) if cheio else (Color(0.3, 0.17, 0.12) if alto else Color(0.25, 0.18, 0.16)))
 		if cheio:
 			draw_rect(Rect2(q.position.x + 2.0, q.position.y + 2.0, q.size.x - 4.0, 4.0), Color(1.0, 0.96, 0.7))
 		if novo:
@@ -734,7 +818,7 @@ func _botao(i: int) -> void:
 	if id.begins_with("m"):
 		kc = UIComum.cascata(abrir_t, int(id.substr(1)))
 	elif id.begins_with("d"):
-		kc = UIComum.cascata(abrir_t, int(id.substr(1)) + 2)
+		kc = UIComum.cascata(abrir_t, int(id.substr(1)) % Torre.MODULOS_POR_ABA + 2)
 		lado = 1.0
 	r.position.x += lado * 46.0 * (1.0 - kc) * (1.0 - kc)
 	if treme.has(id):

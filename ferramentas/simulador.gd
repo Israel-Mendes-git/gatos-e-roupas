@@ -39,8 +39,12 @@ func _init() -> void:
 		var inv_casa: Array[int] = []      # ondas vencidas na invasão sem fim de um cômodo, por campanha que zerou tudo
 		var inv_fora: Array[int] = []      # idem, num lugar de fora
 		var nivel_fim: Array[float] = []
+		var torre_fim: Array[float] = []   # soma dos níveis das 4 melhorias ao fim de cada ato
+		var mods_fim: Array[float] = []    # módulos liberados ao fim de cada ato
 		for a in Balanco.ATOS:
 			nivel_fim.append(0.0)
+			torre_fim.append(0.0)
+			mods_fim.append(0.0)
 		var completas: int = 0
 		var pecas_fim: float = 0.0
 		var marcas_fim: float = 0.0
@@ -78,6 +82,12 @@ func _init() -> void:
 					for b in e.bonecos:
 						soma_nv += b.nivel
 					nivel_fim[(fa - 1) / Fases.TOTAL] += soma_nv / maxf(1.0, e.bonecos.size())
+					torre_fim[(fa - 1) / Fases.TOTAL] += e.melhorias[0] + e.melhorias[1] + e.melhorias[2] + e.melhorias[3]
+					var nm: int = 0
+					for mm in Torre.MODULO_NOME.size():
+						if e.modulo_liberado(mm):
+							nm += 1
+					mods_fim[(fa - 1) / Fases.TOTAL] += nm
 			if not travou and not so_q:
 				completas += 1
 				# invasão sem fim com o time do fim do jogo: um cômodo e um lugar de fora, um por campanha
@@ -106,6 +116,7 @@ func _init() -> void:
 			print("   ato %d fase %d %-8s de primeira %2d | venceram %2d | tentativas medias %.2f | derrotas (1a tentativa): %s" % [fa / Fases.TOTAL + 1, f + 1, Fases.NOME[f + (Fases.TOTAL if fa >= Fases.TOTAL else 0)], de_primeira[fa], venceram[fa], float(tentativas[fa]) / maxf(1.0, venceram[fa]), dist])
 			if f == Fases.TOTAL - 1:
 				print("      nivel medio dos gatos ao fim do ato %d: %.1f (entre as campanhas que chegaram)" % [fa / Fases.TOTAL + 1, nivel_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos)])
+				print("      torre ao fim do ato %d: soma dos niveis das melhorias %.1f (de %d), modulos liberados %.1f" % [fa / Fases.TOTAL + 1, torre_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos), 4 * Torre.MELHORIA_NIVEL_MAX, mods_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos)])
 		print("   invasao sem fim (time do fim do jogo): comodo %s | lugar de fora %s" % [_resumo_inv(inv_casa), _resumo_inv(inv_fora)])
 		_imprimir_poderes(n_jogos)
 	quit()
@@ -202,7 +213,7 @@ func _preparar(pol: String, e: Estado, _primeira: bool) -> void:
 		else:
 			tentou += 1
 	for m in range(Torre.MODULO_NOME.size() - 1, -1, -1):
-		if e.modulo_liberado(m) and not e.tem_modulo(m) and e.modulos.size() < Torre.MODULOS_EQUIPADOS_MAX:
+		if e.modulo_liberado(m) and not e.tem_modulo(m) and e.modulos.size() < e.vagas_modulos():
 			e.alternar_modulo(m)
 	# funde as peças repetidas que estão paradas no guarda-roupa
 	var fundiu: bool = true

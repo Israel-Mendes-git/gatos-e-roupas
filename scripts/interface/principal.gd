@@ -929,14 +929,19 @@ func _on_campo_terminou(vitoria: bool) -> void:
 		niveis_antes[b] = b.nivel
 	var tamanho_antes: int = estado.bonecos.size()
 	var vencidas_antes: int = estado.fases_vencidas
+	var liberados_antes: Array[int] = []
+	for m in Torre.MODULO_NOME.size():
+		if estado.modulo_liberado(m):
+			liberados_antes.append(m)
 	var era_invasao: bool = estado.invasao
 	trofeus_fase += maxi(0, estado.trofeus - trofeus_luta)
 	trofeus_luta = estado.trofeus
 	modulos_novos.clear()
 	if vitoria:
 		var acabou: bool = estado.encerrar_onda(campo.sim)
-		for m in range(vencidas_antes, mini(estado.fases_vencidas, Torre.MODULO_NOME.size())):
-			modulos_novos.append(m)
+		for m in Torre.MODULO_NOME.size():
+			if estado.modulo_liberado(m) and not (m in liberados_antes):
+				modulos_novos.append(m)
 		novos_no_time.clear()
 		for k in range(tamanho_antes, estado.bonecos.size()):
 			novos_no_time.append(estado.bonecos[k].nome)
@@ -2579,7 +2584,7 @@ func oficina_tem_novidade() -> bool:
 	for m in Torre.MELHORIA_NOME.size():
 		if estado.pode_melhorar(m):
 			return true
-	if estado.modulos.size() < Torre.MODULOS_EQUIPADOS_MAX:
+	if estado.modulos.size() < estado.vagas_modulos():
 		for m in Torre.MODULO_NOME.size():
 			if estado.modulo_liberado(m) and not estado.tem_modulo(m):
 				return true
@@ -3044,15 +3049,15 @@ func rect_mod_slot(k: int) -> Rect2:
 
 ## Ícones pequenos dos módulos montados (encaixes vazios aparecem apagados).
 func _modulos_montados() -> void:
-	for k in Torre.MODULOS_EQUIPADOS_MAX:
+	for k in estado.vagas_modulos():
 		var r: Rect2 = rect_mod_slot(k)
 		draw_rect(r, Color(0.08, 0.05, 0.07, 0.85))
 		var cheio: bool = k < estado.modulos.size()
 		draw_rect(r, Color(1.0, 0.85, 0.4, 0.7) if cheio else Color(1, 1, 1, 0.18), false, 2.0)
 		if cheio:
 			Oficina.icone_modulo(self, estado.modulos[k], r.position + Vector2(1, 1), 2.0)
-	var rot: String = "%d/%d módulos" % [estado.modulos.size(), Torre.MODULOS_EQUIPADOS_MAX]
-	Desenho.texto(self, rot, Vector2(MOD_SLOT_X0 + Torre.MODULOS_EQUIPADOS_MAX * MOD_SLOT_PASSO + 4.0, MOD_SLOT_Y + 18.0), 13, Color(1, 1, 1, 0.65), -1.0, 3)
+	var rot: String = "%d/%d módulos" % [estado.modulos.size(), estado.vagas_modulos()]
+	Desenho.texto(self, rot, Vector2(MOD_SLOT_X0 + estado.vagas_modulos() * MOD_SLOT_PASSO + 4.0, MOD_SLOT_Y + 18.0), 13, Color(1, 1, 1, 0.65), -1.0, 3)
 
 ## Dica do mouse sobre um módulo montado.
 func _dica_modulo() -> void:

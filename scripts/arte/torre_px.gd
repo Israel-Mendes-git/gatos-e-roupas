@@ -46,12 +46,14 @@ const TABUA := Color(0.62, 0.42, 0.22)
 const METAL: Array[Color] = [
 	Color(0, 0, 0, 0), Color(0.62, 0.66, 0.74), Color(0.68, 0.72, 0.80),
 	Color(0.55, 0.70, 0.92), Color(0.62, 0.78, 0.96), Color(0.97, 0.80, 0.28),
+	Color(1.0, 0.62, 0.26), Color(0.45, 0.92, 0.78), Color(0.78, 0.60, 1.0),   # 6 cobre, 7 esmeralda, 8 ametista
 ]
 const CANHAO_COR: Array[Color] = [
 	Color(0.58, 0.38, 0.22), Color(0.58, 0.61, 0.66), Color(0.30, 0.52, 0.86),
 	Color(0.30, 0.72, 0.42), Color(0.68, 0.42, 0.88), Color(0.96, 0.78, 0.25),
+	Color(0.95, 0.46, 0.18), Color(0.28, 0.84, 0.76), Color(0.80, 0.52, 1.0),
 ]
-const CANHAO_ESP: Array[float] = [12.0, 12.0, 16.0, 16.0, 20.0, 20.0]
+const CANHAO_ESP: Array[float] = [12.0, 12.0, 16.0, 16.0, 20.0, 20.0, 24.0, 24.0, 24.0]
 
 const PAL_VIGIA := {
 	"k": Color(0.14, 0.09, 0.13), "o": Color(0.93, 0.58, 0.26), "w": Color(0.99, 0.93, 0.80),
@@ -221,6 +223,77 @@ const ENGR_B: Array[String] = [
 	"g.....g",
 ]
 
+const SPR_FOSSO: Array[String] = [
+	"............",
+	"............",
+	"............",
+	"............",
+	"............",
+	"............",
+	"...kkkkkk...",
+	".kkMMMMMMkk.",
+	"kMMkkkkkkMMk",
+	"kMkPPPPPPkMk",
+	"kMkPPppPPkMk",
+	".kkkkkkkkkk.",
+]
+const SPR_REPELENTE: Array[String] = [
+	"............",
+	"....kkkk....",
+	"....kyyk....",
+	"...kkkkkk...",
+	"...kGGGGk...",
+	"...kGggGk...",
+	"...kGwwGk...",
+	"...kGggGk...",
+	"...kGggGk...",
+	"...kGGGGk...",
+	"...kkkkkk...",
+	"............",
+]
+const SPR_LUNETA: Array[String] = [
+	"............",
+	"........kk..",
+	".......kaak.",
+	"......kayyk.",
+	".....kaAak..",
+	"....kaAak...",
+	"...kaAak....",
+	"..kkAak.....",
+	"....kmk.....",
+	"...k.m.k....",
+	"..k..m..k...",
+	".kk..M..kk..",
+]
+const SPR_CASINHA: Array[String] = [
+	"............",
+	"....kkkk....",
+	"...krrrrk...",
+	"..krrrrrRk..",
+	".krrrrrrrRk.",
+	"kRRRRRRRRRRk",
+	"kmmmkkkkmmmk",
+	"kmmkPPPPkmmk",
+	"kmmkPPPPkmmk",
+	"kmmkPPPPkmmk",
+	"kMMkPPPPkMMk",
+	"kkkkkkkkkkkk",
+]
+const SPR_REFORCO: Array[String] = [
+	"............",
+	"kkkkkkkkkkkk",
+	"kAAAAAAAAAAk",
+	"kAkAAAAAAkAk",
+	"kAAkAAAAkAAk",
+	"kAAAkAAkAAAk",
+	"kAAAAkkAAAAk",
+	"kAAAkAAkAAAk",
+	"kAAkAAAAkAAk",
+	"kAkAAAAAAkAk",
+	"kAAAAAAAAAAk",
+	"kkkkkkkkkkkk",
+]
+
 # ---------------------------------------------------------------- utilidades
 static func _r(c: Object, x: float, y: float, w: float, h: float, cor: Color) -> void:
 	c.draw_rect(Rect2(x, y, w, h), cor)
@@ -258,7 +331,7 @@ static func _corridas(linhas: Array) -> Array:
 	return out
 
 static func nivel(melhorias: Array, m: int) -> int:
-	return clampi(int(melhorias[m]), 0, 5) if melhorias.size() > m else 0
+	return clampi(int(melhorias[m]), 0, Torre.MELHORIA_NIVEL_MAX) if melhorias.size() > m else 0
 
 # ---------------------------------------------------------------- geometria
 static func y_corpo(base: Vector2) -> float:
@@ -310,7 +383,7 @@ static func centro_topo(base: Vector2, n: int, nmax: int, t: float = 0.0, golpe:
 static func rect_canhao(base: Vector2, n: int, nmax: int, melhorias: Array, t: float = 0.0, golpe: float = 0.0, recuo: float = 0.0) -> Rect2:
 	var lv: int = nivel(melhorias, CANH)
 	var th: float = CANHAO_ESP[lv]
-	var comp: float = 24.0 + 8.0 * lv   # 24 a 64 px; com a torre torta (até 12 px) a boca ainda fica em x <= 200
+	var comp: float = 24.0 + 8.0 * mini(lv, 5) + 4.0 * maxi(lv - 5, 0)   # 24 a 76 px; com a torre torta (até 12 px) a boca ainda fica em x <= 200
 	var dxp: float = desl(linhas_cheias(n), n, nmax, t, golpe)
 	var dxr: float = -roundf(recuo * 2.0) * G
 	var x0: float = base.x + 112.0 + dxp + dxr
@@ -321,13 +394,17 @@ static func boca_canhao(base: Vector2, tijolos: int, tijolos_max: int, melhorias
 	var r: Rect2 = rect_canhao(base, tijolos, tijolos_max, melhorias, t, golpe, recuo)
 	return Vector2(r.end.x, r.position.y + r.size.y * 0.5)
 
-## Encaixe do módulo i (0 = lado direito, perto dos bichos; 1 = lado esquerdo). 48x48, no chão, na frente da caixa.
-static func rect_encaixe(base: Vector2, i: int) -> Rect2:
-	return Rect2(base.x + (112.0 if i == 0 else 4.0), base.y - 44.0, 48.0, 48.0)
+## Encaixe do módulo i, de `n` montados. Até 3: 48x48 no chão, na frente da caixa (0 = lado direito, perto dos bichos;
+## 1 = lado esquerdo; 2 = meio). Com 4: todos 36x36 em fila, para caberem na frente da caixa.
+static func rect_encaixe(base: Vector2, i: int, n: int = 2) -> Rect2:
+	if n >= 4:
+		return Rect2(base.x + [124.0, 4.0, 84.0, 44.0][clampi(i, 0, 3)], base.y - 32.0, 36.0, 36.0)
+	return Rect2(base.x + [112.0, 4.0, 58.0][clampi(i, 0, 2)], base.y - 44.0, 48.0, 48.0)
 
 ## Posição de onde o saco da catapulta parte (acima do encaixe).
-static func ponta_catapulta(base: Vector2, i: int) -> Vector2:
-	return rect_encaixe(base, i).position + Vector2(26.0, -4.0)
+static func ponta_catapulta(base: Vector2, i: int, n: int = 2) -> Vector2:
+	var r: Rect2 = rect_encaixe(base, i, n)
+	return r.position + Vector2(26.0, -4.0) * (r.size.x / 48.0)
 
 # ---------------------------------------------------------------- desenho da torre
 static func desenhar(c: CanvasItem, base: Vector2, tijolos: int, tijolos_max: int, melhorias: Array, modulos: Array, t: float, golpe: float, op: Dictionary = {}) -> void:
@@ -357,8 +434,8 @@ static func desenhar(c: CanvasItem, base: Vector2, tijolos: int, tijolos_max: in
 	if bool(op.get("vigia", true)):
 		_vigia(c, base.x + dxp + 8.0, ys, t, golpe, bool(op.get("vitoria", false)))
 	_canhao(c, base, n, nmax, melhorias, t, golpe, recuo)
-	for i in mini(modulos.size(), 2):
-		_modulo(c, int(modulos[i]), rect_encaixe(base, i), t, op)
+	for i in mini(modulos.size(), 4):
+		_modulo(c, int(modulos[i]), rect_encaixe(base, i, modulos.size()), t, op)
 	if golpe > 0.02:
 		_poeira(c, base, golpe)
 
@@ -462,7 +539,7 @@ static func _camada(c: Object, base: Vector2, n: int, nmax: int, nf: int, lv_est
 	for k in 7:
 		_r(c, base.x + dxp + 4.0 + k * 24.0, ys - 12.0, 12.0, 4.0, PEDRA_CLARA)
 	# tábuas da plataforma
-	_r(c, base.x - 4.0 + dxp, ys, 168.0, 4.0, METAL[5] if lv_est >= 5 else TABUA)
+	_r(c, base.x - 4.0 + dxp, ys, 168.0, 4.0, METAL[lv_est] if lv_est >= 5 else TABUA)
 	_r(c, base.x - 4.0 + dxp, ys, 4.0, 4.0, COR_CONTORNO)
 	_r(c, base.x + 160.0 + dxp, ys, 4.0, 4.0, COR_CONTORNO)
 	# blocos (fileiras cheias e os soltos de cima)
@@ -561,6 +638,19 @@ static func _reforcos(c: Object, base: Vector2, n: int, nmax: int, nf: int, lv: 
 		_r(c, rt3.end.x - 4.0, rt3.position.y, 4.0, 16.0, cor)
 		_r(c, rt0.position.x + 4.0, rt0.position.y + 4.0, 4.0, 4.0, claro)
 		_r(c, rt3.end.x - 8.0, rt3.position.y + 4.0, 4.0, 4.0, claro)
+	# níveis 6 a 8: rebites em todas as fileiras, filete no topo e joia na fileira de cima
+	if lv >= 6:
+		for r in nf:
+			var rr: Rect2 = rect_bloco(base, r * COLS, n, nmax, t, golpe)
+			var rq: Rect2 = rect_bloco(base, r * COLS + 3, n, nmax, t, golpe)
+			_r(c, rr.position.x + 8.0, rr.position.y + 8.0, 4.0, 4.0, claro)
+			_r(c, rq.end.x - 12.0, rq.position.y + 8.0, 4.0, 4.0, claro)
+		if lv >= 7:
+			_r(c, rt0.position.x, rt0.position.y, rt3.end.x - rt0.position.x, 4.0, cor)
+		if lv >= 8:
+			var jx: float = (rt0.position.x + rt3.end.x) * 0.5 - 4.0
+			_r(c, jx, rt0.position.y - 4.0, 8.0, 8.0, Color(1.0, 1.0, 1.0))
+			_r(c, jx + 2.0, rt0.position.y - 2.0, 4.0, 4.0, cor)
 	# placas no meio (nível 3) e barras ao longo de toda a lateral (nível 4)
 	for r in nf:
 		var ra: Rect2 = rect_bloco(base, r * COLS, n, nmax, t, golpe)
@@ -579,7 +669,7 @@ static func _reforcos(c: Object, base: Vector2, n: int, nmax: int, nf: int, lv: 
 
 static func _bandeira(c: CanvasItem, x: float, ys: float, t: float, lv_est: int) -> void:
 	_r(c, x, ys - 52.0, 4.0, 52.0, Color(0.88, 0.76, 0.55))
-	_r(c, x, ys - 56.0, 4.0, 4.0, METAL[5])
+	_r(c, x, ys - 56.0, 4.0, 4.0, METAL[maxi(lv_est, 5)])
 	var pano := Color(0.90, 0.35, 0.30)
 	for i in 5:
 		var dy: float = G if sin(t * 5.0 - i * 1.2) > 0.4 else 0.0
@@ -634,6 +724,9 @@ static func _canhao(c: CanvasItem, base: Vector2, n: int, nmax: int, melhorias: 
 	if lv >= 3:
 		_r(c, r.position.x + 12.0, r.position.y + G, G, r.size.y - 2.0 * G, METAL[5])
 		_r(c, r.position.x + 20.0, r.position.y + G, G, r.size.y - 2.0 * G, METAL[5])
+	if lv >= 6:   # anéis na cor do nível
+		for ax in ([28.0, 36.0] if lv < 8 else [28.0, 36.0, 44.0]):
+			_r(c, r.position.x + ax, r.position.y, G, r.size.y, METAL[lv])
 	if recuo > 0.55:  # clarão na boca
 		var b: Vector2 = Vector2(r.end.x, r.position.y + r.size.y * 0.5)
 		_r(c, b.x, b.y - 8.0, 8.0, 16.0, Color(1.0, 0.85, 0.3, 0.9))
@@ -652,6 +745,9 @@ static func _modulo(c: CanvasItem, m: int, r: Rect2, t: float, op: Dictionary) -
 	var x: float = r.position.x
 	var y: float = r.position.y
 	var pal: Dictionary = PAL_MOD.duplicate()
+	if r.size.x < 47.0:
+		_modulo_pequeno(c, m, r, t, op, pal)
+		return
 	match m:
 		Torre.Modulo.RATOEIRA:
 			var estala: float = float(op.get("ratoeira", 0.0))
@@ -712,6 +808,45 @@ static func _modulo(c: CanvasItem, m: int, r: Rect2, t: float, op: Dictionary) -
 				var bx2: float = x + (4 + k * 3) * G
 				var by2: float = y + 3.0 * G - w * (3.0 if ferve <= 0.0 else 5.0) * G
 				_r(c, bx2, floorf(by2 / G) * G, bs, bs, Color(0.7, 1.0, 0.6, 1.0 - w * 0.8))
+
+		Torre.Modulo.FOSSO:
+			spr(c, x, y, SPR_FOSSO, pal)
+			var cai: float = float(op.get("fosso", 0.0))
+			if cai > 0.0:
+				_r(c, x + 16.0, y + 28.0 - minf(cai, 0.6) * 12.0, 16.0, 8.0, Color(1.0, 0.95, 0.6, minf(1.0, cai * 2.0)))
+			for k in 2:
+				var w2: float = fposmod(t * 0.5 + k * 0.5, 1.0)
+				_r(c, x + (16.0 + k * 12.0), floorf((y + 36.0 - w2 * 12.0) / G) * G, G, G, Color(0.55, 0.45, 0.35, 1.0 - w2))
+		Torre.Modulo.REPELENTE:
+			spr(c, x, y, SPR_REPELENTE, pal)
+			var nuvem: float = 0.35 + 0.3 * sin(t * 2.0)
+			for k in 3:
+				var w3: float = fposmod(t * 0.45 + k * 0.33, 1.0)
+				_r(c, floorf((x + 28.0 + w3 * 20.0) / G) * G, floorf((y + 12.0 - sin(w3 * 3.0 + k) * 6.0) / G) * G, 8.0, 8.0, Color(0.6, 1.0, 0.5, (1.0 - w3) * (0.5 + nuvem)))
+		Torre.Modulo.LUNETA:
+			spr(c, x, y, SPR_LUNETA, pal)
+			if fposmod(t, 2.4) > 2.2 or float(op.get("luneta", 0.0)) > 0.0:
+				_r(c, x + 36.0, y + 4.0, 4.0, 4.0, Color(1, 1, 0.8))
+		Torre.Modulo.CASINHA:
+			spr(c, x, y, SPR_CASINHA, pal)
+			if fposmod(t, 3.0) > 2.6:
+				_r(c, x + 20.0, y + 28.0, 4.0, 4.0, pal["y"])
+		Torre.Modulo.REFORCO:
+			spr(c, x, y, SPR_REFORCO, pal)
+			var rf: float = float(op.get("reforco", 0.0))
+			if rf > 0.0:
+				_r(c, x - 4.0, y - 4.0, 56.0, 56.0, Color(0.7, 0.85, 1.0, 0.45 * minf(1.0, rf / 0.3)))
+
+## Os mesmos módulos em 36x36 (4 montados): bitmaps de 12x12 com pixels de 3 px, sem os efeitos animados.
+static func _modulo_pequeno(c: CanvasItem, m: int, r: Rect2, t: float, _op: Dictionary, pal: Dictionary) -> void:
+	var sprs: Array = [SPR_RATOEIRA, SPR_CATAPULTA, SPR_SIRENE, SPR_BALISTA, SPR_CALDEIRAO_A, SPR_FOSSO, SPR_REPELENTE, SPR_LUNETA, SPR_CASINHA, SPR_REFORCO]
+	if m == Torre.Modulo.CALDEIRAO and int(t * 3.0) % 2 == 1:
+		spr(c, r.position.x, r.position.y, SPR_CALDEIRAO_B, pal, 0.0, 3.0)
+		return
+	if m == Torre.Modulo.SIRENE:
+		var p: float = 0.5 + 0.5 * sin(t * 2.2)
+		pal["r"] = Color(0.70, 0.14, 0.14).lerp(Color(1.0, 0.50, 0.38), p)
+	spr(c, r.position.x, r.position.y, sprs[clampi(m, 0, sprs.size() - 1)], pal, 0.0, 3.0)
 
 # ---------------------------------------------------------------- avulsos
 ## Troféu dourado (9x8 pixels de `cel` px), centrado em `p`.

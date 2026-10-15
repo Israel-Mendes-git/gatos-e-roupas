@@ -277,6 +277,9 @@ var catapulta_t: float = -1.0    # s desde o disparo da catapulta (-1 = armada)
 var sirene_t: float = 0.0
 var balista_t: float = 0.0
 var caldeirao_t: float = 0.0
+var fosso_t: float = 0.0
+var reforco_t: float = 0.0
+var luneta_t: float = 0.0
 var novo_s: float = -1.0         # s desde que o Caldeirão repôs um bloco (-1 = nenhum)
 var novo_idx: int = -1
 var trofeu_pulso: float = 0.0
@@ -371,6 +374,9 @@ func iniciar(e: Estado) -> void:
 	sirene_t = 0.0
 	balista_t = 0.0
 	caldeirao_t = 0.0
+	fosso_t = 0.0
+	reforco_t = 0.0
+	luneta_t = 0.0
 	novo_s = -1.0
 	novo_idx = -1
 	trofeu_pulso = 0.0
@@ -978,7 +984,7 @@ func _consumir() -> void:
 				# o braço dispara; o saco voa em arco até (x, y) e estoura em ração
 				catapulta_t = 0.0
 				_som("catapulta", 1.0, -3.0, true)
-				var ini_c: Vector2 = TorrePx.ponta_catapulta(_base_f(), maxi(_slot_modulo(Torre.Modulo.CATAPULTA), 0))
+				var ini_c: Vector2 = TorrePx.ponta_catapulta(_base_f(), maxi(_slot_modulo(Torre.Modulo.CATAPULTA), 0), estado.modulos.size())
 				tfx.append({"k": "saco", "ini": ini_c, "fim": Vector2(e["x"], e["y"]), "t": 0.0, "dur": 0.85, "raio": float(e.get("raio", Torre.CATAPULTA_RAIO))})
 				_faisca(ini_c + Vector2(0, 8), Color(0.85, 0.65, 0.35), 5, 100.0, 0.3, 2.4)
 			"sirene":
@@ -1003,6 +1009,29 @@ func _consumir() -> void:
 				var pb_b: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				tfx.append({"k": "pena", "a": pa_b, "b": pb_b, "t": 0.0, "dur": 0.4})
 				_faisca(pb_b, Color(1.0, 0.85, 0.85), 6, 90.0, 0.6, 2.4)
+			"fosso":
+				# o bicho mais perto cai no buraco: poeira, "PLOFT!" e estrelas
+				fosso_t = 0.6
+				_som("pancada", 0.8, -4.0, true)
+				var pf: Vector2 = Vector2(e["x"], e["y"] - 10 * ESC)
+				numeros.append({"p": pf + Vector2(0, -40), "txt": "PLOFT!", "cor": Color(0.85, 0.7, 0.45), "vida": 0.9, "tam": 24, "larg": 140.0, "ct": 6})
+				_faisca(pf, Color(0.7, 0.55, 0.38), 12, 150.0, 0.5, 3.0)
+				for k in 3:
+					var ang_f: float = -PI * 0.5 + randf_range(-1.0, 1.0)
+					particulas.append({"p": pf + Vector2(0, -40 * ESC), "v": Vector2(cos(ang_f), sin(ang_f)) * randf_range(40, 80), "vida": 0.9, "max": 0.9, "cor": Desenho.DOURADO, "r": 5.0, "g": 80.0, "tipo": 4, "rot": randf() * TAU, "vrot": randf_range(-6, 6)})
+			"reforco":
+				# o golpe na torre não derruba bloco: clarão azulado e "FIRME!"
+				reforco_t = 0.45
+				_som("escudo", 1.0, -4.0, true)
+				var pr2: Vector2 = _centro_modulo(Torre.Modulo.REFORCO)
+				numeros.append({"p": pr2 + Vector2(0, -44), "txt": "FIRME!", "cor": Color(0.7, 0.88, 1.0), "vida": 0.9, "tam": 22, "larg": 120.0, "ct": 6})
+				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Color(0.7, 0.88, 1.0), 8, 160.0, 0.35, 2.6)
+			"luneta":
+				luneta_t = 0.5
+				_faisca(Vector2(e["x"], e["y"] - 50 * ESC), Color(1.0, 0.95, 0.5), 5, 80.0, 0.4, 2.4)
+			"luneta_crit":
+				_numero(Vector2(e["x"], e["y"] - 70 * ESC), "×2", Color(1.0, 0.9, 0.3), 20, 0.8, 80.0)
+				_faisca(Vector2(e["x"], e["y"] - 40 * ESC), Color(1.0, 0.9, 0.3), 6, 140.0, 0.3, 2.6)
 			"caldeirao":
 				# bolha sobe até o topo e um bloco novo assenta com brilho
 				caldeirao_t = 1.0
@@ -1023,13 +1052,13 @@ func _base_f() -> Vector2:
 ## Em qual encaixe (0 = direito, 1 = esquerdo) está o módulo; -1 se não está montado.
 func _slot_modulo(m: int) -> int:
 	var idx: int = estado.modulos.find(m)
-	return idx if idx >= 0 and idx < 2 else -1
+	return idx if idx >= 0 and idx < 4 else -1
 
 func _centro_modulo(m: int) -> Vector2:
 	var s: int = _slot_modulo(m)
 	if s < 0:
 		return _base_f() + Vector2(80, -40)
-	return TorrePx.rect_encaixe(_base_f(), s).get_center()
+	return TorrePx.rect_encaixe(_base_f(), s, estado.modulos.size()).get_center()
 
 ## Aliados e inimigos do fundo para a frente (menor vy primeiro; empate: aliados antes, na ordem da lista).
 ## Ordena uma chave numérica (vy em 1/64 px * 65536 + posição) com o sort nativo: sem lambda, sem comparação em GDScript.
@@ -1054,7 +1083,7 @@ func _op_torre() -> Dictionary:
 	return {
 		"recuo": recuo_canhao, "pulso": torre_pulso * 0.6, "vitoria": sim.terminada and sim.vitoria,
 		"luta": not sim.terminada, "vigia": TORRE_VIGIA, "ratoeira": ratoeira_t, "catapulta": catapulta_t,
-		"sirene": sirene_t, "balista": balista_t, "caldeirao": caldeirao_t, "novo_idx": novo_idx, "novo_s": novo_s,
+		"sirene": sirene_t, "balista": balista_t, "caldeirao": caldeirao_t, "fosso": fosso_t, "reforco": reforco_t, "luneta": luneta_t, "novo_idx": novo_idx, "novo_s": novo_s,
 	}
 
 ## Quanto o tiro da torre ainda está "preso" à boca do canhão (o simulador o cria em x = TORRE_X - 70):
@@ -1792,6 +1821,9 @@ func _atualizar_torre(dt: float) -> void:
 	sirene_t = maxf(0.0, sirene_t - dt)
 	balista_t = maxf(0.0, balista_t - dt)
 	caldeirao_t = maxf(0.0, caldeirao_t - dt)
+	fosso_t = maxf(0.0, fosso_t - dt)
+	reforco_t = maxf(0.0, reforco_t - dt)
+	luneta_t = maxf(0.0, luneta_t - dt)
 	trofeu_pulso = move_toward(trofeu_pulso, 0.0, dt * 3.0)
 	if catapulta_t >= 0.0:
 		catapulta_t += dt
@@ -2098,7 +2130,10 @@ func _draw() -> void:
 			sx_u -= br * 0.5
 		var esc_d: float = esc_u * sy_u
 		var dir_d: float = dir * sx_u / sy_u
-		Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
+		if uu2.cao:
+			Desenho.boneco(self, pos, esc_d, -dir_d, 1, [null, null, null, null], fl_u, uu2.anim, uu2.andando, uu2.golpe, 1.0, false, -1, 0.0, 0, false, true, 0, false, Fases.Chefe.VIRALATA)
+		else:
+			Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
 		if uu2.barreira_int > 0.0 and uu2.barreira_cd <= 0.0:

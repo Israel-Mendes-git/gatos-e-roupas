@@ -20,7 +20,7 @@ var bichos_vistos: Dictionary = {}
 # torre: troféus (moeda permanente), melhorias compradas e módulos montados
 var trofeus: int = 0
 var melhorias: Array[int] = [0, 0, 0, 0]      # nível de cada Torre.Melhoria
-var modulos: Array[int] = []                  # Torre.Modulo montados (até Torre.MODULOS_EQUIPADOS_MAX)
+var modulos: Array[int] = []                  # Torre.Modulo montados (até vagas_modulos())
 var onda: int = 1
 # invasão sem fim: mesmo cômodo, ondas até cair; `onda` gira de 1 a 5 (chefe a cada cinco) e esta conta o total
 var invasao: bool = false
@@ -248,7 +248,7 @@ func progresso() -> int:
 
 ## Quanto a torre cura cada boneco antes da próxima onda (depende da altura dela agora).
 func cura_atual() -> float:
-	return (Balanco.CURA_MAX + Torre.ENFERMARIA_CURA * melhorias[Torre.Melhoria.ENFERMARIA]) * clampf(float(tijolos) / tijolos_max(), 0.0, 1.0)
+	return (Balanco.CURA_MAX + Torre.enfermaria_cura(melhorias[Torre.Melhoria.ENFERMARIA])) * clampf(float(tijolos) / tijolos_max(), 0.0, 1.0)
 
 # ---------- Fichário ----------
 func _garantir_colecao() -> void:
@@ -304,20 +304,36 @@ func torre_rapidez() -> float:
 	return 1.0 + Torre.CADENCIA_RAPIDEZ * melhorias[Torre.Melhoria.CADENCIA]
 
 func pode_melhorar(m: int) -> bool:
-	return melhorias[m] < Torre.MELHORIA_NIVEL_MAX and trofeus >= Torre.MELHORIA_CUSTO
+	return melhorias[m] < Torre.MELHORIA_NIVEL_MAX and trofeus >= Torre.custo_melhoria(melhorias[m])
 
 ## Compra um nível da melhoria com troféus. A Estrutura vale a partir do próximo cômodo; as demais, já.
 func melhorar(m: int) -> bool:
 	if not pode_melhorar(m):
 		return false
-	trofeus -= Torre.MELHORIA_CUSTO
+	trofeus -= Torre.custo_melhoria(melhorias[m])
 	melhorias[m] += 1
 	salvar()
 	return true
 
 ## O módulo existe para montar? (O chefe que o guarda já foi vencido.)
 func modulo_liberado(m: int) -> bool:
+	if m >= Torre.MODULOS_POR_ABA:
+		return m < Torre.MODULO_NOME.size() and vencido[m - Torre.MODULOS_POR_ABA] >= 2   # o chefe do lugar de fora (2º ato)
 	return fases_vencidas > m
+
+## Atos em que todos os lugares já foram vencidos (0 a ATOS).
+func atos_vencidos() -> int:
+	var n: int = 0
+	for a in range(1, Balanco.ATOS + 1):
+		if vencidos_no_ato(a) >= Fases.TOTAL:
+			n += 1
+		else:
+			break
+	return n
+
+## Vagas de módulo na torre agora.
+func vagas_modulos() -> int:
+	return Torre.vagas(atos_vencidos())
 
 func tem_modulo(m: int) -> bool:
 	return m in modulos
@@ -328,7 +344,7 @@ func alternar_modulo(m: int) -> bool:
 		modulos.erase(m)
 		salvar()
 		return true
-	if not modulo_liberado(m) or modulos.size() >= Torre.MODULOS_EQUIPADOS_MAX:
+	if not modulo_liberado(m) or modulos.size() >= vagas_modulos():
 		return false
 	modulos.append(m)
 	salvar()
@@ -750,7 +766,7 @@ func carregar() -> bool:
 		melhorias[i] = clampi(int(ml[i]), 0, Torre.MELHORIA_NIVEL_MAX)
 	modulos.clear()
 	for m in dados.get("modulos", []):
-		if int(m) >= 0 and int(m) < Torre.MODULO_NOME.size() and modulo_liberado(int(m)) and modulos.size() < Torre.MODULOS_EQUIPADOS_MAX and not (int(m) in modulos):
+		if int(m) >= 0 and int(m) < Torre.MODULO_NOME.size() and modulo_liberado(int(m)) and modulos.size() < vagas_modulos() and not (int(m) in modulos):
 			modulos.append(int(m))
 	_completar_time()  # gravação antiga (sem time) ou time incompleto
 	recordes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

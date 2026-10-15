@@ -29,6 +29,7 @@ var parte: bool = false        # pedaço do Rei de Massinha
 var pecas: Array = [null, null, null, null]
 # clone invocado (Pecas.Poder.INVOCA): unidade temporária, sem roupa para drops e marcas, fora do time
 var clone: bool = false
+var cao: bool = false          # Casinha (módulo da torre): cão de guarda; é um clone sem dono que dura a onda toda
 var clone_t: float = 0.0
 var dono: Unidade = null
 var pecas_visuais: Array = [null, null, null, null]   # só para desenhar o clone com a roupa do dono
@@ -129,6 +130,8 @@ var vy: float = 0.0
 var anim: float = 0.0
 
 func escala() -> float:
+	if cao:
+		return 0.55
 	if chefe:
 		return Balanco.CHEFE_ESCALA * Balanco.CHEFE_ESCALA_TIPO[clampi(chefe_tipo, 0, Balanco.CHEFE_ESCALA_TIPO.size() - 1)]
 	if parte:
