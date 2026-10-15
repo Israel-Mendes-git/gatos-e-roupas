@@ -302,7 +302,8 @@ static func _fase(golpe: float) -> int:
 		return 3
 	return 4
 
-## Dicionário de inteiros da pose, mais "a" = posição real de cada âncora de roupa (na ordem de RoupaGato.Onde).
+## Dicionário de inteiros da pose, mais "a" = posição real de cada âncora de roupa (na ordem de RoupaGato.Onde). A de cabeça fica no
+## alto do crânio: capacete da toupeira e coroa do texugo saem quando há chapéu.
 static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool) -> Dictionary:
 	var q: int = 0
 	var bob: int = 0
@@ -329,7 +330,11 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 	return g
 
 static func _chave(g: Dictionary) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], g["q"], g["ph"], g["bob"], g["resp"], int(g["andando"]), int(g["parado"]), g["ext"]]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], g["q"], g["ph"], g["bob"], g["resp"], int(g["andando"]), int(g["parado"]), g["ext"], int(BichoPx.cabeca_coberta)]
+
+## Molde do tronco e largura do crânio do quadro em montagem (cada _monta* grava aqui): as roupas de corpo e o chapéu se ajustam.
+static var _tr: PackedInt32Array = PackedInt32Array()
+static var _cr: int = 0
 
 static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parado: bool) -> Vector2:
 	var ct: int = clampi(chefe_tipo, 5, 9)
@@ -347,10 +352,21 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 	if not _cache.has(k):
 		_cache[k] = _monta(g)
 	var s: Dictionary = _cache[k]
+	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
 	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(ct, alfa), f)
+
+## Quadro em cache do chefe nesta pose (sprite "l", molde do tronco "t", crânio "c"), para as roupas acompanharem o desenho.
+static func quadro(chefe_tipo: int, anim: float, andando: bool, golpe: float, parado: bool) -> Dictionary:
+	var g: Dictionary = _geo(clampi(chefe_tipo, 5, 9), anim, andando, golpe, parado)
+	var k: String = _chave(g)
+	if not _cache.has(k):
+		_cache[k] = _monta(g)
+	return _cache[k]
 
 static func _monta(g: Dictionary) -> Dictionary:
 	var G := _nova()
+	_tr = _nova()
+	_cr = 0
 	match int(g["ct"]):
 		5:
 			if g["parado"]:
@@ -384,7 +400,8 @@ static func _monta(g: Dictionary) -> Dictionary:
 			var v: int = G[j * _W + i]
 			s2 += String.chr(v) if v != 0 else "."
 		lin.append(s2)
-	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin}
+	# "t" = molde do tronco, "c" = largura do crânio (chapéu), "max" = quanto a roupa de corpo pode crescer (chefe é bem maior)
+	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin, "t": BichoPx.recorte(_tr, _W, _H, _OX, _OY), "c": _cr, "max": Vector2i(32, 20)}
 
 # ================================================================ 5 TOUPEIRA ESCAVADORA
 const _HELM: Array = [
@@ -452,10 +469,10 @@ static func _geo5(g: Dictionary, tk: int) -> void:
 		g["cy0"] = -20
 		g["gx"] = -2
 		g["gy"] = -15
-		g["a"] = [Vector2(0, -21), Vector2(0, -8), Vector2(10, -11), Vector2(-8, -9), Vector2(0, -11), Vector2(0, 0), Vector2(1, -14)]
+		g["a"] = [Vector2(0, -14), Vector2(0, -8), Vector2(10, -11), Vector2(-8, -9), Vector2(0, -11), Vector2(0, 0), Vector2(1, -14)]
 		g["patas"] = Vector2(0, 5000)
 		return
-	g["a"] = [Vector2(hx + 6, hy - 5), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + 18, hy + 6), Vector2(bx + 3, by0 + 2),
+	g["a"] = [Vector2(hx + 6, hy + 1), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + 18, hy + 6), Vector2(bx + 3, by0 + 2),
 		Vector2(hx + 3, hy + 8), Vector2(g["gx"] + 2, g["gy"] + 2), Vector2(hx + 12, hy + 4)]
 	g["patas"] = Vector2(-3, 0)
 
@@ -531,6 +548,8 @@ static func _monta5(G: PackedInt32Array, g: Dictionary) -> void:
 	# corpo redondo + cabeça + focinho
 	var B := _nova()
 	_elip(B, bx, by0, int(g["bw"]), bh)
+	_tr = B.duplicate()
+	_cr = 12
 	_tinta(B, bx + 3, by0 + bh - 6, 12, 6, "d")
 	_elip(B, hx, hy, 12, 11)
 	_bmp(B, hx + 9, hy + 4, _FOCINHO)
@@ -542,22 +561,24 @@ static func _monta5(G: PackedInt32Array, g: Dictionary) -> void:
 	_rect(B, hx + 1, gy + 1, gx - hx - 1, 2, "S")
 	_lente(B, gx, gy)
 	_comp(G, B)
-	# capacete com lanterna
-	var C := _nova()
+	# capacete com lanterna (sai quando a toupeira veste chapéu, como os gorros dos bichos)
 	var cx0: int = g["cx0"]
 	var cy0: int = g["cy0"]
-	_bmp(C, cx0, cy0, _HELM)
-	_rect(C, cx0 + 5, cy0 + 1, 1, 4, "y")
-	_bmp(C, cx0 + 11, cy0 + 1, _LAMPADA)
-	_px(C, cx0 + 2, cy0 + 3, "h")
-	_comp(G, C)
+	if not BichoPx.cabeca_coberta:
+		var C := _nova()
+		_bmp(C, cx0, cy0, _HELM)
+		_rect(C, cx0 + 5, cy0 + 1, 1, 4, "y")
+		_bmp(C, cx0 + 11, cy0 + 1, _LAMPADA)
+		_px(C, cx0 + 2, cy0 + 3, "h")
+		_comp(G, C)
 	# braço de perto
 	var D := _nova()
 	_braco(D, 2, by0 + 4, int(g["ax"]), int(g["ay"]), false)
 	_comp(G, D)
 	_garras(G, int(g["fx"]), int(g["fy"]), true, 0, 0)
 	_garras(G, int(g["ax"]), int(g["ay"]), false, int(g["abre"]), ph)
-	_feixe(G, cx0 + 15, cy0 + 2, 12)
+	if not BichoPx.cabeca_coberta:
+		_feixe(G, cx0 + 15, cy0 + 2, 12)
 	if ph == 2 or ph == 3:
 		var X := _nova()
 		var hxm: int = int(g["ax"])
@@ -582,14 +603,15 @@ static func _monta5_monte(G: PackedInt32Array, g: Dictionary) -> void:
 	_lente(B, gx, gy)
 	_bmp(B, 3, -11 - up, ["PPPp", "PPPPQ", "pppQ"])
 	_comp(G, B)
-	var C := _nova()
 	var cx0: int = -8
 	var cy0: int = -20 - up
-	_bmp(C, cx0, cy0, _HELM)
-	_rect(C, cx0 + 5, cy0 + 1, 1, 4, "y")
-	_bmp(C, cx0 + 11, cy0 + 1, _LAMPADA)
-	_px(C, cx0 + 2, cy0 + 3, "h")
-	_comp(G, C)
+	if not BichoPx.cabeca_coberta:
+		var C := _nova()
+		_bmp(C, cx0, cy0, _HELM)
+		_rect(C, cx0 + 5, cy0 + 1, 1, 4, "y")
+		_bmp(C, cx0 + 11, cy0 + 1, _LAMPADA)
+		_px(C, cx0 + 2, cy0 + 3, "h")
+		_comp(G, C)
 	if f == 1 or f == 3:
 		var A := _nova()
 		var ya: int = -10 - (3 if f == 1 else 0)
@@ -614,7 +636,8 @@ static func _monta5_monte(G: PackedInt32Array, g: Dictionary) -> void:
 		_rect(V, xx, yy, 2, 2, "T")
 		_px(V, xx, yy, "u")
 	_comp(G, V)
-	_feixe(G, cx0 + 15, cy0 + 2, 11)
+	if not BichoPx.cabeca_coberta:
+		_feixe(G, cx0 + 15, cy0 + 2, 11)
 
 ## apaga o que está abaixo do chão (y >= 0) numa camada
 static func _corta(L: PackedInt32Array) -> PackedInt32Array:
@@ -750,6 +773,8 @@ static func _monta6(G: PackedInt32Array, g: Dictionary) -> void:
 	# corpo + pescoço + cabeça + orelha de perto
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
+	_tr = B.duplicate()
+	_cr = BichoPx.cranio(_CAB["G"]["rows"])
 	_elip(B, hx - 3, hy + 3, 9, 9)
 	var cab: Array = _cab_rows(_CAB["G"], g["boca"])
 	_bmp(B, hx, hy, cab)
@@ -793,7 +818,7 @@ static func _geo7(g: Dictionary, tk: int) -> void:
 	var hcy: int = -31 - lift - int(g["resp"])
 	g["hcx"] = hcx
 	g["hcy"] = hcy
-	g["a"] = [Vector2(hcx + 1, hcy - 9), Vector2(0, -15 - lift), Vector2(hcx + 5, hcy + 5), Vector2(-9, -9 - lift),
+	g["a"] = [Vector2(hcx + 1, hcy - 7), Vector2(0, -15 - lift), Vector2(hcx + 5, hcy + 5), Vector2(-9, -9 - lift),
 		Vector2(hcx, hcy + 8), Vector2(hcx + 2, hcy + 1), Vector2(hcx + 1, hcy - 6)]
 	g["patas"] = Vector2(0, 5000) if voa else Vector2(0, 0)
 
@@ -869,6 +894,8 @@ static func _monta7(G: PackedInt32Array, g: Dictionary) -> void:
 	# corpo ovo, peito creme com penugem em V
 	var B := _nova()
 	_elip(B, -9, -27 - lift - resp, 19, 24 + resp)
+	_tr = B.duplicate()
+	_cr = 16   # a cabeça larga tem 21, mas metade é o disco do rosto e as orelhas de pena: o chapéu fica no alto dela
 	_tinta(B, -2, -25 - lift - resp, 12, 20 + resp, "m")
 	_elip(B, 0, -25 - lift - resp, 10, 19 + resp, "v", "v", "V")
 	var py: int = -22 - lift - resp
@@ -1020,6 +1047,8 @@ static func _monta8(G: PackedInt32Array, g: Dictionary) -> void:
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
 	_elip(B, bx + 1, by0 + 3, 11, 13, "l", "m", "d")
+	_tr = B.duplicate()
+	_cr = BichoPx.cranio(_cabk("V", 1.2)["rows"])
 	_tinta(B, bx + bw - 12, by0 + bh - 8, 13, 9, "v")
 	_tinta(B, bx + 11, by0 - 1, 8, 5, "e")
 	var cb: Dictionary = _cabk("V", 1.2)
@@ -1118,7 +1147,7 @@ static func _geo9(g: Dictionary, tk: int) -> void:
 	g["hy"] = hy
 	g["boca"] = ph == 2 or ph == 3
 	g["ext"] = (tk / 240) % 3
-	g["a"] = [Vector2(hx + hw * 0.5, hy - 7), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + hw - 1, hy + hh * 0.5), Vector2(bx + 3, by0 + 1),
+	g["a"] = [Vector2(hx + hw * 0.5, hy + 1), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + hw - 1, hy + hh * 0.5), Vector2(bx + 3, by0 + 1),
 		Vector2(hx + 3, hy + hh - 1), Vector2(hx + cb["ex"] + 2, hy + cb["ey"] + 1), Vector2(hx + cb["ex"] + 2, hy + cb["ey"])]
 	g["patas"] = Vector2(0, 0)
 
@@ -1191,6 +1220,8 @@ static func _monta9(G: PackedInt32Array, g: Dictionary) -> void:
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
 	_elip(B, bx + bw - 14, by0 - 1, 14, 12)
+	_tr = B.duplicate()
+	_cr = BichoPx.cranio(_cabk("T", 1.3)["rows"])
 	_tinta(B, bx + 2, by0 + bh - 4, bw - 6, 5, "K")
 	for j in range(by0 - 3, by0 + bh):
 		for i in range(bx, bx + bw):
@@ -1226,7 +1257,8 @@ static func _monta9(G: PackedInt32Array, g: Dictionary) -> void:
 	_px(Go, hx, hy + hh - 1, "G")
 	_px(Go, hx + 1, hy + hh - 1, "G")
 	_comp(G, Go)
-	# coroa de ouro com gemas
-	var Cr := _nova()
-	_bmp(Cr, hx + (hw - 9) / 2 - 1, hy - 6, _COROA)
-	_comp(G, Cr)
+	# coroa de ouro com gemas (sai quando o texugo veste chapéu)
+	if not BichoPx.cabeca_coberta:
+		var Cr := _nova()
+		_bmp(Cr, hx + (hw - 9) / 2 - 1, hy - 6, _COROA)
+		_comp(G, Cr)

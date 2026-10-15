@@ -26,9 +26,10 @@ static var _cache: Dictionary = {}
 
 # ---------------------------------------------------------------- cabeças (sem contorno; `.` = vazio)
 # js = primeira linha da mandíbula; ms = coluna onde começa a boca; ab = linhas que a boca aberta acrescenta;
-# ct/cy = coluna do meio e linha (relativa a hy) do alto da cabeça (âncora de chapéu); ex/ey = olho; mb = linha da boca/focinho
+# ct/cy = coluna do meio e linha (relativa a hy) do alto da cabeça (âncora de chapéu; a coroa sai quando há chapéu, então a âncora
+# é o crânio, não a coroa); ex/ey = olho; mb = linha da boca/focinho
 const _CAB: Array = [
-	{"js": 7, "ms": 6, "ab": 3, "ct": 5.0, "cy": -3, "ex": 8, "ey": 4, "mb": 6, "rows": [   # Rei dos Ratos
+	{"js": 7, "ms": 6, "ab": 3, "ct": 5.0, "cy": 0, "ex": 8, "ey": 4, "mb": 6, "rows": [   # Rei dos Ratos
 		"..llllllll.....",
 		".llllllllllmm..",
 		"lllllllmmmmmmm.",
@@ -71,7 +72,7 @@ const _CAB: Array = [
 		".dmmmmmmmm.......",
 		"..dddddddd.......",
 	]},
-	{"js": 5, "ms": 4, "ab": 3, "ct": 5.0, "cy": -4, "ex": 3, "ey": 1, "mb": 5, "rows": [   # Sapo-Rei
+	{"js": 5, "ms": 4, "ab": 3, "ct": 5.0, "cy": 0, "ex": 3, "ey": 1, "mb": 5, "rows": [   # Sapo-Rei
 		"..lllllll........",
 		".leeewweell......",
 		".leeekkeelllllllm",
@@ -449,10 +450,14 @@ static func _orelha_c(L: PackedInt32Array, x: int, y: int, w: int, h: int, longe
 
 # ---------------------------------------------------------------- montagem do quadro
 static func _chave(g: Dictionary) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], int(g["andando"]), g["q"], g["ei"], int(g["boca"]), g["resp"], g["bob"], g["salto"], g["aire"], g["sq"], int(g["parado"]), g["sw"], g["dr"], g["ala"], g["tl"]]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], int(g["andando"]), g["q"], g["ei"], int(g["boca"]), g["resp"], g["bob"], g["salto"], g["aire"], g["sq"], int(g["parado"]), g["sw"], g["dr"], g["ala"], g["tl"], int(BichoPx.cabeca_coberta)]
+
+## Molde do tronco do quadro em montagem (cada _monta_* grava aqui o corpo antes do pescoço): as roupas de corpo se ajustam a ele.
+static var _tr: PackedInt32Array = PackedInt32Array()
 
 static func _monta(g: Dictionary) -> Dictionary:
 	var G := _nova()
+	_tr = _nova()
 	match int(g["ct"]):
 		0:
 			_monta_rei(G, g)
@@ -483,7 +488,9 @@ static func _monta(g: Dictionary) -> Dictionary:
 			var v: int = G[j * _W + i]
 			s2 += String.chr(v) if v != 0 else "."
 		lin.append(s2)
-	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin}
+	# "t" = molde do tronco, "c" = largura do crânio (chapéu), "max" = quanto a roupa de corpo pode crescer (chefe é bem maior)
+	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin, "t": BichoPx.recorte(_tr, _W, _H, _OX, _OY),
+		"c": BichoPx.cranio(Dictionary(g["ch"])["rows"], "abc" if int(g["ct"]) == 3 else ""), "max": Vector2i(32, 20)}
 
 # ================================================================ 0. REI DOS RATOS
 static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
@@ -517,6 +524,7 @@ static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
 	_elip(B, bx, by0 - 1, 17, bh + 1)   # anca alta
+	_tr = B.duplicate()
 	var py0: int = hy + 3
 	_elip(B, hx - 3, py0, 11, maxi(5, by0 + bh - py0 - 1))
 	_bmp(B, hx, hy, _cab_rows(0, ch, g["boca"]))
@@ -563,15 +571,16 @@ static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
 	var FE := _nova()
 	_rect(FE, hx - 3, hy + hh - 2, 2, 2, "Y")
 	_comp(G, FE)
-	# coroa de ouro com rubi
-	var CR := _nova()
-	_bmp(CR, hx + 6, hy - 4, [
-		"Y...Y...Y",
-		"YY.YYY.YY",
-		"YYYYYYYYY",
-		"yyyryyyry",
-	])
-	_comp(G, CR)
+	# coroa de ouro com rubi (sai quando o rei veste chapéu)
+	if not BichoPx.cabeca_coberta:
+		var CR := _nova()
+		_bmp(CR, hx + 6, hy - 4, [
+			"Y...Y...Y",
+			"YY.YYY.YY",
+			"YYYYYYYYY",
+			"yyyryyyry",
+		])
+		_comp(G, CR)
 	# bigodes longos e caídos (sem contorno)
 	var WB := _nova()
 	var tx: int = hx + hw
@@ -634,6 +643,7 @@ static func _monta_glutao(G: PackedInt32Array, g: Dictionary) -> void:
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
 	_elip(B, bx, by0 - 1, 17, bh)   # anca alta: dorso arqueado de guaxinim
+	_tr = B.duplicate()
 	var py0: int = hy + 2
 	_elip(B, hx - 3, py0, 10, maxi(5, by0 + bh - py0 - 1))
 	_bmp(B, hx, hy, _cab_rows(1, ch, g["boca"]))
@@ -739,21 +749,26 @@ static func _monta_raposa(G: PackedInt32Array, g: Dictionary) -> void:
 	_pernas4(L1, L2, g)
 	_comp(G, L1)
 	_comp(G, L2)
-	# orelha de longe
+	# orelha de longe (com chapéu, as orelhas altas ficam por baixo dele: a de longe some e a de perto mostra só a base)
 	var OL := _nova()
 	var far: Array = []
 	for s in _OREL_F:
 		far.append(String(s).replace("l", "d").replace("m", "d").replace("e", "d"))
-	_bmp(OL, hx + 1, hy - far.size() + 2, far)
+	if not BichoPx.cabeca_coberta:
+		_bmp(OL, hx + 1, hy - far.size() + 2, far)
 	_comp(G, OL)
 	# corpo + pescoço + cabeça + orelha de perto numa camada só
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
 	_elip(B, bx + bw - 12, by0 - 1, 12, bh + 2)   # peito fundo de corredora
+	_tr = B.duplicate()
 	var py0: int = hy + 2
 	_elip(B, hx - 3, py0, 9, maxi(5, by0 + bh - py0 - 1))
 	_bmp(B, hx, hy, _cab_rows(2, ch, g["boca"]))
-	_bmp(B, hx + 5, hy - _OREL_F.size() + 2, _OREL_F)
+	if BichoPx.cabeca_coberta:
+		_bmp(B, hx + 5, hy - 2, _OREL_F.slice(5))
+	else:
+		_bmp(B, hx + 5, hy - _OREL_F.size() + 2, _OREL_F)
 	_tinta(B, bx + bw - 8, by0 + bh - 6, 8, 6, "v")   # peito branco
 	_comp(G, B)
 	# língua de fora e suor (sem fôlego)
@@ -871,6 +886,7 @@ static func _monta_corvo(G: PackedInt32Array, g: Dictionary) -> void:
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
 	_elip(B, bx + bw - 12, by0 - 1, 12, bh - 1)   # peito estufado
+	_tr = B.duplicate()
 	var ny0: int = hy + 3
 	_elip(B, hx - 1, ny0, 9, maxi(5, by0 + bh - ny0 - 1))
 	# penas arrepiadas no dorso e no peito
@@ -979,6 +995,7 @@ static func _monta_sapo(G: PackedInt32Array, g: Dictionary) -> void:
 	# corpo + pescoço + cabeça numa camada só
 	var B := _nova()
 	_elip(B, bx, by0, bw, bh)
+	_tr = B.duplicate()
 	_elip(B, hx - 1, hy + 3, 10, maxi(4, tb - (hy + 3)))
 	_tinta(B, bx + 4, by0 + bh - 9, bw - 8, 9, "v")      # barrigão amarelado
 	_bmp(B, hx, hy, _cab_rows(4, ch, g["boca"]))
@@ -1031,15 +1048,16 @@ static func _monta_sapo(G: PackedInt32Array, g: Dictionary) -> void:
 		_trazo(CA, ax, top, ax + 3, top + 6, 3, "m")
 		_rect(CA, ax + 3, top + 6, 4, 2, "v")
 	_comp(G, CA)
-	# coroa de ouro torta, sobre os olhos
-	var CR := _nova()
-	_bmp(CR, hx + 2, hy - 4, [
-		"Y.Y.Y.Y.Y",
-		"YYYYYYYYY",
-		"yyryybyyy",
-		"yyyyyyyyy",
-	])
-	_comp(G, CR)
+	# coroa de ouro torta, sobre os olhos (sai quando o sapo veste chapéu)
+	if not BichoPx.cabeca_coberta:
+		var CR := _nova()
+		_bmp(CR, hx + 2, hy - 4, [
+			"Y.Y.Y.Y.Y",
+			"YYYYYYYYY",
+			"yyryybyyy",
+			"yyyyyyyyy",
+		])
+		_comp(G, CR)
 	# língua do golpe
 	if g["tl"] > 0:
 		var TL := _nova()
@@ -1059,4 +1077,13 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 	if not _cache.has(k):
 		_cache[k] = _monta(g)
 	var s: Dictionary = _cache[k]
+	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
 	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(int(g["ct"]), alfa), f)
+
+## Quadro em cache do chefe nesta pose (sprite "l", molde do tronco "t", crânio "c"), para as roupas acompanharem o desenho.
+static func quadro(chefe_tipo: int, anim: float, andando: bool, golpe: float, parado: bool) -> Dictionary:
+	var g: Dictionary = _geo(chefe_tipo, anim, andando, golpe, parado)
+	var k: String = _chave(g)
+	if not _cache.has(k):
+		_cache[k] = _monta(g)
+	return _cache[k]

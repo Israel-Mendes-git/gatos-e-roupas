@@ -6,7 +6,8 @@ extends RefCounted
 ## O corpo segue a mesma planta do gato para vestir as mesmas roupas (ver RoupaGato.ORIGEM):
 ## topo do crânio em (5.5, -16), centro do tronco em (-0.5, -9), ponta do focinho em (11, -11),
 ## alto da anca em (-8, -12), pescoço em (2, -11), patas da frente no chão em x = 4.5.
-## Bichos comuns com arte nova ficam um arquivo por família (ver NOVOS); os chefes e as famílias ainda sem arquivo novo seguem em BichoPxA (0 a 2) e BichoPxB (3 e 4).
+## Bichos comuns com arte nova ficam um arquivo por família (ver NOVOS), os chefes em dois (NOVOS_CHEFES); quem ainda não tem arquivo
+## novo segue em BichoPxA (0 a 2) e BichoPxB (3 e 4). Todos os novos gravam o quadro com o molde do tronco e o crânio (ver quadro()).
 
 ## Pose de truque em curso (Unidade.Tipo do truque, ou -1): lida por BichoPxA._geo e BichoPxB._pose para dar ao Escudeiro, à Bomba e ao Atirador
 ## uma postura própria (cabeça baixa, inclinado, ereto). Só vale durante a chamada de desenhar()/desloc().
@@ -75,9 +76,22 @@ static func recorte(L: PackedInt32Array, w: int, h: int, ox: int, oy: int) -> Di
 				m[Vector2i(i - ox, j - oy)] = true
 	return m
 
-## Quadro em cache do bicho comum nesta pose: sprite ("x", "y", "l") e molde do tronco ("t"). Vazio para chefes e famílias sem arte nova.
-static func quadro(familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parte: bool) -> Dictionary:
-	if chefe_tipo >= 0 or parte or _novo(familia) == null:
+## Quadro em cache do bicho nesta pose: sprite ("x", "y", "l"), molde do tronco ("t") e crânio ("c"). Vazio para o sapinho do
+## Sapo-Rei e para quem ainda não tem arte nova.
+static func quadro(familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parte: bool, parado: bool = false) -> Dictionary:
+	if parte:
+		return {}
+	if chefe_tipo >= 0:
+		if _novo_chefe(chefe_tipo) == null:
+			return {}
+		var qc: Dictionary = ultimo_quadro
+		if qc.is_empty():
+			qc = _novo_chefe(chefe_tipo).quadro(chefe_tipo, anim, andando, golpe, parado)
+		if not qc.has("id"):
+			_ids_quadro += 1
+			qc["id"] = _ids_quadro
+		return qc
+	if _novo(familia) == null:
 		return {}
 	var q: Dictionary = ultimo_quadro
 	if q.is_empty():
@@ -116,7 +130,8 @@ static func caixa_tronco(q: Dictionary) -> Rect2i:
 ## Colunas e linhas que a peça de corpo ganha (RoupaGato.esticar): sobra um pouco além do tronco, e o molde apara o excesso.
 static func esticar_corpo(q: Dictionary) -> Vector2i:
 	var r: Rect2i = caixa_tronco(q)
-	return Vector2i(clampi(r.size.x + 2 - TRONCO_GATO.x, 0, 16), clampi(r.size.y + 2 - TRONCO_GATO.y, 0, 8))
+	var m: Vector2i = q.get("max", Vector2i(16, 8))   # os chefes, bem maiores, deixam crescer mais
+	return Vector2i(clampi(r.size.x + 2 - TRONCO_GATO.x, 0, m.x), clampi(r.size.y + 2 - TRONCO_GATO.y, 0, m.y))
 
 ## Largura do crânio do gato (as três primeiras linhas da cabeça, sem orelhas): o tamanho para o qual as peças de cabeça foram feitas.
 const CRANIO_GATO := 10
@@ -139,13 +154,13 @@ static func cranio(rows: Array, fora: String = "") -> int:
 	return r
 
 ## Colunas e linhas que a peça de cabeça ganha neste quadro (RoupaGato.desenhar_esticada): acompanha o crânio do bicho ("c" do
-## quadro); a altura cresce metade do que cresce a largura, para o chapéu não achatar.
+## quadro); a altura cresce metade do que cresce a largura (até 3), para o chapéu não achatar nem virar torre.
 static func esticar_cabeca(q: Dictionary) -> Vector2i:
 	var cr: int = int(q.get("c", 0))
 	if cr <= CRANIO_GATO:
 		return Vector2i.ZERO
 	var ex: int = mini(cr - CRANIO_GATO, 12)
-	return Vector2i(ex, ex / 2)
+	return Vector2i(ex, mini(ex / 2, 3))
 
 ## Pés do bicho no chão neste quadro, de trás para a frente (x do meio de cada pé, y do chão), lidos da última linha do desenho.
 static func pes(q: Dictionary) -> Array[Vector2]:

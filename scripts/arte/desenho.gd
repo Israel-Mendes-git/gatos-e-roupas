@@ -1110,7 +1110,7 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	if parte or filhote:
 		resetar(c)
 		return
-	var q: Dictionary = BichoPx.quadro(fam, tipo, anim, andando, golpe, ct, parte)
+	var q: Dictionary = BichoPx.quadro(fam, tipo, anim, andando, golpe, ct, parte, parado)
 	BichoPx.ultimo_quadro = {}
 	for s in [1, 3, 0, 2]:
 		var p: Peca = pecas[s]
@@ -1134,12 +1134,14 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 				_tr(c, pos, esc, dir, (pp[k] + dp) * GATO_K, 0.0, GATO_K)
 				RoupaGato.desenhar(c, p.tipo, f, anim)
 			continue
+		if Pecas.SLOT[p.tipo] == Pecas.SLOT_CORPO and q.has("t") and Dictionary(q["t"]).is_empty():
+			continue   # sem tronco à mostra (a toupeira debaixo da terra): a roupa de corpo não tem onde ficar
 		var rot: float = -sin(golpe / 0.22 * PI) * 0.5 if (onde == RoupaGato.Onde.BOCA and golpe > 0.0) else 0.0
 		var o: Vector2 = RoupaGato.ORIGEM[onde] + BichoPx.desloc(onde, fam, tipo, anim, andando, golpe, ct, parado)
 		# peça de mão (presa na boca) em bicho: escala MAO_BICHO; continua presa à boca
 		var k_mao: float = GATO_K * (MAO_BICHO if onde == RoupaGato.Onde.BOCA else 1.0)
 		_tr(c, pos, esc, dir, o * GATO_K, rot, k_mao)
-		if onde == RoupaGato.Onde.CORPO and Pecas.SLOT[p.tipo] == Pecas.SLOT_CORPO and not q.is_empty():
+		if onde == RoupaGato.Onde.CORPO and Pecas.SLOT[p.tipo] == Pecas.SLOT_CORPO and not q.is_empty() and not Dictionary(q["t"]).is_empty():
 			# roupa de corpo (não acessório preso ao tronco, como cinto ou reator): o tronco do bicho é maior e de outro formato,
 			# então a peça cresce até cobri-lo e é aparada pelo molde dele,
 			# centrada no meio do tronco (mesmo tamanho de pixel)
