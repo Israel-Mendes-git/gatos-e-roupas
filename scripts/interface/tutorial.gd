@@ -597,7 +597,8 @@ func _entendi() -> void:
 		aula_i += 1
 		_t_aula = 0.0
 		if aula_i >= (aula["balaos"] as Array).size():
-			_marcar_aula(str(aula["id"]))
+			if not bool(aula.get("rever", false)):
+				_marcar_aula(str(aula["id"]))   # revisão (botão "?") não conta como progresso
 			aula = {}
 			p.menus.espera_dica = 0.8
 		return
@@ -674,6 +675,81 @@ func _aula(id: String) -> Dictionary:
 				return {}
 	return d
 
+## Qual tela está à vista (para o botão "?"): guarda, mapa, prep (preparação da luta) ou luta.
+func _contexto() -> String:
+	match int(p.modo):
+		M_GUARDA:
+			return "guarda"
+		M_MAPA:
+			return "mapa"
+		M_COMBATE:
+			return "prep" if p.campo.prep else "luta"
+	return ""
+
+## Botão "?": repete as aulas da tela atual (sem gravar progresso e sem mexer no guiado). Devolve false se não há o que repetir agora.
+func rever() -> bool:
+	if p == null or fonte != Fonte.NENHUM or p.menus.ativo() or p.menus.em_transicao() or not _ambiente_livre():
+		return false
+	var ctx: String = _contexto()
+	var a: Dictionary = _aula_rever(ctx)
+	if a.is_empty():
+		return false
+	a["rever"] = true
+	a["ctx"] = ctx
+	fila.clear()
+	aula = a
+	aula_i = 0
+	_t_aula = 0.0
+	Som.tocar("aba", 1.25, 0.03, -6.0)
+	return true
+
+## Passos de cada tela, na ordem do guiado (mesmos textos e alvos), só explicados: ninguém precisa fazer nada.
+func _aula_rever(ctx: String) -> Dictionary:
+	var e: Estado = p.estado
+	var d: Dictionary = {"id": "rever_" + ctx, "modos": [], "balaos": [], "segura": false}
+	var b: Array = []
+	match ctx:
+		"guarda":
+			d["modos"] = [M_GUARDA]
+			b = [
+				["Estes são os seus gatos. Cada um luta sozinho e pode vestir até 4 peças. Clique num gato para escolhê-lo: o que você vestir vai para o escolhido.", "gatos"],
+				["Arraste uma peça até o gato (só clicar nela também funciona). Cada gato tem 4 espaços: Cabeça, Corpo, Mão e Acessório. Passe o mouse numa peça para ver o que ela faz.", "painel"],
+				["Peças da mesma fantasia combinam. Com 2 ou 3 vem um bônus. Com as 4, o gato ganha um poder.", "painel"],
+				["Estes botões vestem os gatos por você. Vestir o time é a tecla V.", "bt_vestir"],
+				["Cada gato luta numa linha: Frente, Meio ou Fundo. A frente apanha primeiro. Clique em Linha para trocar.", "linhas"],
+				["Gato que sobe de nível ganha 1 ponto de treino. Gaste em Vida, Força ou Agilidade.", "atributos"],
+				["Pronto? Clique em LUTAR para a onda começar. Atalhos e regras: tecla F1.", "btn_lutar"],
+			]
+		"mapa":
+			d["modos"] = [M_MAPA]
+			b = [
+				["A casa tem cinco cômodos, cada um com cinco ondas. Clique num cômodo para entrar.", "comodo:%d" % clampi(e.fase_liberada - 1, 0, Fases.TOTAL - 1)],
+				["Cada cômodo tem uma família de bichos e um chefe. Dá para voltar aos cômodos vencidos para treinar e juntar peças.", ""],
+				["O Fichário [F] é o álbum das fantasias. Na aba Metas há prêmios em troféus.", "fich_bt"],
+				["Troféus pagam melhorias permanentes da torre. Abra a Oficina (tecla T) para gastá-los.", "torre_bt"],
+			]
+			if e.campanha_vencida():
+				b.append(["Casa limpa, mas os bichos fugiram para fora! Este botão (ou V) alterna as vistas: a casa, o Quintal e o resto. Na casa, I abre a Invasão sem fim.", "mapa_vista"])
+		"prep":
+			var a_prep: Dictionary = _aula("a_prep")
+			d["modos"] = [M_COMBATE]
+			d["prep"] = true
+			b = a_prep["balaos"]
+		"luta":
+			d["modos"] = [M_COMBATE]
+			d["segura"] = true   # a luta fica parada enquanto o balão está aberto
+			b = [
+				["A luta corre sozinha. Este botão muda a velocidade: 1x, 2x ou 3x.", "vel"],
+				["Este botão (ou a tecla Esc) pausa a luta. Lá dentro ficam as Opções.", "pausa"],
+				["Se os blocos da torre acabarem, a onda está perdida.", "campo_torre"],
+			]
+			if p.campo.sim != null and p.campo.sim.poder_manual and not p.campo.poder_btns.is_empty():
+				b.append(["Poderes das fantasias completas: clique no botão (ou aperte o número dele) quando estiver carregado. Nas Opções dá para ligar o poder automático.", "poder:%d" % _poder_pronto()])
+	d["balaos"] = b
+	if b.is_empty():
+		return {}
+	return d
+
 func _poder_pronto() -> int:
 	for i in p.campo.poder_btns.size():
 		if bool(p.campo.poder_btns[i]["pronto"]):
@@ -691,6 +767,11 @@ func _vigiar_aulas(delta: float) -> void:
 				fila.remove_at(i)
 	if not aula.is_empty():
 		_t_aula += delta
+		if bool(aula.get("rever", false)):
+			# revisão pedida pelo botão "?": se a tela mudou, simplesmente acaba (nada a lembrar, nada gravado)
+			if not _ambiente_livre() or _contexto() != str(aula["ctx"]):
+				aula = {}
+			return
 		if not _ambiente_livre() or not (int(p.modo) in (aula["modos"] as Array)):
 			# trocou de tela no meio: a aula some e volta depois (não foi marcada)
 			fila.push_front(aula)
