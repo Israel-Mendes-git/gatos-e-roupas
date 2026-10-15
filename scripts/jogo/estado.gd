@@ -13,6 +13,10 @@ var tutorial_facil: bool = false   # tutorial ativo: a 1ª onda vem mais fraca (
 var tijolos: int = Balanco.TIJOLOS_INICIAIS
 # fichário: tipos de peça que o jogador já teve alguma vez (índice = Pecas.Tipo)
 var colecao: Array[bool] = []
+# bestiário (aba "Bichos" do fichário): chaves dos bichos já vistos numa prévia de onda.
+# "f0".."f4" famílias da casa, "b0".."b4" bandos de fora, "t0".."t8" tipos (Unidade.Tipo), "t9" fantasiado, "c0".."c9" chefes
+const BICHOS_TOTAL := 30
+var bichos_vistos: Dictionary = {}
 # torre: troféus (moeda permanente), melhorias compradas e módulos montados
 var trofeus: int = 0
 var melhorias: Array[int] = [0, 0, 0, 0]      # nível de cada Torre.Melhoria
@@ -66,6 +70,7 @@ func novo_jogo() -> void:
 	for t in [Pecas.Tipo.PORRETE, Pecas.Tipo.ESTILINGUE, Pecas.Tipo.COLETE, Pecas.Tipo.CAPACETE]:
 		guarda.append(Peca.new(t))
 	colecao.clear()
+	bichos_vistos.clear()
 	_registrar_tudo()
 	_completar_time()
 	iniciar_fase(1)
@@ -188,6 +193,53 @@ func recolher() -> void:
 func preparar_onda() -> void:
 	plano = Balanco.gerar_plano(fase, onda, rng, ato, degrau_ato())
 	chefe = Balanco.gerar_chefe(fase, onda, rng, ato, degrau_ato())
+	_ver_onda()
+
+## Anota no bestiário tudo o que a onda preparada mostra na prévia: famílias, tipos, fantasiados e chefe.
+func _ver_onda() -> void:
+	var lg: int = lugar()
+	for it in plano:
+		var d: Dictionary = it
+		bichos_vistos["t%d" % int(d.get("tipo", 0))] = true
+		if d.get("elite", false):
+			bichos_vistos["t9"] = true
+		if d.has("fam"):
+			bichos_vistos["f%d" % int(d["fam"])] = true
+		elif lg < Fases.TOTAL:
+			bichos_vistos["f%d" % lg] = true
+		else:
+			bichos_vistos["b%d" % (lg - Fases.TOTAL)] = true
+	if not chefe.is_empty():
+		bichos_vistos["c%d" % lg] = true
+
+func viu_bicho(chave: String) -> bool:
+	return bichos_vistos.has(chave)
+
+func bichos_vistos_total() -> int:
+	return bichos_vistos.size()
+
+## Gravação de antes do bestiário: deduz o que o jogador já deve ter visto pelo andamento da campanha.
+func _inferir_bichos() -> void:
+	bichos_vistos.clear()
+	if int(estat.get("ondas", 0)) <= 0 and fase_liberada <= 1 and fases_vencidas <= 0:
+		return
+	var maxp: int = Balanco.progresso(fase_liberada, 1)
+	if fases_vencidas > 0:
+		maxp = maxi(maxp, Balanco.progresso(fases_vencidas, Balanco.ONDAS_TOTAIS))
+	for t in Balanco.TIPO_NOMES.size():
+		if t == 0 or maxp >= Balanco.TIPO_PROG_MIN[t]:
+			bichos_vistos["t%d" % t] = true
+	if int(estat.get("ondas", 0)) >= Balanco.ELITE_ONDA_MIN or fases_vencidas > 0:
+		bichos_vistos["t9"] = true
+	for i in mini(fase_liberada, Fases.TOTAL):
+		bichos_vistos["f%d" % i] = true
+	for i in Fases.TOTAL:
+		if vencido[i] >= 1:
+			bichos_vistos["c%d" % i] = true
+			bichos_vistos["f%d" % i] = true
+		if vencido[i] >= 2:
+			bichos_vistos["c%d" % (i + Fases.TOTAL)] = true
+			bichos_vistos["b%d" % i] = true
 
 func progresso() -> int:
 	if ato > 1:
@@ -618,7 +670,7 @@ func salvar() -> void:
 		time.append(b.para_dados())
 	var arq := FileAccess.open(ARQUIVO, FileAccess.WRITE)
 	if arq != null:
-		arq.store_string(JSON.stringify({"versao": 3, "fase_liberada": fase_liberada, "fases_vencidas": fases_vencidas, "vencido": vencido.duplicate(), "curso": _dados_curso(), "pecas": pecas, "bonecos": time, "trofeus": trofeus, "melhorias": melhorias.duplicate(), "modulos": modulos.duplicate(), "colecao": colecao.duplicate(), "recordes": recordes.duplicate(), "estat": estat.duplicate(), "feitos": feitos.keys(), "metas_pagas": metas_pagas.keys()}))
+		arq.store_string(JSON.stringify({"versao": 3, "fase_liberada": fase_liberada, "fases_vencidas": fases_vencidas, "vencido": vencido.duplicate(), "curso": _dados_curso(), "pecas": pecas, "bonecos": time, "trofeus": trofeus, "melhorias": melhorias.duplicate(), "modulos": modulos.duplicate(), "colecao": colecao.duplicate(), "bichos": bichos_vistos.keys(), "recordes": recordes.duplicate(), "estat": estat.duplicate(), "feitos": feitos.keys(), "metas_pagas": metas_pagas.keys()}))
 
 ## Gravação de antes da versão 3 (3 raridades): a Lendária era o índice 2 e agora é o 3 (o 2 virou Épica).
 ## Sem isto, toda Lendária gravada viraria Épica.
@@ -697,4 +749,12 @@ func carregar() -> bool:
 	for i in mini(cl.size(), colecao.size()):
 		colecao[i] = bool(cl[i])
 	_registrar_tudo()
+	if dados.has("bichos"):
+		bichos_vistos.clear()
+		for k in dados["bichos"]:
+			bichos_vistos[str(k)] = true
+	else:
+		_inferir_bichos()
+	if em_curso:
+		_ver_onda()
 	return true

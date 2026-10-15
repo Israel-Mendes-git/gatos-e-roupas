@@ -19,7 +19,10 @@ signal metas_vistas
 
 ## Valor de `abrir()` que abre direto na aba "Metas".
 const PAGINA_METAS := -2
-const N_ABAS := 8
+## Valor de `abrir()` que abre direto na aba "Bichos" (o bestiário).
+const PAGINA_BICHOS := -3
+const N_ABAS := 9
+const ABA_BICHOS := 8  # "Bichos": o bestiário (famílias, tipos e chefes)
 const ABA_FORA := 6    # "De fora": as fantasias que só caem fora da casa
 const ABA_METAS := 7
 
@@ -47,7 +50,7 @@ const COR_SIL := Color(0.1, 0.08, 0.14, 0.93)
 ## Cor de cada aba de cômodo (Índice primeiro): papel colorido.
 const COR_ABA: Array[Color] = [
 	Color(0.88, 0.84, 0.74), Color(0.96, 0.62, 0.66), Color(0.55, 0.74, 0.96),
-	Color(0.98, 0.84, 0.4), Color(0.75, 0.6, 0.92), Color(0.55, 0.82, 0.55), Color(0.5, 0.8, 0.82), Color(0.96, 0.78, 0.5),
+	Color(0.98, 0.84, 0.4), Color(0.75, 0.6, 0.92), Color(0.55, 0.82, 0.55), Color(0.5, 0.8, 0.82), Color(0.96, 0.78, 0.5), Color(0.9, 0.62, 0.45),
 ]
 
 # ---- geometria (tudo a partir destas constantes) ----
@@ -84,6 +87,7 @@ var estado: Estado = null
 var metas_pag: int = 0             # aba Metas: 0 = Campanha, Guarda-roupa, Invasão e Fantasias; 1 = Lado de fora
 var em_metas: bool = false          # a aba "Metas" está aberta (ocupa as duas páginas)
 var metas_novas: Array[String] = [] # metas cumpridas e ainda não vistas (o dono preenche antes de abrir)
+var em_bichos: bool = false         # a aba "Bichos" está aberta (`pagina` 0 = índice; 1.. = um bicho por página dupla)
 var aberta: bool = false
 var pagina: int = 0          # 0 = índice; 1..21 = fantasias na ordem dos cômodos
 var itens: Array[Dictionary] = []   # {id, r, on}
@@ -144,6 +148,7 @@ func abrir(fantasia: int = -1) -> void:
 	virar_t = 0.0
 	pagina = 0
 	em_metas = fantasia == PAGINA_METAS
+	em_bichos = fantasia == PAGINA_BICHOS
 	metas_pag = 0
 	if fantasia >= 0 and _ordem.has(fantasia):
 		pagina = _ordem.find(fantasia) + 1
@@ -156,7 +161,7 @@ func abrir(fantasia: int = -1) -> void:
 ## Página de fantasia completa: o carimbo "COMPLETA" bate com som.
 func _checa_carimbo() -> void:
 	carimbo_t = 9.0
-	if aberta and not em_metas and pagina > 0 and estado != null and estado.pecas_da_fantasia(fantasia_da_pagina(pagina)) >= Pecas.SLOTS:
+	if aberta and not em_metas and not em_bichos and pagina > 0 and estado != null and estado.pecas_da_fantasia(fantasia_da_pagina(pagina)) >= Pecas.SLOTS:
 		carimbo_t = -0.25   # um instante de espera antes da batida
 
 func fechar() -> void:
@@ -172,6 +177,8 @@ func fechar() -> void:
 	fechado.emit()
 
 func total_paginas() -> int:
+	if em_bichos:
+		return entradas().size() + 1
 	return _ordem.size() + 1
 
 func fantasia_da_pagina(p: int) -> int:
@@ -218,6 +225,8 @@ func ir_para_fora() -> void:
 func aba_atual() -> int:
 	if em_metas:
 		return ABA_METAS
+	if em_bichos:
+		return ABA_BICHOS
 	if pagina == 0:
 		return 0
 	var sala: int = comodo_da_fantasia(fantasia_da_pagina(pagina))
@@ -448,6 +457,9 @@ func _montar() -> void:
 	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true})
 	if em_metas:
 		return
+	if em_bichos:
+		_montar_bichos()
+		return
 	if pagina == 0:
 		for i in Fases.TOTAL:
 			var sala: Array = Fases.CONJUNTOS[i]
@@ -501,7 +513,7 @@ func acionar(id: String) -> void:
 		return
 	if id.begins_with("aba") and int(id.substr(3)) != aba_atual():
 		Som.tocar("aba")
-	elif id.begins_with("f") or id == "fechar":
+	elif id.begins_with("f") or id.begins_with("b") or id == "fechar":
 		Som.tocar("clique")
 	if id == "fechar":
 		fechar()
@@ -514,12 +526,21 @@ func acionar(id: String) -> void:
 		if i == ABA_METAS:
 			if not em_metas:
 				em_metas = true
+				em_bichos = false
 				metas_pag = 0
 				_montar()
 				metas_vistas.emit()
 			return
-		if em_metas:
+		if i == ABA_BICHOS:
+			if not em_bichos:
+				em_bichos = true
+				em_metas = false
+				pagina = 0
+				_montar()
+			return
+		if em_metas or em_bichos:
 			em_metas = false
+			em_bichos = false
 			pagina = -1
 			_montar()
 		if i == 0:
@@ -530,6 +551,8 @@ func acionar(id: String) -> void:
 			ir_para_comodo(i - 1)
 	elif id.begins_with("f"):
 		ir_para_fantasia(int(id.substr(1)))
+	elif _eh_tile(id):
+		ir_para_pagina(int(id.substr(1)) + 1)
 
 func _gui_input(ev: InputEvent) -> void:
 	if not aberta:
@@ -629,8 +652,10 @@ func tecla(kc: int) -> bool:
 func _foco_e_tile() -> bool:
 	if foco < 0 or foco >= itens.size():
 		return false
-	var id: String = itens[foco]["id"]
-	return id.begins_with("f") and id != "fechar"
+	return _eh_tile(itens[foco]["id"])
+
+static func _eh_tile(id: String) -> bool:
+	return id.length() > 1 and (id[0] == "f" or id[0] == "b") and id.substr(1).is_valid_int()
 
 ## Foco de teclado nas miniaturas do índice: vai à miniatura mais próxima na direção `d`.
 func _mover_tile(d: Vector2i) -> void:
@@ -642,7 +667,7 @@ func _mover_tile(d: Vector2i) -> void:
 	var ms: float = INF
 	for j in itens.size():
 		var id: String = itens[j]["id"]
-		if not id.begins_with("f") or id == "fechar" or j == foco:
+		if not _eh_tile(id) or j == foco:
 			continue
 		var dc: Vector2 = (itens[j]["r"] as Rect2).get_center() - cur
 		if tem:
@@ -859,6 +884,8 @@ func _draw() -> void:
 	_argolas()
 	if em_metas:
 		_pagina_metas(e)
+	elif em_bichos:
+		_pagina_bichos(e)
 	elif pagina == 0:
 		_pagina_indice(e)
 	else:
@@ -896,9 +923,11 @@ func _abas(e: Estado) -> void:
 		var fe: PackedVector2Array = pts.duplicate()
 		fe.append(pts[0])
 		draw_polyline(fe, TINTA, 2.0 if ativa else 1.5)
-		var nome: String = "Índice" if i == 0 else ("Metas" if i == ABA_METAS else ("De fora" if i == ABA_FORA else Fases.NOME[i - 1]))
+		var nome: String = "Índice" if i == 0 else ("Bichos" if i == ABA_BICHOS else "Metas" if i == ABA_METAS else ("De fora" if i == ABA_FORA else Fases.NOME[i - 1]))
 		var sub: String = ""
-		if i == ABA_METAS:
+		if i == ABA_BICHOS:
+			sub = "%d/%d" % [e.bichos_vistos_total(), Estado.BICHOS_TOTAL]
+		elif i == ABA_METAS:
 			sub = "%d/%d" % [e.metas_cumpridas(), Metas.lista().size()]
 		elif i == ABA_FORA:
 			sub = "%d/%d" % [completas_so_de_fora(e), fantasias_so_de_fora().size()]
@@ -919,19 +948,26 @@ func _botoes() -> void:
 	for i in itens.size():
 		var it: Dictionary = itens[i]
 		var id: String = it["id"]
-		if id.begins_with("aba") or (id.begins_with("f") and id != "fechar"):
+		if id.begins_with("aba") or _eh_tile(id):
 			continue
 		var txt: String = "Fechar" if id == "fechar" else ("< Voltar" if id == "ant" else "Avançar >")
 		var cor: Color = UIComum.B_MARROM if id == "fechar" else UIComum.B_OURO
 		var o: Dictionary = {"on": it["on"], "foco": i == foco and it["on"], "h": UIComum.anim_h(anim, id), "p": UIComum.anim_p(anim, id), "tam": 17}
 		UIComum.botao(self, it["r"], txt, cor, o, t)
-	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else "Índice" if pagina == 0 else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
+	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bicho %d de %d" % [pagina, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
 	_txt(marca, Vector2(250.0, 672.0), 15 if marca.length() < 26 else 13, Color(1, 0.94, 0.8), 240.0, 4)
 	_txt("Setas, A/D ou PgUp/PgDn  |  Esc fecha", Vector2(700.0, 672.0), 13, Color(1, 0.94, 0.8, 0.7), 230.0, 3)
 
 ## Dica do mouse (ou do foco do teclado) sobre uma miniatura do índice.
 func _dica_tile() -> void:
-	if pagina != 0 or em_metas or not _foco_e_tile():
+	if em_bichos and pagina == 0 and _foco_e_tile():
+		var en: Dictionary = entradas()[int(String(itens[foco]["id"]).substr(1))]
+		var rb: Rect2 = itens[foco]["r"]
+		var vis: bool = estado.viu_bicho(en["chave"])
+		var st: String = "Ainda não visto" if not vis else ("Derrotado" if _derrotado(estado, en) else "Visto")
+		UIComum.dica_mouse(self, [[en["nome"] if vis else "???", 16, TINTA], [st, 13, TINTA2]], _mouse if rb.has_point(_mouse) else rb.get_center(), en["cor"])
+		return
+	if pagina != 0 or em_metas or em_bichos or not _foco_e_tile():
 		return
 	var c: int = int(String(itens[foco]["id"]).substr(1))
 	var r: Rect2 = itens[foco]["r"]
@@ -1191,7 +1227,9 @@ func _desenhar_silhuetas() -> void:
 	if not aberta or estado == null:
 		return
 	for j in _jobs:
-		if j["k"] == "icone":
+		if j["k"] == "bicho":
+			_bicho(_sil, entradas()[int(j["i"])], j["pos"], float(j["esc"]), true)
+		elif j["k"] == "icone":
 			Desenho.icone(_sil, j["tipo"], j["centro"], j["tam"])
 		elif j["k"] == "gato" and not (j["faltam"] as Array).is_empty():
 			_gato(_sil, j["c"], true)
@@ -1317,3 +1355,302 @@ func _pagina_metas(e: Estado) -> void:
 		if feita2:
 			_selo_meta(Vector2(r2.end.x - 34.0, yy + 9.5), "FEITA", COR_TEM, 11)
 		yy += 20.4
+
+
+# ------------------------------------------------------------------ aba "Bichos" (bestiário)
+# Ordem das entradas: 5 famílias, 5 bandos de fora, 9 tipos + o fantasiado, 10 chefes (30, ver Estado.BICHOS_TOTAL).
+const FAM_ENFRENTAR: Array[String] = [
+	"Sem truques e sem pressa: gatos na frente seguram o bando enquanto os de trás atacam.",
+	"Aguentam muito dano e andam devagar: atacar de longe dá tempo de sobra, e dano alto compensa a vida.",
+	"Vêm rápidas e caem rápido: gatos na linha da frente não deixam passar, e Recuar guarda a torre.",
+	"Bicam forte, mas caem fácil: derrube os corvos antes de chegarem aos gatos.",
+	"Regeneram o tempo todo: concentre o dano no mesmo sapo, sem espalhar golpes.",
+]
+const BANDO_ENFRENTAR := "Misturam todas as famílias: monte um time que sirva para tudo, com gatos fortes na frente e dano de longe atrás."
+const TIPO_ENFRENTAR: Array[String] = [
+	"Sem truque: qualquer gato na frente resolve. Fique de olho nos fantasiados no meio do bando.",
+	"Pula por cima dos gatos: deixe um gato em Recuar perto da torre para pegá-lo.",
+	"Marque o Ladrão como alvo na preparação e deixe gatos na linha da frente.",
+	"Muita vida: dano alto e poderes ajudam. Marque-o como alvo para o time inteiro focar.",
+	"Cada Ninhada vira dois filhotes ao cair: golpes em área resolvem rápido.",
+	"Atira de longe: gatos em Avançar o alcançam. Marque-o como alvo.",
+	"Cura os outros: derrube-o primeiro, marcando-o como alvo.",
+	"Leva pouco dano e atrai os golpes: a Varinha ignora a defesa dele.",
+	"Explode ao encostar: derrube de longe antes que chegue aos gatos ou à torre.",
+	"Larga uma peça da fantasia que veste: vale a pena derrubá-lo.",
+]
+const FANTASIADO_OQUE := "Um bicho comum vestido com uma fantasia do lugar. Também usa os bônus dela."
+const BICHO_RETRATO_ESC := 1.45
+
+static var _entradas_c: Array = []
+
+static func entradas() -> Array:
+	if not _entradas_c.is_empty():
+		return _entradas_c
+	var l: Array = []
+	for i in Fases.TOTAL:
+		l.append({"k": "fam", "i": i, "chave": "f%d" % i, "nome": Fases.FAMILIA_NOME[i], "cor": Desenho.COR_FAM[i],
+			"oque": Fases.FAMILIA_DICA[i], "dica": FAM_ENFRENTAR[i],
+			"ficha": ["Vida ×%s  ·  Velocidade ×%s  ·  Dano ×%s" % [_n(Fases.FAMILIA_VIDA[i]), _n(Fases.FAMILIA_VEL[i]), _n(Fases.FAMILIA_DANO[i])], "Chefe da família: " + Fases.CHEFE_NOME[i]],
+			"onde": "Vive %s. Fora da casa, aparece misturada nos bandos." % _em(i)})
+	for k in Fases.TOTAL:
+		var lg: int = k + Fases.TOTAL
+		l.append({"k": "bando", "i": k, "chave": "b%d" % k, "nome": Fases.FAMILIA_NOME[lg], "cor": Desenho.COR_FAM[k],
+			"oque": Fases.FAMILIA_DICA[lg], "dica": BANDO_ENFRENTAR,
+			"ficha": ["Chefe: " + Fases.CHEFE_NOME[lg], "Mais forte que os bichos da casa"],
+			"onde": "Só no segundo ato, %s." % _em(lg)})
+	for t in Balanco.TIPO_NOMES.size():
+		l.append({"k": "tipo", "i": t, "chave": "t%d" % t, "nome": Balanco.TIPO_NOMES[t], "cor": Desenho.COR_TIPO[t],
+			"oque": Campo.TIPO_DICA[t], "dica": TIPO_ENFRENTAR[t],
+			"ficha": ["Vida ×%s  ·  Velocidade ×%s" % [_n(Balanco.TIPO_VIDA[t]), _n(Balanco.TIPO_VEL[t])], "Tamanho ×%s" % _n(Balanco.TIPO_ESCALA[t])],
+			"onde": _onde_tipo(t)})
+	l.append({"k": "tipo", "i": 9, "chave": "t9", "nome": "Fantasiado", "cor": Desenho.DOURADO,
+		"oque": FANTASIADO_OQUE, "dica": TIPO_ENFRENTAR[9],
+		"ficha": ["Larga uma peça da fantasia e dá %d troféu" % Torre.TROFEU_ELITE, "Tamanho ×%s" % _n(Balanco.ELITE_ESCALA)],
+		"onde": "Em toda luta a partir da onda %d de cada lugar." % Balanco.ELITE_ONDA_MIN})
+	for i in Fases.CHEFE_NOME.size():
+		var vest: Array = []
+		for c in Fases.CONJUNTOS[i]:
+			vest.append(Pecas.CONJUNTO_NOME[c])
+		l.append({"k": "chefe", "i": i, "chave": "c%d" % i, "nome": Fases.CHEFE_NOME[i], "cor": Desenho.COR_CHEFES[i],
+			"oque": Fases.CHEFE_ATAQUE[i], "dica": Fases.CHEFE_FRAQUEZA[i],
+			"ficha": ["Larga uma peça Rara ou Lendária e dá %d troféus" % Torre.TROFEU_CHEFE, "Veste: " + ", ".join(vest)],
+			"onde": "Última onda %s%s." % [_do(i), "" if i < Fases.TOTAL else " (segundo ato)"]})
+	_entradas_c = l
+	return l
+
+static func _n(v: float) -> String:
+	return ("%.2f" % v).rstrip("0").rstrip(".")
+
+## "do Quarto", "da Sala"...
+static func _do(i: int) -> String:
+	return ("da " if i in [1, 2, 6, 8, 9] else "do ") + Fases.NOME[i]
+
+static func _onde_tipo(t: int) -> String:
+	if t == 0:
+		return "Em todo lugar, desde a primeira onda."
+	var p: int = Balanco.TIPO_PROG_MIN[t]
+	var fase: int = maxi(1, int(ceil((p - Balanco.ONDAS_TOTAIS) / float(Balanco.PROG_POR_FASE))) + 1)
+	if fase > Fases.TOTAL:
+		return "Só no segundo ato, lá fora."
+	return "A partir de %s, onda %d." % [Fases.NOME[fase - 1], p - (fase - 1) * Balanco.PROG_POR_FASE]
+
+static func _derrotado(e: Estado, en: Dictionary) -> bool:
+	if en["k"] != "chefe":
+		return false
+	var i: int = int(en["i"])
+	return e.vencido[i] >= 1 if i < Fases.TOTAL else e.vencido[i - Fases.TOTAL] >= 2
+
+## Posição da miniatura da k-ésima entrada no índice do bestiário.
+static func rect_tile_bicho(k: int) -> Rect2:
+	var x0: float = 0.0
+	var y0: float = 0.0
+	if k < 5:          # famílias: fileira de cima, página esquerda
+		x0 = COL_E_X + k * (TILE_W + TILE_GAP)
+		y0 = IDX_Y0 + 24.0
+	elif k < 10:       # bandos de fora: fileira de baixo, página direita
+		x0 = COL_D_X + (k - 5) * (TILE_W + TILE_GAP)
+		y0 = IDX_Y0 + 2 * IDX_PASSO + 24.0
+	elif k < 20:       # tipos: duas fileiras, página esquerda
+		var j: int = k - 10
+		x0 = COL_E_X + (j % 5) * (TILE_W + TILE_GAP)
+		y0 = IDX_Y0 + IDX_PASSO + 24.0 + (j / 5) * 112.0
+	else:              # chefes: duas fileiras, página direita
+		var j2: int = k - 20
+		x0 = COL_D_X + (j2 % 5) * (TILE_W + TILE_GAP)
+		y0 = IDX_Y0 + 24.0 + (j2 / 5) * IDX_PASSO
+	return Rect2(x0, y0, TILE_W, TILE_H)
+
+## Desenha o bicho da entrada com os pés em `pe` (a camada de silhueta pinta tudo escuro).
+func _bicho(alvo: CanvasItem, en: Dictionary, pe: Vector2, esc: float, _sil_: bool) -> void:
+	var vazio: Array = [null, null, null, null]
+	var an: float = t * 2.0 + int(en["i"])
+	var i: int = int(en["i"])
+	match String(en["k"]):
+		"fam":
+			Desenho.boneco(alvo, pe, esc, -1.0, 1, vazio, 0.0, an, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, i, false, -1)
+		"bando":
+			Desenho.boneco(alvo, pe, esc, -1.0, 1, vazio, 0.0, an, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, i + Fases.TOTAL, false, -1)
+		"tipo":
+			var pecas: Array = vazio
+			var tp: int = i
+			var eli: bool = false
+			if i == 9:
+				tp = 0
+				eli = true
+				pecas = []
+				for s in Pecas.SLOTS:
+					pecas.append(Peca.new(Pecas.CONJUNTO_PECAS[Pecas.Conjunto.CAVALEIRO][s]))
+			Desenho.boneco(alvo, pe, esc * lerpf(1.0, Balanco.TIPO_ESCALA[tp], 0.5), -1.0, 1, pecas, 0.0, an, false, 0.0, 1.0, false, -1, 0.0, tp, false, false, 0, eli, -1)
+		"chefe":
+			var vest: Array = []
+			for s in Pecas.SLOTS:
+				vest.append(Peca.new(Pecas.CONJUNTO_PECAS[Fases.CONJUNTOS[i][0]][s]))
+			Desenho.boneco(alvo, pe, esc * Balanco.CHEFE_ESCALA_TIPO[i], -1.0, 1, vest, 0.0, an, false, 0.0, 1.0, false, -1, 0.0, 0, false, true, i, false, i)
+
+## Escala do bicho numa miniatura.
+static func _esc_mini(en: Dictionary) -> float:
+	return 0.5 if en["k"] != "chefe" else 0.27
+
+func _montar_bichos() -> void:
+	var lista: Array = entradas()
+	if pagina == 0:
+		for k in lista.size():
+			var r: Rect2 = rect_tile_bicho(k)
+			itens.append({"id": "b%d" % k, "r": r, "on": true})
+			if not estado.viu_bicho(lista[k]["chave"]):
+				_jobs.append({"k": "bicho", "i": k, "pos": r.position + Vector2(TILE_W * 0.5, TILE_H - 40.0), "esc": _esc_mini(lista[k])})
+	else:
+		var k2: int = pagina - 1
+		if not estado.viu_bicho(lista[k2]["chave"]):
+			var cb: Rect2 = _cabine_gato()
+			_jobs.append({"k": "bicho", "i": k2, "pos": Vector2(cb.get_center().x, cb.end.y - 44.0), "esc": BICHO_RETRATO_ESC * (0.85 if lista[k2]["k"] == "chefe" else 1.0)})
+
+func _rotulo_bichos(txt: String, r0: Rect2, cor: Color, extra: String = "") -> void:
+	draw_rect(Rect2(r0.position.x, r0.position.y - 24.0, 5.0, 16.0), cor.darkened(0.1))
+	_txt(txt, Vector2(r0.position.x + 11.0, r0.position.y - 10.0), 16, TINTA)
+	if extra != "":
+		_txt(extra, Vector2(r0.position.x + 11.0 + largura(txt, 16) + 10.0, r0.position.y - 10.0), 12, TINTA2)
+
+func _tile_bicho(e: Estado, k: int) -> void:
+	var en: Dictionary = entradas()[k]
+	var r: Rect2 = rect_tile_bicho(k)
+	var viu: bool = e.viu_bicho(en["chave"])
+	var der: bool = _derrotado(e, en)
+	var cor: Color = en["cor"]
+	var sobre: bool = foco >= 0 and itens[foco]["id"] == "b%d" % k
+	draw_rect(Rect2(r.position.x + 2, r.position.y + 3, r.size.x, r.size.y), Color(0, 0, 0, 0.18))
+	draw_rect(r, Color(0.98, 0.95, 0.85) if viu else PAPEL_ESC.lightened(0.1))
+	draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 5.0), cor.darkened(0.15) if viu else Color(0.5, 0.45, 0.42))
+	draw_rect(r, Color(0.9, 0.68, 0.1) if der else PAPEL_BORDA, false, 3.0 if der else 1.5)
+	var pe: Vector2 = r.position + Vector2(TILE_W * 0.5, TILE_H - 40.0)
+	draw_circle(pe + Vector2(0, -22.0), 30.0, cor.lerp(PAPEL, 0.75) if viu else PAPEL_ESC)
+	if viu:
+		_bicho(self, en, pe, _esc_mini(en), false)
+	var nome: String = en["nome"] if viu else "???"
+	var aj: Dictionary = ajustar(nome, [12, 11, 10, 9], r.size.x - 6.0, 2)
+	var yy: float = r.end.y - 8.0 - (int(aj["tam"]) + 1) * ((aj["linhas"] as Array).size() - 1)
+	for ln in aj["linhas"]:
+		_txt(ln, Vector2(r.position.x + 3.0, yy), aj["tam"], TINTA if viu else TINTA2, r.size.x - 6.0)
+		yy += int(aj["tam"]) + 1
+	if der:
+		_estrela(r.position + Vector2(r.size.x - 11.0, 16.0), 9.0, COR_OURO)
+	if sobre:
+		var pu: float = 0.5 + 0.5 * sin(t * 5.0)
+		draw_rect(r.grow(3.0), Color(1.0, 0.7, 0.2, 0.55 + 0.4 * pu), false, 3.0)
+
+func _pagina_bichos(e: Estado) -> void:
+	if pagina == 0:
+		_indice_bichos(e)
+	else:
+		_ficha_bicho(e, pagina - 1)
+
+func _indice_bichos(e: Estado) -> void:
+	var lista: Array = entradas()
+	var vistos: int = e.bichos_vistos_total()
+	var chefes_der: int = 0
+	for en in lista:
+		if _derrotado(e, en):
+			chefes_der += 1
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), "Bestiário", [30, 26], COR_OURO)
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), "Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d" % [vistos, lista.size(), chefes_der, Fases.CHEFE_NOME.size()], [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
+	_rotulo_bichos("Famílias da casa", rect_tile_bicho(0), COR_ABA[1])
+	_rotulo_bichos("Tipos de bicho", rect_tile_bicho(10), COR_ABA[2], "e o fantasiado")
+	_rotulo_bichos("Chefes da casa", rect_tile_bicho(20), COR_ABA[3])
+	_rotulo_bichos("Chefes de fora", rect_tile_bicho(25), COR_ABA[ABA_FORA])
+	_rotulo_bichos("Bandos de fora", rect_tile_bicho(5), COR_ABA[ABA_FORA], "todas as famílias juntas")
+	for k in lista.size():
+		_tile_bicho(e, k)
+	var pl := Rect2(COL_E_X, 538.0, COL_W, 92.0)
+	draw_rect(pl, PAPEL_ESC)
+	draw_rect(pl, PAPEL_BORDA, false, 2.0)
+	_txt("Como ler o bestiário", Vector2(pl.position.x + 14.0, pl.position.y + 24.0), 16, TINTA)
+	_bloco("Clique num bicho para ver o que ele faz e como enfrentá-lo. Bicho que ainda não apareceu numa luta fica em silhueta. Chefe derrotado ganha uma estrela dourada.", Vector2(pl.position.x + 14.0, pl.position.y + 44.0), pl.size.x - 28.0, [13, 12], 3, TINTA2, 2.0)
+	var pr := Rect2(COL_D_X, 538.0, COL_W, 92.0)
+	draw_rect(pr, PAPEL_ESC)
+	draw_rect(pr, PAPEL_BORDA, false, 2.0)
+	_txt("Seu progresso", Vector2(pr.position.x + 14.0, pr.position.y + 24.0), 16, TINTA)
+	var lb: float = (pr.size.x - 28.0 - 14.0) * 0.5
+	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(vistos) / lista.size(), "Vistos: %d de %d" % [vistos, lista.size()], Color(0.4, 0.7, 0.45))
+	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(chefes_der) / Fases.CHEFE_NOME.size(), "Chefes derrotados: %d de %d" % [chefes_der, Fases.CHEFE_NOME.size()], Color(0.95, 0.72, 0.15))
+
+func _caixa(r: Rect2, titulo: String, cor: Color) -> void:
+	draw_rect(r, PAPEL_ESC)
+	draw_rect(r, PAPEL_BORDA, false, 2.0)
+	draw_rect(Rect2(r.position.x, r.position.y, 8.0, r.size.y), cor.darkened(0.05))
+	_txt(titulo, Vector2(r.position.x + 18.0, r.position.y + 19.0), 13, TINTA2)
+
+func _ficha_bicho(e: Estado, k: int) -> void:
+	var en: Dictionary = entradas()[k]
+	var viu: bool = e.viu_bicho(en["chave"])
+	var der: bool = _derrotado(e, en)
+	var cor: Color = en["cor"]
+	# ---------------- página da esquerda
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else "Bicho desconhecido", [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
+	var cb: Rect2 = _cabine_gato()
+	draw_rect(Rect2(cb.position.x + 3, cb.position.y + 4, cb.size.x, cb.size.y), Color(0, 0, 0, 0.16))
+	draw_rect(cb, cor.lerp(PAPEL, 0.78) if viu else PAPEL_ESC)
+	draw_rect(Rect2(cb.position.x, cb.end.y - 62.0, cb.size.x, 62.0), cor.lerp(PAPEL, 0.55) if viu else PAPEL_ESC.darkened(0.06))
+	draw_line(Vector2(cb.position.x, cb.end.y - 62.0), Vector2(cb.end.x, cb.end.y - 62.0), cor.darkened(0.2).lerp(PAPEL, 0.4), 2.0)
+	draw_rect(cb, PAPEL_BORDA, false, 2.0)
+	for q in 4:
+		var px: float = cb.position.x if q % 2 == 0 else cb.end.x
+		var py: float = cb.position.y if q < 2 else cb.end.y
+		var sx: float = 1.0 if q % 2 == 0 else -1.0
+		var sy: float = 1.0 if q < 2 else -1.0
+		draw_colored_polygon(PackedVector2Array([Vector2(px, py), Vector2(px + 26.0 * sx, py), Vector2(px, py + 26.0 * sy)]), Color(0.3, 0.17, 0.15))
+	_txt("Ficha nº %02d" % pagina, Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
+	var grupo: String = {"fam": "Família", "bando": "Bando de fora", "tipo": "Tipo de bicho", "chefe": "Chefe"}[en["k"]]
+	_txt(grupo, Vector2(cb.end.x - 160.0, cb.position.y + 18.0), 13, TINTA2, 130.0)
+	if viu:
+		_bicho(self, en, Vector2(cb.get_center().x, cb.end.y - 44.0), BICHO_RETRATO_ESC * (0.85 if en["k"] == "chefe" else 1.0), false)
+		_txt("Derrotado" if der else "Visto", Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, COR_TEM if der else TINTA)
+	else:
+		_txt("???", Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, COR_FALTA)
+	if der:
+		_carimbo_bicho(Vector2(cb.end.x - 110.0, cb.position.y + 62.0))
+	var pb := Rect2(COL_E_X, 392.0, COL_W, 100.0)
+	_caixa(pb, "O que faz", cor)
+	var ob := Rect2(COL_E_X, 500.0, COL_W, 130.0)
+	_caixa(ob, "Onde aparece", cor)
+	# ---------------- página da direita
+	var rd1 := Rect2(COL_D_X, 78.0, COL_W, 200.0)
+	var rd2 := Rect2(COL_D_X, 288.0, COL_W, 150.0)
+	var rd3 := Rect2(COL_D_X, 448.0, COL_W, 182.0)
+	_caixa(rd1, "Como enfrentar", cor)
+	_caixa(rd2, "Números", cor)
+	_caixa(rd3, "No seu caderno", cor)
+	if not viu:
+		_bloco("Este bicho ainda não apareceu numa luta. Avance na campanha e vá ver o que ele faz.", Vector2(pb.position.x + 18.0, pb.position.y + 44.0), pb.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_bloco("Ainda é segredo.", Vector2(ob.position.x + 18.0, ob.position.y + 44.0), ob.size.x - 30.0, [16, 15], 1, TINTA2)
+		_bloco("Quando ele aparecer, a dica de como vencê-lo fica anotada aqui.", Vector2(rd1.position.x + 18.0, rd1.position.y + 44.0), rd1.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_txt("???", Vector2(rd2.position.x + 18.0, rd2.position.y + 48.0), 20, TINTA2)
+		_txt("Ainda não visto", Vector2(rd3.position.x + 18.0, rd3.position.y + 48.0), 18, COR_FALTA)
+		return
+	_bloco(_maiuscula(en["oque"]), Vector2(pb.position.x + 18.0, pb.position.y + 44.0), pb.size.x - 30.0, [18, 16, 15, 14], 3, TINTA, 3.0)
+	_bloco(en["onde"], Vector2(ob.position.x + 18.0, ob.position.y + 44.0), ob.size.x - 30.0, [16, 15, 14], 3, TINTA, 3.0)
+	_bloco(_maiuscula(en["dica"]), Vector2(rd1.position.x + 18.0, rd1.position.y + 44.0), rd1.size.x - 30.0, [22, 20, 18, 16], 6, Color(0.5, 0.28, 0.02), 5.0)
+	var yy: float = rd2.position.y + 44.0
+	for ln in en["ficha"]:
+		yy = _bloco(ln, Vector2(rd2.position.x + 18.0, yy), rd2.size.x - 30.0, [16, 15, 14, 13], 2, TINTA, 3.0) + 6.0
+	yy = rd3.position.y + 44.0
+	draw_circle(Vector2(rd3.position.x + 26.0, yy - 5.0), 5.0, COR_TEM)
+	yy = _bloco("Já apareceu numa luta sua.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [16, 15, 14], 2, TINTA, 3.0) + 6.0
+	if en["k"] == "chefe":
+		draw_circle(Vector2(rd3.position.x + 26.0, yy - 5.0), 5.0, COR_TEM if der else COR_FALTA)
+		_bloco("Derrotado: sim." if der else "Derrotado: ainda não.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [16, 15, 14], 2, TINTA, 3.0)
+	else:
+		_bloco("O jogo ainda não conta quantos você derrotou.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [14, 13, 12], 2, TINTA2, 3.0)
+
+func _carimbo_bicho(centro: Vector2) -> void:
+	var f: Font = ThemeDB.fallback_font
+	var pul: float = 1.0 + 0.03 * sin(t * 3.0)
+	UIComum.trans(self, centro, -0.2, Vector2(pul, pul))
+	var w: float = largura("DERROTADO", 26) + 22.0
+	var r := Rect2(-w * 0.5, -22.0, w, 38.0)
+	var tinta := Color(0.78, 0.12, 0.12, 0.9)
+	draw_rect(r, Color(1, 1, 1, 0.35))
+	draw_rect(r, tinta, false, 4.0)
+	draw_rect(r.grow(-6.0), tinta, false, 1.5)
+	draw_string(f, Vector2(-w * 0.5 + 11.0, 8.0), "DERROTADO", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, tinta)
+	UIComum.trans_fim(self)
