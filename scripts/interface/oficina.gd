@@ -166,7 +166,7 @@ static func rect_melhorar(i: int) -> Rect2:
 
 static func rect_quadrado(i: int, k: int) -> Rect2:
 	var r: Rect2 = rect_linha(i)
-	return Rect2(r.position.x + QUADRADOS_DESLOC + k * 20.0, r.position.y + 14.0, 16.0, 16.0)
+	return Rect2(r.position.x + QUADRADOS_DESLOC + k * 16.0, r.position.y + 15.0, 13.0, 13.0)
 
 ## Cartão do módulo `i` (0 a 9) na sua aba: cinco por aba.
 static func rect_card(i: int) -> Rect2:
@@ -647,7 +647,7 @@ func _previa_torre(e: Estado) -> void:
 	draw_rect(cx, Color(1, 0.85, 0.5, 0.35), false, 2.0)
 	draw_rect(Rect2(cx.position.x + 2.0, cx.end.y - 22.0, cx.size.x - 4.0, 20.0), Color(0.2, 0.14, 0.1))
 	_texto("Sua torre", Vector2(cx.position.x + 8.0, cx.position.y + 15.0), 12, Color(1, 1, 1, 0.7), -1.0, 3)
-	var esc: float = 0.4
+	var esc: float = clampf(96.0 / maxf(TorrePx.altura(Vector2.ZERO, e.tijolos_max()), 1.0), 0.2, 0.4)   # torre alta encolhe para caber
 	var prev_base := Vector2(cx.position.x + 26.0, cx.end.y - 8.0)
 	var base_ant: Transform2D = UIComum.base
 	draw_set_transform_matrix(base_ant * Transform2D(0.0, Vector2(esc, esc), 0.0, prev_base))

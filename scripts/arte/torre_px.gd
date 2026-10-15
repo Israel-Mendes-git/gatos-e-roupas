@@ -383,7 +383,7 @@ static func centro_topo(base: Vector2, n: int, nmax: int, t: float = 0.0, golpe:
 static func rect_canhao(base: Vector2, n: int, nmax: int, melhorias: Array, t: float = 0.0, golpe: float = 0.0, recuo: float = 0.0) -> Rect2:
 	var lv: int = nivel(melhorias, CANH)
 	var th: float = CANHAO_ESP[lv]
-	var comp: float = 24.0 + 8.0 * mini(lv, 5) + 4.0 * maxi(lv - 5, 0)   # 24 a 76 px; com a torre torta (até 12 px) a boca ainda fica em x <= 200
+	var comp: float = 24.0 + 8.0 * mini(lv, 5)   # 24 a 64 px (do nível 6 em diante o cano muda de cor e ganha anéis, não cresce); com a torre torta (até 12 px) a boca ainda fica em x <= 200
 	var dxp: float = desl(linhas_cheias(n), n, nmax, t, golpe)
 	var dxr: float = -roundf(recuo * 2.0) * G
 	var x0: float = base.x + 112.0 + dxp + dxr

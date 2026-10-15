@@ -29,7 +29,7 @@ const MODULO_DICA: Array[String] = [
 	"Quando a torre cai à metade, um alarme atordoa todos os bichos (uma vez por onda)",
 	"O tiro da torre atravessa e fere mais dois bichos atrás do alvo",
 	"Durante a luta, repõe um bloco de tempos em tempos",
-	"De tempos em tempos o bicho comum mais perto da torre cai num buraco: leva dano e fica tonto",
+	"De tempos em tempos o bicho mais perto cai no buraco, leva dano e fica tonto",
 	"Bichos perto da torre andam e batem mais devagar",
 	"O tiro mira o alvo prioritário, às vezes acerta em cheio e deixa o alvo mais frágil",
 	"Um cão de guarda luta ao lado da torre a cada onda",
