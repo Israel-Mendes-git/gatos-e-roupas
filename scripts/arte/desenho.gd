@@ -1119,6 +1119,8 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		var onde: int = RoupaGato.onde(p.tipo)
 		if onde == RoupaGato.Onde.PATAS:
 			var dp: Vector2 = BichoPx.desloc(onde, fam, tipo, anim, andando, golpe, ct, parado)
+			if dp.y > 1000.0:
+				continue   # no ar (pulo, voo, debaixo da terra): as patas não estão no chão e o calçado sai de cena
 			var pp: Array[Vector2] = RoupaGato.PATAS_PADRAO
 			if not q.is_empty():
 				# pés de verdade do desenho: o de trás e o da frente (o calçado acompanha o passo)

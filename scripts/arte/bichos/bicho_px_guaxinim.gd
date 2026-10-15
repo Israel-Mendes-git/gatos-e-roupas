@@ -231,16 +231,11 @@ static func _geo(tipo: int, anim: float, andando: bool, golpe: float, filhote: b
 	var bh: int = esp["bh"]
 	var pe: int = esp["pe"]
 	var by0: int = -pe - bh - salto + bob
-	if sal and aire == 0 and andando:
-		by0 += 0
 	var bh2: int = bh
 	by0 -= resp
 	bh2 += resp
 	var hdx: int = ei
 	var hdy: int = 0
-	if aire > 0:
-		hdx += 1
-		hdy = -1
 	match pt:
 		Unidade.Tipo.ESCUDEIRO:
 			hdx -= 2   # cabeça baixa e recuada atrás do escudo
@@ -255,8 +250,16 @@ static func _geo(tipo: int, anim: float, andando: bool, golpe: float, filhote: b
 	var hx: int = int(esp["hx"]) + hdx
 	var hoff: int = int(esp["hoff"])
 	if sal and aire == 0:
-		hoff = -6   # sentado nas patas traseiras: cabeça no alto, corpo inclinado
-		hx -= 1
+		# Saltador no chão: sentado nas patas de trás, como guaxinim que se ergue para olhar — anca larga no chão, peito de pé
+		# com as mãos pretas juntas na frente, cabeça no alto (by0/bh = o peito)
+		by0 = -20 - resp
+		bh2 = 13 + resp
+		hx = 1 + ei
+		hoff = -6
+	elif sal:
+		# no ar: o corpo do pulo, cabeça à frente — subindo de nariz para cima, descendo de nariz para baixo
+		hx = 3 + ei
+		hoff = -3 if aire == 1 else -1
 	var hy: int = by0 + hoff + hdy - (resp if tipo == Unidade.Tipo.COMUM else 0)
 	return {"q": q, "e": e, "ei": ei, "boca": boca, "salto": salto, "aire": aire, "bob": bob, "resp": resp, "esp": esp, "ch": ch,
 		"hw": hw, "hh": hh, "bx": int(esp["bx"]), "bw": bw, "bh": bh2, "pe": pe, "by0": by0, "hx": hx, "hy": hy, "pt": pt, "sal": sal, "andando": andando}
@@ -282,7 +285,10 @@ static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: boo
 		RoupaGato.Onde.CORPO:
 			p = Vector2(int(g["bx"]) + int(g["bw"]) * 0.5, int(g["by0"]) + int(g["bh"]) * 0.5) - RoupaGato.ORIGEM[RoupaGato.Onde.CORPO]
 		RoupaGato.Onde.TRASEIRA:
-			p = Vector2(int(g["bx"]) + 2, int(g["by0"]) - 1) - RoupaGato.ORIGEM[RoupaGato.Onde.TRASEIRA]
+			if g["sal"] and int(g["aire"]) == 0:
+				p = Vector2(int(g["bx"]) + 3, -12) - RoupaGato.ORIGEM[RoupaGato.Onde.TRASEIRA]   # sentado: o alto da anca
+			else:
+				p = Vector2(int(g["bx"]) + 2, int(g["by0"]) - 1) - RoupaGato.ORIGEM[RoupaGato.Onde.TRASEIRA]
 		RoupaGato.Onde.PATAS:
 			if int(g["aire"]) > 0:
 				return Vector2(0, 5000)   # no ar as patas ficam esticadas: botas saem de cena em vez de flutuar fora delas
@@ -350,40 +356,42 @@ static func _pernas(L1: PackedInt32Array, L2: PackedInt32Array, g: Dictionary) -
 			yf = maxi(hip + 1, -2 - 2 * int(g["ei"]))
 		_pata(d[3], x, hip, xf, yf, d[2], "a", "d" if d[2] == "a" else "m")
 
+## Perna de 2 px em qualquer direção, do quadril/ombro (x0, y0) até a pata (x1, y1): pelo do corpo e, nos últimos passos, a luva
+## preta; a ponta da pata no tom mais escuro. É a perna do guaxinim no pulo, esticada para a frente ou para trás.
+static func _perna_ar(L: PackedInt32Array, x0: int, y0: int, x1: int, y1: int, pelo: String, luva: String) -> void:
+	var n: int = maxi(1, maxi(absi(x1 - x0), absi(y1 - y0)))
+	for i in n + 1:
+		var t: float = float(i) / float(n)
+		_rect(L, roundi(lerpf(x0, x1, t)), roundi(lerpf(y0, y1, t)), 2, 2, luva if i >= n - 2 else pelo)
+	if absi(x1 - x0) >= absi(y1 - y0):
+		_px(L, x1 + 2 if x1 >= x0 else x1 - 1, y1 + 1, "a")
+	else:
+		_px(L, x1 + 1 if x1 >= x0 else x1, y1 + 2 if y1 >= y0 else y1 - 1, "a")
+
 static func _pernas_sal(L1: PackedInt32Array, L2: PackedInt32Array, g: Dictionary) -> void:
 	var bx: int = g["bx"]
 	var aire: int = g["aire"]
 	var by0: int = g["by0"]
 	var bh: int = g["bh"]
 	var bw: int = g["bw"]
-	var hip: int = by0 + bh - 4
+	var hip: int = by0 + bh - 3
 	if aire == 1:
-		# subindo: traseiras esticadas para trás, dianteiras para a frente
-		_trazo(L1, bx + 6, hip, bx - 2, hip + 3, 2, "a")
-		_trazo(L1, bx + bw - 4, hip + 1, bx + bw + 3, hip, 2, "d")
-		_trazo(L2, bx + 4, hip + 1, bx - 4, hip + 4, 2, "m")
-		_trazo(L2, bx + bw - 7, hip + 2, bx + bw + 1, hip + 1, 2, "m")
-		_px(L2, bx - 5, hip + 5, "a")
-		_px(L2, bx - 6, hip + 5, "a")
-		_px(L2, bx + bw + 2, hip + 2, "a")
-		_px(L2, bx + bw + 3, hip + 2, "a")
+		# subindo: traseiras esticadas para trás e para baixo (o impulso), dianteiras esticadas para a frente
+		_perna_ar(L1, bx + 5, hip, bx - 3, hip + 5, "d", "a")
+		_perna_ar(L1, bx + bw - 3, hip, bx + bw + 4, hip + 3, "d", "a")
+		_perna_ar(L2, bx + 3, hip, bx - 5, hip + 4, "m", "u")
+		_perna_ar(L2, bx + bw - 5, hip + 1, bx + bw + 6, hip + 3, "m", "u")   # passa por baixo do queixo
 	elif aire == 2:
-		# descendo: dianteiras alcançando o chão, traseiras recolhidas sob a barriga
-		_trazo(L1, bx + bw - 4, hip, bx + bw - 1, hip + 4, 2, "d")
-		_trazo(L1, bx + 8, hip, bx + 11, hip + 3, 2, "d")
-		_trazo(L2, bx + bw - 7, hip + 1, bx + bw - 4, hip + 5, 2, "m")
-		_trazo(L2, bx + 5, hip + 1, bx + 9, hip + 4, 2, "m")
-		_px(L2, bx + bw - 3, hip + 6, "a")
-		_px(L2, bx + bw - 4, hip + 6, "a")
-		_px(L2, bx + 10, hip + 5, "a")
-		_px(L2, bx + 11, hip + 5, "a")
+		# descendo: dianteiras descendo para pegar o chão, traseiras dobradas sob a barriga
+		_perna_ar(L1, bx + bw - 3, hip, bx + bw + 1, hip + 6, "d", "a")
+		_perna_ar(L1, bx + 5, hip, bx + 8, hip + 4, "d", "a")
+		_perna_ar(L2, bx + bw - 5, hip + 1, bx + bw + 3, hip + 6, "m", "u")
+		_perna_ar(L2, bx + 3, hip + 1, bx + 6, hip + 5, "m", "u")
 	else:
-		# sentado: pés traseiros compridos apoiados no chão à frente da anca; braços curtos no peito
-		var ei: int = g["ei"]
-		_rect(L1, bx + 5, -2, 11, 2, "d")
-		_rect(L1, bx + 14, -2, 2, 2, "a")
-		_rect(L2, bx + 3, -2, 11, 2, "m")
-		_rect(L2, bx + 12, -2, 2, 2, "a")
+		# sentado: os pés de trás compridos no chão, à frente da anca (luva preta, dedos no tom mais escuro)
+		_rect(L1, bx + 6, -2, 8, 2, "a")
+		_rect(L2, bx + 4, -2, 8, 2, "u")
+		_rect(L2, bx + 11, -2, 1, 2, "a")
 
 ## Rabo grosso com anéis: faixas claras (l/m/d) e pretas (a) alternadas, mais grosso no meio, ponta preta arredondada.
 ## `alto` = erguido em S (Saltador sentado)
@@ -547,11 +555,10 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	# corpo + pescoço + cabeça numa camada só
 	var B := _nova()
 	if sal and g["aire"] == 0:
-		_elip(B, bx, -9, 11, 8)                    # anca redonda no chão
-		_elip(B, bx + 4, -16, 8, 11)               # tronco inclinado, subindo para a cabeça
+		_elip(B, bx, -11, 12, 10)                   # anca larga sentada no chão
+		_elip(B, bx + 5, by0, 9, bh + 1)            # peito de pé, subindo para a cabeça
 	elif sal:
-		_elip(B, bx, by0 - 4, 10, bh + 4)         # anca alta
-		_elip(B, bx + 6, by0 + 2, bw - 6, bh - 1)  # peito baixo
+		_lomo(B, bx, by0, bw, bh, arq)              # o corpo corcunda do guaxinim, esticado no pulo
 	elif filhote:
 		_elip(B, bx, by0, bw, bh)
 	else:
@@ -560,6 +567,12 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	var TR: PackedInt32Array = B.duplicate()   # só o tronco: molde das peças de corpo (BichoPx.quadro)
 	_elip(B, hx - 2, py0, 8, maxi(5, by0 + bh - py0 - 1))   # pescoço
 	_bmp(B, hx, hy, cab_rows)
+	if sal and g["aire"] == 0:
+		# braços curtos no peito, na mesma camada do corpo (sem contorno por dentro): só as mãos pretas aparecem, juntas na frente;
+		# no golpe a de perto avança
+		var ae: int = g["ei"]
+		_pata(B, bx + 10, by0 + 5, bx + 12, by0 + 10, "a", "a", "d")
+		_pata(B, bx + 11, by0 + 4, bx + 14 + 2 * ae, by0 + 10 - ae, "u", "a", "m")
 	if gig:
 		_tinta(B, bx + 6, by0 + bh - 7, bw - 12, 7, "v")   # barrigão claro
 	elif mae:
@@ -581,11 +594,9 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 
 	# adereços
 	if sal and g["aire"] == 0:
+		# coxa de perto por cima da anca
 		var CX := _nova()
-		_elip(CX, bx + 1, -10, 8, 8)   # coxa traseira redonda
-		var ae: int = g["ei"]
-		_rect(CX, bx + 12 + ae, -10 - ae, 2, 5 + ae, "u")   # braço dianteiro preto (avança no golpe)
-		_rect(CX, bx + 13 + ae, -6 - ae, 2, 2, "a")
+		_elip(CX, bx + 1, -11, 9, 9)
 		_comp(G, CX)
 	if lad:
 		var S := _nova()
