@@ -6,6 +6,38 @@ extends RefCounted
 ##   além de animação suave (hover/clique), salto de painel, cascata, contagem e faíscas em pixel.
 ## Tudo é desenhado por código sobre um CanvasItem qualquer e não guarda estado de jogo.
 
+## Fonte pixel do jogo inteiro (Jersey 10, SIL OFL 1.1; ver CREDITOS.md). Sem suavização nem hinting.
+const FONTE: Font = preload("res://assets/fontes/Jersey10-Regular.ttf")
+## Tamanhos em que a Jersey 10 cai em pixels inteiros (2x, 3x, 4x... do pixel-base de 9,4 px).
+const TAMANHOS_NITIDOS: Array[int] = [19, 28, 38, 47, 56, 66, 75, 85, 94]
+
+## Tamanho nítido mais próximo de um tamanho "de projeto": até 21 vira 19; 22 a 32 vira 28; 33 a 42, 38; e assim por diante.
+static func tam(t: float) -> int:
+	if t < 22.0:
+		return 19
+	if t < 33.0:
+		return 28
+	if t < 43.0:
+		return 38
+	if t < 52.0:
+		return 47
+	if t < 61.0:
+		return 56
+	if t < 71.0:
+		return 66
+	if t < 80.0:
+		return 75
+	if t < 90.0:
+		return 85
+	return 94
+
+## Próximo tamanho nítido abaixo de `t` (19 é o piso). Para os laços que encolhem texto até caber.
+static func tam_menor(t: int) -> int:
+	for k in range(TAMANHOS_NITIDOS.size() - 1, -1, -1):
+		if TAMANHOS_NITIDOS[k] < t:
+			return TAMANHOS_NITIDOS[k]
+	return TAMANHOS_NITIDOS[0]
+
 const GATO_TEX: Texture2D = preload("res://assets/terceiros/gui/gato_ui.png")
 const C_CONT := Color(0.24, 0.17, 0.19)
 const C_CREME := Color(1.0, 0.94, 0.88)
@@ -178,7 +210,7 @@ static func botao(c: CanvasItem, r: Rect2, txt: String, cor: Color, o: Dictionar
 	elif not on:
 		for k in int(rb.size.x / 24.0):
 			c.draw_rect(Rect2(rb.position.x + 14.0 + k * 24.0, rb.position.y + u, 10, u), Color(1, 1, 1, 0.35))
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var tam: int = int(o.get("tam", 22))
 	var tx: float = rb.position.x
 	var tw: float = rb.size.x
@@ -188,22 +220,23 @@ static func botao(c: CanvasItem, r: Rect2, txt: String, cor: Color, o: Dictionar
 		tx += 40.0
 		tw -= 48.0
 	var sub: String = o.get("sub", "")
-	var yb: float = rb.position.y + (rb.size.y - fonte.get_height(tam)) * 0.5 + fonte.get_ascent(tam) - 1.0
+	var yb: float = rb.position.y + (rb.size.y - fonte.get_height(UIComum.tam(tam))) * 0.5 + fonte.get_ascent(UIComum.tam(tam)) - 1.0
 	if sub != "":
 		yb -= 11.0
 	var ct: Color = C_TEXTO if on else Color(0.56, 0.5, 0.5)
 	# encolhe o texto se não couber
-	while tam > 11 and fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x > tw - 14.0:
-		tam -= 1
-	var larg_txt: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	tam = UIComum.tam(tam)
+	while tam > 19 and fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x > tw - 14.0:
+		tam = tam_menor(tam)
+	var larg_txt: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
 	var extra_x: float = 0.0
 	if o.has("trofeu"):
 		extra_x = 12.0   # abre espaço para o troféu à direita do texto
-	c.draw_string(fonte, Vector2(tx - extra_x, roundf(yb)), txt, HORIZONTAL_ALIGNMENT_CENTER, tw, tam, ct)
+	c.draw_string(fonte, Vector2(tx - extra_x, roundf(yb)), txt, HORIZONTAL_ALIGNMENT_CENTER, tw, UIComum.tam(tam), ct)
 	if o.has("trofeu"):
 		Oficina.trofeu(c, Vector2(tx + (tw + larg_txt) * 0.5 - extra_x + 4.0, rb.get_center().y - 10.0), 2.0, 1.0 if on else 0.5)
 	if sub != "":
-		c.draw_string(fonte, Vector2(tx, roundf(yb + 23.0)), sub, HORIZONTAL_ALIGNMENT_CENTER, tw, 14, Color(0.34, 0.22, 0.24))
+		c.draw_string(fonte, Vector2(tx, roundf(yb + 23.0)), sub, HORIZONTAL_ALIGNMENT_CENTER, tw, UIComum.tam(14), Color(0.34, 0.22, 0.24))
 	trans_fim(c)
 	# carinha de gato saltando ao lado do botão em foco
 	if foco and o.get("balao", -1) >= 0 and r.size.x >= 120.0:
@@ -220,13 +253,13 @@ static func fechar(c: CanvasItem, r: Rect2, o: Dictionary, t: float) -> void:
 # ------------------------------------------------------------------ título, aviso, contador, dica
 ## Título de painel: texto grande com contorno e uma patinha de cada lado.
 static func titulo(c: CanvasItem, txt: String, cx: float, base_y: float, tam: int, cor: Color, contorno: Color = C_CONT, t: float = 0.0, sombra: bool = true) -> void:
-	var fonte: Font = ThemeDB.fallback_font
-	var w: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	var fonte: Font = UIComum.FONTE
+	var w: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
 	var x: float = cx - w * 0.5
 	if sombra:
-		c.draw_string_outline(fonte, Vector2(x, base_y + 3.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 8, Color(0, 0, 0, 0.3))
-	c.draw_string_outline(fonte, Vector2(x, base_y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 8, contorno)
-	c.draw_string(fonte, Vector2(x, base_y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, cor)
+		c.draw_string_outline(fonte, Vector2(x, base_y + 3.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 8, Color(0, 0, 0, 0.3))
+	c.draw_string_outline(fonte, Vector2(x, base_y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 8, contorno)
+	c.draw_string(fonte, Vector2(x, base_y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), cor)
 	var py: float = base_y - tam * 0.72 + roundf(sin(t * 2.0) * 1.0)
 	pata(c, 0, Vector2(x - 46.0, py), 2)
 	pata(c, 2, Vector2(x + w + 16.0, py), 2)
@@ -235,41 +268,41 @@ static func titulo(c: CanvasItem, txt: String, cx: float, base_y: float, tam: in
 static func aviso(c: CanvasItem, txt: String, cx: float, y: float, alfa: float = 1.0, cor_txt: Color = C_TEXTO, tam: int = 16) -> void:
 	if txt == "" or alfa <= 0.01:
 		return
-	var fonte: Font = ThemeDB.fallback_font
-	var w: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x + 36.0
+	var fonte: Font = UIComum.FONTE
+	var w: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x + 36.0
 	var r := Rect2(roundf(cx - w * 0.5), y, roundf(w), 34.0)
 	forma(c, Rect2(r.position + Vector2(0, 4), r.size), Color(0, 0, 0, 0.3 * alfa))
 	caixa(c, r, Color(C_CONT.r, C_CONT.g, C_CONT.b, alfa), Color(C_CREME.r, C_CREME.g, C_CREME.b, alfa))
-	c.draw_string(fonte, Vector2(r.position.x, r.position.y + 23.0), txt, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, tam, Color(cor_txt.r, cor_txt.g, cor_txt.b, alfa))
+	c.draw_string(fonte, Vector2(r.position.x, r.position.y + 23.0), txt, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, UIComum.tam(tam), Color(cor_txt.r, cor_txt.g, cor_txt.b, alfa))
 
 ## Contador de troféus: ícone + número + legenda. `pulso` (0..1) dá um soco no número quando ele muda.
 ## Devolve o centro do ícone (destino dos troféus que voam).
 static func contador_trofeus(c: CanvasItem, cx: float, y: float, valor: int, pulso: float = 0.0, legenda: String = "troféus", tam: int = 34) -> Vector2:
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var txt: String = str(valor)
-	var wn: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
-	var wl: float = fonte.get_string_size(legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+	var wn: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
+	var wl: float = fonte.get_string_size(legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18)).x
 	var x0: float = cx - (40.0 + 10.0 + wn + 8.0 + wl) * 0.5
 	Oficina.trofeu(c, Vector2(x0, y), 4.0)
 	var esc: float = 1.0 + 0.28 * pulso
 	trans(c, Vector2(x0 + 50.0 + wn * 0.5, y + 32.0), 0.0, Vector2(esc, esc))
 	var base := Vector2(-wn * 0.5, 0.0)
-	c.draw_string_outline(fonte, base, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 6, Color(0.16, 0.07, 0.05, 0.95))
-	c.draw_string(fonte, base, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, Color(1.0, 0.92, 0.5).lerp(Color.WHITE, pulso))
+	c.draw_string_outline(fonte, base, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 6, Color(0.16, 0.07, 0.05, 0.95))
+	c.draw_string(fonte, base, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color(1.0, 0.92, 0.5).lerp(Color.WHITE, pulso))
 	trans_fim(c)
-	c.draw_string_outline(fonte, Vector2(x0 + 58.0 + wn, y + 32.0), legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 4, Color(0.16, 0.07, 0.05, 0.95))
-	c.draw_string(fonte, Vector2(x0 + 58.0 + wn, y + 32.0), legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1.0, 0.94, 0.8))
+	c.draw_string_outline(fonte, Vector2(x0 + 58.0 + wn, y + 32.0), legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18), 4, Color(0.16, 0.07, 0.05, 0.95))
+	c.draw_string(fonte, Vector2(x0 + 58.0 + wn, y + 32.0), legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18), Color(1.0, 0.94, 0.8))
 	return Vector2(x0 + 20.0, y + 20.0)
 
 ## Dica do mouse. `linhas`: [[texto, tamanho, cor], ...]. Fica sempre dentro da tela de 1280 x 720.
 static func dica_mouse(c: CanvasItem, linhas: Array, mouse: Vector2, borda: Color = C_CONT, larg_min: float = 120.0) -> void:
 	if linhas.is_empty():
 		return
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var w: float = larg_min
 	var h: float = 18.0
 	for l in linhas:
-		w = maxf(w, fonte.get_string_size(l[0], HORIZONTAL_ALIGNMENT_LEFT, -1, int(l[1])).x + 28.0)
+		w = maxf(w, fonte.get_string_size(l[0], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(int(l[1]))).x + 28.0)
 		h += int(l[1]) + 6.0
 	var p := Vector2(mouse.x + 16.0, mouse.y + 20.0)
 	if p.x + w > 1272.0:
@@ -282,7 +315,7 @@ static func dica_mouse(c: CanvasItem, linhas: Array, mouse: Vector2, borda: Colo
 	var y: float = r.position.y + 12.0
 	for l in linhas:
 		y += int(l[1])
-		c.draw_string(fonte, Vector2(r.position.x + 14.0, y), l[0], HORIZONTAL_ALIGNMENT_LEFT, -1, int(l[1]), l[2])
+		c.draw_string(fonte, Vector2(r.position.x + 14.0, y), l[0], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(int(l[1])), l[2])
 		y += 6.0
 
 ## Clarão que some: retângulo `r` e um anel que cresce. `k` vai de 1 (agora) a 0.

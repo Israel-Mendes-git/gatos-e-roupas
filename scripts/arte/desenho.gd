@@ -53,11 +53,11 @@ static func _tr(c: CanvasItem, pos: Vector2, esc: float, dir: float, local: Vect
 	c.draw_set_transform(pos + Vector2(local.x * dir * esc, local.y * esc), rot * dir, Vector2(esc * dir * extra, esc * extra * alto))
 
 static func texto(c: CanvasItem, txt: String, pos: Vector2, tam: int, cor: Color, largura: float = -1.0, contorno: int = 0) -> void:
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var alin: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT if largura < 0.0 else HORIZONTAL_ALIGNMENT_CENTER
 	if contorno > 0:
-		c.draw_string_outline(fonte, pos, txt, alin, largura, tam, contorno, Color(0, 0, 0, 0.85))
-	c.draw_string(fonte, pos, txt, alin, largura, tam, cor)
+		c.draw_string_outline(fonte, pos, txt, alin, largura, UIComum.tam(tam), contorno, Color(0, 0, 0, 0.85))
+	c.draw_string(fonte, pos, txt, alin, largura, UIComum.tam(tam), cor)
 
 # ------------------------------------------------------------------ formas das peças
 static func _arco(cx: float, cy: float, r: float, de: float = PI, ate: float = TAU, n: int = 12) -> PackedVector2Array:

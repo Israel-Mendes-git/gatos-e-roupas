@@ -775,7 +775,7 @@ func _painel_gato(r: Rect2, orelhas: bool = true, fundo: Color = C_CREME) -> voi
 
 func _t(txt: String, pos: Vector2, tam: int, cor: Color, larg: float = -1.0) -> void:
 	var alin: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT if larg < 0.0 else HORIZONTAL_ALIGNMENT_CENTER
-	draw_string(ThemeDB.fallback_font, pos, txt, alin, larg, tam, cor)
+	draw_string(UIComum.FONTE, pos, txt, alin, larg, UIComum.tam(tam), cor)
 
 ## Título do painel (o mesmo desenho das outras telas: UIComum.titulo).
 func _cabecalho(txt: String, r: Rect2, y: float) -> void:
@@ -987,13 +987,13 @@ func _sombra(p: Vector2, rx: float, ry: float) -> void:
 	UIComum.trans_fim(self)
 
 func _placa_titulo() -> void:
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var tam: int = 92
 	var letras: String = TITULO_JOGO
 	var largs: Array[float] = []
 	var total: float = 0.0
 	for c in letras:
-		var w: float = fonte.get_string_size(c, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+		var w: float = fonte.get_string_size(c, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
 		largs.append(w)
 		total += w
 	var x0: float = roundf(640.0 - total * 0.5 - 52.0)
@@ -1011,18 +1011,18 @@ func _placa_titulo() -> void:
 	# contorno escuro com sombra, depois contorno rosa
 	var x: float = x0
 	for k in letras.length():
-		draw_string_outline(fonte, Vector2(x, ys[k] + 6.0), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 24, Color(0, 0, 0, 0.3))
-		draw_string_outline(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 22, C_CONT)
+		draw_string_outline(fonte, Vector2(x, ys[k] + 6.0), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 24, Color(0, 0, 0, 0.3))
+		draw_string_outline(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 22, C_CONT)
 		x += largs[k]
 	_orelha_logo(ox_e, oy, true, 1)
 	_orelha_logo(ox_d, oy, false, 1)
 	x = x0
 	for k in letras.length():
-		draw_string_outline(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 11, C_ROSA)
+		draw_string_outline(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 11, C_ROSA)
 		x += largs[k]
 	x = x0
 	for k in letras.length():
-		draw_string(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, Color(1.0, 0.62, 0.68) if (letras[k] == "-" or (letras[k] == "e" and k > 0 and k < letras.length() - 1 and letras[k - 1] == " " and letras[k + 1] == " ")) else C_CREME)
+		draw_string(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color(1.0, 0.62, 0.68) if (letras[k] == "-" or (letras[k] == "e" and k > 0 and k < letras.length() - 1 and letras[k - 1] == " " and letras[k + 1] == " ")) else C_CREME)
 		x += largs[k]
 	# novelo de lã rolando ao lado do nome, com a ponta do fio solta
 	var cn: Vector2 = Vector2(x0 + total + 66.0, base - 30.0)
@@ -1090,12 +1090,12 @@ func _tela_opcoes() -> void:
 
 ## Quebra o texto em linhas que cabem em `larg` pixels.
 func _quebra(txt: String, tam: int, larg: float) -> Array[String]:
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var res: Array[String] = []
 	var atual: String = ""
 	for palavra in txt.split(" "):
 		var tent: String = palavra if atual == "" else atual + " " + palavra
-		if atual != "" and fonte.get_string_size(tent, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x > larg:
+		if atual != "" and fonte.get_string_size(tent, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x > larg:
 			res.append(atual)
 			atual = palavra
 		else:

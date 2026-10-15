@@ -956,7 +956,7 @@ func _molduras(holes: Array[Rect2], a: float) -> void:
 	draw_colored_polygon(pts2, Color(COR_OURO.r, COR_OURO.g, COR_OURO.b, a))
 
 func _balao(txt: String, holes: Array[Rect2], com_botao: bool, rotulo: String, cont: String, a: float) -> void:
-	var fonte_f: Font = ThemeDB.fallback_font
+	var fonte_f: Font = UIComum.FONTE
 	var larg_txt: float = LARG_BALAO - 76.0
 	var linhas: Array[String] = p._quebrar(txt, TAM_TEXTO, larg_txt)
 	var alt: float = 26.0 + linhas.size() * 23.0 + 10.0 + (46.0 if com_botao else 0.0)
@@ -970,10 +970,10 @@ func _balao(txt: String, holes: Array[Rect2], com_botao: bool, rotulo: String, c
 	UIComum.spr(self, Menus.R_BALAO[0], Vector2(r.position.x + 12.0, r.position.y + 14.0), 2, Color(1, 1, 1, cm))
 	var y: float = r.position.y + 28.0
 	for l in linhas:
-		draw_string(fonte_f, Vector2(r.position.x + 64.0, y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, TAM_TEXTO, Color(Menus.C_TEXTO.r, Menus.C_TEXTO.g, Menus.C_TEXTO.b, cm))
+		draw_string(fonte_f, Vector2(r.position.x + 64.0, y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(TAM_TEXTO), Color(Menus.C_TEXTO.r, Menus.C_TEXTO.g, Menus.C_TEXTO.b, cm))
 		y += 23.0
 	if cont != "":
-		draw_string(fonte_f, Vector2(r.position.x + 12.0, r.end.y - 10.0), cont, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(Menus.C_TEXTO2.r, Menus.C_TEXTO2.g, Menus.C_TEXTO2.b, cm))
+		draw_string(fonte_f, Vector2(r.position.x + 12.0, r.end.y - 10.0), cont, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(12), Color(Menus.C_TEXTO2.r, Menus.C_TEXTO2.g, Menus.C_TEXTO2.b, cm))
 	if com_botao:
 		var rb: Rect2 = Rect2(r.end.x - 136.0, r.end.y - 50.0, 120.0, 38.0)
 		_rect_ok = Rect2(rb.position - Vector2(0, off), rb.size)

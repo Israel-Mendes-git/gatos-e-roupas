@@ -430,7 +430,7 @@ func _rotulo_fim(r: Rect2, tam: int, cor: Color) -> Label:
 	l.size = r.size
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.add_theme_font_size_override("font_size", tam)
+	l.add_theme_font_size_override("font_size", UIComum.tam(tam))
 	l.add_theme_color_override("font_color", cor)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 	l.add_theme_constant_override("outline_size", 5 if tam > 30 else 3)
@@ -447,7 +447,7 @@ func _botao(txt: String, r: Rect2, cor: Color, tam: int) -> BotaoArte:
 	bt.esc = 1.0
 	bt.pintar = _pintar_botao
 	bt.focus_mode = Control.FOCUS_NONE
-	bt.add_theme_font_size_override("font_size", tam)
+	bt.add_theme_font_size_override("font_size", UIComum.tam(tam))
 	# o texto é desenhado por _pintar_botao; o do próprio Button fica invisível
 	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color", "font_hover_pressed_color", "font_focus_color", "font_outline_color"]:
 		bt.add_theme_color_override(k, Color(0, 0, 0, 0))
@@ -2597,17 +2597,17 @@ func _pintar_botao_torre(bt: BotaoArte) -> void:
 	var d: int = bt.get_draw_mode()
 	var apertado: bool = d == BaseButton.DRAW_PRESSED or d == BaseButton.DRAW_HOVER_PRESSED
 	var dy: float = 3.0 if apertado else 0.0
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var tam: int = bt.tam_fonte
-	var y: float = (bt.size.y - fonte.get_height(tam)) * 0.5 + fonte.get_ascent(tam) - 3.0 + dy
+	var y: float = (bt.size.y - fonte.get_height(UIComum.tam(tam))) * 0.5 + fonte.get_ascent(UIComum.tam(tam)) - 3.0 + dy
 	Oficina.trofeu(bt, Vector2(16, (bt.size.y - 20.0) * 0.5 - 1.0 + dy), 2.0)
 	var tam_l: int = mini(tam, 17)
-	bt.draw_string_outline(fonte, Vector2(42, y), "Torre [T]", HORIZONTAL_ALIGNMENT_LEFT, -1, tam_l, 6, Color(0.16, 0.07, 0.05, 0.95))
-	bt.draw_string(fonte, Vector2(42, y), "Torre [T]", HORIZONTAL_ALIGNMENT_LEFT, -1, tam_l, Color.WHITE)
+	bt.draw_string_outline(fonte, Vector2(42, y), "Torre [T]", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam_l), 6, Color(0.16, 0.07, 0.05, 0.95))
+	bt.draw_string(fonte, Vector2(42, y), "Torre [T]", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam_l), Color.WHITE)
 	var n: String = str(estado.trofeus)
-	var xn: float = bt.size.x - 14.0 - fonte.get_string_size(n, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
-	bt.draw_string_outline(fonte, Vector2(xn, y), n, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 6, Color(0.16, 0.07, 0.05, 0.95))
-	bt.draw_string(fonte, Vector2(xn, y), n, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, Color(1.0, 0.92, 0.45))
+	var xn: float = bt.size.x - 14.0 - fonte.get_string_size(n, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
+	bt.draw_string_outline(fonte, Vector2(xn, y), n, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 6, Color(0.16, 0.07, 0.05, 0.95))
+	bt.draw_string(fonte, Vector2(xn, y), n, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color(1.0, 0.92, 0.45))
 
 func _apertar(p: Vector2) -> void:
 	if avisos_aberto:
@@ -2821,12 +2821,12 @@ func _quebrar(txt: String, tam: int, larg: float) -> Array[String]:
 	return res
 
 func _quebrar_calc(txt: String, tam: int, larg: float) -> Array[String]:
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var res: Array[String] = []
 	var atual: String = ""
 	for palavra in txt.split(" "):
 		var tent: String = palavra if atual == "" else atual + " " + palavra
-		if atual != "" and fonte.get_string_size(tent, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x > larg:
+		if atual != "" and fonte.get_string_size(tent, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x > larg:
 			res.append(atual)
 			atual = palavra
 		else:
@@ -2928,12 +2928,12 @@ func _pintar_botao(bt: BotaoArte) -> void:
 		dy = 3.0
 	else:
 		nove(bt, BOT_TEX, R_BT_N, M_BT, r, bt.esc, cor)
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var tam: int = bt.tam_fonte
-	var y: float = (bt.size.y - fonte.get_height(tam)) * 0.5 + fonte.get_ascent(tam) - 3.0 + dy
+	var y: float = (bt.size.y - fonte.get_height(UIComum.tam(tam))) * 0.5 + fonte.get_ascent(UIComum.tam(tam)) - 3.0 + dy
 	var ct: Color = Color(1, 1, 1, 0.55) if bt.disabled else Color.WHITE
-	bt.draw_string_outline(fonte, Vector2(0, y), bt.text, HORIZONTAL_ALIGNMENT_CENTER, bt.size.x, tam, 7, Color(0.16, 0.07, 0.05, 0.95))
-	bt.draw_string(fonte, Vector2(0, y), bt.text, HORIZONTAL_ALIGNMENT_CENTER, bt.size.x, tam, ct)
+	bt.draw_string_outline(fonte, Vector2(0, y), bt.text, HORIZONTAL_ALIGNMENT_CENTER, bt.size.x, UIComum.tam(tam), 7, Color(0.16, 0.07, 0.05, 0.95))
+	bt.draw_string(fonte, Vector2(0, y), bt.text, HORIZONTAL_ALIGNMENT_CENTER, bt.size.x, UIComum.tam(tam), ct)
 
 ## Barra com contorno escuro, brilho no topo e miolo `cor`.
 func _barra(r: Rect2, frac: float, cor: Color, atras: float = -1.0, cor_atras: Color = Color(0.55, 0.8, 1.0, 0.75)) -> void:
@@ -2957,10 +2957,10 @@ func _ellipse_sombra(p: Vector2, rx: float, ry: float, cor: Color) -> void:
 	_c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _texto_dir(txt: String, x_dir: float, y: float, tam: int, cor: Color, contorno: int = 0) -> void:
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	if contorno > 0:
-		draw_string_outline(fonte, Vector2(x_dir - 400.0, y), txt, HORIZONTAL_ALIGNMENT_RIGHT, 400.0, tam, contorno, Color(0, 0, 0, 0.85))
-	draw_string(fonte, Vector2(x_dir - 400.0, y), txt, HORIZONTAL_ALIGNMENT_RIGHT, 400.0, tam, cor)
+		draw_string_outline(fonte, Vector2(x_dir - 400.0, y), txt, HORIZONTAL_ALIGNMENT_RIGHT, 400.0, UIComum.tam(tam), contorno, Color(0, 0, 0, 0.85))
+	draw_string(fonte, Vector2(x_dir - 400.0, y), txt, HORIZONTAL_ALIGNMENT_RIGHT, 400.0, UIComum.tam(tam), cor)
 
 ## Maior tamanho (da lista) em que o texto cabe em `larg`.
 func _tam_cabe(txt: String, tams: Array, larg: float) -> int:
@@ -2969,9 +2969,9 @@ func _tam_cabe(txt: String, tams: Array, larg: float) -> int:
 	if not ent.is_empty() and ent[0] == txt and ent[1] == tams and ent[2] == larg:
 		return int(ent[3])
 	var res: int = int(tams[tams.size() - 1])
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	for tm in tams:
-		if fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(tm)).x <= larg:
+		if fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(int(tm))).x <= larg:
 			res = int(tm)
 			break
 	if _tam_cabe_c.size() > 400:
@@ -3817,7 +3817,7 @@ func _fantasias_boneco(b: Boneco, base: Vector2) -> void:
 		_rect_heranca.clear()
 		_rect_her_feita.clear()
 	var cont: Array[int] = Pecas.contar_conjuntos(b.pecas)
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var y: float = 130.0 if b.pontos > 0 else 118.0
 	for c in Pecas.Conjunto.size():
 		var grau: int = Pecas.grau_conjunto(cont[c])
@@ -3830,9 +3830,9 @@ func _fantasias_boneco(b: Boneco, base: Vector2) -> void:
 		# nome longo (Patrulheiro Espacial) quebra em duas linhas em vez de vazar
 		var nome_l: Array[String] = [nome_cj]
 		var tm: int = 16
-		if fonte.get_string_size(nome_cj, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x > 100.0:
+		if fonte.get_string_size(nome_cj, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(16)).x > 100.0:
 			tm = 13
-			if fonte.get_string_size(nome_cj, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x > 100.0:
+			if fonte.get_string_size(nome_cj, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(13)).x > 100.0:
 				nome_l = _quebrar(nome_cj, 13, 100.0)
 		var alt: float = 12.0 + (nome_l.size() - 1) * 15.0 + 14.0
 		var r := Rect2(base.x - 74, y, 148, alt)
@@ -3930,7 +3930,7 @@ func _ladrilho(r: Rect2, p: Peca, escondida: bool = false, sob: bool = false) ->
 func _cartoes_fantasias() -> void:
 	var alvo: int = _alvo_vestir()
 	var mapa: Dictionary = _mapa_guarda_desenho()
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	var sob_c: int = _cartao_fant_em(mouse) if arrasto.is_empty() else -1
 	for c in Pecas.CONJUNTO_PECAS.size():
 		var r: Rect2 = rect_cartao_fant(c)
@@ -4011,7 +4011,7 @@ func _cartoes_fantasias() -> void:
 			tag = "+%d em uso" % int(st["outro"])
 			ctag = Color(1.0, 0.7, 0.35, 0.85)
 		if tag != "":
-			var lt: float = fonte.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+			var lt: float = fonte.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(11)).x
 			Desenho.texto(self, tag, Vector2(r.end.x - 7.0 - lt, yb), 11, ctag)
 
 func _barra_fantasias() -> void:
@@ -4472,7 +4472,7 @@ func _montar_nome_edit() -> void:
 	nome_edit.max_length = NOME_MAX
 	nome_edit.context_menu_enabled = false
 	nome_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nome_edit.add_theme_font_size_override("font_size", 20)
+	nome_edit.add_theme_font_size_override("font_size", 28)
 	nome_edit.add_theme_color_override("font_color", COR_TINTA_ESC)
 	nome_edit.add_theme_color_override("caret_color", COR_TINTA_ESC)
 	nome_edit.add_theme_color_override("selection_color", Color(0.85, 0.4, 0.08, 0.95))

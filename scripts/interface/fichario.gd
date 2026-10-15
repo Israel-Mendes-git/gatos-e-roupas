@@ -373,7 +373,7 @@ static func largura(txt: String, tam: int) -> float:
 	var por_tam: Dictionary = _larg_c.get(tam, {})
 	if por_tam.has(txt):
 		return float(por_tam[txt])
-	var w: float = ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	var w: float = UIComum.FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
 	if por_tam.size() > 400:
 		por_tam.clear()
 	por_tam[txt] = w
@@ -436,7 +436,7 @@ func _bloco(txt: String, pos: Vector2, larg: float, tams: Array, max_linhas: int
 	var tam: int = aj["tam"]
 	var y: float = pos.y
 	for ln in aj["linhas"]:
-		draw_string(ThemeDB.fallback_font, Vector2(pos.x, y), ln, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, cor)
+		draw_string(UIComum.FONTE, Vector2(pos.x, y), ln, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), cor)
 		y += tam + entre
 	return y
 
@@ -827,8 +827,8 @@ func _faixa(r: Rect2, txt: String, tams: Array, cor: Color) -> void:
 	draw_rect(r, COR_FAIXA)
 	draw_rect(r, cor.darkened(0.1), false, 2.0)
 	var tam: int = tam_cabe(txt, tams, r.size.x - 24.0)
-	var f: Font = ThemeDB.fallback_font
-	var y: float = r.position.y + (r.size.y - f.get_height(tam)) * 0.5 + f.get_ascent(tam)
+	var f: Font = UIComum.FONTE
+	var y: float = r.position.y + (r.size.y - f.get_height(UIComum.tam(tam))) * 0.5 + f.get_ascent(UIComum.tam(tam))
 	_txt(txt, Vector2(r.position.x, y), tam, cor, r.size.x, 6)
 
 func _estrela(centro: Vector2, raio: float, cor: Color) -> void:
@@ -1125,7 +1125,7 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	_bonus(c)
 
 func _carimbo(centro: Vector2) -> void:
-	var f: Font = ThemeDB.fallback_font
+	var f: Font = UIComum.FONTE
 	if carimbo_t < 0.0:
 		return   # ainda não bateu
 	var pul: float = 1.0 + 0.03 * sin(t * 3.0)
@@ -1138,7 +1138,7 @@ func _carimbo(centro: Vector2) -> void:
 	draw_rect(r, Color(1, 1, 1, 0.35))
 	draw_rect(r, tinta, false, 4.0)
 	draw_rect(r.grow(-6.0), tinta, false, 1.5)
-	draw_string(f, Vector2(-w * 0.5 + 11.0, 9.0), "COMPLETA", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, tinta)
+	draw_string(f, Vector2(-w * 0.5 + 11.0, 9.0), "COMPLETA", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(28), tinta)
 	UIComum.trans_fim(self)
 
 func _linha_peca(e: Estado, c: int, s: int) -> void:
@@ -1649,7 +1649,7 @@ func _ficha_bicho(e: Estado, k: int) -> void:
 		_bloco("O jogo ainda não conta quantos você derrotou.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [14, 13, 12], 2, TINTA2, 3.0)
 
 func _carimbo_bicho(centro: Vector2) -> void:
-	var f: Font = ThemeDB.fallback_font
+	var f: Font = UIComum.FONTE
 	var pul: float = 1.0 + 0.03 * sin(t * 3.0)
 	UIComum.trans(self, centro, -0.2, Vector2(pul, pul))
 	var w: float = largura("DERROTADO", 26) + 22.0
@@ -1658,5 +1658,5 @@ func _carimbo_bicho(centro: Vector2) -> void:
 	draw_rect(r, Color(1, 1, 1, 0.35))
 	draw_rect(r, tinta, false, 4.0)
 	draw_rect(r.grow(-6.0), tinta, false, 1.5)
-	draw_string(f, Vector2(-w * 0.5 + 11.0, 8.0), "DERROTADO", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, tinta)
+	draw_string(f, Vector2(-w * 0.5 + 11.0, 8.0), "DERROTADO", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(26), tinta)
 	UIComum.trans_fim(self)

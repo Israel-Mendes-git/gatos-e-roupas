@@ -1168,10 +1168,10 @@ func _cor_legivel(c: Color, lum_min: float) -> Color:
 
 ## Texto com contorno escuro que acompanha o alfa da cor (some junto com o texto).
 func _texto_c(txt: String, pos: Vector2, tam: int, cor: Color, larg: float, ct: int) -> void:
-	var fonte: Font = ThemeDB.fallback_font
+	var fonte: Font = UIComum.FONTE
 	if ct > 0:
-		draw_string_outline(fonte, pos, txt, HORIZONTAL_ALIGNMENT_CENTER, larg, tam, ct, Color(0.04, 0.02, 0.06, 0.92 * cor.a))
-	draw_string(fonte, pos, txt, HORIZONTAL_ALIGNMENT_CENTER, larg, tam, cor)
+		draw_string_outline(fonte, pos, txt, HORIZONTAL_ALIGNMENT_CENTER, larg, UIComum.tam(tam), ct, Color(0.04, 0.02, 0.06, 0.92 * cor.a))
+	draw_string(fonte, pos, txt, HORIZONTAL_ALIGNMENT_CENTER, larg, UIComum.tam(tam), cor)
 
 func _centelha(p: Vector2, dir: float, cor: Color, n: int) -> void:
 	for i in n:
@@ -2501,7 +2501,7 @@ func _draw() -> void:
 		p2 = Vector2.ZERO
 		if n.get("placa", false):
 			# placa escura semitransparente atrás do nome do poder (legível sobre qualquer parede)
-			var tw: float = ThemeDB.fallback_font.get_string_size(n["txt"], HORIZONTAL_ALIGNMENT_LEFT, -1, int(n["tam"])).x + 20.0
+			var tw: float = UIComum.FONTE.get_string_size(n["txt"], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(int(n["tam"]))).x + 20.0
 			var pl: Rect2 = Rect2(p2.x - tw * 0.5, p2.y - float(n["tam"]) - 2.0, tw, float(n["tam"]) + 12.0)
 			draw_rect(pl.grow(2.0), Color(0, 0, 0, 0.35 * a2))
 			draw_rect(pl, Color(0.04, 0.03, 0.08, 0.72 * a2))
@@ -4790,10 +4790,10 @@ func _botao_poder(i: int) -> void:
 	var tx: float = painel.end.x + 5.0
 	var larg_t: float = dentro.end.x - tx - 1.0
 	var nome: String = str(b["nome"])
-	var fonte: Font = ThemeDB.fallback_font
-	var tam_n: int = 14
-	while tam_n > 9 and fonte.get_string_size(nome, HORIZONTAL_ALIGNMENT_LEFT, -1, tam_n).x > larg_t:
-		tam_n -= 1
+	var fonte: Font = UIComum.FONTE
+	var tam_n: int = 19
+	if fonte.get_string_size(nome, HORIZONTAL_ALIGNMENT_LEFT, -1, tam_n).x > larg_t:
+		tam_n = 15   # nome comprido: um passo abaixo do nítido (a barra é estreita)
 	var cor_nome: Color = Color(1, 1, 1) if viva else Color(0.75, 0.75, 0.8)
 	Desenho.texto(self, nome, Vector2(tx, dentro.position.y + 17.0), tam_n, cor_nome, -1.0, 4)
 	var txt: String
@@ -4842,7 +4842,7 @@ func _seta_primeira_vez(i: int) -> void:
 	draw_colored_polygon(PackedVector2Array([tip + Vector2(-11, -15), tip + Vector2(11, -15), tip]), Color(0.08, 0.04, 0.1))
 	draw_colored_polygon(PackedVector2Array([tip + Vector2(-8, -13), tip + Vector2(8, -13), tip + Vector2(0, -3)]), Desenho.DOURADO)
 	var txt: String = "Clique ou aperte %d" % int(poder_btns[i]["tecla"])
-	var tw: float = ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 16.0
+	var tw: float = UIComum.FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(15)).x + 16.0
 	var pl: Rect2 = Rect2(tip.x - tw * 0.5, tip.y - 44.0, tw, 24.0)
 	draw_rect(pl.grow(2.0), Color(0, 0, 0, 0.35))
 	draw_rect(pl, Color(0.08, 0.05, 0.1, 0.88))
@@ -4857,8 +4857,8 @@ func _dica_poder(i: int) -> void:
 	var nome: String = str(b["nome"])
 	var d: String = str(b["dica"])
 	d = d.substr(0, 1).to_upper() + d.substr(1)
-	var fonte: Font = ThemeDB.fallback_font
-	var larg: float = maxf(fonte.get_string_size(nome, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x, fonte.get_string_size(d, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x) + 22.0
+	var fonte: Font = UIComum.FONTE
+	var larg: float = maxf(fonte.get_string_size(nome, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(17)).x, fonte.get_string_size(d, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(14)).x) + 22.0
 	var pl: Rect2 = Rect2(clampf(r.get_center().x - larg * 0.5, 8.0, 1272.0 - larg), r.position.y - 62.0, larg, 52.0)
 	draw_rect(pl.grow(2.0), Color(0, 0, 0, 0.4))
 	draw_rect(pl, Color(0.07, 0.04, 0.09, 0.94))
@@ -5193,11 +5193,11 @@ func _caixa_info(linhas: Array, ancora: Vector2, larg: float, borda: Color) -> v
 			# estado: ícone, nome e tempo restante à direita
 			IconesEstado.desenhar(self, int(l[0]), Vector2(r.position.x + 18.0, y - tam * 0.35))
 			Desenho.texto(self, str(l[1]), Vector2(r.position.x + 30.0, y), tam, cor)
-			var tw5: float = ThemeDB.fallback_font.get_string_size(str(l[2]), HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+			var tw5: float = UIComum.FONTE.get_string_size(str(l[2]), HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
 			Desenho.texto(self, str(l[2]), Vector2(r.end.x - 12.0 - tw5, y), tam, Color(1.0, 0.95, 0.6))
 		elif l.size() == 4:
 			Desenho.texto(self, str(l[0]), Vector2(r.position.x + 12.0, y), tam, Color(1, 1, 1, 0.7))
-			var tw: float = ThemeDB.fallback_font.get_string_size(str(l[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+			var tw: float = UIComum.FONTE.get_string_size(str(l[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
 			Desenho.texto(self, str(l[1]), Vector2(r.end.x - 12.0 - tw, y), tam, cor)
 		else:
 			Desenho.texto(self, str(l[0]), Vector2(r.position.x + 12.0, y), tam, cor)

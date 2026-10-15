@@ -504,7 +504,7 @@ static func _tocar(c: CanvasItem, g: Grav, t: float, luta: bool, lv_est: int, lv
 		if malha != null:
 			c.draw_mesh(malha, null)
 		for l in s["letras"]:
-			c.draw_string(l[0], l[1], l[2], l[3], l[4], l[5], l[6])
+			c.draw_string(l[0], l[1], l[2], l[3], l[4], UIComum.tam(l[5]), l[6])
 		var gancho: Variant = s["gancho"]
 		if gancho != null:
 			_gancho(c, int(gancho[0]), gancho[1], float(gancho[2]), t, luta, lv_est, lv_cad, lv_enf)
@@ -589,7 +589,7 @@ static func _bloco(c: Object, p: Vector2, cor: Color, letra: String, tipo: int =
 		0:
 			_r(c, p.x + 16.0, p.y + 4.0, 8.0, 12.0, Color(0.99, 0.95, 0.82))
 			_r(c, p.x + 12.0, p.y + 8.0, 16.0, 4.0, Color(0.99, 0.95, 0.82))
-			c.draw_string(ThemeDB.fallback_font, Vector2(p.x + 20.0 - 6.6, p.y + 10.0 + 4.2), letra, HORIZONTAL_ALIGNMENT_CENTER, 13.2, 12, cor.darkened(0.4))
+			c.draw_string(UIComum.FONTE, Vector2(p.x + 20.0 - 6.6, p.y + 10.0 + 4.2), letra, HORIZONTAL_ALIGNMENT_CENTER, 13.2, UIComum.tam(12), cor.darkened(0.4))
 		1:  # janelinha acesa
 			_r(c, p.x + 12.0, p.y + 4.0, 16.0, 12.0, Color(0.30, 0.18, 0.10))
 			_r(c, p.x + 16.0, p.y + 8.0, 8.0, 4.0, Color(1.0, 0.90, 0.50))

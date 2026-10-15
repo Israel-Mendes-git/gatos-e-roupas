@@ -371,7 +371,7 @@ func _disco(cx: float, cy: float, raio: float, c: Color) -> void:
 		y += 4.0
 
 func _largura(txt: String, tam: int) -> float:
-	return ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	return UIComum.FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
 
 # ------------------------------------------------------------------ desenho geral
 func desenhar() -> void:

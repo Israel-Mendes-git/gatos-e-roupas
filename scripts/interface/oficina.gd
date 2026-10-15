@@ -575,7 +575,7 @@ static func largura(txt: String, tam: int) -> float:
 	var por_tam: Dictionary = _larg_c.get(tam, {})
 	if por_tam.has(txt):
 		return float(por_tam[txt])
-	var w: float = ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+	var w: float = UIComum.FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
 	if por_tam.size() > 400:
 		por_tam.clear()
 	por_tam[txt] = w
