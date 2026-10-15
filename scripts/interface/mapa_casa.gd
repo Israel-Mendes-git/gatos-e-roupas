@@ -1316,12 +1316,12 @@ func _painel_lateral(f: int) -> void:
 	# ataque e fraqueza do chefe
 	Desenho.texto(cv, "Ataque do chefe", Vector2(x0, 386), 13, p._com_alfa(Color(1.0, 0.72, 0.55), al))
 	var la: Array[String] = p._quebrar(Fases.CHEFE_ATAQUE[li], 13, larg)
-	for k in mini(la.size(), 2):
-		Desenho.texto(cv, la[k], Vector2(x0, 404.0 + 16.0 * k), 13, Color(1, 1, 1, 0.9 * al))
-	Desenho.texto(cv, "Fraqueza", Vector2(x0, 444), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
+	for k in mini(la.size(), 3):
+		Desenho.texto(cv, la[k], Vector2(x0, 402.0 + 15.0 * k), 13, Color(1, 1, 1, 0.9 * al))
+	Desenho.texto(cv, "Fraqueza", Vector2(x0, 449), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
 	var lf: Array[String] = p._quebrar(Fases.CHEFE_FRAQUEZA[li], 13, larg)
 	for k in mini(lf.size(), 2):
-		Desenho.texto(cv, lf[k], Vector2(x0, 462.0 + 16.0 * k), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
+		Desenho.texto(cv, lf[k], Vector2(x0, 465.0 + 15.0 * k), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
 	_sep(x0, larg, 492.0)
 	# fantasias que caem (o nome completo sai na dica do mouse)
 	Desenho.texto(cv, "Fantasias que caem", Vector2(x0, 512), 13, Color(1, 1, 1, 0.65 * al))

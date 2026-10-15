@@ -3969,7 +3969,7 @@ func _cartoes_fantasias() -> void:
 		# nome na cor da fantasia
 		var nome: String = Pecas.CONJUNTO_NOME[c]
 		var cn: Color = cor.lightened(0.5) if (disp > 0 or em_uso) else cor.lightened(0.2).darkened(0.25)
-		Desenho.texto(self, nome, Vector2(r.position.x, r.position.y + 19), _tam_cabe(nome, [14, 13, 12, 11, 10], r.size.x - 8.0), cn, r.size.x)
+		Desenho.texto(self, Fichario.cortar(nome, 19, r.size.x - 6.0), Vector2(r.position.x, r.position.y + 19), 19, cn, r.size.x)
 		# o gato escolhido vestindo a fantasia (peças que faltam: espaço vazio e fantasminha; sem nenhuma peça: silhueta escura)
 		var nenhuma: bool = int(st["gato"]) + int(st["guarda"]) + int(st["outro"]) == 0
 		var vestes: Array = [null, null, null, null]
@@ -4052,6 +4052,8 @@ func _painel_guarda() -> void:
 		_botao_arte(ra, cf, false)
 		var ct: Color = COR_TINTA_ESC if ativa else (Color(0.2, 0.1, 0.05) if (sob or (k == ABA_NOVAS and qtd > 0)) else Color(1, 0.94, 0.8, 0.8 if qtd > 0 else 0.5))
 		var rot: String = "%s %d" % [nome, qtd]
+		if UIComum.FONTE.get_string_size(rot, HORIZONTAL_ALIGNMENT_LEFT, -1, 19).x > ra.size.x - 6.0:
+			rot = "%s %d" % [{"Fantasias": "Fantas.", "Acessório": "Acess."}.get(nome, nome), qtd]   # o rótulo inteiro não cabe na aba
 		Desenho.texto(self, rot, ra.position + Vector2(0, ra.size.y - 8.0), _tam_cabe(rot, [13, 12, 11], ra.size.x - 8.0), ct, ra.size.x)
 	if aba == ABA_FANTASIAS:
 		_cartoes_fantasias()
@@ -4874,19 +4876,22 @@ func _rodape_mapa() -> void:
 	else:
 		Desenho.texto(self, "Cômodos vencidos: %d/%d" % [estado.fases_vencidas, Fases.TOTAL], Vector2(48, 640), 16, Color(1, 0.92, 0.75), -1.0, 4)
 	# o time, vestido
-	Desenho.texto(self, "Seu time", Vector2(330, 636), 13, Color(1, 1, 1, 0.6), -1.0, 3)
+	Desenho.texto(self, "Seu time", Vector2(430, 636), 19, Color(1, 1, 1, 0.6), -1.0, 3)
 	for i in Balanco.MAX_BONECOS:
-		var pos := Vector2(380.0 + i * 92.0, 700.0)
+		var pos := Vector2(430.0 + i * 98.0, 696.0)
 		_ellipse_sombra(pos + Vector2(0, 2), 26.0, 6.0, Color(0, 0, 0, 0.35))
 		if i < estado.bonecos.size():
 			var b: Boneco = estado.bonecos[i]
 			Desenho.boneco(self, pos, 0.66, 1.0, 0, b.pecas, 0.0, t * 3.0 + i, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
-			Desenho.texto(self, "%s · Nv %d" % [b.nome, b.nivel], Vector2(pos.x - 44, 716), 13, Color(1, 0.94, 0.8), 88.0, 3)
+			var rot_b: String = "%s · Nv %d" % [b.nome, b.nivel]
+			if UIComum.FONTE.get_string_size(rot_b, HORIZONTAL_ALIGNMENT_LEFT, -1, 19).x > 96.0:
+				rot_b = "%s · %d" % [b.nome, b.nivel]
+			Desenho.texto(self, rot_b, Vector2(pos.x - 48, 716), 19, Color(1, 0.94, 0.8), 96.0, 3)
 			if b.pontos > 0:
 				_estrela4(pos + Vector2(26, -62 + sin(t * 5.0 + i) * 3.0), 8.0, Color(1.0, 0.9, 0.4))
 		else:
 			Desenho.boneco(self, pos, 0.66, 1.0, 0, [null, null, null, null], 0.0, 0.0, false, 0.0, 0.14, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
-			Desenho.texto(self, "?", Vector2(pos.x - 44, 716), 13, Color(1, 1, 1, 0.3), 88.0, 2)
+			Desenho.texto(self, "?", Vector2(pos.x - 48, 716), 19, Color(1, 1, 1, 0.3), 96.0, 2)
 	_texto_dir("Guarda-roupa: %d peças" % estado.guarda.size(), 1236.0, 640.0, 16, Color(1, 1, 1, 0.8), 4)
 	var pt: int = _pontos_totais()
 	if pt > 0:
@@ -4896,15 +4901,16 @@ func _rodape_mapa() -> void:
 		Desenho.texto(self, "%d ponto%s de treino por gastar" % [pt, "" if pt == 1 else "s"], Vector2(r.position.x + 40, r.position.y + 24), 16, COR_TINTA_ESC, r.size.x - 48.0)
 	elif estado.bonecos.size() < Balanco.MAX_BONECOS:
 		_texto_dir("Cada cômodo vencido traz um gato novo", 1236.0, 690.0, 13, Color(0.75, 0.9, 1.0), 3)
-	var rod: String = "Esc ou II: menu de pausa  |  T: oficina da torre"
+	var rod: Array[String] = ["Esc ou II: menu de pausa", "T: oficina da torre"]
 	if estado.campanha_vencida() and mapa_casa != null:
 		var dst: int = mapa_casa.destaque()
 		var inv_ok: bool = mapa_casa.invasao_fora_liberada(dst) if mapa_casa.vista_fora() else (dst >= 1 and dst <= estado.fase_liberada)
 		if inv_ok:
-			rod += "  |  I: invasão sem fim"
+			rod.append("I: invasão sem fim")
 		if estado.ato_atual() > 1:
-			rod += "  |  V: casa ou lado de fora"
-	Desenho.texto(self, rod, Vector2(48, 668), 13, Color(1, 1, 1, 0.5), -1.0, 3)
+			rod.append("V: casa ou lado de fora")
+	for k in rod.size():
+		Desenho.texto(self, rod[k], Vector2(48, 662.0 + 18.0 * k), 19, Color(1, 1, 1, 0.5), -1.0, 3)
 	if confirma_nova > 0.0:
 		Desenho.texto(self, "Isso apaga o progresso e as peças.", Vector2(48, 724), 13, Color(1, 0.55, 0.5), -1.0, 3)
 
