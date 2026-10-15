@@ -636,7 +636,7 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 			var v: int = G[j * _W + i]
 			s2 += String.chr(v) if v != 0 else "."
 		lin.append(s2)
-	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin, "t": BichoPx.recorte(TR, _W, _H, _OX, _OY)}
+	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin, "t": BichoPx.recorte(TR, _W, _H, _OX, _OY), "c": BichoPx.cranio(ch["rows"])}
 
 static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andando: bool, golpe: float, f: float, alfa: float, carregando: bool, filhote: bool, chefe_tipo: int, parte: bool, parado: bool) -> void:
 	var g: Dictionary = _geo(tipo, anim, andando, golpe, filhote, carregando)

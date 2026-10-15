@@ -1148,7 +1148,11 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 			RoupaGato.mascara = q["t"]
 			RoupaGato.mascara_origem = o
 			RoupaGato.mascara_id = q["id"]
-		RoupaGato.desenhar(c, p.tipo, f, anim)
+		if Pecas.SLOT[p.tipo] == Pecas.SLOT_CABECA and not q.is_empty():
+			# peça de cabeça: cresce junto com o crânio do bicho (mesmo pixel, centro e aba no lugar)
+			RoupaGato.desenhar_esticada(c, p.tipo, f, anim, BichoPx.esticar_cabeca(q))
+		else:
+			RoupaGato.desenhar(c, p.tipo, f, anim)
 		RoupaGato.esticar = Vector2i.ZERO
 		RoupaGato.mascara = {}
 	if not chefe:

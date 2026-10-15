@@ -118,6 +118,35 @@ static func esticar_corpo(q: Dictionary) -> Vector2i:
 	var r: Rect2i = caixa_tronco(q)
 	return Vector2i(clampi(r.size.x + 2 - TRONCO_GATO.x, 0, 16), clampi(r.size.y + 2 - TRONCO_GATO.y, 0, 8))
 
+## Largura do crânio do gato (as três primeiras linhas da cabeça, sem orelhas): o tamanho para o qual as peças de cabeça foram feitas.
+const CRANIO_GATO := 10
+
+## Largura do crânio de uma cabeça desenhada em linhas de letras: o trecho pintado mais largo das três primeiras linhas, sem as
+## letras de `fora` (bico do corvo), que não entram no chapéu.
+static func cranio(rows: Array, fora: String = "") -> int:
+	var r: int = 0
+	for j in mini(3, rows.size()):
+		var s: String = rows[j]
+		var ini: int = -1
+		var fim: int = -1
+		for i in s.length():
+			if s[i] != "." and not fora.contains(s[i]):
+				if ini < 0:
+					ini = i
+				fim = i
+		if ini >= 0:
+			r = maxi(r, fim - ini + 1)
+	return r
+
+## Colunas e linhas que a peça de cabeça ganha neste quadro (RoupaGato.desenhar_esticada): acompanha o crânio do bicho ("c" do
+## quadro); a altura cresce metade do que cresce a largura, para o chapéu não achatar.
+static func esticar_cabeca(q: Dictionary) -> Vector2i:
+	var cr: int = int(q.get("c", 0))
+	if cr <= CRANIO_GATO:
+		return Vector2i.ZERO
+	var ex: int = mini(cr - CRANIO_GATO, 12)
+	return Vector2i(ex, ex / 2)
+
 ## Pés do bicho no chão neste quadro, de trás para a frente (x do meio de cada pé, y do chão), lidos da última linha do desenho.
 static func pes(q: Dictionary) -> Array[Vector2]:
 	var r: Array[Vector2] = []

@@ -510,7 +510,7 @@ static func _monta(tipo: int, mk: int, carregando: bool, g: Dictionary) -> Dicti
 			var v: int = G[j * _W + i]
 			s2 += String.chr(v) if v != 0 else "."
 		lin.append(s2)
-	return {"x": x0c - _OX, "y": y0c - _OY, "l": lin, "t": BichoPx.recorte(TR, _W, _H, _OX, _OY)}
+	return {"x": x0c - _OX, "y": y0c - _OY, "l": lin, "t": BichoPx.recorte(TR, _W, _H, _OX, _OY), "c": BichoPx.cranio(ch["rows"])}
 
 ## Quadradinho pintado só onde a camada já tem pixel.
 static func _rect_t(L: PackedInt32Array, x: int, y: int, w: int, h: int, ch: String) -> void:

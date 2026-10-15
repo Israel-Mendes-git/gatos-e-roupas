@@ -77,9 +77,131 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 		_:
 			RoupaGatoE.desenhar(c, tipo, f, anim)
 
+## Desenha a peça de cabeça `e` colunas mais larga e `e.y` linhas mais alta (bicho de cabeça maior que a do gato): cada camada da
+## peça (boné e bigode, faixa e pontas) corta na mesma coluna e na mesma linha, escolhidas pela primeira camada, e repete ali o
+## trecho liso dela (ver _trecho). O pixel continua do mesmo tamanho; o centro fica no lugar e a aba fica embaixo (cresce para cima).
+static func desenhar_esticada(c: CanvasItem, tipo: int, f: float, anim: float, e: Vector2i) -> void:
+	if e == Vector2i.ZERO:
+		desenhar(c, tipo, f, anim)
+		return
+	esticar_cab = e
+	_corte_ok = false
+	desenhar(c, tipo, f, anim)
+	esticar_cab = Vector2i.ZERO
+	_corte_ok = false
+
+static var esticar_cab: Vector2i = Vector2i.ZERO
+static var _corte_ok: bool = false
+static var _corte: Vector4 = Vector4.ZERO      # coluna do trecho, largura, linha do trecho, altura (coordenadas da peça)
+static var _cache_corte: Dictionary = {}
+static var _cache_cab: Dictionary = {}
+
 ## Um retângulo de pixels.
 static func r(c: CanvasItem, x: float, y: float, w: float, h: float, cor: Color, f: float = 0.0) -> void:
+	if esticar_cab != Vector2i.ZERO:
+		var ox: float = -floorf(esticar_cab.x * 0.5)
+		var oy: float = -esticar_cab.y
+		if _corte_ok:
+			if x >= _corte.x + _corte.y:
+				ox += esticar_cab.x
+			if y >= _corte.z + _corte.w:
+				oy += esticar_cab.y
+		x += ox
+		y += oy
 	c.draw_rect(Rect2(x, y, w + 0.03, h + 0.03), Desenho.b(cor, f))
+
+## Uma camada da peça de cabeça esticada (ver desenhar_esticada).
+static func _sprite_cabeca(c: CanvasItem, x: float, y: float, linhas: Array, paleta: Dictionary, f: float) -> void:
+	var e: Vector2i = esticar_cab
+	if not _corte_ok:
+		var kc: int = linhas.hash()
+		if not _cache_corte.has(kc):
+			if _cache_corte.size() > 300:
+				_cache_corte.clear()
+			var w0: int = 0
+			for l in linhas:
+				w0 = maxi(w0, String(l).length())
+			var pad0: Array = []
+			for l in linhas:
+				pad0.append(String(l).rpad(w0, "."))
+			var lp0: Array = _limpo(_emblemas(pad0)[0])
+			var tx: Array = _trecho(_transposta(lp0), 1, w0 - 2, _letras_raras(lp0), _mistura(lp0), w0 * 0.5, 1)
+			var ty: Array = _trecho(lp0, 1, lp0.size() - 2, _letras_raras(lp0), _mistura(lp0), lp0.size() * 0.5, 1)
+			_cache_corte[kc] = Vector4i(tx[0], tx[1], ty[0], ty[1])
+		var cc: Vector4i = _cache_corte[kc]
+		_corte = Vector4(x + cc.x, cc.y, y + cc.z, cc.w)
+		_corte_ok = true
+	var a: int = roundi(_corte.x - x)
+	var ay: int = roundi(_corte.z - y)
+	var ch: int = hash([linhas.hash(), paleta.hash(), a, int(_corte.y), ay, int(_corte.w), e])
+	var m: Array = _cache_cab.get(ch, [])
+	if m.is_empty() or m[0] != linhas or m[1] != paleta:
+		if _cache_cab.size() > 600:
+			_cache_cab.clear()
+		m = _montar_sprite(_cabeca_esticada(linhas, a, int(_corte.y), e.x, ay, int(_corte.w), e.y), paleta)
+		m[0] = linhas.duplicate(true)
+		_cache_cab[ch] = m
+	_retangulos(c, x - floorf(e.x * 0.5), y - e.y, m[2], m[3], f)
+
+## Camada com `ex` colunas a mais depois do trecho [a, a + L) e `ey` linhas a mais depois de [ay, ay + Ly) (o trecho pode cair fora
+## da camada: aí ela só anda, inteira). As cópias saem da camada limpa (sem pontinhos soltos).
+static func _cabeca_esticada(linhas: Array, a: int, L: int, ex: int, ay: int, Ly: int, ey: int) -> Array:
+	var w: int = 0
+	for l in linhas:
+		w = maxi(w, String(l).length())
+	var pad0: Array = []
+	for l in linhas:
+		pad0.append(String(l).rpad(w, "."))
+	var em: Array = _emblemas(pad0)   # a caveira do tricórnio, a estrela: não se repetem, voltam inteiras no fim
+	var pad: Array = em[0]
+	var lp: Array = _limpo(pad)
+	var h: int = pad.size()
+	var b: int = a + L
+	var larg: int = w + ex
+	var cols: Array = []
+	for j in h:
+		var s: String = ""
+		for o in larg:
+			var src: int = o
+			var fonte: Array = pad
+			if o >= b and o < b + ex:
+				src = a + (o - b) % maxi(1, L)
+				fonte = lp
+			elif o >= b + ex:
+				src = o - ex
+			s += String(fonte[j])[src] if src >= 0 and src < w else "."
+		cols.append(s)
+	var r: Array = cols
+	var by: int = ay + Ly
+	if ey > 0:
+		r = []
+		var lp2: Array = _limpo(cols)
+		for o in h + ey:
+			if o < by:
+				r.append(cols[o] if o < h else ".".repeat(larg))
+			elif o < by + ey:
+				var src2: int = ay + (o - by) % maxi(1, Ly)
+				r.append(lp2[src2] if src2 >= 0 and src2 < h else ".".repeat(larg))
+			else:
+				var src3: int = o - ey
+				r.append(cols[src3] if src3 >= 0 and src3 < h else ".".repeat(larg))
+	if Array(em[1]).is_empty():
+		return r
+	var g: Array = []
+	for l in r:
+		g.append(Array(String(l).split("")))
+	for it in em[1]:
+		var cx: Rect2i = it[1]
+		var dx: int = _anda([[b, ex]], cx.position.x, cx.end.x)
+		var dy: int = _anda([[by, ey]], cx.position.y, cx.end.y) if ey > 0 else 0
+		for p in Dictionary(it[0]).keys():
+			var v: Vector2i = p
+			if v.y + dy >= 0 and v.y + dy < g.size() and v.x + dx >= 0 and v.x + dx < Array(g[v.y + dy]).size():
+				g[v.y + dy][v.x + dx] = it[0][p]
+	var out: Array = []
+	for linha in g:
+		out.append("".join(linha))
+	return out
 
 ## Desenho em pixels a partir de linhas de texto: cada letra é um pixel da cor `paleta[letra]`;
 ## ponto ou espaço é transparente. (x, y) é o canto de cima à esquerda.
@@ -101,6 +223,9 @@ static var mascara_id: int = 0
 static var _cache_aparado: Dictionary = {}
 
 static func sprite(c: CanvasItem, x: float, y: float, linhas: Array, paleta: Dictionary, f: float = 0.0) -> void:
+	if esticar_cab != Vector2i.ZERO:
+		_sprite_cabeca(c, x, y, linhas, paleta, f)
+		return
 	if not mascara.is_empty():
 		if _sprite_vestido(c, x, y, linhas, paleta, f):
 			return
