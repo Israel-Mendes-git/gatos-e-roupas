@@ -2428,7 +2428,8 @@ func _draw() -> void:
 		var esc_d: float = esc_u * sy_u
 		var dir_d: float = dir * sx_u / sy_u
 		if uu2.cao:
-			Desenho.boneco(self, pos, esc_d, -dir_d, 1, [null, null, null, null], fl_u, uu2.anim, uu2.andando, uu2.golpe, 1.0, false, -1, 0.0, 0, false, true, 0, false, Fases.Chefe.VIRALATA)
+			# cão de guarda da Casinha: sprite próprio, do tamanho de um bicho comum (a escala da unidade é a do desenho antigo do chefe)
+			CaoGuarda.desenhar(self, pos, ESC * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
 			Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
 		_estados(uu2, pos, esc_u, dir)
