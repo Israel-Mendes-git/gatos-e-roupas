@@ -7,6 +7,7 @@ var aliados: Array[Unidade] = []
 var inimigos: Array[Unidade] = []
 var fila: Array = []
 var nascidos: Array[Unidade] = []
+var perdas: Dictionary = {}   # blocos tirados da torre por tipo de bicho ("chefe" para chefe), para a tela de derrota
 var nascidos_aliados: Array[Unidade] = []   # clones dos gatos: entram fora dos laços
 var zonas: Array = []   # nuvens do Enxame: {x, y, t, dur, raio, dps, dono, eq}
 var projeteis: Array = []
@@ -951,6 +952,8 @@ func _bater_torre(u: Unidade) -> void:
 		u.carga = mini(n, estado.tijolos)
 		u.golpe = 0.0
 	n = mini(n, estado.tijolos)
+	var kp: Variant = "chefe" if u.chefe else u.tipo
+	perdas[kp] = int(perdas.get(kp, 0)) + n
 	estado.tijolos -= n
 	_ev({"t": "torre", "n": n, "x": u.x, "y": u.y})
 	if u.tipo == Unidade.Tipo.BOMBA and not u.chefe and u.vivo:

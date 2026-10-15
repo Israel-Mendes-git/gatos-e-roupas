@@ -957,7 +957,7 @@ func _causa_derrota(sim: Simulacao) -> Dictionary:
 		blocos = 0   # sem contagem exata de blocos: a frase fica sem número
 	if chave is String and chave == "chefe":
 		var ct: int = clampi(derrota_chefe if derrota_chefe >= 0 else estado.lugar(), 0, Fases.CHEFE_NOME.size() - 1)
-		return {"causa": "%s acabou com a torre." % Fases.CHEFE_NOME[ct], "dica": Fases.CHEFE_FRAQUEZA[ct] + "."}
+		return {"causa": "O chefe %s acabou com a torre." % Fases.CHEFE_NOME[ct], "dica": Fases.CHEFE_FRAQUEZA[ct] + "."}
 	var q: String = " (%d bloco%s)" % [blocos, "" if blocos == 1 else "s"] if blocos > 0 else ""
 	match chave:
 		Unidade.Tipo.LADRAO:
