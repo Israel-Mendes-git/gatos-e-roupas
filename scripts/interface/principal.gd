@@ -85,10 +85,18 @@ class BotaoArte extends Button:
 	var brilho: bool = false
 	var t_ui: float = 0.0
 	var pintar: Callable
+	var _sig: Array = []
+	var _qd: int = 0
 	func _process(delta: float) -> void:
 		if visible:
 			t_ui += delta
-			queue_redraw()
+			# só repinta quando algo muda (estado do botão, texto, tamanho, cor) ou quando pulsa (brilho);
+			# os botões com pintura própria (fichário, torre) leem estado externo: repintam a cada 6 quadros
+			var sig: Array = [get_draw_mode(), disabled, text, size, tom, tam_fonte, esc]
+			_qd += 1
+			if brilho or sig != _sig or (pintar.is_valid() and pintar.get_method() != &"_pintar_botao" and _qd % 6 == 0):
+				_sig = sig
+				queue_redraw()
 	func _draw() -> void:
 		if pintar.is_valid():
 			pintar.call(self)
@@ -117,6 +125,8 @@ var _topo_fila: Array = []           # o que o `_draw` pediu para pintar por cim
 var modo: Modo = Modo.MAPA
 var estado: Estado
 var campo: Campo
+const AQUECEDOR := preload("res://scripts/arte/aquecedor.gd")
+var aquecedor: Node2D = null          # pré-aquece os caches de arte fora da vista (ver aquecedor.gd)
 var t: float = 0.0
 var mouse: Vector2 = Vector2(-500, -500)
 var arrasto: Dictionary = {}
@@ -391,10 +401,28 @@ func _ready() -> void:
 	guardiao = Guardiao.new()
 	guardiao.tratar = _esc_guarda
 	add_child(guardiao)
+	aquecedor = AQUECEDOR.new()
+	add_child(aquecedor)
+	_aquecer_mapa()
 	if Menus.pular_titulo:
 		_entrar_mapa()
 	else:
 		ir_para_titulo()
+
+## Monta, aos poucos e fora da vista, o que o mapa e o guarda-roupa desenham pela primeira vez (bichos do mapa,
+## chefes dos retratos e as roupas do time): sem isto o primeiro desenho de cada tela travava por 100 a 250 ms.
+func _aquecer_mapa() -> void:
+	var vazio: Array = [null, null, null, null]
+	for fam in 5:
+		aquecedor.adicionar_bicho(vazio, Unidade.Tipo.COMUM, fam, false, false, -1, false)
+	for li in mini(_chefes_mapa.size(), Fases.NOME.size()):
+		aquecedor.adicionar_bicho(_chefes_mapa[li], Unidade.Tipo.COMUM, 0, true, false, li, false)
+	for i in estado.bonecos.size():
+		aquecedor.adicionar_gato(estado.bonecos[i].pecas, i)
+
+## Ao fechar o jogo, grava o que a gravação adiada ainda não escreveu.
+func _exit_tree() -> void:
+	Estado.gravar_pendente()
 
 func _rotulo_fim(r: Rect2, tam: int, cor: Color) -> Label:
 	var l := Label.new()
@@ -619,6 +647,7 @@ func nova_campanha_do_titulo() -> void:
 func apagar_campanha() -> void:
 	_descartar_sessao()
 	if estado.persistir:
+		estado.cancelar_gravacao()   # a gravação adiada não pode recriar o arquivo apagado
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(Estado.ARQUIVO))
 	estado = Estado.new()
 	estado.persistir = false

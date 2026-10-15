@@ -4083,10 +4083,18 @@ void fragment() {
 	COLOR = c;
 }
 """
+const AQUECEDOR := preload("res://scripts/arte/aquecedor.gd")
+var aquecedor: Node2D = null          # pré-aquece as poses dos bichos da onda enquanto o jogador arruma o time
 var vp_fundo: SubViewport = null
 var vp_anim: SubViewport = null
 var anim: Animado = null
 var fundo_rep: int = 0
+
+## A animação da torre é um SubViewport que renderiza todo quadro; com o campo escondido (mapa, guarda-roupa, menus)
+## ele não precisa renderizar.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED and vp_anim != null:
+		vp_anim.render_target_update_mode = SubViewport.UPDATE_ALWAYS if visible else SubViewport.UPDATE_DISABLED
 
 func _novo_vp(transparente: bool) -> SubViewport:
 	var v := SubViewport.new()
@@ -4685,7 +4693,19 @@ func _montar_preparacao() -> void:
 			k += 1
 		prep_previa.append(g)
 	prep_previa.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return (a["pos"] as Vector2).y < (b["pos"] as Vector2).y)
+	_aquecer_poses()
 	# (a explicação da preparação e dos bichos novos vem das aulas de tutorial.gd)
+
+## Monta, fora da vista e aos poucos, as poses dos bichos desta onda: o primeiro quadro de cada pose custa vários
+## milissegundos e travava a luta quando o bicho aparecia.
+func _aquecer_poses() -> void:
+	if aquecedor == null:
+		aquecedor = AQUECEDOR.new()
+		add_child(aquecedor)
+	aquecedor.limpar()
+	for g in prep_previa:
+		var u: Unidade = g["u"]
+		aquecedor.adicionar_bicho(u.pecas, u.tipo, u.familia, u.chefe, u.elite, u.chefe_tipo)
 
 func _prep_rect(i: int) -> Rect2:
 	return Rect2(PREP_BT_X[i], PREP_BT_Y, PREP_BT_W, PREP_BT_H)

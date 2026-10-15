@@ -659,7 +659,36 @@ func _carregar_curso(c: Variant) -> void:
 	em_curso = true
 	preparar_onda()
 
+## Gravação adiada: várias ações no mesmo quadro (vestir o time, promover tudo...) viram uma gravação só, feita no
+## início do quadro seguinte, em vez de uma escrita em disco por peça no meio do clique.
+static var _pendente: Estado = null
+
 func salvar() -> void:
+	if not persistir:
+		return
+	var ml: MainLoop = Engine.get_main_loop()
+	if not (ml is SceneTree):
+		_gravar()
+		return
+	if _pendente == self:
+		return
+	gravar_pendente()   # outro estado (outra sessão) ainda esperava: grava antes de trocar
+	_pendente = self
+	(ml as SceneTree).process_frame.connect(gravar_pendente, CONNECT_ONE_SHOT)
+
+## Grava agora o que ficou esperando (ao fechar o jogo, antes de ler o arquivo e no quadro seguinte).
+static func gravar_pendente() -> void:
+	var e: Estado = _pendente
+	_pendente = null
+	if e != null:
+		e._gravar()
+
+## Esquece a gravação esperando (o arquivo está sendo apagado).
+func cancelar_gravacao() -> void:
+	if _pendente == self:
+		_pendente = null
+
+func _gravar() -> void:
 	if not persistir:
 		return
 	var pecas: Array = []
@@ -689,6 +718,7 @@ func _migrar_raridades(dados: Dictionary) -> void:
 
 ## Carrega a campanha gravada. Devolve false se não há gravação válida.
 func carregar() -> bool:
+	gravar_pendente()
 	if not FileAccess.file_exists(ARQUIVO):
 		return false
 	var dados: Variant = JSON.parse_string(FileAccess.get_file_as_string(ARQUIVO))
