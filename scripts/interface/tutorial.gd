@@ -939,21 +939,37 @@ func _molduras(holes: Array[Rect2], a: float) -> void:
 	var u: Rect2 = holes[0]
 	for h in holes:
 		u = u.merge(h)
-	var bob: float = absf(sin(_t * 4.0)) * 6.0
-	var alvo_p: Vector2
-	var dir: Vector2
+	# o balanço anda de célula em célula (3 px), sem posição de meio pixel
+	var bob: float = floorf(absf(sin(_t * 4.0)) * 2.99) * 3.0
+	var cx: float = floorf(clampf(u.get_center().x, 30.0, 1250.0) / 3.0) * 3.0
 	if u.position.y > 90.0:
-		alvo_p = Vector2(u.get_center().x, u.position.y - 10.0 - bob)
-		dir = Vector2(0, 1)
+		# a ponta (última fileira) fica 10 px acima do alvo
+		_seta_px(cx, u.position.y - 10.0 - bob - 18.0, false, a)
 	else:
-		alvo_p = Vector2(u.get_center().x, u.end.y + 10.0 + bob)
-		dir = Vector2(0, -1)
-	alvo_p.x = clampf(alvo_p.x, 30.0, 1250.0)
-	var lado: Vector2 = Vector2(dir.y, -dir.x)
-	var pts: PackedVector2Array = PackedVector2Array([alvo_p, alvo_p - dir * 16.0 + lado * 11.0, alvo_p - dir * 16.0 - lado * 11.0])
-	draw_colored_polygon(pts, Color(0.1, 0.05, 0.08, a))
-	var pts2: PackedVector2Array = PackedVector2Array([alvo_p - dir * 3.0, alvo_p - dir * 14.0 + lado * 7.0, alvo_p - dir * 14.0 - lado * 7.0])
-	draw_colored_polygon(pts2, Color(COR_OURO.r, COR_OURO.g, COR_OURO.b, a))
+		_seta_px(cx, u.end.y + 10.0 + bob, true, a)
+
+## Seta em pixel de 9 x 6 células de 3 px (contorno escuro, miolo dourado e um brilho), com o meio em `cx` e o
+## topo em `y`; `para_cima` a desenha virada. As fileiras não se sobrepõem, então o alfa `a` fica limpo.
+const PX_SETA_ALVO: Array = ["ooooooooo", "occaaaaao", ".ocaaaao.", "..oaaao..", "...oao...", "....o...."]
+func _seta_px(cx: float, y: float, para_cima: bool, a: float) -> void:
+	var q: float = 3.0
+	var x0: float = cx - q * 4.0
+	var y0: float = floorf(y / q) * q
+	var cont := Color(0.1, 0.05, 0.08, a)
+	var ouro := Color(COR_OURO.r, COR_OURO.g, COR_OURO.b, a)
+	var claro: Color = Color(1.0, 0.95, 0.7, a)
+	var n: int = PX_SETA_ALVO.size()
+	for k in n:
+		var ln: String = PX_SETA_ALVO[n - 1 - k if para_cima else k]
+		var x: int = 0
+		while x < ln.length():
+			var ch: String = ln[x]
+			var x2: int = x
+			while x2 + 1 < ln.length() and ln[x2 + 1] == ch:
+				x2 += 1
+			if ch != ".":
+				draw_rect(Rect2(x0 + x * q, y0 + k * q, (x2 - x + 1) * q, q), cont if ch == "o" else (ouro if ch == "a" else claro))
+			x = x2 + 1
 
 func _balao(txt: String, holes: Array[Rect2], com_botao: bool, rotulo: String, cont: String, a: float) -> void:
 	var fonte_f: Font = UIComum.FONTE

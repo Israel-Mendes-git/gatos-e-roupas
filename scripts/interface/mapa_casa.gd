@@ -45,6 +45,8 @@ const ICONE_Y := 540.0
 const ICONE_X0 := 902.0
 const ICONE_PASSO := 44.0
 const VAZIO: Array = [null, null, null, null]
+## Moldura redonda das "fantasias que caem" (10 x 10 células de 4 px): o = contorno, a = aro, b = miolo, c = brilho.
+const PX_MOEDA: Array = ["...oooo...", ".ooaaaaoo.", ".oacbbbao.", "oacbbbbbao", "oabbbbbbao", "oabbbbbbao", "oabbbbbbao", ".oabbbbao.", ".ooaaaaoo.", "...oooo..."]
 # Segundo ato: o lado de fora da casa, de noite. Mesma ordem das tabelas de Fases (5..9):
 # Quintal, Garagem, Telhado, Rua, Toca. Cada retângulo é a área clicável do lugar.
 const FORA: Array[Rect2] = [
@@ -1331,10 +1333,13 @@ func _painel_lateral(f: int) -> void:
 		var pc: Vector2 = centro_fantasia(k)
 		var cor_c: Color = Pecas.CONJUNTO_COR[c]
 		var sobre: bool = not bloq and p.mouse.distance_to(pc) < 18.0
-		cv.draw_circle(pc, 18.0, p._com_alfa(Color(0.05, 0.03, 0.06), 0.8 * al))
-		cv.draw_circle(pc, 16.0, p._com_alfa(cor_c.darkened(0.55), al))
-		cv.draw_arc(pc, 16.0, 0.0, TAU, 24, p._com_alfa(cor_c.lightened(0.15) if not sobre else Color.WHITE, al), 2.0)
-		Desenho.icone(cv, Pecas.CONJUNTO_PECAS[c][0], pc + Vector2(0, 1), 24.0)
+		# moldura em pixel: discos de faixas de 4 px (contorno, aro na cor da fantasia, miolo escuro), já
+		# misturados com o fundo do painel em vez de alfa sobre alfa (cômodo bloqueado fica apagado)
+		var pq := Vector2(snappedf(pc.x, 4.0), snappedf(pc.y, 4.0))
+		var fundo_m := Color(0.1, 0.06, 0.1)
+		var aro: Color = cor_c.lightened(0.15) if not sobre else Color.WHITE
+		Oficina.grade(cv, PX_MOEDA, pq - Vector2(20.0, 20.0), 4.0, fundo_m.lerp(aro, al), fundo_m.lerp(cor_c.darkened(0.55), al), fundo_m.lerp(aro.lightened(0.5), al), fundo_m.lerp(Color(0.03, 0.02, 0.04), al))
+		Desenho.icone(cv, Pecas.CONJUNTO_PECAS[c][0], pq, 24.0)
 	if oferta and (not _fora or invasao_fora_liberada(f)):
 		# recorde da invasão neste lugar (cômodo ou, lá fora, o lugar de fora: posições 5..9), ao lado das fantasias
 		var rec: int = est.recordes[li]
@@ -1368,8 +1373,13 @@ static func _rect_botao(id: int) -> Rect2:
 func _botao_vista() -> void:
 	_botao_painel(BT_VISTA, "Ver a casa" if _fora else "Ver lá fora", UIComum.B_AZUL)
 
+## Separador em pixel: pontilhado de quadradinhos de 4 px na grade do mapa (um a cada dois).
 func _sep(x0: float, larg: float, y: float) -> void:
-	cv.draw_line(Vector2(x0, y), Vector2(x0 + larg, y), Color(1, 1, 1, 0.16), 1.0)
+	var yy: float = floorf(y / 4.0) * 4.0
+	var x: float = ceilf(x0 / 4.0) * 4.0
+	while x + 4.0 <= x0 + larg:
+		_r(x, yy, 4.0, 4.0, Color(1, 1, 1, 0.18))
+		x += 8.0
 
 ## Dica do mouse: nome completo da fantasia sob o ícone (só em cômodo liberado, como no cartão).
 func _dica_casa(f: int) -> void:

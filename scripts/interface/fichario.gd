@@ -82,6 +82,31 @@ const GATO_ESC := 3.1
 const PATADA_CADA := 3.4
 const PATADA_DUR := 0.22
 
+# ---- pixel art: tudo o que é desenho (e não texto) cai na grade de Q px, a mesma das molduras da UIComum ----
+const V := preload("res://scripts/interface/vfx_px.gd")
+const Q := 3.0
+const PX_ESC := Color(0.3, 0.18, 0.05)          # contorno de estrela e troféu
+const ARGOLA_CONT := Color(0.3, 0.3, 0.36)
+const ARGOLA := Color(0.62, 0.64, 0.72)
+const ARGOLA_CL := Color(0.95, 0.96, 1.0)
+const ARGOLA_ESC := Color(0.45, 0.47, 0.56)
+const FURO := Color(0.25, 0.15, 0.15)
+const SELO_NOVO := Color(0.9, 0.2, 0.2)
+## Estrela de 7 x 7 células: a = ouro, c = brilho, o = contorno.
+const PX_ESTRELA: Array = ["...o...", "..oco..", "oooaooo", "oaaaaao", ".oaaao.", ".oaoao.", ".oo.oo."]
+## Bolinha de situação (5 x 5): com visto branco (tem/teve) ou lisa (falta).
+const PX_VISTO: Array = [".aaa.", "aaawa", "wawaa", "awaaa", ".aaa."]
+const PX_BOLINHA: Array = [".aaa.", "aaaaa", "aaaaa", "aaaaa", ".aaa."]
+## Seta de navegação "<" (8 x 7): a = miolo, o = contorno. Espelhada vira ">".
+const PX_SETA_NAV: Array = ["...oo...", "..oao...", ".oaaoooo", "oaaaaaao", ".oaaoooo", "..oao...", "...oo..."]
+## Emblema de cada grupo de metas (7 x 7): casa (Campanha), cabide (Guarda-roupa), escudo (Invasão), árvore (Lado de fora).
+const PX_GRUPO: Dictionary = {
+	"Campanha": ["...o...", "..oao..", ".oaaao.", "oaaaaao", ".obcbo.", ".obcbo.", ".ooooo."],
+	"Guarda-roupa": ["...oo..", "....o..", "...o...", "..oao..", ".oa.ao.", "oa...ao", "ooooooo"],
+	"Invasão": ["ooooooo", "oacabao", "oacabao", "oaaabao", ".oaabo.", "..obo..", "...o..."],
+	"Lado de fora": ["..ooo..", ".oacao.", "oaccaao", "oaaaaao", ".oobooo", "...b...", "..obo.."],
+}
+
 # ---- estado da tela ----
 var estado: Estado = null
 var metas_pag: int = 0             # aba Metas: 0 = Campanha, Guarda-roupa, Invasão e Fantasias; 1 = Lado de fora
@@ -267,7 +292,7 @@ static func ordem_das_fantasias() -> Array[int]:
 
 ## Retângulo da miniatura da k-ésima fantasia da seção "Lado de fora" (página direita do índice, terceira fileira).
 static func rect_tile_fora(k: int) -> Rect2:
-	return Rect2(COL_D_X + k * (TILE_W + TILE_GAP), IDX_Y0 + 2 * IDX_PASSO + 24.0, TILE_W, TILE_H)
+	return Rect2(_sn(COL_D_X + k * (TILE_W + TILE_GAP)), IDX_Y0 + 2 * IDX_PASSO + 24.0, TILE_W, TILE_H)
 
 static func rect_aba(i: int) -> Rect2:
 	return Rect2(ABA_X, ABA_Y0 + i * (ABA_H + ABA_GAP), ABA_W, ABA_H)
@@ -277,7 +302,7 @@ static func rect_tile(comodo: int, k: int) -> Rect2:
 	var esq: bool = comodo < 3
 	var fila: int = comodo if esq else comodo - 3
 	var x0: float = (COL_E_X if esq else COL_D_X) + k * (TILE_W + TILE_GAP)
-	return Rect2(x0, IDX_Y0 + fila * IDX_PASSO + 24.0, TILE_W, TILE_H)
+	return Rect2(_sn(x0), IDX_Y0 + fila * IDX_PASSO + 24.0, TILE_W, TILE_H)
 
 static func rect_linha_peca(i: int) -> Rect2:
 	return Rect2(COL_D_X, LIN_Y0 + i * (LIN_H + LIN_GAP), COL_W, LIN_H)
@@ -755,72 +780,104 @@ static func _nove(c: CanvasItem, tex: Texture2D, src: Rect2, m: Vector4, dst: Re
 	if miolo:
 		_ladrilhar(c, tex, Rect2(sx + m.x, sy + m.y, iw, ih), Rect2(x1, y1, x2 - x1, y2 - y1), e, cor)
 
-## Retângulo com os cantos cortados (`corte` px) nos cantos pedidos: [topo-esq, topo-dir, base-dir, base-esq].
-static func _pts_papel(r: Rect2, corte: float, cantos: Array) -> PackedVector2Array:
-	var p := PackedVector2Array()
-	var x0: float = r.position.x
-	var y0: float = r.position.y
-	var x1: float = r.end.x
-	var y1: float = r.end.y
-	if cantos[0]:
-		p.append_array([Vector2(x0, y0 + corte), Vector2(x0 + corte, y0)])
-	else:
-		p.append(Vector2(x0, y0))
-	if cantos[1]:
-		p.append_array([Vector2(x1 - corte, y0), Vector2(x1, y0 + corte)])
-	else:
-		p.append(Vector2(x1, y0))
-	if cantos[2]:
-		p.append_array([Vector2(x1, y1 - corte), Vector2(x1 - corte, y1)])
-	else:
-		p.append(Vector2(x1, y1))
-	if cantos[3]:
-		p.append_array([Vector2(x0 + corte, y1), Vector2(x0, y1 - corte)])
-	else:
-		p.append(Vector2(x0, y1))
-	return p
+static func _sn(v: float) -> float:
+	return floorf(v / Q) * Q
+
+## Papel em pixel: retângulo com os cantos pedidos (topo-esq, topo-dir, base-dir, base-esq) chanfrados em
+## `n` degraus de Q px. Fileiras que não se sobrepõem: cor com alfa (sombra) fica limpa.
+func _papel_px(r: Rect2, n: int, te: bool, td: bool, bd: bool, be: bool, cor: Color) -> void:
+	var x0: float = _sn(r.position.x)
+	var y0: float = _sn(r.position.y)
+	var x1: float = _sn(r.end.x)
+	var y1: float = _sn(r.end.y)
+	n = maxi(0, n)
+	for k in n:
+		var d: float = (n - k) * Q
+		var l: float = x0 + (d if te else 0.0)
+		draw_rect(Rect2(l, y0 + k * Q, x1 - (d if td else 0.0) - l, Q), cor)
+		l = x0 + (d if be else 0.0)
+		draw_rect(Rect2(l, y1 - (k + 1) * Q, x1 - (d if bd else 0.0) - l, Q), cor)
+	draw_rect(Rect2(x0, y0 + n * Q, x1 - x0, y1 - y0 - 2.0 * n * Q), cor)
+
+## O mesmo papel com contorno de uma célula (o degrau do chanfro também fica com uma célula de espessura).
+func _papel_borda(r: Rect2, n: int, te: bool, td: bool, bd: bool, be: bool, fundo: Color, borda: Color) -> void:
+	_papel_px(r, n, te, td, bd, be, borda)
+	_papel_px(r.grow(-Q), n - 1, te, td, bd, be, fundo)
+
+## Moldura de `larg` px (múltiplo de Q) por dentro de `r`, em quatro retângulos.
+func _moldura_px(r: Rect2, cor: Color, larg: float = Q) -> void:
+	var x0: float = _sn(r.position.x)
+	var y0: float = _sn(r.position.y)
+	var w: float = _sn(r.end.x) - x0
+	var h: float = _sn(r.end.y) - y0
+	draw_rect(Rect2(x0, y0, w, larg), cor)
+	draw_rect(Rect2(x0, y0 + h - larg, w, larg), cor)
+	draw_rect(Rect2(x0, y0 + larg, larg, h - 2.0 * larg), cor)
+	draw_rect(Rect2(x0 + w - larg, y0 + larg, larg, h - 2.0 * larg), cor)
+
+## Grade de letras (ver Oficina.grade) com o canto de cima em `pos`, já na grade.
+func _grade(g: Array, pos: Vector2, a: Color, b: Color, c: Color, cont: Color, espelho: bool = false) -> void:
+	Oficina.grade(self, g, Vector2(_sn(pos.x), _sn(pos.y)), Q, a, b, c, cont, espelho)
+
+## Cantoneira de foto em degraus: triângulo de `n` células no canto (px, py), abrindo para (sx, sy).
+func _cantoneira(px: float, py: float, sx: float, sy: float, n: int, cor: Color) -> void:
+	for k in n:
+		var w: float = (n - k) * Q
+		var y: float = py + k * Q if sy > 0.0 else py - (k + 1) * Q
+		draw_rect(Rect2(px if sx > 0.0 else px - w, y, w, Q), cor)
+
+## As quatro cantoneiras de uma foto.
+func _cantoneiras(cb: Rect2, cor: Color) -> void:
+	_cantoneira(cb.position.x, cb.position.y, 1.0, 1.0, 9, cor)
+	_cantoneira(cb.end.x, cb.position.y, -1.0, 1.0, 9, cor)
+	_cantoneira(cb.position.x, cb.end.y, 1.0, -1.0, 9, cor)
+	_cantoneira(cb.end.x, cb.end.y, -1.0, -1.0, 9, cor)
+
+## Bolinha de situação de 15 px com o canto de cima à esquerda perto de `pos`: verde com visto, ou lisa.
+func _bolinha(pos: Vector2, cor: Color, visto: bool) -> void:
+	_grade(PX_VISTO if visto else PX_BOLINHA, pos, cor, cor, cor, cor.darkened(0.4))
 
 func _folha(r: Rect2, esquerda: bool) -> void:
-	var cantos: Array = [true, false, false, true] if esquerda else [false, true, true, false]
-	# folhas de baixo, para dar espessura ao álbum
-	for k in [3, 2, 1]:
-		var off := Vector2(-2.0 * k, 2.0 * k) if esquerda else Vector2(2.0 * k, 2.0 * k)
-		var pts: PackedVector2Array = _pts_papel(Rect2(r.position + off, r.size), 12.0, cantos)
-		draw_colored_polygon(pts, Color(0.82, 0.76, 0.62).darkened(0.04 * (4 - k)))
-		var fech: PackedVector2Array = pts.duplicate()
-		fech.append(pts[0])
-		draw_polyline(fech, Color(0.42, 0.32, 0.24, 0.6), 1.0)
-	var p: PackedVector2Array = _pts_papel(r, 12.0, cantos)
-	draw_colored_polygon(p, PAPEL)
-	# linhas de caderno bem fracas
-	var y: float = r.position.y + 50.0
-	while y < r.end.y - 10.0:
-		draw_line(Vector2(r.position.x + 6.0, y), Vector2(r.end.x - 6.0, y), Color(0.45, 0.6, 0.8, 0.10), 1.0)
-		y += 22.0
-	# sombra suave na dobra (espinha)
-	for i in 16:
-		var a: float = 0.16 * (1.0 - i / 16.0)
-		var x: float = (r.end.x - 1 - i) if esquerda else (r.position.x + i)
-		draw_rect(Rect2(x, r.position.y + 2.0, 1.0, r.size.y - 4.0), Color(0.25, 0.15, 0.1, a))
-	var fecha: PackedVector2Array = p.duplicate()
-	fecha.append(p[0])
-	draw_polyline(fecha, PAPEL_BORDA, 1.5)
+	var te: bool = esquerda
+	var td: bool = not esquerda
+	# folhas de baixo, para dar espessura ao álbum: uma faixa de papel e, por fim, a borda escura
+	var dx: float = -Q if esquerda else Q
+	_papel_px(Rect2(r.position + Vector2(dx * 2.0, Q * 2.0), r.size), 4, te, td, td, te, Color(0.42, 0.32, 0.24))
+	_papel_px(Rect2(r.position + Vector2(dx, Q), r.size), 4, te, td, td, te, Color(0.82, 0.76, 0.62).darkened(0.06))
+	_papel_borda(r, 4, te, td, td, te, PAPEL, PAPEL_BORDA)
+	# linhas de caderno bem fracas, uma célula de altura
+	var x0: float = _sn(r.position.x) + Q * 2.0
+	var x1: float = _sn(r.end.x) - Q * 2.0
+	var y: float = _sn(r.position.y + 50.0)
+	while y < r.end.y - 12.0:
+		draw_rect(Rect2(x0, y, x1 - x0, Q), Color(0.45, 0.6, 0.8, 0.07))
+		y += Q * 7.0
+	# sombra na dobra (espinha): quatro faixas de uma célula, do escuro para o claro
+	for i in 4:
+		var a: float = 0.15 - 0.035 * i
+		var x: float = (_sn(r.end.x) - Q * (i + 2)) if esquerda else (_sn(r.position.x) + Q * (i + 1))
+		draw_rect(Rect2(x, _sn(r.position.y) + Q, Q, _sn(r.end.y) - _sn(r.position.y) - Q * 2.0), Color(0.25, 0.15, 0.1, a))
 
 func _argolas() -> void:
+	var xe: float = _sn(ESPINHA_X - 21.0)        # a barra vai de xe a xe + 15 células
 	for i in 5:
-		var y: float = 118.0 + i * 108.0
-		# furos nas duas folhas
-		draw_circle(Vector2(PG_E.end.x - 12.0, y), 5.0, Color(0.25, 0.15, 0.15))
-		draw_circle(Vector2(PG_D.position.x + 12.0, y), 5.0, Color(0.25, 0.15, 0.15))
-		# argola de metal atravessando a espinha
-		draw_rect(Rect2(ESPINHA_X - 22.0, y - 7.0, 44.0, 14.0), Color(0.3, 0.3, 0.36))
-		draw_rect(Rect2(ESPINHA_X - 22.0, y - 6.0, 44.0, 12.0), Color(0.7, 0.72, 0.8))
-		draw_rect(Rect2(ESPINHA_X - 22.0, y - 6.0, 44.0, 4.0), Color(0.95, 0.96, 1.0))
-		draw_rect(Rect2(ESPINHA_X - 22.0, y + 3.0, 44.0, 3.0), Color(0.45, 0.47, 0.56))
-		draw_circle(Vector2(ESPINHA_X - 22.0, y), 7.0, Color(0.62, 0.64, 0.72))
-		draw_circle(Vector2(ESPINHA_X + 22.0, y), 7.0, Color(0.62, 0.64, 0.72))
-		draw_circle(Vector2(ESPINHA_X - 22.0, y - 1.0), 3.0, Color(0.95, 0.96, 1.0))
-		draw_circle(Vector2(ESPINHA_X + 22.0, y - 1.0), 3.0, Color(0.95, 0.96, 1.0))
+		var y: float = _sn(118.0 + i * 108.0)
+		# furos nas duas folhas: discos de 3 células
+		V.disco(self, Vector2(PG_E.end.x - 12.0, y + 1.5), 4.0, FURO)
+		V.disco(self, Vector2(PG_D.position.x + 12.0, y + 1.5), 4.0, FURO)
+		# argola de metal atravessando a espinha: cinco fileiras (contorno, brilho, miolo, sombra, contorno)
+		draw_rect(Rect2(xe, y - Q * 2.0, Q * 15.0, Q * 5.0), ARGOLA_CONT)
+		draw_rect(Rect2(xe, y - Q, Q * 15.0, Q), ARGOLA_CL)
+		draw_rect(Rect2(xe, y, Q * 15.0, Q), Color(0.7, 0.72, 0.8))
+		draw_rect(Rect2(xe, y + Q, Q * 15.0, Q), ARGOLA_ESC)
+		# as pontas: discos com contorno e um brilho
+		_ponta_argola(xe + Q * 0.5, y)
+		_ponta_argola(xe + Q * 14.5, y)
+
+## Ponta da argola: disco com contorno e um brilho em cima à esquerda.
+func _ponta_argola(px: float, y: float) -> void:
+	V.disco_c(self, Vector2(px, y + 1.5), 3.0, ARGOLA, ARGOLA_CONT)
+	draw_rect(Rect2(_sn(px) - Q, y - Q, Q, Q), ARGOLA_CL)
 
 func _faixa(r: Rect2, txt: String, tams: Array, cor: Color) -> void:
 	draw_rect(r.grow(2.0), Color(0, 0, 0, 0.18))
@@ -831,21 +888,38 @@ func _faixa(r: Rect2, txt: String, tams: Array, cor: Color) -> void:
 	var y: float = r.position.y + (r.size.y - f.get_height(UIComum.tam(tam))) * 0.5 + f.get_ascent(UIComum.tam(tam))
 	_txt(txt, Vector2(r.position.x, y), tam, cor, r.size.x, 6)
 
-func _estrela(centro: Vector2, raio: float, cor: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 10:
-		var a: float = -PI * 0.5 + i * PI / 5.0
-		var rr: float = raio if i % 2 == 0 else raio * 0.45
-		pts.append(centro + Vector2(cos(a), sin(a)) * rr)
-	draw_colored_polygon(pts, cor)
-	var fe: PackedVector2Array = pts.duplicate()
-	fe.append(pts[0])
-	draw_polyline(fe, Color(0.3, 0.18, 0.05), 1.2)
+## Estrela em pixel (7 x 7 células, 21 px) centrada em `centro`.
+func _estrela(centro: Vector2, cor: Color) -> void:
+	_grade(PX_ESTRELA, centro - Vector2(10.5, 10.5), cor, cor, cor.lightened(0.6), PX_ESC)
 
 func _cadeado(centro: Vector2, cor: Color) -> void:
-	draw_arc(centro + Vector2(0, -2), 4.5, PI, TAU, 8, cor, 2.0)
-	draw_rect(Rect2(centro.x - 6, centro.y - 2, 12, 9), cor)
-	draw_rect(Rect2(centro.x - 1, centro.y + 1, 2, 4), Color(0.2, 0.12, 0.1))
+	Oficina.cadeado(self, centro, cor)
+
+## Troféu em pixel (o da torre, 9 x 8 células de 2 px), centrado em `centro`; desbotado se ainda não ganho.
+func _trofeu(centro: Vector2, ganho: bool) -> void:
+	Oficina.arte(self, TorrePx.SPR_TROFEU, (centro - Vector2(9.0, 8.0)).round(), 2.0, false, 1.0 if ganho else 0.4)
+
+## Emblema do grupo de metas (21 px) com o canto de cima em `pos`.
+func _emblema_grupo(g: String, pos: Vector2) -> void:
+	if not PX_GRUPO.has(g):
+		return
+	var a: Color = TINTA2
+	var b: Color = PAPEL
+	var c: Color = COR_OURO
+	match g:
+		"Campanha":
+			a = COR_FALTA
+		"Guarda-roupa":
+			a = Color(0.62, 0.42, 0.25)
+		"Invasão":
+			a = COR_ABA[2].darkened(0.15)
+			b = COR_ABA[2].darkened(0.35)
+			c = COR_ABA[2].lightened(0.4)
+		"Lado de fora":
+			a = COR_TEM.lightened(0.15)
+			b = TINTA2
+			c = COR_ABA[5].lightened(0.3)
+	_grade(PX_GRUPO[g], pos, a, b, c, TINTA)
 
 # ------------------------------------------------------------------ pintura geral
 func _draw() -> void:
@@ -858,23 +932,28 @@ func _draw() -> void:
 	draw_rect(CAPA.grow(-16.0), COR_CAPA)
 	for i in 6:
 		draw_rect(Rect2(CAPA.position.x + 16, CAPA.position.y + 16 + i * 120, CAPA.size.x - 32, 60), Color(1, 1, 1, 0.012))
-	var costura: Rect2 = CAPA.grow(-27.0)
-	var x: float = costura.position.x
-	while x < costura.end.x:
-		draw_line(Vector2(x, costura.position.y), Vector2(minf(x + 7.0, costura.end.x), costura.position.y), COR_COSTURA, 2.0)
-		draw_line(Vector2(x, costura.end.y), Vector2(minf(x + 7.0, costura.end.x), costura.end.y), COR_COSTURA, 2.0)
-		x += 12.0
-	var y: float = costura.position.y
-	while y < costura.end.y:
-		draw_line(Vector2(costura.position.x, y), Vector2(costura.position.x, minf(y + 7.0, costura.end.y)), COR_COSTURA, 2.0)
-		draw_line(Vector2(costura.end.x, y), Vector2(costura.end.x, minf(y + 7.0, costura.end.y)), COR_COSTURA, 2.0)
-		y += 12.0
+	# costura: pontos de 2 x 1 células, um a cada 4 células
+	var cx0: float = _sn(CAPA.position.x + 27.0)
+	var cy0: float = _sn(CAPA.position.y + 27.0)
+	var cx1: float = _sn(CAPA.end.x - 27.0)
+	var cy1: float = _sn(CAPA.end.y - 27.0)
+	var x: float = cx0
+	while x + Q * 2.0 <= cx1:
+		draw_rect(Rect2(x, cy0, Q * 2.0, Q), COR_COSTURA)
+		draw_rect(Rect2(x, cy1, Q * 2.0, Q), COR_COSTURA)
+		x += Q * 4.0
+	var y: float = cy0 + Q * 2.0
+	while y + Q * 2.0 <= cy1:
+		draw_rect(Rect2(cx0, y, Q, Q * 2.0), COR_COSTURA)
+		draw_rect(Rect2(cx1, y, Q, Q * 2.0), COR_COSTURA)
+		y += Q * 4.0
 	_nove(self, GUI_TEX, R_MADEIRA, M_MADEIRA, CAPA, 0.75, Color.WHITE, false)
-	# plaqueta dourada com o título
-	var placa := Rect2(592.0 - 130.0, 33.0, 260.0, 24.0)
-	draw_rect(placa, Color(0.55, 0.38, 0.1))
-	draw_rect(placa.grow(-2.0), Color(0.95, 0.78, 0.3))
-	draw_rect(placa.grow(-2.0), Color(0.5, 0.32, 0.06), false, 1.0)
+	# plaqueta dourada com o título: borda escura, miolo dourado com brilho em cima e sombra embaixo
+	var placa := Rect2(_sn(592.0 - 130.0), _sn(33.0), 261.0, 24.0)
+	UIComum.forma(self, placa, Color(0.5, 0.32, 0.06))
+	draw_rect(Rect2(placa.position.x + Q, placa.position.y + Q, placa.size.x - Q * 2.0, placa.size.y - Q * 2.0), Color(0.95, 0.78, 0.3))
+	draw_rect(Rect2(placa.position.x + Q * 2.0, placa.position.y + Q, placa.size.x - Q * 4.0, Q), Color(1.0, 0.92, 0.6))
+	draw_rect(Rect2(placa.position.x + Q, placa.end.y - Q * 2.0, placa.size.x - Q * 2.0, Q), Color(0.8, 0.6, 0.2))
 	_txt("Fichário de fantasias", Vector2(placa.position.x, placa.position.y + 17.0), 16, Color(0.3, 0.17, 0.04), placa.size.x)
 	UIComum.pata(self, 0, Vector2(placa.position.x + 8.0, placa.position.y + 2.0), 1)
 	UIComum.pata(self, 2, Vector2(placa.end.x - 23.0, placa.position.y + 2.0), 1)
@@ -894,11 +973,17 @@ func _draw() -> void:
 	if virar_t > 0.0:
 		var k: float = virar_t / 0.26
 		var alvo: Rect2 = PG_D if virar_dir > 0 else PG_E
-		var larg: float = alvo.size.x * k
-		var rr: Rect2 = Rect2(alvo.position.x, alvo.position.y, larg, alvo.size.y) if virar_dir > 0 else Rect2(alvo.end.x - larg, alvo.position.y, larg, alvo.size.y)
-		draw_rect(rr, Color(PAPEL.r, PAPEL.g, PAPEL.b, 0.85 * k))
-		var borda_x: float = rr.end.x if virar_dir > 0 else rr.position.x
-		draw_rect(Rect2(borda_x - 3.0, rr.position.y, 6.0, rr.size.y), Color(0.2, 0.12, 0.08, 0.25 * k))
+		# a folha some encolhendo (sem esmaecer), com a largura e a borda na grade
+		var ax0: float = _sn(alvo.position.x) + Q
+		var ax1: float = _sn(alvo.end.x) - Q
+		var larg: float = _sn((ax1 - ax0) * k)
+		if larg >= Q:
+			var ay: float = _sn(alvo.position.y) + Q
+			var ah: float = _sn(alvo.end.y) - Q - ay
+			var rx: float = ax0 if virar_dir > 0 else ax1 - larg
+			draw_rect(Rect2(rx, ay, larg, ah), PAPEL)
+			var borda_x: float = rx + larg - Q if virar_dir > 0 else rx
+			draw_rect(Rect2(borda_x, ay, Q, ah), PAPEL_ESC.darkened(0.12))
 	_abas(e)
 	_botoes()
 	UIComum.fechar(self, BTN_X, {"on": true, "foco": x_sobre, "h": UIComum.anim_h(anim, "x"), "p": UIComum.anim_p(anim, "x")}, t)
@@ -916,13 +1001,12 @@ func _abas(e: Estado) -> void:
 		var cor: Color = COR_ABA[i]
 		if not ativa and not sobre:
 			cor = cor.darkened(0.14)
-		var rr := Rect2(r.position.x - (14.0 if ativa else (6.0 if sobre else 0.0)), r.position.y, r.size.x + (14.0 if ativa else (6.0 if sobre else 0.0)), r.size.y)
-		draw_rect(Rect2(rr.position.x + 3, rr.position.y + 3, rr.size.x, rr.size.y), Color(0, 0, 0, 0.3))
-		var pts := PackedVector2Array([rr.position, Vector2(rr.end.x - 12.0, rr.position.y), Vector2(rr.end.x, rr.position.y + 12.0), Vector2(rr.end.x, rr.end.y - 12.0), Vector2(rr.end.x - 12.0, rr.end.y), Vector2(rr.position.x, rr.end.y)])
-		draw_colored_polygon(pts, cor)
-		var fe: PackedVector2Array = pts.duplicate()
-		fe.append(pts[0])
-		draw_polyline(fe, TINTA, 2.0 if ativa else 1.5)
+		var avanco: float = 15.0 if ativa else (6.0 if sobre else 0.0)
+		var rr := Rect2(_sn(r.position.x - avanco), _sn(r.position.y), r.size.x + avanco, r.size.y)
+		# sombra (uma forma só, sem sobreposição), contorno de uma célula e brilho na beirada de cima
+		_papel_px(Rect2(rr.position + Vector2(Q, Q), rr.size), 4, false, true, true, false, Color(0, 0, 0, 0.3))
+		_papel_borda(rr, 4, false, true, true, false, cor, TINTA)
+		draw_rect(Rect2(rr.position.x + Q, rr.position.y + Q, _sn(rr.end.x) - rr.position.x - Q * 5.0, Q), cor.lightened(0.3))
 		var nome: String = "Índice" if i == 0 else ("Bichos" if i == ABA_BICHOS else "Metas" if i == ABA_METAS else ("De fora" if i == ABA_FORA else Fases.NOME[i - 1]))
 		var sub: String = ""
 		if i == ABA_BICHOS:
@@ -940,7 +1024,9 @@ func _abas(e: Estado) -> void:
 		_txt(nome, Vector2(cx - larg_t * 0.5, rr.position.y + 25.0), 17, TINTA, larg_t)
 		_txt(sub, Vector2(cx - larg_t * 0.5, rr.position.y + 44.0), 13, TINTA2, larg_t)
 		if i == ABA_METAS and not metas_novas.is_empty() and not em_metas:
-			draw_circle(Vector2(rr.position.x + 18.0, rr.position.y + 28.0), 7.0, Color(0.9, 0.2, 0.2))
+			var sn_c := Vector2(rr.position.x + 19.5, rr.position.y + 28.5)
+			V.disco_c(self, sn_c, 4.0, SELO_NOVO, TINTA)
+			draw_rect(Rect2(_sn(sn_c.x) - Q, _sn(sn_c.y) - Q, Q, Q), SELO_NOVO.lightened(0.55))
 		if i > 0 and i < ABA_FORA and comodo_bloqueado(e, i - 1):
 			_cadeado(Vector2(rr.position.x + 18.0, rr.position.y + 28.0), Color(0.3, 0.2, 0.25))
 
@@ -950,13 +1036,30 @@ func _botoes() -> void:
 		var id: String = it["id"]
 		if id.begins_with("aba") or _eh_tile(id):
 			continue
-		var txt: String = "Fechar" if id == "fechar" else ("< Voltar" if id == "ant" else "Avançar >")
+		var txt: String = "Fechar" if id == "fechar" else ("Voltar" if id == "ant" else "Avançar")
 		var cor: Color = UIComum.B_MARROM if id == "fechar" else UIComum.B_OURO
 		var o: Dictionary = {"on": it["on"], "foco": i == foco and it["on"], "h": UIComum.anim_h(anim, id), "p": UIComum.anim_p(anim, id), "tam": 17}
 		UIComum.botao(self, it["r"], txt, cor, o, t)
+		if id != "fechar":
+			_seta_nav(it["r"], -1.0 if id == "ant" else 1.0, it["on"], float(o["h"]), float(o["p"]))
 	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bicho %d de %d" % [pagina, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
 	_txt(marca, Vector2(250.0, 672.0), 15 if marca.length() < 26 else 13, Color(1, 0.94, 0.8), 240.0, 4)
 	_txt("Setas, A/D ou PgUp/PgDn  |  Esc fecha", Vector2(700.0, 672.0), 13, Color(1, 0.94, 0.8, 0.7), 230.0, 3)
+
+## Seta em pixel dentro do botão Voltar/Avançar, junto da borda; acompanha o crescer e o afundar do botão.
+func _seta_nav(r: Rect2, dir: float, on: bool, h: float, pr: float) -> void:
+	if not on:
+		h = 0.0
+		pr = 0.0
+	r = Rect2(r.position.round(), r.size.round())
+	var esc: float = 1.0 + 0.045 * h - 0.05 * pr
+	UIComum.trans(self, r.get_center(), 0.0, Vector2(esc, esc))
+	var x: float = -r.size.x * 0.5 + 12.0 if dir < 0.0 else r.size.x * 0.5 - 12.0 - Q * 8.0
+	var y: float = -Q * 3.5 + (3.0 if on and pr > 0.45 else 0.0)
+	var miolo: Color = UIComum.C_CREME if on else Color(0.72, 0.68, 0.66)
+	var cont: Color = UIComum.C_CONT if on else Color(0.56, 0.5, 0.5)
+	Oficina.grade(self, PX_SETA_NAV, Vector2(roundf(x), roundf(y)), Q, miolo, miolo, miolo, cont, dir > 0.0)
+	UIComum.trans_fim(self)
 
 ## Dica do mouse (ou do foco do teclado) sobre uma miniatura do índice.
 func _dica_tile() -> void:
@@ -1021,24 +1124,32 @@ func _pagina_indice(e: Estado) -> void:
 
 func _barra(r: Rect2, frac: float, rotulo: String, cor: Color) -> void:
 	_txt(rotulo, Vector2(r.position.x, r.position.y - 6.0), 14, TINTA)
-	var b := Rect2(r.position.x, r.position.y, r.size.x, r.size.y)
-	draw_rect(b, Color(0.25, 0.18, 0.16))
-	draw_rect(Rect2(b.position.x + 2.0, b.position.y + 2.0, (b.size.x - 4.0) * clampf(frac, 0.0, 1.0), b.size.y - 4.0), cor)
-	draw_rect(Rect2(b.position.x + 2.0, b.position.y + 2.0, (b.size.x - 4.0) * clampf(frac, 0.0, 1.0), 4.0), cor.lightened(0.4))
+	# trilho escuro de cantos cortados; o enchimento anda de célula em célula, com brilho e sombra
+	var b := Rect2(_sn(r.position.x), _sn(r.position.y), _sn(r.size.x), maxf(Q * 5.0, _sn(r.size.y)))
+	UIComum.forma(self, b, Color(0.25, 0.18, 0.16), Q)
+	var w: float = _sn((b.size.x - Q * 2.0) * clampf(frac, 0.0, 1.0))
+	if w < Q and frac > 0.0:
+		w = Q
+	if w >= Q:
+		var ih: float = b.size.y - Q * 2.0
+		draw_rect(Rect2(b.position.x + Q, b.position.y + Q, w, ih), cor)
+		draw_rect(Rect2(b.position.x + Q, b.position.y + Q, w, Q), cor.lightened(0.4))
+		draw_rect(Rect2(b.position.x + Q, b.position.y + Q + ih - Q, w, Q), cor.darkened(0.2))
 
 func _tile(e: Estado, c: int, r: Rect2) -> void:
 	var n: int = e.pecas_da_fantasia(c)
 	var completa: bool = n >= Pecas.SLOTS
 	var cor: Color = Pecas.CONJUNTO_COR[c]
 	var sobre: bool = foco >= 0 and itens[foco]["id"] == "f%d" % c
-	draw_rect(Rect2(r.position.x + 2, r.position.y + 3, r.size.x, r.size.y), Color(0, 0, 0, 0.18))
+	r = Rect2(_sn(r.position.x), _sn(r.position.y), r.size.x, r.size.y)
+	draw_rect(Rect2(r.position.x + Q, r.position.y + Q, r.size.x, r.size.y), Color(0, 0, 0, 0.18))
 	draw_rect(r, Color(0.98, 0.95, 0.85) if completa else PAPEL_ESC.lightened(0.25))
 	# fita colorida no topo, na cor da fantasia
-	draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 5.0), cor.darkened(0.15))
-	draw_rect(r, Color(0.9, 0.68, 0.1) if completa else PAPEL_BORDA, false, 3.0 if completa else 1.5)
+	draw_rect(Rect2(r.position.x, r.position.y, r.size.x, Q * 2.0), cor.darkened(0.15))
+	_moldura_px(r, Color(0.9, 0.68, 0.1) if completa else PAPEL_BORDA)
 	var cab: int = Pecas.CONJUNTO_PECAS[c][0]
 	var centro := r.position + Vector2(r.size.x * 0.5, TILE_ICO_Y)
-	draw_circle(centro, 26.0, cor.lerp(PAPEL, 0.7))
+	V.disco(self, centro, 24.0, cor.lerp(PAPEL, 0.7))
 	if e.ja_teve(cab):
 		Desenho.icone(self, cab, centro, 50.0)
 	# nome em até duas linhas
@@ -1050,7 +1161,7 @@ func _tile(e: Estado, c: int, r: Rect2) -> void:
 	var cc: Color = Color(0.6, 0.38, 0.0) if completa else (TINTA2 if n > 0 else Color(0.55, 0.5, 0.48))
 	_txt("%d/%d" % [n, Pecas.SLOTS], Vector2(r.position.x, r.end.y - 5.0), 13, cc, r.size.x)
 	if completa:
-		_estrela(r.position + Vector2(r.size.x - 11.0, 16.0), 9.0, COR_OURO)
+		_estrela(r.position + Vector2(r.size.x - 14.0, 19.0), COR_OURO)
 	if sobre:
 		var pu: float = 0.5 + 0.5 * sin(t * 5.0)
 		draw_rect(r.grow(3.0), Color(1.0, 0.7, 0.2, 0.55 + 0.4 * pu), false, 3.0)
@@ -1067,15 +1178,10 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	draw_rect(Rect2(cb.position.x + 3, cb.position.y + 4, cb.size.x, cb.size.y), Color(0, 0, 0, 0.16))
 	draw_rect(cb, cor.lerp(PAPEL, 0.78))
 	# chão da foto
-	draw_rect(Rect2(cb.position.x, cb.end.y - 62.0, cb.size.x, 62.0), cor.lerp(PAPEL, 0.55))
-	draw_line(Vector2(cb.position.x, cb.end.y - 62.0), Vector2(cb.end.x, cb.end.y - 62.0), cor.darkened(0.2).lerp(PAPEL, 0.4), 2.0)
-	draw_rect(cb, PAPEL_BORDA, false, 2.0)
-	for q in 4:   # cantoneiras da foto
-		var px: float = cb.position.x if q % 2 == 0 else cb.end.x
-		var py: float = cb.position.y if q < 2 else cb.end.y
-		var sx: float = 1.0 if q % 2 == 0 else -1.0
-		var sy: float = 1.0 if q < 2 else -1.0
-		draw_colored_polygon(PackedVector2Array([Vector2(px, py), Vector2(px + 26.0 * sx, py), Vector2(px, py + 26.0 * sy)]), Color(0.3, 0.17, 0.15))
+	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, 63.0), cor.lerp(PAPEL, 0.55))
+	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, Q), cor.darkened(0.2).lerp(PAPEL, 0.4))
+	_moldura_px(cb, PAPEL_BORDA)
+	_cantoneiras(cb, Color(0.3, 0.17, 0.15))
 	_txt("Ficha nº %02d" % (pagina), Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
 	# o gato: as peças já tidas aqui; as que faltam saem em silhueta pela camada filha
 	_gato(self, c, false)
@@ -1164,9 +1270,8 @@ func _linha_peca(e: Estado, c: int, s: int) -> void:
 	else:
 		# interrogação num selo no canto da caixa (o ícone em silhueta vem da camada filha)
 		var sc: Vector2 = cx.position + Vector2(cx.size.x - 6.0, 8.0)
-		draw_circle(sc, 10.0, Color(0.62, 0.2, 0.2))
-		draw_arc(sc, 10.0, 0.0, TAU, 16, Color(0.25, 0.08, 0.08), 1.5)
-		_txt("?", Vector2(sc.x - 10.0, sc.y + 6.0), 16, Color.WHITE, 20.0)
+		V.disco_c(self, sc, 7.0, Color(0.62, 0.2, 0.2), Color(0.25, 0.08, 0.08))
+		_txt("?", Vector2(_sn(sc.x) - 9.0, _sn(sc.y) + 8.0), 16, Color.WHITE, 21.0)
 	var x: float = r.position.x + 88.0
 	var larg: float = r.size.x - 88.0 - 10.0
 	var tag: String = Pecas.SLOT_NOME[s]
@@ -1191,11 +1296,8 @@ func _linha_peca(e: Estado, c: int, s: int) -> void:
 		txt = "Falta: ainda não apareceu"
 	var ty: float = r.end.y - 8.0
 	var tam_s: int = tam_cabe(txt, [14, 13, 12, 11], larg - 20.0)
-	draw_circle(Vector2(x + 5.0, ty - 5.0), 5.0, cs)
-	if tem or teve:
-		draw_line(Vector2(x + 2.5, ty - 5.0), Vector2(x + 4.5, ty - 3.0), Color.WHITE, 1.5)
-		draw_line(Vector2(x + 4.5, ty - 3.0), Vector2(x + 8.0, ty - 8.0), Color.WHITE, 1.5)
-	_txt(txt, Vector2(x + 16.0, ty), tam_s, cs)
+	_bolinha(Vector2(x, ty - 13.0), cs, tem or teve)
+	_txt(txt, Vector2(x + 18.0, ty), tam_s, cs)
 
 func _bonus(c: int) -> void:
 	var cor: Color = Pecas.CONJUNTO_COR[c]
@@ -1246,7 +1348,7 @@ func _selo_meta(c: Vector2, txt: String, cor: Color, tam: int = 13) -> void:
 	UIComum.trans_fim(self)
 
 func _premio(m: Dictionary, direita: float, y: float, feita: bool) -> void:
-	_estrela(Vector2(direita - 38.0, y), 7.0, COR_OURO if feita else Color(0.75, 0.68, 0.5))
+	_trofeu(Vector2(direita - 39.0, y), feita)
 	_txt("+%d" % int(m["premio"]), Vector2(direita - 28.0, y + 5.0), 15, COR_TEVE if feita else TINTA2)
 
 ## Uma linha de meta da página esquerda; devolve o y da próxima.
@@ -1280,8 +1382,8 @@ func _metas_fora(e: Estado, todas: Array) -> void:
 		if e.metas_pagas.has(m["id"]):
 			feitas += 1
 	var y: float = 120.0
-	draw_rect(Rect2(COL_E_X, y + 3.0, 5.0, 16.0), COR_ABA[ABA_METAS].darkened(0.2))
-	_txt("Lado de fora  ·  %d/%d" % [feitas, ms.size()], Vector2(COL_E_X + 11.0, y + 17.0), 16, TINTA)
+	_emblema_grupo("Lado de fora", Vector2(COL_E_X, y))
+	_txt("Lado de fora  ·  %d/%d" % [feitas, ms.size()], Vector2(COL_E_X + 27.0, y + 17.0), 16, TINTA)
 	y += 24.0
 	for m in ms:
 		y = _linha_meta(e, m, y, false)
@@ -1325,8 +1427,8 @@ func _pagina_metas(e: Estado) -> void:
 		for m in ms:
 			if e.metas_pagas.has(m["id"]):
 				feitas += 1
-		draw_rect(Rect2(COL_E_X, y + 3.0, 5.0, 16.0), COR_ABA[ABA_METAS].darkened(0.2))
-		_txt("%s  ·  %d/%d" % [g, feitas, ms.size()], Vector2(COL_E_X + 11.0, y + 17.0), 16, TINTA)
+		_emblema_grupo(g, Vector2(COL_E_X, y))
+		_txt("%s  ·  %d/%d" % [g, feitas, ms.size()], Vector2(COL_E_X + 27.0, y + 17.0), 16, TINTA)
 		y += 24.0
 		for m in ms:
 			y = _linha_meta(e, m, y, g == "Invasão" and not zerada)
@@ -1459,7 +1561,7 @@ static func rect_tile_bicho(k: int) -> Rect2:
 		var j2: int = k - 20
 		x0 = COL_D_X + (j2 % 5) * (TILE_W + TILE_GAP)
 		y0 = IDX_Y0 + 24.0 + (j2 / 5) * IDX_PASSO
-	return Rect2(x0, y0, TILE_W, TILE_H)
+	return Rect2(_sn(x0), _sn(y0), TILE_W, TILE_H)
 
 ## Desenha o bicho da entrada com os pés em `pe` (a camada de silhueta pinta tudo escuro).
 func _bicho(alvo: CanvasItem, en: Dictionary, pe: Vector2, esc: float, _sil_: bool) -> void:
@@ -1519,12 +1621,12 @@ func _tile_bicho(e: Estado, k: int) -> void:
 	var der: bool = _derrotado(e, en)
 	var cor: Color = en["cor"]
 	var sobre: bool = foco >= 0 and itens[foco]["id"] == "b%d" % k
-	draw_rect(Rect2(r.position.x + 2, r.position.y + 3, r.size.x, r.size.y), Color(0, 0, 0, 0.18))
+	draw_rect(Rect2(r.position.x + Q, r.position.y + Q, r.size.x, r.size.y), Color(0, 0, 0, 0.18))
 	draw_rect(r, Color(0.98, 0.95, 0.85) if viu else PAPEL_ESC.lightened(0.1))
-	draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 5.0), cor.darkened(0.15) if viu else Color(0.5, 0.45, 0.42))
-	draw_rect(r, Color(0.9, 0.68, 0.1) if der else PAPEL_BORDA, false, 3.0 if der else 1.5)
+	draw_rect(Rect2(r.position.x, r.position.y, r.size.x, Q * 2.0), cor.darkened(0.15) if viu else Color(0.5, 0.45, 0.42))
+	_moldura_px(r, Color(0.9, 0.68, 0.1) if der else PAPEL_BORDA)
 	var pe: Vector2 = r.position + Vector2(TILE_W * 0.5, TILE_H - 40.0)
-	draw_circle(pe + Vector2(0, -22.0), 30.0, cor.lerp(PAPEL, 0.75) if viu else PAPEL_ESC)
+	V.disco(self, pe + Vector2(0, -22.0), 27.0, cor.lerp(PAPEL, 0.75) if viu else PAPEL_ESC)
 	if viu:
 		_bicho(self, en, pe, _esc_mini(en), false)
 	var nome: String = en["nome"] if viu else "???"
@@ -1534,7 +1636,7 @@ func _tile_bicho(e: Estado, k: int) -> void:
 		_txt(ln, Vector2(r.position.x + 3.0, yy), aj["tam"], TINTA if viu else TINTA2, r.size.x - 6.0)
 		yy += int(aj["tam"]) + 1
 	if der:
-		_estrela(r.position + Vector2(r.size.x - 11.0, 16.0), 9.0, COR_OURO)
+		_estrela(r.position + Vector2(r.size.x - 14.0, 19.0), COR_OURO)
 	if sobre:
 		var pu: float = 0.5 + 0.5 * sin(t * 5.0)
 		draw_rect(r.grow(3.0), Color(1.0, 0.7, 0.2, 0.55 + 0.4 * pu), false, 3.0)
@@ -1596,15 +1698,10 @@ func _ficha_bicho(e: Estado, k: int) -> void:
 	var cb: Rect2 = _cabine_gato()
 	draw_rect(Rect2(cb.position.x + 3, cb.position.y + 4, cb.size.x, cb.size.y), Color(0, 0, 0, 0.16))
 	draw_rect(cb, cor.lerp(PAPEL, 0.78) if viu else PAPEL_ESC)
-	draw_rect(Rect2(cb.position.x, cb.end.y - 62.0, cb.size.x, 62.0), cor.lerp(PAPEL, 0.55) if viu else PAPEL_ESC.darkened(0.06))
-	draw_line(Vector2(cb.position.x, cb.end.y - 62.0), Vector2(cb.end.x, cb.end.y - 62.0), cor.darkened(0.2).lerp(PAPEL, 0.4), 2.0)
-	draw_rect(cb, PAPEL_BORDA, false, 2.0)
-	for q in 4:
-		var px: float = cb.position.x if q % 2 == 0 else cb.end.x
-		var py: float = cb.position.y if q < 2 else cb.end.y
-		var sx: float = 1.0 if q % 2 == 0 else -1.0
-		var sy: float = 1.0 if q < 2 else -1.0
-		draw_colored_polygon(PackedVector2Array([Vector2(px, py), Vector2(px + 26.0 * sx, py), Vector2(px, py + 26.0 * sy)]), Color(0.3, 0.17, 0.15))
+	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, 63.0), cor.lerp(PAPEL, 0.55) if viu else PAPEL_ESC.darkened(0.06))
+	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, Q), cor.darkened(0.2).lerp(PAPEL, 0.4))
+	_moldura_px(cb, PAPEL_BORDA)
+	_cantoneiras(cb, Color(0.3, 0.17, 0.15))
 	_txt("Ficha nº %02d" % pagina, Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
 	var grupo: String = {"fam": "Família", "bando": "Bando de fora", "tipo": "Tipo de bicho", "chefe": "Chefe"}[en["k"]]
 	_txt(grupo, Vector2(cb.end.x - 160.0, cb.position.y + 18.0), 13, TINTA2, 130.0)
@@ -1640,10 +1737,10 @@ func _ficha_bicho(e: Estado, k: int) -> void:
 	for ln in en["ficha"]:
 		yy = _bloco(ln, Vector2(rd2.position.x + 18.0, yy), rd2.size.x - 30.0, [16, 15, 14, 13], 2, TINTA, 3.0) + 6.0
 	yy = rd3.position.y + 44.0
-	draw_circle(Vector2(rd3.position.x + 26.0, yy - 5.0), 5.0, COR_TEM)
+	_bolinha(Vector2(rd3.position.x + 18.0, yy - 13.0), COR_TEM, true)
 	yy = _bloco("Já apareceu numa luta sua.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [16, 15, 14], 2, TINTA, 3.0) + 6.0
 	if en["k"] == "chefe":
-		draw_circle(Vector2(rd3.position.x + 26.0, yy - 5.0), 5.0, COR_TEM if der else COR_FALTA)
+		_bolinha(Vector2(rd3.position.x + 18.0, yy - 13.0), COR_TEM if der else COR_FALTA, der)
 		_bloco("Derrotado: sim." if der else "Derrotado: ainda não.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [16, 15, 14], 2, TINTA, 3.0)
 	else:
 		_bloco("O jogo ainda não conta quantos você derrotou.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [14, 13, 12], 2, TINTA2, 3.0)

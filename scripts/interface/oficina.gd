@@ -255,14 +255,52 @@ static func icone_modulo(c: CanvasItem, m: int, pos: Vector2, cel: float, cinza:
 static func trofeu(c: CanvasItem, pos: Vector2, cel: float, alfa: float = 1.0) -> void:
 	arte(c, ICO_TROFEU, pos, cel, false, alfa)
 
-static func cadeado(c: CanvasItem, centro: Vector2, cor: Color) -> void:
-	c.draw_arc(centro + Vector2(0, -2), 4.5, PI, TAU, 8, cor, 2.0)
-	c.draw_rect(Rect2(centro.x - 6, centro.y - 2, 12, 9), cor)
-	c.draw_rect(Rect2(centro.x - 1, centro.y + 1, 2, 4), Color(0.2, 0.12, 0.1))
+## Cadeado em pixel (5 x 6 células de 3 px): alça clara, corpo na cor pedida e o buraco da chave escuro.
+const PX_CADEADO: Array = [".bbb.", ".b.b.", "ccccc", "aaoaa", "aaoaa", "aaaaa"]
+## Seta "->" em pixel (6 x 5 células de 3 px), metade de baixo um tom mais escura.
+const PX_SETA: Array = ["...a..", "aaaaa.", "aaaaaa", "bbbbb.", "...b.."]
+## Cor de contorno das grades (`grade`) quando quem chama não escolhe outra.
+const PX_CONT := Color(0.12, 0.07, 0.06)
+const PX := 3.0   # célula da grade de pixel das telas de interface (a mesma de UIComum.forma)
 
+## Arredonda para baixo na grade de `q` px.
+static func px(v: float, q: float = PX) -> float:
+	return floorf(v / q) * q
+
+## Desenha uma grade de letras com as cores dadas, sem alocar nada: o = contorno `cont`, a/b/c = cores 1 a 3,
+## w = creme claro, "." = vazio. Fileiras viram retângulos por trecho de mesma letra (nunca se sobrepõem, então
+## cores com alfa ficam limpas). `espelho` desenha virada na horizontal.
+static func grade(c: CanvasItem, linhas: Array, pos: Vector2, cel: float, a: Color, b: Color, cc: Color, cont: Color = PX_CONT, espelho: bool = false) -> void:
+	for y in linhas.size():
+		var ln: String = linhas[y]
+		var n: int = ln.length()
+		var x: int = 0
+		while x < n:
+			var ch: String = ln[x]
+			if ch == ".":
+				x += 1
+				continue
+			var x2: int = x
+			while x2 + 1 < n and ln[x2 + 1] == ch:
+				x2 += 1
+			var cor: Color = cont
+			match ch:
+				"a": cor = a
+				"b": cor = b
+				"c": cor = cc
+				"w": cor = Color(1.0, 0.98, 0.9, a.a)
+			var xi: int = (n - 1 - x2) if espelho else x
+			c.draw_rect(Rect2(pos.x + xi * cel, pos.y + y * cel, (x2 - x + 1) * cel, cel), cor)
+			x = x2 + 1
+
+## Cadeado centrado em `centro`, alinhado à grade de 3 px; `cor` pode ter alfa.
+static func cadeado(c: CanvasItem, centro: Vector2, cor: Color) -> void:
+	var esc := Color(0.2, 0.12, 0.1, cor.a)
+	grade(c, PX_CADEADO, Vector2(px(centro.x - 7.5), px(centro.y - 9.0)), PX, cor, cor.lightened(0.25), cor.lightened(0.4), esc)
+
+## Seta "->" com o canto de cima em `pos` (ocupa SETA_W x 15 px).
 static func seta(c: CanvasItem, pos: Vector2, cor: Color) -> void:
-	c.draw_rect(Rect2(pos.x, pos.y + 3, 11, 4), cor)
-	c.draw_colored_polygon(PackedVector2Array([pos + Vector2(10, 0), pos + Vector2(18, 5), pos + Vector2(10, 10)]), cor)
+	grade(c, PX_SETA, Vector2(px(pos.x), px(pos.y - 3.0)), PX, cor, cor.darkened(0.25), cor)
 
 const SETA_W := 18.0
 
@@ -608,8 +646,8 @@ func _draw() -> void:
 	_texto("Melhorias da torre", Vector2(COL_E_X, 172), 18, COR_TINTA, -1.0, 4)
 	_texto("Módulos montados: %d de %d vagas" % [e.modulos.size(), e.vagas_modulos()], Vector2(COL_D_X, 172), 18, COR_TINTA, -1.0, 4)
 	_vagas(e)
-	draw_line(Vector2(COL_E_X, 177), Vector2(COL_E_X + COL_E_W, 177), Color(1, 1, 1, 0.16), 1.0)
-	draw_line(Vector2(COL_D_X, 177), Vector2(COL_D_X + COL_D_W, 177), Color(1, 1, 1, 0.16), 1.0)
+	_sep_px(COL_E_X, COL_E_W, 177.0)
+	_sep_px(COL_D_X, COL_D_W, 177.0)
 	for m in Torre.MELHORIA_NOME.size():
 		UIComum.ini_cascata(self, UIComum.cascata(abrir_t, m), -1.0)
 		_linha_melhoria(e, m)
@@ -663,6 +701,14 @@ static func explicacao_trofeus() -> String:
 static func proxima_vaga(e: Estado) -> String:
 	var v: int = e.vagas_modulos()
 	return "%dª vaga: vença o %dº ato inteiro" % [v + 1, v]
+
+## Separador em pixel: pontilhado de quadradinhos de 3 px na grade (um a cada dois).
+func _sep_px(x0: float, larg: float, y: float) -> void:
+	var yy: float = px(y)
+	var x: float = px(x0)
+	while x + PX <= x0 + larg:
+		draw_rect(Rect2(x, yy, PX, PX), Color(1, 1, 1, 0.2))
+		x += PX * 2.0
 
 ## Quadradinhos das vagas: cheia (módulo montado), livre ou ainda trancada.
 func _vagas(e: Estado) -> void:
