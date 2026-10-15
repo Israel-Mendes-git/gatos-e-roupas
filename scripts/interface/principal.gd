@@ -100,6 +100,20 @@ class Guardiao extends Node:
 		if tratar.is_valid() and bool(tratar.call(ev)):
 			get_viewport().set_input_as_handled()
 
+## Camada de topo: filha de `principal.gd`, fica acima de todos os botões. Dicas, arrasto, avisos e janelas modais são
+## desenhadas aqui (Controls filhos sempre pintam por cima do `_draw` do pai; sem esta camada a caixa de texto ficava atrás dos botões).
+class CamadaTopo extends Control:
+	var dono: Control
+	func _process(_delta: float) -> void:
+		if visible:
+			queue_redraw()
+	func _draw() -> void:
+		if dono != null:
+			dono._desenhar_topo(self)
+
+var _c: CanvasItem                   # onde as funções de desenho pintam: o próprio nó ou a camada de topo
+var camada_topo: CamadaTopo
+var _topo_fila: Array = []           # o que o `_draw` pediu para pintar por cima dos botões (Callables)
 var modo: Modo = Modo.MAPA
 var estado: Estado
 var campo: Campo
@@ -135,6 +149,7 @@ const DESFAZER_R := Rect2(116, 632, 64, 30)
 const FILTRO_R := Rect2(229, 472, 158, 26)          # chip do filtro por fantasia (no lugar do título do painel)
 const CHIP_AV := Rect2(990, 664, 235, 36)           # resumo dos avisos junto do LUTAR
 const AJUDA_BT := Rect2(1229, 664, 36, 36)
+const AJUDA_BT_TOPO := Rect2(1224, 66, 36, 34)    # "?" no mapa e na luta: sob o botão de pausa / velocidade
 const VOO_DUR := 0.34
 const RESUMO_PASSO := 0.3
 const AJUDA_ATALHOS: Array[String] = [
@@ -250,6 +265,7 @@ var fim_invasao: bool = false         # o painel de fim em exibição é de uma 
 var fim_vitoria: bool = false         # ... e o último fim de fase foi vitória
 
 func _ready() -> void:
+	_c = self
 	randomize()
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	Menus.carregar_opcoes()
@@ -315,8 +331,8 @@ func _ready() -> void:
 	btn_desf.pressed.connect(_desfazer)
 	btn_desf.tooltip_text = "Volta as roupas como estavam antes da última montagem automática (tecla Z)."
 	btn_ajuda = _botao("?", AJUDA_BT, Color(0.62, 0.8, 1.0), 22)
-	btn_ajuda.pressed.connect(_alternar_ajuda)
-	btn_ajuda.tooltip_text = "Atalhos e regras (tecla ? ou F1)."
+	btn_ajuda.pressed.connect(_ajuda_da_tela)
+	btn_ajuda.tooltip_text = "Repete o tutorial desta tela (F1: atalhos e regras)."
 	_botoes_guarda(false)
 	# camada de menus por cima de tudo (título, pausa, opções, créditos, cortina, dicas)
 	menus = Menus.new()
@@ -361,6 +377,12 @@ func _ready() -> void:
 	tutorial = Tutorial.new()
 	add_child(tutorial)
 	move_child(tutorial, menus.get_index())
+	camada_topo = CamadaTopo.new()
+	camada_topo.dono = self
+	camada_topo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	camada_topo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(camada_topo)
+	move_child(camada_topo, tutorial.get_index())   # acima dos botões, abaixo do tutorial e dos menus
 	tutorial.iniciar(self)
 	tutorial.migrar()
 	tutorial.retomar_se_preciso()
@@ -490,6 +512,7 @@ func _retomar_luta() -> void:
 	btn_mapa.visible = false
 	_botoes_guarda(false)
 	btn_vel.visible = true
+	_ajuda_em(AJUDA_BT_TOPO)
 	btn_vel.text = "%dx" % velocidade
 	btn_pausa.visible = true
 	btn_pausa.position = Vector2(1070, 12)
@@ -624,6 +647,7 @@ func _entrar_mapa() -> void:
 	btn_lutar.visible = false
 	btn_mapa.visible = false
 	_botoes_guarda(false)
+	_ajuda_em(AJUDA_BT_TOPO)
 	btn_nova.visible = false   # "Nova campanha" mora no menu principal
 	btn_pausa.visible = true
 	btn_pausa.position = Vector2(1210, 12)
@@ -844,6 +868,7 @@ func _lutar() -> void:
 	btn_mapa.visible = false
 	_botoes_guarda(false)
 	btn_vel.visible = true
+	_ajuda_em(AJUDA_BT_TOPO)
 	btn_pausa.visible = true
 	btn_pausa.position = Vector2(1070, 12)
 	btn_pausa.size = Vector2(56, 48)
@@ -1604,6 +1629,23 @@ func _botoes_guarda(v: bool) -> void:
 	for b in [btn_melhor, btn_time, btn_desf, btn_ajuda]:
 		if b != null:
 			b.visible = v
+	if v and btn_ajuda != null:
+		btn_ajuda.position = AJUDA_BT.position
+		btn_ajuda.size = AJUDA_BT.size
+
+## Mostra o "?" num lugar fora do guarda-roupa (mapa e luta).
+func _ajuda_em(r: Rect2) -> void:
+	btn_ajuda.position = r.position
+	btn_ajuda.size = r.size
+	btn_ajuda.visible = true
+
+## Botão "?": repete o tutorial da tela à vista (guarda-roupa, mapa, preparação ou luta), sem gravar progresso.
+func _ajuda_da_tela() -> void:
+	if menus.ativo() or menus.em_transicao() or tutorial == null or tutorial.guiado_ativo():
+		return
+	if modo == Modo.GUARDA and (ajuda_aberta or not resumo.is_empty() or not fusao.is_empty()):
+		return
+	tutorial.rever()
 
 func _alternar_ajuda() -> void:
 	if modo != Modo.GUARDA or menus.ativo() or menus.em_transicao():
@@ -1726,6 +1768,14 @@ func _planejar(bis: Array) -> Dictionary:
 		for q in estado.bonecos[bi].pecas:
 			if q != null:
 				reserva.append(q)
+	# peças da reserva agrupadas por (fantasia, espaço), na mesma ordem da reserva: a busca do melhor candidato
+	# olha só o grupo certo em vez de varrer a reserva inteira (o resultado é idêntico)
+	var grupos: Dictionary = {}
+	for q in reserva:
+		var gk: int = q.conjunto() * 8 + q.slot()
+		if not grupos.has(gk):
+			grupos[gk] = []
+		(grupos[gk] as Array).append(q)
 	var livres: Array = bis.duplicate()
 	while not livres.is_empty():
 		var melhor: float = 0.0
@@ -1740,9 +1790,7 @@ func _planejar(bis: Array) -> Dictionary:
 				for s in Pecas.SLOTS:
 					var bp: Peca = null
 					var bq: float = -1.0
-					for q in reserva:
-						if q.slot() != s or q.conjunto() != c:
-							continue
+					for q in grupos.get(c * 8 + s, []):
 						var qq: float = _qualidade(q) + (0.5 if b.pecas[s] == q else 0.0)
 						if qq > bq:
 							bq = qq
@@ -1764,6 +1812,7 @@ func _planejar(bis: Array) -> Dictionary:
 			if m_pecas[s] != null:
 				plano[m_bi][s] = m_pecas[s]
 				reserva.erase(m_pecas[s])
+				(grupos[m_pecas[s].conjunto() * 8 + s] as Array).erase(m_pecas[s])
 		livres.erase(m_bi)
 	# o que sobrou: primeiro o que já vestem, depois a melhor peça livre do espaço
 	for bi in bis:
@@ -2756,7 +2805,7 @@ func _quebrar_calc(txt: String, tam: int, larg: float) -> Array[String]:
 func _paragrafo(txt: String, pos: Vector2, tam: int, cor: Color, larg: float, passo: float, centro: bool = false, contorno: int = 0) -> float:
 	var y: float = pos.y
 	for l in _quebrar(txt, tam, larg):
-		Desenho.texto(self, l, Vector2(pos.x, y), tam, cor, larg if centro else -1.0, contorno)
+		Desenho.texto(_c, l, Vector2(pos.x, y), tam, cor, larg if centro else -1.0, contorno)
 		y += passo
 	return y
 
@@ -2810,17 +2859,17 @@ static func nove(c: CanvasItem, tex: Texture2D, src: Rect2, m: Vector4, dst: Rec
 
 ## Painel: miolo colorido com moldura de madeira por cima.
 func _painel(r: Rect2, fundo: Color, esc: float = 0.5, moldura: Color = Color.WHITE) -> void:
-	draw_rect(r.grow(-6.0 * esc * 2.0), fundo)
-	draw_rect(r.grow(-12.0 * esc * 2.0), Color(0, 0, 0, 0.18), false, 2.0)
-	nove(self, GUI_TEX, R_MADEIRA, M_MADEIRA, r, esc, moldura, false)
+	_c.draw_rect(r.grow(-6.0 * esc * 2.0), fundo)
+	_c.draw_rect(r.grow(-12.0 * esc * 2.0), Color(0, 0, 0, 0.18), false, 2.0)
+	nove(_c, GUI_TEX, R_MADEIRA, M_MADEIRA, r, esc, moldura, false)
 
 ## Botão de papel/bege com tinta `cor` (usa o recorte de botão solto ou apertado).
 func _botao_arte(r: Rect2, cor: Color, apertado: bool = false, esc: float = 0.5) -> void:
 	if apertado:
 		var rr := Rect2(r.position.x, r.position.y + 4.0 * esc, r.size.x, r.size.y - 4.0 * esc)
-		nove(self, BOT_TEX, R_BT_P, M_BT, rr, esc, cor)
+		nove(_c, BOT_TEX, R_BT_P, M_BT, rr, esc, cor)
 	else:
-		nove(self, BOT_TEX, R_BT_N, M_BT, r, esc, cor)
+		nove(_c, BOT_TEX, R_BT_N, M_BT, r, esc, cor)
 
 func _pintar_botao(bt: BotaoArte) -> void:
 	var d: int = bt.get_draw_mode()
@@ -2869,9 +2918,9 @@ func _ruido(n: float) -> float:
 	return fposmod(sin(n * 12.9898) * 43758.5453, 1.0)
 
 func _ellipse_sombra(p: Vector2, rx: float, ry: float, cor: Color) -> void:
-	draw_set_transform(p, 0.0, Vector2(1.0, ry / rx))
-	draw_circle(Vector2.ZERO, rx, cor)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_c.draw_set_transform(p, 0.0, Vector2(1.0, ry / rx))
+	_c.draw_circle(Vector2.ZERO, rx, cor)
+	_c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _texto_dir(txt: String, x_dir: float, y: float, tam: int, cor: Color, contorno: int = 0) -> void:
 	var fonte: Font = ThemeDB.fallback_font
@@ -2901,10 +2950,11 @@ func _icone_gui(ico: Rect2, centro: Vector2, esc: float, cor: Color = Color.WHIT
 	draw_texture_rect_region(GUI_TEX, Rect2((centro - tam * 0.5).round(), tam), ico, cor)
 
 func _estrela4(p: Vector2, r: float, cor: Color) -> void:
-	draw_colored_polygon(PackedVector2Array([p + Vector2(0, -r), p + Vector2(r * 0.28, -r * 0.28), p + Vector2(r, 0), p + Vector2(r * 0.28, r * 0.28), p + Vector2(0, r), p + Vector2(-r * 0.28, r * 0.28), p + Vector2(-r, 0), p + Vector2(-r * 0.28, -r * 0.28)]), cor)
+	_c.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -r), p + Vector2(r * 0.28, -r * 0.28), p + Vector2(r, 0), p + Vector2(r * 0.28, r * 0.28), p + Vector2(0, r), p + Vector2(-r * 0.28, r * 0.28), p + Vector2(-r, 0), p + Vector2(-r * 0.28, -r * 0.28)]), cor)
 
 # ------------------------------------------------------------------ desenho
 func _draw() -> void:
+	_topo_fila.clear()   # pedidos de pintura por cima dos botões feitos durante este desenho (a camada de topo os executa)
 	if modo == Modo.COMBATE or modo == Modo.TITULO:
 		return
 	if modo == Modo.MAPA:
@@ -2945,13 +2995,19 @@ func _draw() -> void:
 	_aviso_lutar()
 	_efeitos()
 	_aviso_time()
-	_arrasto()
-	_dica()
-	_dica_modulo()
-	_aviso_cursor_tela()
-	_confirma_fusao()
-	_tela_resumo()
-	_tela_ajuda()
+
+## Pintura da camada de topo: roda o que o `_draw` deixou na fila, com `_c` apontando para a camada.
+func _desenhar_topo(cv: CanvasItem) -> void:
+	if modo != Modo.GUARDA and modo != Modo.MAPA:
+		return
+	_c = cv
+	if modo == Modo.GUARDA:
+		# por cima dos botões (ver CamadaTopo): arrasto, dicas, recados e janelas, sempre com o estado de agora
+		for f in [_arrasto, _dica, _dica_modulo, _aviso_cursor_tela, _confirma_fusao, _tela_resumo, _tela_ajuda]:
+			(f as Callable).call()
+	for f2 in _topo_fila:   # o que o `_draw` pediu (dicas do mapa, lista de avisos): dados fixos, repetir é inofensivo
+		(f2 as Callable).call()
+	_c = self
 
 ## Retângulo do k-ésimo encaixe de módulo, ao lado da torre desenhada.
 func rect_mod_slot(k: int) -> Rect2:
@@ -3217,12 +3273,12 @@ func _aviso_cursor_tela() -> void:
 	r.position.x = minf(r.position.x, 1272.0 - r.size.x)
 	r.position.y = clampf(r.position.y, 6.0, 714.0 - alt)
 	r.position.x = maxf(r.position.x, 6.0)
-	draw_rect(Rect2(r.position + Vector2(3, 4), r.size), Color(0, 0, 0, 0.35 * al))
-	draw_rect(r, Color(0.1, 0.05, 0.06, 0.95 * al))
-	draw_rect(r, _com_alfa(aviso_cursor_cor, al), false, 2.0)
+	_c.draw_rect(Rect2(r.position + Vector2(3, 4), r.size), Color(0, 0, 0, 0.35 * al))
+	_c.draw_rect(r, Color(0.1, 0.05, 0.06, 0.95 * al))
+	_c.draw_rect(r, _com_alfa(aviso_cursor_cor, al), false, 2.0)
 	var y: float = r.position.y + 21.0
 	for l in linhas:
-		Desenho.texto(self, l, Vector2(r.position.x + 12, y), 14, _com_alfa(aviso_cursor_cor.lightened(0.45), al))
+		Desenho.texto(_c, l, Vector2(r.position.x + 12, y), 14, _com_alfa(aviso_cursor_cor.lightened(0.45), al))
 		y += 18.0
 
 func _tela_resumo() -> void:
@@ -3242,9 +3298,9 @@ func _tela_resumo() -> void:
 	var alt: float = 120.0 + lin_p * 66.0 + (16.0 if lin_p > 0 and linhas.size() > 0 else 0.0) + linhas.size() * 32.0
 	alt = clampf(alt, 230.0, 640.0)
 	var r := Rect2(300, (720.0 - alt) * 0.5, 680, alt)
-	draw_rect(Rect2(0, 0, 1280, 720), Color(0, 0, 0, 0.6 * clampf(tt / 0.2, 0.0, 1.0)))
+	_c.draw_rect(Rect2(0, 0, 1280, 720), Color(0, 0, 0, 0.6 * clampf(tt / 0.2, 0.0, 1.0)))
 	_painel(r, Color(0.14, 0.09, 0.12, 0.98), 0.75)
-	Desenho.texto(self, "Volta da luta", Vector2(r.position.x, r.position.y + 54), 30, Desenho.DOURADO, r.size.x, 5)
+	Desenho.texto(_c, "Volta da luta", Vector2(r.position.x, r.position.y + 54), 30, Desenho.DOURADO, r.size.x, 5)
 	var y0: float = r.position.y + 76.0
 	for j in pecas.size():
 		var k2: int = pecas[j]
@@ -3259,12 +3315,12 @@ func _tela_resumo() -> void:
 		if p.raridade > 0:
 			var cc: Color = Pecas.cor_rar(p.raridade)
 			var pu: float = 0.5 + 0.5 * sin(t * 5.0 + j)
-			draw_circle(Vector2(cx, cy), 30.0, _com_alfa(cc, 0.16 + 0.14 * pu))
-			draw_arc(Vector2(cx, cy), 30.0, 0.0, TAU, 28, _com_alfa(cc, 0.9), 2.0)
+			_c.draw_circle(Vector2(cx, cy), 30.0, _com_alfa(cc, 0.16 + 0.14 * pu))
+			_c.draw_arc(Vector2(cx, cy), 30.0, 0.0, TAU, 28, _com_alfa(cc, 0.9), 2.0)
 			if age < 0.6:
 				_estrela4(Vector2(cx, cy - 24.0 - age * 30.0), 8.0 * (1.0 - age / 0.6) + 2.0, Color(1, 0.95, 0.5))
-			Desenho.texto(self, Pecas.RARIDADE_NOME[p.raridade], Vector2(cx - 31, cy + 40), 13, cc.lightened(0.3), 62.0, 3)
-		Desenho.icone(self, p.tipo, Vector2(cx, cy), 44.0 * esc, p.nivel, 0.0, 0.0, p.marcas, p.raridade)
+			Desenho.texto(_c, Pecas.RARIDADE_NOME[p.raridade], Vector2(cx - 31, cy + 40), 13, cc.lightened(0.3), 62.0, 3)
+		Desenho.icone(_c, p.tipo, Vector2(cx, cy), 44.0 * esc, p.nivel, 0.0, 0.0, p.marcas, p.raridade)
 	var y: float = y0 + lin_p * 66.0 + (22.0 if lin_p > 0 else 8.0)
 	for k3 in linhas:
 		var it: Dictionary = itens[k3]
@@ -3287,29 +3343,29 @@ func _tela_resumo() -> void:
 				"trofeu":
 					txt = "+%d troféu%s" % [int(it["n"]), "" if int(it["n"]) == 1 else "s"]
 					cor = Desenho.DOURADO
-			Desenho.texto(self, txt, Vector2(r.position.x + 50 + dx, y + 18), 18, _com_alfa(cor, al), -1.0, 3)
+			Desenho.texto(_c, txt, Vector2(r.position.x + 50 + dx, y + 18), 18, _com_alfa(cor, al), -1.0, 3)
 		y += 32.0
-	Desenho.texto(self, "Clique para continuar", Vector2(r.position.x, r.end.y - 22), 14, Color(1, 1, 1, 0.45 + 0.25 * sin(t * 3.0)), r.size.x)
+	Desenho.texto(_c, "Clique para continuar", Vector2(r.position.x, r.end.y - 22), 14, Color(1, 1, 1, 0.45 + 0.25 * sin(t * 3.0)), r.size.x)
 
 func _tela_ajuda() -> void:
 	if not ajuda_aberta:
 		return
 	var r := Rect2(190, 22, 790, 676)
-	draw_rect(Rect2(0, 0, 1280, 720), Color(0, 0, 0, 0.6))
+	_c.draw_rect(Rect2(0, 0, 1280, 720), Color(0, 0, 0, 0.6))
 	_painel(r, Color(0.14, 0.09, 0.12, 0.98), 0.75)
-	Desenho.texto(self, "Atalhos e regras", Vector2(r.position.x, r.position.y + 56), 30, Desenho.DOURADO, r.size.x, 5)
+	Desenho.texto(_c, "Atalhos e regras", Vector2(r.position.x, r.position.y + 56), 30, Desenho.DOURADO, r.size.x, 5)
 	var x: float = r.position.x + 36.0
 	var y: float = r.position.y + 92.0
-	Desenho.texto(self, "Atalhos", Vector2(x, y), 20, Color(0.7, 1.0, 0.75), -1.0, 3)
+	Desenho.texto(_c, "Atalhos", Vector2(x, y), 20, Color(0.7, 1.0, 0.75), -1.0, 3)
 	y += 10.0
 	for l in AJUDA_ATALHOS:
 		y = _paragrafo(l, Vector2(x, y + 12.0), 14, Color(1, 0.96, 0.88), 718.0, 18.0)
 	y += 14.0
-	Desenho.texto(self, "Regras", Vector2(x, y), 20, Color(1.0, 0.85, 0.5), -1.0, 3)
+	Desenho.texto(_c, "Regras", Vector2(x, y), 20, Color(1.0, 0.85, 0.5), -1.0, 3)
 	y += 10.0
 	for l in AJUDA_REGRAS:
 		y = _paragrafo(l, Vector2(x, y + 12.0), 14, Color(1, 0.96, 0.88), 718.0, 18.0)
-	Desenho.texto(self, "Clique, Esc ou ? para fechar", Vector2(r.position.x, r.end.y - 22), 14, Color(1, 1, 1, 0.5), r.size.x)
+	Desenho.texto(_c, "Clique, Esc ou ? para fechar", Vector2(r.position.x, r.end.y - 22), 14, Color(1, 1, 1, 0.5), r.size.x)
 
 ## Chip discreto junto do LUTAR: quantos avisos há; abre a lista, que leva ao item com um clique. Nunca bloqueia o LUTAR.
 func _aviso_lutar() -> void:
@@ -3320,21 +3376,25 @@ func _aviso_lutar() -> void:
 	var cor: Color = Color(1.0, 0.84, 0.45)
 	_botao_arte(CHIP_AV, cor.lightened(0.2) if (sob or avisos_aberto) else cor, avisos_aberto)
 	var c: Vector2 = CHIP_AV.position + Vector2(22, 18)
-	draw_circle(c, 11.0, Color(0.72, 0.22, 0.14))
-	Desenho.texto(self, "!", c + Vector2(-10, 6), 17, Color.WHITE, 20.0)
+	UIComum.emblema(self, "aviso", c + Vector2(-10, -8), 2.0, Color(0.95, 0.35, 0.2))
 	Desenho.texto(self, "%d aviso%s" % [n, "" if n == 1 else "s"], CHIP_AV.position + Vector2(42, 24), 16, COR_TINTA_ESC)
 	if not avisos_aberto:
 		return
+	_topo_fila.append(_aviso_lista)
+
+## Lista de avisos aberta (por cima do LUTAR e dos outros botões).
+func _aviso_lista() -> void:
+	var n: int = avisos_cache.size()
 	var lr: Rect2 = _rect_aviso_lista()
 	_painel(lr, Color(0.14, 0.09, 0.1, 0.98), 0.5)
 	for k in mini(6, n):
 		var rl: Rect2 = _rect_aviso_linha(k)
 		var sob_l: bool = rl.has_point(mouse)
-		draw_rect(rl, Color(1, 0.9, 0.5, 0.22) if sob_l else Color(1, 1, 1, 0.06))
+		_c.draw_rect(rl, Color(1, 0.9, 0.5, 0.22) if sob_l else Color(1, 1, 1, 0.06))
 		var linhas: Array[String] = _quebrar(str(avisos_cache[k]["txt"]), 13, rl.size.x - 14.0)
 		var yl: float = rl.position.y + (20.0 if linhas.size() == 1 else 14.0)
 		for i in mini(2, linhas.size()):
-			Desenho.texto(self, linhas[i], Vector2(rl.position.x + 8, yl + i * 15.0), 13, COR_TINTA)
+			Desenho.texto(_c, linhas[i], Vector2(rl.position.x + 8, yl + i * 15.0), 13, COR_TINTA)
 
 func _fundo() -> void:
 	# parede (papel de parede) e rodapé
@@ -3778,14 +3838,18 @@ func _fantasias_boneco(b: Boneco, base: Vector2) -> void:
 	if b.herancas_pendentes() > 0:
 		var rp := Rect2(base.x - 74, y, 148, 28.0)
 		var pu_h: float = 0.5 + 0.5 * sin(t * 5.0)
-		draw_rect(rp, Color(0.12, 0.06, 0.2, 0.78))
-		draw_rect(rp, _com_alfa(Desenho.DOURADO, 0.55 + 0.45 * pu_h), false, 2.0)
+		var pronta_h: bool = b.fantasia_completa() >= 0
+		draw_rect(rp, Color(0.12, 0.06, 0.2, 0.78 if pronta_h else 0.5))
+		draw_rect(rp, _com_alfa(Desenho.DOURADO, 0.55 + 0.45 * pu_h) if pronta_h else Color(0.6, 0.55, 0.5, 0.45), false, 2.0)
 		if rp.has_point(mouse) and arrasto.is_empty():
 			draw_rect(rp, Color(1, 1, 1, 0.16))
 		_rect_heranca.append([rp, estado.bonecos.find(b)])
-		var pronta_h: bool = b.fantasia_completa() >= 0
-		_estrela4(Vector2(rp.position.x + 18.0, rp.get_center().y), 5.0 + pu_h, Desenho.DOURADO if pronta_h else Color(0.7, 0.62, 0.45))
-		Desenho.texto(self, "Herança pronta!", Vector2(rp.position.x + 28.0, rp.position.y + 19), 15, Desenho.DOURADO if pronta_h else Color(0.85, 0.78, 0.6), -1.0, 3)
+		_estrela4(Vector2(rp.position.x + 18.0, rp.get_center().y), 5.0 + pu_h if pronta_h else 4.0, Desenho.DOURADO if pronta_h else Color(0.55, 0.5, 0.42))
+		if pronta_h:
+			Desenho.texto(self, "Herança pronta!", Vector2(rp.position.x + 28.0, rp.position.y + 19), 15, Desenho.DOURADO, -1.0, 3)
+		else:
+			# o poder está à espera, mas só se incorpora com a fantasia completa: tom apagado, sem prometer "pronta"
+			Desenho.texto(self, "Herança: vista 4/4", Vector2(rp.position.x + 28.0, rp.position.y + 19), 13, Color(0.78, 0.73, 0.65, 0.85), -1.0, 3)
 
 ## Ladrilho de uma peça: fundo do espaço, tarja da fantasia, moldura da raridade e ícone.
 func _ladrilho(r: Rect2, p: Peca, escondida: bool = false, sob: bool = false) -> void:
@@ -3794,36 +3858,36 @@ func _ladrilho(r: Rect2, p: Peca, escondida: bool = false, sob: bool = false) ->
 		fundo = fundo.darkened(0.6)
 	elif sob:
 		fundo = fundo.lightened(0.22)
-	draw_rect(r.grow(-2), fundo.darkened(0.2))
-	draw_rect(Rect2(r.position.x + 2, r.position.y + 2, r.size.x - 4, r.size.y * 0.55), fundo)
+	_c.draw_rect(r.grow(-2), fundo.darkened(0.2))
+	_c.draw_rect(Rect2(r.position.x + 2, r.position.y + 2, r.size.x - 4, r.size.y * 0.55), fundo)
 	if escondida:
-		nove(self, GUI_TEX, R_FINA, M_FINA, r, 0.5, Color(1, 1, 1, 0.5))
+		nove(_c, GUI_TEX, R_FINA, M_FINA, r, 0.5, Color(1, 1, 1, 0.5))
 		return
 	match p.raridade:
 		0:
-			draw_rect(r.grow(-2), Color(1, 1, 1, 0.22), false, 1.0)
+			_c.draw_rect(r.grow(-2), Color(1, 1, 1, 0.22), false, 1.0)
 		1:
-			draw_rect(r.grow(-2), Pecas.RARIDADE_COR[1], false, 2.0)
+			_c.draw_rect(r.grow(-2), Pecas.RARIDADE_COR[1], false, 2.0)
 		_:
 			var pulso: float = 0.5 + 0.5 * sin(t * 3.0)
 			var cr_r: Color = Pecas.cor_rar(p.raridade)
-			draw_rect(r.grow(1), Color(cr_r.r, cr_r.g, cr_r.b, 0.2 + 0.25 * pulso), false, 2.0)
-			draw_rect(r.grow(-2), cr_r, false, 2.0)
+			_c.draw_rect(r.grow(1), Color(cr_r.r, cr_r.g, cr_r.b, 0.2 + 0.25 * pulso), false, 2.0)
+			_c.draw_rect(r.grow(-2), cr_r, false, 2.0)
 			if p.raridade >= 4:
-				draw_rect(r.grow(-5), Color.from_hsv(fposmod(t * 0.3 + 0.5, 1.0), 0.6, 1.0, 0.5), false, 1.0)
-	nove(self, GUI_TEX, R_FINA, M_FINA, r, 0.5)
+				_c.draw_rect(r.grow(-5), Color.from_hsv(fposmod(t * 0.3 + 0.5, 1.0), 0.6, 1.0, 0.5), false, 1.0)
+	nove(_c, GUI_TEX, R_FINA, M_FINA, r, 0.5)
 	# tarja da fantasia
-	draw_rect(Rect2(r.position.x + 4, r.position.y + 4, r.size.x - 8, 4), Pecas.CONJUNTO_COR[p.conjunto()])
+	_c.draw_rect(Rect2(r.position.x + 4, r.position.y + 4, r.size.x - 8, 4), Pecas.CONJUNTO_COR[p.conjunto()])
 	var c: Vector2 = r.get_center() + Vector2(0, 2)
 	var tam: float = r.size.x * 0.72
-	Desenho.icone(self, p.tipo, c, tam, 0, 0.0, 0.0, [], p.raridade)
+	Desenho.icone(_c, p.tipo, c, tam, 0, 0.0, 0.0, [], p.raridade)
 	var k: float = r.size.x / 46.0
 	if p.nivel > 0:
-		Desenho.pips(self, Vector2(c.x, r.end.y - 5.0 * k), p.nivel, 1.8 * k, 5.0 * k)
+		Desenho.pips(_c, Vector2(c.x, r.end.y - 5.0 * k), p.nivel, 1.8 * k, 5.0 * k)
 	if p.marcas.size() > 0:
-		Desenho.pontos_marcas(self, Vector2(r.position.x + 6.0 * k, c.y), p.marcas, 2.2 * k, 5.6 * k, true)
+		Desenho.pontos_marcas(_c, Vector2(r.position.x + 6.0 * k, c.y), p.marcas, 2.2 * k, 5.6 * k, true)
 	if sob:
-		draw_rect(r.grow(1.0), Desenho.DOURADO, false, 2.0)
+		_c.draw_rect(r.grow(1.0), Desenho.DOURADO, false, 2.0)
 
 ## Grade da aba Fantasias: um cartão por fantasia, com as 4 peças, o nome e quantas dá para vestir.
 func _cartoes_fantasias() -> void:
@@ -4047,7 +4111,9 @@ func _celula_previa(g: Dictionary, topo_esq: Vector2, larg: float, alt: float, e
 		linhas_r = _quebrar(rotulo, 13, larg - 2.0)
 		reserva = 4.0 + linhas_r.size() * 15.0
 	var esc: float = esc_base * lerpf(1.0, Balanco.TIPO_ESCALA[tp], 0.35)
-	var pe: Vector2 = Vector2(topo_esq.x + larg * 0.5, topo_esq.y + alt - reserva - 3.0)
+	# os bichos olham para a esquerda (o corpo cresce para lá): o centro fica dentro da moldura do painel nos dois lados
+	var cx_b: float = clampf(topo_esq.x + larg * 0.5 + 8.0, PREVIA.position.x + 18.0 + 70.0 * esc, PREVIA.end.x - 16.0 - 44.0 * esc)
+	var pe: Vector2 = Vector2(cx_b, topo_esq.y + alt - reserva - 3.0)
 	_ellipse_sombra(pe + Vector2(0, 2), 30.0 * esc, 5.0 * esc, Color(0, 0, 0, 0.35))
 	Desenho.boneco(self, pe, esc, -1.0, 1, ini["pecas"], 0.0, t * 2.0 + idx, false, 0.0, 1.0, false, -1, 0.0, tp, false, false, fi, eli)
 	var y: float = pe.y + 17.0
@@ -4064,7 +4130,7 @@ func _previa() -> void:
 	_painel(PREVIA, Color(0.24, 0.1, 0.12, 0.96))
 	var xi: float = PREVIA.position.x + 18.0
 	var li: float = PREVIA.size.x - 36.0
-	draw_circle(PREVIA.position + Vector2(32, 35), 8, Desenho.COR_INIMIGO)
+	UIComum.emblema(self, "inimigo", PREVIA.position + Vector2(20, 26), 2.0, Desenho.COR_INIMIGO)
 	var tem_chefe: bool = not estado.chefe.is_empty()
 	var tit_prev: String = "Próxima onda: CHEFE" if tem_chefe else "Próxima onda"
 	if estado.invasao:
@@ -4096,7 +4162,7 @@ func _previa() -> void:
 		var linhas: int = int(ceil(grupos.size() / float(cols)))
 		var area_h: float = 196.0
 		var alt_c: float = minf(86.0, area_h / maxf(1.0, linhas))
-		var esc_b: float = clampf((alt_c - 26.0) / 56.0, 0.45, 0.95)
+		var esc_b: float = clampf((alt_c - 26.0) / 56.0, 0.45, 0.8)   # até 0,8: os bichos grandes não passam da borda do painel
 		var desloc: float = (area_h - minf(area_h, linhas * alt_c)) * 0.5
 		for i in grupos.size():
 			var c: int = i % cols
@@ -4184,14 +4250,14 @@ func _confirma_fusao() -> void:
 	var base: Peca = fusao["base"]
 	var outra: Peca = fusao["outra"]
 	var res: Peca = _resultado_fusao(base, outra)
-	draw_rect(Rect2(0, 0, 1280, 720), Color(0, 0, 0, 0.55))
+	_c.draw_rect(Rect2(0, 0, 1280, 720), Color(0, 0, 0, 0.55))
 	_painel(FUSAO_R, Color(0.14, 0.09, 0.12, 0.99), 0.75)
-	Desenho.texto(self, "Fundir peças iguais?", Vector2(FUSAO_R.position.x, FUSAO_R.position.y + 46.0), 26, Desenho.DOURADO, FUSAO_R.size.x, 5)
+	Desenho.texto(_c, "Fundir peças iguais?", Vector2(FUSAO_R.position.x, FUSAO_R.position.y + 46.0), 26, Desenho.DOURADO, FUSAO_R.size.x, 5)
 	var y: float = FUSAO_R.position.y + 62.0
 	_ladrilho(Rect2(512, y, 56, 56), base)
-	Desenho.texto(self, "+", Vector2(568, y + 38.0), 30, COR_TINTA, 44.0, 4)
+	Desenho.texto(_c, "+", Vector2(568, y + 38.0), 30, COR_TINTA, 44.0, 4)
 	_ladrilho(Rect2(612, y, 56, 56), outra)
-	Desenho.texto(self, "→", Vector2(668, y + 38.0), 30, Desenho.DOURADO, 44.0, 4)
+	Desenho.texto(_c, "→", Vector2(668, y + 38.0), 30, Desenho.DOURADO, 44.0, 4)
 	_ladrilho(Rect2(712, y, 56, 56), res)
 	var texto: String = "%s + %s → %s, %s" % [_rot_peca(base), _rot_peca(outra), _rot_peca(res), _rot_marcas(res.marcas.size())]
 	var yt: float = _paragrafo(texto, Vector2(FUSAO_R.position.x + 30.0, y + 88.0), 18, Color(1, 0.95, 0.85), FUSAO_R.size.x - 60.0, 23.0, true, 3)
@@ -4203,9 +4269,9 @@ func _confirma_fusao() -> void:
 	var sob_ok: bool = FUSAO_OK.has_point(mouse_fusao())
 	var sob_nao: bool = FUSAO_NAO.has_point(mouse_fusao())
 	_botao_arte(FUSAO_OK, Color(0.62, 0.9, 0.55).lightened(0.2 if sob_ok else 0.0), sob_ok and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT))
-	Desenho.texto(self, "Fundir", FUSAO_OK.position + Vector2(0, 31), 24, COR_TINTA_ESC, FUSAO_OK.size.x)
+	Desenho.texto(_c, "Fundir", FUSAO_OK.position + Vector2(0, 31), 24, COR_TINTA_ESC, FUSAO_OK.size.x)
 	_botao_arte(FUSAO_NAO, Color(1.0, 0.7, 0.62).lightened(0.2 if sob_nao else 0.0), sob_nao and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT))
-	Desenho.texto(self, "Cancelar", FUSAO_NAO.position + Vector2(0, 31), 24, COR_TINTA_ESC, FUSAO_NAO.size.x)
+	Desenho.texto(_c, "Cancelar", FUSAO_NAO.position + Vector2(0, 31), 24, COR_TINTA_ESC, FUSAO_NAO.size.x)
 
 ## Posição do ponteiro para a confirmação (o `mouse` normal fica fora da tela com menus por cima).
 func mouse_fusao() -> Vector2:
@@ -4246,20 +4312,23 @@ func _efeitos() -> void:
 func _arrasto() -> void:
 	if not arrasto.has("peca"):
 		if arrasto.has("boneco"):
-			Desenho.boneco(self, mouse + Vector2(0, 50), 1.3, 1.0, 0, (arrasto["boneco"] as Boneco).pecas, 0.0, 0.0, false, 0.0, 0.8, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, estado.bonecos.find(arrasto["boneco"]), false)
+			Desenho.boneco(_c, mouse + Vector2(0, 50), 1.3, 1.0, 0, (arrasto["boneco"] as Boneco).pecas, 0.0, 0.0, false, 0.0, 0.8, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, estado.bonecos.find(arrasto["boneco"]), false)
 		return
 	var p: Peca = arrasto["peca"]
 	_ellipse_sombra(mouse + Vector2(4, 36), 30.0, 8.0, Color(0, 0, 0, 0.35))
-	draw_circle(mouse, 36.0, Color(1, 1, 1, 0.16))
-	draw_arc(mouse, 36.0, 0.0, TAU, 28, Color(1.0, 0.9, 0.5, 0.7), 2.0)
-	Desenho.icone(self, p.tipo, mouse, 62.0, p.nivel, 0.0, 0.0, p.marcas, p.raridade)
+	_c.draw_circle(mouse, 36.0, Color(1, 1, 1, 0.16))
+	_c.draw_arc(mouse, 36.0, 0.0, TAU, 28, Color(1.0, 0.9, 0.5, 0.7), 2.0)
+	Desenho.icone(_c, p.tipo, mouse, 62.0, p.nivel, 0.0, 0.0, p.marcas, p.raridade)
 	var bi_c: int = _boneco_em(mouse)
 	if bi_c >= 0:
 		_caixa_dica(_comparar(bi_c, p), 290.0, Pecas.CONJUNTO_COR[p.conjunto()], Desenho.DOURADO, mouse, Vector2(48, -40))
 
 # ------------------------------------------------------------------ dicas
-## Caixa de dica com a moldura de madeira. Itens: ["t", texto, tam, cor], ["sep"] ou ["m", texto, tam, cor, cor_da_bolinha].
-## A largura é fixa (caixa estável) e a caixa nunca sai da tela.
+## Caixa de dica com a moldura de madeira. Itens: ["t", texto, tam, cor], ["sep"] ou
+## ["m", texto, tam, cor, cor_da_situação, ícone]: linha com marcador à esquerda. `ícone` é o tipo de uma peça (int, ícone da roupa em
+## pixel art numa plaquinha da cor da situação) ou o nome de um emblema (String, ver UIComum.EMBLEMAS). O marcador aparece UMA vez, na
+## primeira linha; se o texto quebrar, as linhas seguintes recuam sob o texto da primeira, sem marcador novo.
+## A largura é fixa (caixa estável) e a caixa nunca sai da tela. A pintura vai para a camada de topo (acima dos botões).
 func _caixa_dica(itens: Array, larg: float, cor_faixa: Color, cor_borda: Color, ancora: Vector2, desl: Vector2) -> Rect2:
 	var pad_x: float = 20.0
 	var pad_y: float = 18.0
@@ -4274,31 +4343,55 @@ func _caixa_dica(itens: Array, larg: float, cor_faixa: Color, cor_borda: Color, 
 			y += 6.0
 			continue
 		var tam: int = it[2]
-		var ml: float = 0.0 if tipo == "t" else 16.0
+		var ml: float = 0.0 if tipo == "t" else 26.0
+		var ic: Variant = it[5] if it.size() > 5 else null
+		var passo: float = float(tam) + 4.0
+		var primeira: bool = true
 		for l in _quebrar(it[1], tam, interno - ml):
-			lin.append([tipo, y + tam * 0.9, l, tam, it[3], it[4] if it.size() > 4 else Color.WHITE, ml])
-			y += tam + 4.0
+			if primeira and ic is int:
+				y += 3.0   # a plaquinha da peça é mais alta que a linha de texto
+			lin.append([tipo, y + tam * 0.9, l, tam, it[3], it[4] if it.size() > 4 else Color.WHITE, ml, ic if primeira else null])
+			y += passo
+			if primeira and ic is int:
+				y += 3.0
+			primeira = false
 	var alt: float = y + 2.0 * pad_y
 	var caixa := Rect2(ancora + desl, Vector2(larg, alt))
 	if caixa.end.x > 1272.0:
 		caixa.position.x = ancora.x - desl.x - caixa.size.x
 	caixa.position.x = maxf(6.0, caixa.position.x)
 	caixa.position.y = clampf(caixa.position.y, 6.0, 714.0 - alt)
-	draw_rect(Rect2(caixa.position + Vector2(4, 5), caixa.size), Color(0, 0, 0, 0.35))
+	if _c == self:
+		_topo_fila.append(_pintar_dica.bind(caixa, lin, cor_faixa, cor_borda))
+	else:
+		_pintar_dica(caixa, lin, cor_faixa, cor_borda)
+	return caixa
+
+func _pintar_dica(caixa: Rect2, lin: Array, cor_faixa: Color, cor_borda: Color) -> void:
+	var pad_x: float = 20.0
+	var pad_y: float = 18.0
+	var alt: float = caixa.size.y
+	_c.draw_rect(Rect2(caixa.position + Vector2(4, 5), caixa.size), Color(0, 0, 0, 0.35))
 	_painel(caixa, Color(0.08, 0.05, 0.09, 0.98))
-	draw_rect(caixa.grow(-10.0), _com_alfa(cor_borda, 0.8), false, 1.5)
-	draw_rect(Rect2(caixa.position.x + 14.0, caixa.position.y + 14.0, 3.0, alt - 28.0), cor_faixa)
+	_c.draw_rect(caixa.grow(-10.0), _com_alfa(cor_borda, 0.8), false, 1.5)
+	_c.draw_rect(Rect2(caixa.position.x + 14.0, caixa.position.y + 14.0, 3.0, alt - 28.0), cor_faixa)
 	var ox: float = caixa.position.x + pad_x + 4.0
 	var oy: float = caixa.position.y + pad_y
 	for l in lin:
 		if l[0] == "sep":
-			draw_line(Vector2(ox, oy + float(l[1])), Vector2(caixa.end.x - pad_x, oy + float(l[1])), Color(1, 1, 1, 0.16), 1.0)
-		elif l[0] == "m":
-			draw_circle(Vector2(ox + 5.0, oy + float(l[1]) - 4.0), 4.5, l[5])
-			Desenho.texto(self, l[2], Vector2(ox + float(l[6]), oy + float(l[1])), l[3], l[4])
-		else:
-			Desenho.texto(self, l[2], Vector2(ox, oy + float(l[1])), l[3], l[4])
-	return caixa
+			_c.draw_line(Vector2(ox, oy + float(l[1])), Vector2(caixa.end.x - pad_x, oy + float(l[1])), Color(1, 1, 1, 0.16), 1.0)
+			continue
+		if l[0] == "m" and l[7] != null:
+			var base_y: float = oy + float(l[1])
+			if l[7] is int:
+				var cc := Vector2(ox + 10.0, base_y - 5.0)
+				var cs: Color = l[5]
+				_c.draw_rect(Rect2(cc - Vector2(11, 11), Vector2(22, 22)), Color(cs.r, cs.g, cs.b, 0.4))
+				_c.draw_rect(Rect2(cc - Vector2(11, 11), Vector2(22, 22)), Color(cs.r, cs.g, cs.b, 0.95), false, 1.5)
+				Desenho.icone(_c, int(l[7]), cc, 18.0)
+			else:
+				UIComum.emblema(_c, str(l[7]), Vector2(ox + 1.0, base_y - 12.0), 2.0, l[5])
+		Desenho.texto(_c, l[2], Vector2(ox + float(l[6]), oy + float(l[1])), l[3], l[4])
 
 ## Dica do botão "Promover tudo" de um gato.
 func _dica_promover_tudo(i: int) -> void:
@@ -4524,13 +4617,13 @@ func _dica_fantasia(c: int) -> void:
 		var nome: String = "%s (%s)" % [Pecas.NOME[int(st["tipos"][i])], Pecas.SLOT_NOME[Pecas.SLOT[int(st["tipos"][i])]]]
 		match int(st["onde"][i]):
 			FS_GATO:
-				itens.append(["m", nome + ": já com " + nome_g, 13, verde, Color(0.4, 0.9, 0.5)])
+				itens.append(["m", nome + ": já com " + nome_g, 13, verde, Color(0.4, 0.9, 0.5), int(st["tipos"][i])])
 			FS_GUARDA:
-				itens.append(["m", nome + ": no guarda-roupa", 13, Color(0.85, 0.95, 1.0), Color(0.5, 0.75, 1.0)])
+				itens.append(["m", nome + ": no guarda-roupa", 13, Color(0.85, 0.95, 1.0), Color(0.5, 0.75, 1.0), int(st["tipos"][i])])
 			FS_OUTRO:
-				itens.append(["m", nome + ": com " + estado.bonecos[int(st["dono"][i])].nome, 13, laranja, Color(1.0, 0.6, 0.25)])
+				itens.append(["m", nome + ": com " + estado.bonecos[int(st["dono"][i])].nome, 13, laranja, Color(1.0, 0.6, 0.25), int(st["tipos"][i])])
 			_:
-				itens.append(["m", nome + ": você ainda não tem", 13, cinza, Color(0.45, 0.45, 0.5)])
+				itens.append(["m", nome + ": você ainda não tem", 13, cinza, Color(0.45, 0.45, 0.5), int(st["tipos"][i])])
 	if int(st["outro"]) > 0:
 		itens.append(["t", "Peças de outro gato não saem sozinhas: tire do gato primeiro.", 13, cinza])
 	_caixa_dica(itens, 340.0, cor, Desenho.DOURADO, mouse, Vector2(18, -92))
@@ -4646,7 +4739,7 @@ func _dica() -> void:
 	for m in Pecas.Marca.values():
 		var qtd: int = p.contar_marca(m)
 		if qtd > 0:
-			itens.append(["m", Pecas.marca_linha(m, qtd), 13, Pecas.MARCA_COR[m].lightened(0.3), Pecas.MARCA_COR[m]])
+			itens.append(["m", Pecas.marca_linha(m, qtd), 13, Pecas.MARCA_COR[m].lightened(0.3), Pecas.MARCA_COR[m], "marca%d" % int(m)])
 	# uma linha de ação: nível, senão fundir, senão o motivo
 	var par: int = 0
 	for q in estado.guarda:

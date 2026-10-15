@@ -347,3 +347,58 @@ class Faiscas:
 				c.draw_rect(Rect2(pp - Vector2(z, z) * 0.5, Vector2(z, z)), Color(col.r, col.g, col.b, a))
 			elif float(q["t"]) >= 0.0:
 				Oficina.trofeu(c, ((q["p"] as Vector2).round()) - Vector2(10, 10), 2.0)
+
+# ------------------------------------------------------------------ emblemas em pixel art
+## Ícones pequenos de grade (substituem as bolinhas coloridas usadas como marcador).
+## Letras: o = contorno escuro, c = cor do emblema, l = cor clara, P = rosa, k = escuro, p = nariz.
+const EMBLEMAS := {
+	"inimigo": [
+		".oo....oo.",
+		"oPPo..oPPo",
+		"oPPooooPPo",
+		".occcccco.",
+		".ockcckco.",
+		".occcccco.",
+		"..occcco..",
+		"...ocpco..",
+		"...oooo...",
+	],
+	"aviso": [
+		"....o....",
+		"...oco...",
+		"..ockco..",
+		"..ockco..",
+		".occkcco.",
+		".occccco.",
+		".occkcco.",
+		"ooooooooo",
+	],
+	"marca0": [".....oo", "....olo", "...olo.", "..olo..", ".olo...", "olo....", "oo....."],
+	"marca1": ["...o...", "..oco..", ".occlo.", "occlcco", ".occco.", "..oco..", "...o..."],
+	"marca2": ["ooooooo", "occlcco", "occlcco", "occccco", ".occco.", "..oco..", "...o..."],
+	"marca3": ["...o...", "..oco..", "..occo.", ".occlco", ".occlco", ".occcco", "..ooo.."],
+	"marca4": [".....l.", "....o..", ".ooooo.", "occccco", "oclccco", "occccco", ".ooooo."],
+}
+
+## Desenha o emblema `k` com o canto de cima em `pos` e `esc` pixels por quadradinho. Devolve a largura desenhada.
+static func emblema(c: CanvasItem, k: String, pos: Vector2, esc: float, cor: Color) -> float:
+	var g: Array = EMBLEMAS.get(k, [])
+	if g.is_empty():
+		return 0.0
+	var escuro := Color(0.1, 0.05, 0.08)
+	var larg: int = 0
+	for y in g.size():
+		var lin: String = g[y]
+		larg = maxi(larg, lin.length())
+		for x in lin.length():
+			var ch: String = lin[x]
+			var col: Color
+			match ch:
+				"o": col = escuro
+				"c": col = cor
+				"l": col = cor.lightened(0.55)
+				"P", "p": col = Color(1.0, 0.72, 0.78)
+				"k": col = escuro
+				_: continue
+			c.draw_rect(Rect2((pos + Vector2(x, y) * esc).round(), Vector2(esc, esc)), col)
+	return larg * esc

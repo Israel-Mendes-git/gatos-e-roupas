@@ -4595,7 +4595,7 @@ func _hud() -> void:
 			Desenho.texto(self, Balanco.ATO_NOME[estado.ato - 1], Vector2(22, 62), 16, Desenho.DOURADO, -1.0, 3)
 	# contador de inimigos restantes
 	var restam: int = sim.inimigos.size() + sim.fila.size()
-	draw_circle(Vector2(560, 30), 11, Desenho.COR_INIMIGO)
+	UIComum.emblema(self, "inimigo", Vector2(546, 16), 2.0, Desenho.COR_INIMIGO)   # cabecinha de rato em pixel art, não uma bola
 	Desenho.texto(self, str(restam), Vector2(580, 40), 28, Color(1, 1, 1), -1.0, 4)
 	# barra grande do chefe com nome, no topo
 	for u in sim.inimigos:
