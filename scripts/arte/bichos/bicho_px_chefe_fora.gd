@@ -400,8 +400,8 @@ static func _monta(g: Dictionary) -> Dictionary:
 			var v: int = G[j * _W + i]
 			s2 += String.chr(v) if v != 0 else "."
 		lin.append(s2)
-	# "t" = molde do tronco, "c" = largura do crânio (chapéu), "max" = quanto a roupa de corpo pode crescer (chefe é bem maior)
-	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin, "t": BichoPx.recorte(_tr, _W, _H, _OX, _OY), "c": _cr, "max": Vector2i(32, 20)}
+	# "t" = molde do tronco, "c" = largura do crânio (chapéu), "cobre" = quanto da altura do tronco a roupa de corpo cobre (no chefe, só o dorso)
+	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin, "t": BichoPx.recorte(_tr, _W, _H, _OX, _OY), "c": _cr, "cobre": 0.5}
 
 # ================================================================ 5 TOUPEIRA ESCAVADORA
 const _HELM: Array = [
@@ -560,6 +560,7 @@ static func _monta5(G: PackedInt32Array, g: Dictionary) -> void:
 	var gy: int = g["gy"]
 	_rect(B, hx + 1, gy + 1, gx - hx - 1, 2, "S")
 	_lente(B, gx, gy)
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	# capacete com lanterna (sai quando a toupeira veste chapéu, como os gorros dos bichos)
 	var cx0: int = g["cx0"]
@@ -790,6 +791,7 @@ static func _monta6(G: PackedInt32Array, g: Dictionary) -> void:
 	_rect(B, ex - 1, ey + 3, 5, 1, "Y")
 	_rect(B, ex + 1, ey + 3, 3, 1, "k")
 	_trazo(B, ex - 2, ey - 2 + (0 if ph == 0 else 1), ex + 4, ey - 1 + (1 if ph == 0 else 2), 1, "k")
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	_fedor(G, g, ph == 2 or ph == 3)
 
@@ -917,6 +919,7 @@ static func _monta7(G: PackedInt32Array, g: Dictionary) -> void:
 	_elip(B, hcx - 8, hcy - 5, 9, 12, "v", "v", "V")
 	_elip(B, hcx, hcy - 5, 11, 13, "v", "v", "V")
 	_px(B, hcx, hcy - 4, "V")
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	# olhos enormes (dois discos amarelos com aro laranja e pupila)
 	var E := _nova()
@@ -1084,6 +1087,7 @@ static func _monta8(G: PackedInt32Array, g: Dictionary) -> void:
 		_rect(B, hx + ms + 2, hy + js + 2, 5, lg, "T")
 		_rect(B, hx + ms + 2, hy + js + 2 + lg - 2, 5, 2, "t")
 		_px(B, hx + ms + 4, hy + js + 2, "t")
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	# orelha de perto, caída e rasgada
 	var OP := _nova()
@@ -1248,6 +1252,7 @@ static func _monta9(G: PackedInt32Array, g: Dictionary) -> void:
 	if g["boca"]:
 		_rect(B, hx + hw - 6, hy + int(cb["js"]) - 1, 2, 2, "w")
 		_rect(B, hx + hw - 9, hy + int(cb["js"]) + 3, 2, 2, "w")
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	# gola de arminho no pescoço e fecho de ouro
 	var Go := _nova()

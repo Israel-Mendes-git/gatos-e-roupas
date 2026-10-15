@@ -488,9 +488,9 @@ static func _monta(g: Dictionary) -> Dictionary:
 			var v: int = G[j * _W + i]
 			s2 += String.chr(v) if v != 0 else "."
 		lin.append(s2)
-	# "t" = molde do tronco, "c" = largura do crânio (chapéu), "max" = quanto a roupa de corpo pode crescer (chefe é bem maior)
+	# "t" = molde do tronco, "c" = largura do crânio (chapéu), "cobre" = quanto da altura do tronco a roupa de corpo cobre (no chefe, só o dorso)
 	return {"x": x0 - _OX, "y": y0 - _OY, "l": lin, "t": BichoPx.recorte(_tr, _W, _H, _OX, _OY),
-		"c": BichoPx.cranio(Dictionary(g["ch"])["rows"], "abc" if int(g["ct"]) == 3 else ""), "max": Vector2i(32, 20)}
+		"c": BichoPx.cranio(Dictionary(g["ch"])["rows"], "abc" if int(g["ct"]) == 3 else ""), "cobre": 0.5}
 
 # ================================================================ 0. REI DOS RATOS
 static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
@@ -533,6 +533,7 @@ static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
 		_rect(B, hx + hw - 3, hy + 7, 2, 3, "w")       # dentes de roedor sempre à mostra
 		_px(B, hx + hw - 3, hy + 9, "E")
 		_px(B, hx + hw - 2, hy + 9, "E")
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	# orelha de perto
 	var OP := _nova()
@@ -647,6 +648,7 @@ static func _monta_glutao(G: PackedInt32Array, g: Dictionary) -> void:
 	var py0: int = hy + 2
 	_elip(B, hx - 3, py0, 10, maxi(5, by0 + bh - py0 - 1))
 	_bmp(B, hx, hy, _cab_rows(1, ch, g["boca"]))
+	BichoPx.manter_iguais(_tr, B, _W)   # só a cabeça fica por cima: o barrigão é o corpo dele, a manta cobre o alto e ele aparece embaixo
 	_tinta(B, bx + 7, by0 + bh - 15 - g["resp"], bw - 12, 15 + g["resp"], "f")   # barrigão imenso
 	_tinta(B, bx + 9, by0 + bh - 5, bw - 16, 5, "v")
 	_px(B, bx + bw / 2 + 3, by0 + bh - 6, "d")    # umbigo
@@ -770,6 +772,7 @@ static func _monta_raposa(G: PackedInt32Array, g: Dictionary) -> void:
 	else:
 		_bmp(B, hx + 5, hy - _OREL_F.size() + 2, _OREL_F)
 	_tinta(B, bx + bw - 8, by0 + bh - 6, 8, 6, "v")   # peito branco
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	# língua de fora e suor (sem fôlego)
 	if par:
@@ -906,6 +909,7 @@ static func _monta_corvo(G: PackedInt32Array, g: Dictionary) -> void:
 	_tp(B, bx + 15, by0 + 8, "N")
 	_tp(B, bx + bw - 5, by0 + 3, "N")
 	_tp(B, bx + bw - 4, by0 + 4, "N")
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	# asa de perto: dobrada, esfiapada nas pontas, ou aberta
 	var W := _nova()
@@ -1003,6 +1007,7 @@ static func _monta_sapo(G: PackedInt32Array, g: Dictionary) -> void:
 	for w in [[3, 3], [7, 2], [11, 4], [15, 2], [19, 5], [5, 6], [13, 7], [9, 5]]:
 		_rect(B, bx + int(w[0]), by0 + int(w[1]), 2, 2, "X")
 		_tp(B, bx + int(w[0]), by0 + int(w[1]), "g")
+	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
 	# coxa traseira de perto + pé (ou perna esticada no ar)
 	var CX := _nova()
