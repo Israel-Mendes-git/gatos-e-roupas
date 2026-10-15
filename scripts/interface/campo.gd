@@ -865,6 +865,13 @@ func _consumir() -> void:
 			"aviso":
 				# um bicho carrega o poder: ping de alerta (o desenho da área sai de _desenhar_avisos)
 				_som("poder_pronto", 0.6 if e.get("chefe", false) else 0.8, -2.0, true)
+			"aviso_cortado":
+				# o bicho foi atordoado no meio da carga: o "!" do balão se parte e o poder se perde
+				var pcv: Vector2 = Vector2(e["x"], e["y"] - (CORPO_ALT + 40.0) * ESC)
+				tfx.append({"k": "aviso_cortado", "p": pcv, "t": 0.0, "dur": 0.75})
+				_faisca(pcv, Color(1.0, 0.85, 0.4), 6, 130.0, 0.4, 2.6)
+				_numero(pcv + Vector2(0, -34), "cortado!", Color(1.0, 0.85, 0.5), 15, 0.9, 120.0)
+				_som("esquiva", 0.7, -4.0)
 			"clone_fim":
 				# clone que some (fim do tempo ou derrotado): fumacinha, sem som e sem nocaute
 				var pcl: Vector2 = Vector2(e["x"], e["y"] - 22 * ESC)
@@ -1190,14 +1197,6 @@ func _unidade_perto(p: Vector2, eq: int) -> Unidade:
 			dm = d
 			melhor = uu
 	return melhor
-
-func _pts_estrela(c: Vector2, r: float, rot: float, pontas: int = 5) -> PackedVector2Array:
-	var pts := PackedVector2Array()
-	for k in pontas * 2:
-		var rr: float = r if k % 2 == 0 else r * 0.45
-		var a: float = rot - PI * 0.5 + k * PI / float(pontas)
-		pts.append(c + Vector2(cos(a), sin(a)) * rr)
-	return pts
 
 func _anel(c: Vector2, rx: float, ry: float, cor: Color, larg: float) -> void:
 	var pts := PackedVector2Array()
@@ -1861,6 +1860,38 @@ func _desenhar_canteiros() -> void:
 			if sin(wk * PI) * viva > 0.3:
 				V.brilho(self, Vector2(cx + (k - 1.0) * raio * 0.5, cy - wk * 50.0), 3.0, Color(0.7, 1.0, 0.75), Color(0.1, 0.3, 0.15))
 
+## Repelente (módulo da torre): a faixa do chão até REPELENTE_RAIO da torre, onde os bichos ficam lentos.
+## Discreto: divisa pontilhada na grade e uns fiapos de névoa verde que sobem devagar; acende com bicho dentro.
+func _desenhar_repelente() -> void:
+	if not estado.tem_modulo(Torre.Modulo.REPELENTE):
+		return
+	var q: float = V.Q
+	var xb: float = V.sn(Balanco.TORRE_X + Torre.REPELENTE_RAIO)
+	var y0: float = V.sn(Balanco.CHAO_Y0)
+	var y1: float = V.sn(Balanco.CHAO_Y1)
+	var dentro: bool = false
+	for v in sim.inimigos:
+		var vv: Unidade = v
+		if vv.vivo and vv.x - Balanco.TORRE_X <= Torre.REPELENTE_RAIO:
+			dentro = true
+			break
+	var cor := Color(0.62, 0.95, 0.72, 0.55 if dentro else 0.3)
+	var passo: float = q * 4.0
+	var desl: float = V.sn(fposmod(rel * 9.0, passo))   # os pontinhos descem devagar pela divisa
+	var yy: float = y0 + desl
+	while yy < y1:
+		draw_rect(Rect2(xb, yy, q, q * 2.0), cor)
+		yy += passo
+	# névoa: 7 fiapos de 2 quadradinhos que sobem e somem por encolhimento
+	var larg: float = xb - V.sn(Balanco.TORRE_X)
+	for k in 7:
+		var w: float = fposmod(rel * 0.35 + k * 0.143, 1.0)
+		var fx_: float = Balanco.TORRE_X + fposmod(k * 0.618, 1.0) * larg + sin(rel * 1.3 + k) * 6.0
+		var fy_: float = y1 - fposmod(k * 0.382, 1.0) * (y1 - y0) * 0.8 - w * 40.0
+		var s_n: float = q * (2.0 if w < 0.6 else 1.0)
+		if w < 0.9:
+			draw_rect(Rect2(V.sn(fx_), V.sn(fy_), s_n, q), Color(0.62, 0.95, 0.72, 0.4 if dentro else 0.25))
+
 ## Enxame: pontinhos amarelos e pretos girando sobre a área de cada nuvem ativa (sim.zonas).
 func _desenhar_zonas() -> void:
 	for zz in sim.zonas:
@@ -1912,10 +1943,17 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 				V.quadro(self, minf(x1, x1 - dir * 24.0), yy, 24.0, V.Q, Color(1.0, 0.7, 0.25))
 	if uu.furia > 0.0:
 		var fa: float = clampf(uu.furia, 0.0, 1.0)
-		_elipse_cheia(pos + Vector2(0, 2), CORPO_LARG * 1.1 * esc_u, 9.0 * esc_u, Color(1.0, 0.2, 0.15, 0.22 * fa + 0.08 * sin(rel * 8.0)))
+		# poça vermelha no chão (alfa em 2 degraus, piscando) e brasas de raiva que sobem e encolhem
+		var pisca_f: float = 0.08 if sin(rel * 8.0) > 0.0 else 0.0
+		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.1 * esc_u, 9.0 * esc_u, Color(1.0, 0.2, 0.15, 0.2 * fa + pisca_f))
 		for k in 3:
 			var w: float = fposmod(rel * 1.5 + k * 0.33, 1.0)
-			draw_circle(pos + Vector2((k - 1) * 22.0, -h * 0.9 - w * 14.0), 3.0 * (1.0 - w), Color(1.0, 0.4, 0.3, 0.7 * fa))
+			if w > 0.85 or fa < 0.15:
+				continue
+			var pf: Vector2 = pos + Vector2((k - 1) * 22.0, -h * 0.9 - w * 18.0)
+			var sf: float = V.Q * (2.0 if w < 0.45 else 1.0)
+			V.quadro(self, pf.x - V.Q, pf.y - V.Q, sf + V.Q * 2.0, sf + V.Q * 2.0, Color(0.3, 0.04, 0.04))
+			V.quadro(self, pf.x, pf.y, sf, sf, Color(1.0, 0.4, 0.3) if w < 0.45 else Color(1.0, 0.7, 0.45))
 	if uu.preso_t > 0.0:
 		var pe_t: Vector2 = pos + Vector2(0, 2)
 		var wx: float = CORPO_LARG * esc_u
@@ -2112,6 +2150,27 @@ func _desenhar_tfx() -> void:
 				for k in 3:
 					var an: float = u * 10.0 + k * TAU / 3.0
 					V.brilho(self, pn + Vector2(cos(an) * 20.0, -50.0 + sin(an) * 6.0 - 10.0 * u), 4.0, Color(1.0, 0.95, 0.6) if fn > 0.3 else Color(0.8, 0.88, 1.0), Color(0.15, 0.12, 0.3))
+			"aviso_cortado":
+				# balão do aviso estoura: aro que se abre em pontilhado, o "!" partido em dois e um X por cima
+				var pv: Vector2 = f["p"]
+				var fv: float = 1.0 - u
+				var rv: float = 20.0 + 26.0 * u
+				V.aro(self, pv, rv + V.Q, rv + V.Q, V.CONT, fv, 2.0)
+				V.aro(self, pv, rv, rv, Color(1.0, 0.85, 0.4), fv, 1.0)
+				if fv > 0.25 or fposmod(rel * 18.0, 1.0) < 0.5:
+					_exclamacao(pv, Color(1.0, 0.93, 0.7), 1 + int(u * 3.0), true)
+				if u < 0.6:
+					var bx_v: float = 13.0
+					V.linha(self, pv + Vector2(-bx_v, -bx_v), pv + Vector2(bx_v, bx_v), V.CONT, V.Q * 3.0)
+					V.linha(self, pv + Vector2(-bx_v, bx_v), pv + Vector2(bx_v, -bx_v), V.CONT, V.Q * 3.0)
+					V.linha(self, pv + Vector2(-bx_v, -bx_v), pv + Vector2(bx_v, bx_v), Color(1.0, 0.3, 0.25), V.Q)
+					V.linha(self, pv + Vector2(-bx_v, bx_v), pv + Vector2(bx_v, -bx_v), Color(1.0, 0.3, 0.25), V.Q)
+				for k in 4:
+					var ak: float = k * TAU / 4.0 + PI * 0.25
+					var dk: float = 14.0 + 40.0 * u
+					if fv > 0.2:
+						V.quadro(self, pv.x + cos(ak) * dk - V.Q, pv.y + sin(ak) * dk + 30.0 * u * u - V.Q, V.Q * 3.0, V.Q * 3.0, V.CONT)
+						V.quadro(self, pv.x + cos(ak) * dk, pv.y + sin(ak) * dk + 30.0 * u * u, V.Q, V.Q, Color(1.0, 0.85, 0.4))
 			"chefe_chega":
 				var pch: Vector2 = f["p"]
 				var fc: float = 1.0 - u
@@ -2146,13 +2205,6 @@ func _desenhar_tfx() -> void:
 					var dl := Vector2(cos(k * PI * 0.5), sin(k * PI * 0.5))
 					V.quadro(self, pl.x + dl.x * (rl + V.Q) - V.Q * 0.5, pl.y + dl.y * (rl + V.Q) - V.Q * 0.5, V.Q * (1.0 + absf(dl.x) * 2.0), V.Q * (1.0 + absf(dl.y) * 2.0), Color(1.0, 0.95, 0.6))
 				V.ponto(self, pl, Color(1, 1, 1))
-
-func _elipse_cheia(c: Vector2, rx: float, ry: float, cor: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 18:
-		var a: float = TAU * i / 18.0
-		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
-	draw_colored_polygon(pts, cor)
 
 func _atualizar_visual(dt: float, delta_real: float) -> void:
 	for lista in [sim.aliados, sim.inimigos]:
@@ -2270,9 +2322,13 @@ func _draw() -> void:
 		_torre_letras()
 	else:
 		Desenho.torre(self, TORRE_BASE, estado.tijolos, 1.0, torre_pulso * 0.6)
-	Desenho.texto(self, str(estado.tijolos), Vector2(10, 686), 22, Color(1, 0.85, 0.7), 160.0, 3)
+	var txt_bl: String = str(estado.tijolos)
+	var tw_bl: float = UIComum.FONTE.get_string_size(txt_bl, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(22)).x
+	IconesPoder.desenhar(self, IconesPoder.BLOCO, Vector2(90.0 - tw_bl * 0.5 - 16.0, 678.0), 2)   # ícone do bloco junto do contador
+	Desenho.texto(self, txt_bl, Vector2(10, 686), 22, Color(1, 0.85, 0.7), 160.0, 3)
 	if prep:
 		_desenhar_prep_chao()
+	_desenhar_repelente()
 	_desenhar_canteiros()
 	# unidades ordenadas por profundidade
 	var todos: Array = _ordem_profundidade()
@@ -2305,7 +2361,10 @@ func _draw() -> void:
 		# "z z" subindo devagar, o segundo z maior e atrasado
 		for zi in 2:
 			var wz: float = fposmod(rel * 0.45 + zi * 0.5, 1.0)
-			Desenho.texto(self, "z", Vector2(cd["x"] + 30.0 + zi * 12.0 + wz * 8.0, cd["y"] - 50.0 - wz * 26.0), 12 + zi * 5, Color(0.8, 0.9, 1.0, sin(wz * PI) * 0.9), -1.0, 2)
+			# z de pixel (fonte 3x5): nasce pequeno, cresce no meio da subida e some (sem alfa)
+			var vz: float = sin(wz * PI)
+			if vz > 0.25:
+				IconesPoder.texto(self, "z", Vector2(cd["x"] + 30.0 + zi * 12.0 + wz * 8.0, cd["y"] - 62.0 - wz * 26.0), Color(0.8, 0.9, 1.0), 3 if (vz < 0.7 or zi == 0) else 6)
 	for fa in fantasmas:
 		var fan: Dictionary = fa
 		var ug: Unidade = fan["u"]
@@ -2372,20 +2431,28 @@ func _draw() -> void:
 				var wc: float = fposmod(rel * 1.6 + k * 0.25, 1.0)
 				V.cruz(self, pa.lerp(pb, wc), 3.0, Color(0.38, 0.95, 0.5), Color(0.04, 0.3, 0.18))
 			V.disco_c(self, pb, 5.0 + 2.0 * sin(rel * 10.0), Color(0.38, 0.95, 0.5), Color(0.04, 0.3, 0.18))
-			Desenho.texto(self, "+", pb + Vector2(-40, -18 - 6 * fposmod(rel * 2.0, 1.0)), 22, Color(0.5, 1.0, 0.6), 80.0, 3)
+			# cruzinha de pixel subindo sobre quem recebe a cura (no lugar do "+" de texto)
+			var wcr: float = fposmod(rel * 2.0, 1.0)
+			if wcr < 0.85:
+				V.cruz(self, pb + Vector2(0, -22.0 - 9.0 * wcr), 6.0 if wcr < 0.5 else 3.0, Color(0.5, 1.0, 0.6), Color(0.04, 0.3, 0.18))
 		if uu2.vida < uu2.vida_max - 0.01 or uu2.equipe == 0:
 			# barra fina: contorno escuro de 1px, fundo e cor pela fração (gato: verde->amarelo->vermelho)
 			var w: float = 70.0 if uu2.chefe else 44.0
-			var bx: float = pos.x - w * 0.5
-			var by: float = pos.y - (CORPO_ALT + 6.0) * esc_u
+			# em pixel: uma faixa de 1 quadradinho na grade, contorno escuro de 1 e a vida em quadradinhos inteiros
+			var nq_b: int = int(w / V.Q)
+			var bx: float = V.sn(pos.x) - float(nq_b / 2) * V.Q
+			var by: float = V.sn(pos.y - (CORPO_ALT + 6.0) * esc_u)
 			var frac: float = clampf(uu2.vida / uu2.vida_max, 0.0, 1.0)
-			draw_rect(Rect2(bx - 1.5, by - 1.5, w + 3, 6), Color(0, 0, 0, 0.85))
-			draw_rect(Rect2(bx, by, w, 3), Color(0.15, 0.1, 0.1, 0.9))
+			var cheio: int = clampi(ceili(frac * nq_b - 0.01), 1 if frac > 0.0 else 0, nq_b)
+			draw_rect(Rect2(bx - V.Q, by - V.Q, (nq_b + 2) * V.Q, V.Q * 3.0), V.CONT)
 			var cor_b: Color = Color(0.95, 0.3, 0.28)
 			if uu2.equipe == 0:
 				cor_b = Color(0.4, 0.92, 0.45) if frac > 0.55 else (Color(0.98, 0.85, 0.3) if frac > 0.28 else Color(0.98, 0.35, 0.3))
-			draw_rect(Rect2(bx, by, w * frac, 3), cor_b)
-			draw_rect(Rect2(bx, by, w * frac, 1), Color(1, 1, 1, 0.35))
+			if cheio < nq_b:
+				draw_rect(Rect2(bx + cheio * V.Q, by, (nq_b - cheio) * V.Q, V.Q), V.tom(cor_b, 0.3))
+			if cheio > 0:
+				draw_rect(Rect2(bx, by, cheio * V.Q, V.Q), cor_b)
+				draw_rect(Rect2(bx, by, V.Q, V.Q), V.tom(cor_b, 1.45))
 		var n_ico: int = _fila_estados(uu2, pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u, ico_max)
 		if uu2.equipe == 1 and sim.prioritario(uu2):
 			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * esc_u - (22.0 if n_ico > 0 else 0.0)), 9.0, 1.0)
@@ -2427,7 +2494,9 @@ func _draw() -> void:
 		var c: Color = p["cor"]
 		c.a *= a
 		if p["tipo"] == 2:
-			draw_set_transform(p["p"], p["rot"], Vector2.ONE)
+			# giro em quartos de volta e posição na grade: o bloco de pixel nunca fica torto nem em meio pixel
+			var giro_b: float = roundf(float(p["rot"]) / (PI * 0.5)) * (PI * 0.5)
+			draw_set_transform(Vector2(V.sn(p["p"].x), V.sn(p["p"].y)), giro_b, Vector2.ONE)
 			Desenho.bloco(self, Rect2(-20, -10, 40, 20), p["cor"], Desenho.letra_tijolo(int(p["idx"])), a)
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		elif p["tipo"] == 1:
@@ -4438,8 +4507,9 @@ func _bau_desenho() -> void:
 	var pulo_b: float = sin(bau_pulso * PI) * 12.0
 	draw_set_transform(BAU_POS + Vector2(0, -pulo_b), 0.0, Vector2(sc, sc))
 	if CAIXA_EM_PIXEL:
-		Desenho.texto(self, "B", Vector2(-8, -3), 14, Color(0.2, 0.35, 0.6), 16.0)
+		# etiqueta da caixa: uma roupinha de pixel (o que vai para lá são peças de roupa)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		IconesPoder.desenhar(self, IconesPoder.PECA, BAU_POS + Vector2(0, -8.0 - roundf(pulo_b)), 2 if sc < 1.12 else 3)
 		var sc_n: float = 1.0 + 0.7 * bau_pulso * bau_pulso
 		draw_set_transform(Vector2(BAU_POS.x, BAU_POS.y + 38), 0.0, Vector2(sc_n, sc_n))
 		Desenho.texto(self, str(bau_n), Vector2(-40, 0), 18, Color(1, 0.95 - 0.1 * bau_pulso, 0.7), 80.0, 3)
@@ -4612,17 +4682,19 @@ func _icone_poder_gato(u: Unidade, pos: Vector2, esc_u: float) -> void:
 	var b: Dictionary = poder_btns[i]
 	var cor: Color = b["cor"]
 	var bob: float = sin(rel * 5.0 + i) * 3.0
-	var p: Vector2 = Vector2(pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u - 20.0 + bob)
-	V.disco(self, p, 17.0, Color(cor.r, cor.g, cor.b, 0.22))
+	var p: Vector2 = Vector2(pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u - 26.0 + bob)
 	var px_: float = V.sn(p.x)
 	var py_: float = V.sn(p.y)
-	V.quadro(self, px_ - V.Q * 3.0, py_ + V.Q * 2.0, V.Q * 7.0, V.Q * 2.0, V.CONT)
-	V.quadro(self, px_ - V.Q * 2.0, py_ + V.Q * 4.0, V.Q * 5.0, V.Q * 2.0, V.CONT)
-	V.quadro(self, px_ - V.Q, py_ + V.Q * 6.0, V.Q * 3.0, V.Q, V.CONT)
-	V.quadro(self, px_ - V.Q, py_ + V.Q * 2.0, V.Q * 3.0, V.Q * 3.0, cor)
-	V.disco_c(self, p, 9.0, cor, V.CONT)
-	V.quadro(self, px_ - V.Q * 2.0, py_ - V.Q * 2.0, V.Q, V.Q, V.tom(cor, 1.7))
-	Desenho.texto(self, str(b["tecla"]), p + Vector2(-8, 5.5), 15, Color(0.1, 0.05, 0.12), 16.0)
+	# balão na cor da fantasia com o ícone do poder (escala 3 = a grade da luta) e a ponta para o gato
+	V.quadro(self, px_ - V.Q * 3.0, py_ + V.Q * 4.0, V.Q * 7.0, V.Q * 2.0, V.CONT)
+	V.quadro(self, px_ - V.Q * 2.0, py_ + V.Q * 6.0, V.Q * 5.0, V.Q * 2.0, V.CONT)
+	V.quadro(self, px_ - V.Q, py_ + V.Q * 8.0, V.Q * 3.0, V.Q, V.CONT)
+	V.quadro(self, px_ - V.Q, py_ + V.Q * 4.0, V.Q * 3.0, V.Q * 4.0, cor)
+	V.disco_c(self, p, 15.0, cor, V.CONT)
+	V.quadro(self, px_ - V.Q * 4.0, py_ - V.Q * 3.0, V.Q, V.Q, V.tom(cor, 1.7))
+	IconesPoder.desenhar(self, int(b["poder"]), Vector2(px_ + V.Q * 0.5, py_ + V.Q * 0.5), 3, 1.0, V.Q)
+	# a tecla, em algarismo de pixel, na borda direita do balão
+	IconesPoder.texto(self, String.num_int64(int(b["tecla"])), Vector2(px_ + V.Q * 4.0, py_ - V.Q), Color(1, 1, 1), 3)
 
 func _btn_em(p: Vector2) -> int:
 	for i in poder_btns.size():
@@ -4758,8 +4830,14 @@ func _botao_poder(i: int) -> void:
 	if sobre and viva:
 		tom = tom.lightened(0.14)
 	if pronto and viva and not trancado:
-		draw_rect(r.grow(5.0), Color(cor.r, cor.g, cor.b, 0.22 + 0.3 * pu), false, 4.0)
-		draw_rect(r.grow(9.0), Color(cor.r, cor.g, cor.b, 0.06 + 0.12 * pu), false, 3.0)
+		# moldura de pixel em volta do botão pronto: contorno escuro e a cor da fantasia, que acende em degraus
+		var mold: Rect2 = _rect_grade(r.grow(V.Q * 2.0))
+		_moldura_px(mold.grow(V.Q), V.CONT)
+		_moldura_px(mold.grow(-V.Q), V.CONT)
+		_moldura_px(mold, V.tom(cor, 1.0 + 0.2 * floorf(pu * 2.99)))
+		if pu > 0.66:
+			V.brilho(self, mold.position + Vector2(V.Q, V.Q), 4.0, Color(1, 1, 0.9))
+			V.brilho(self, mold.end - Vector2(V.Q * 2.0, V.Q * 2.0), 4.0, Color(1, 1, 0.9))
 	draw_rect(Rect2(r.position + Vector2(0, 5), r.size), Color(0, 0, 0, 0.3))
 	var rb: Rect2 = r
 	if apertado:
@@ -4770,21 +4848,26 @@ func _botao_poder(i: int) -> void:
 	var dentro: Rect2 = rb.grow(-7.0)
 	# carga: sobe de baixo para cima na cor da fantasia
 	if viva and carga > 0.0:
-		var alt: float = dentro.size.y * carga
-		var fr: Rect2 = Rect2(dentro.position.x, dentro.end.y - alt, dentro.size.x, alt)
-		draw_rect(fr, Color(cor.r, cor.g, cor.b, 0.5 if not pronto else 0.62))
-		if carga < 1.0:
-			draw_rect(Rect2(fr.position.x, fr.position.y, fr.size.x, 2.0), Color(1, 1, 1, 0.55))
+		# sobe em degraus de um quadradinho; a borda de cima é uma faixa clara de 1 quadradinho
+		var alt: float = minf(dentro.size.y, V.sn(dentro.size.y * carga + V.Q * 0.5))
+		if alt >= V.Q:
+			var fr: Rect2 = Rect2(dentro.position.x, dentro.end.y - alt, dentro.size.x, alt)
+			if carga < 1.0 and alt > V.Q:
+				draw_rect(Rect2(fr.position.x, fr.position.y + V.Q, fr.size.x, alt - V.Q), Color(cor.r, cor.g, cor.b, 0.5))
+				draw_rect(Rect2(fr.position.x, fr.position.y, fr.size.x, V.Q), V.tom(cor, 1.5))
+			else:
+				draw_rect(fr, Color(cor.r, cor.g, cor.b, 0.5 if not pronto else 0.62))
 	# retrato do gato vestido (ou dormindo)
 	var painel: Rect2 = Rect2(dentro.position.x + 1.0, dentro.position.y + 1.0, 48.0, dentro.size.y - 2.0)
 	draw_rect(painel, Color(0.1, 0.06, 0.13, 0.62))
 	draw_rect(painel, Color(0.04, 0.02, 0.06, 0.8), false, 1.0)
 	Desenho.boneco(self, Vector2(painel.get_center().x, painel.end.y - 6.0), 0.58, 1.0, 0, u.pecas, 0.0, 0.0, false, 0.0, 1.0 if viva else 0.85, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, int(b["variante"]), not viva)
 	if trancado:
+		# estrelinhas de pixel rodando sobre a cabeça (a posição gira; o desenho não)
 		for k in 3:
 			var ang: float = rel * 6.0 + k * TAU / 3.0
-			var sp: Vector2 = Vector2(painel.get_center().x + cos(ang) * 14.0, painel.position.y + 8.0 + sin(ang) * 3.0)
-			draw_colored_polygon(_pts_estrela(sp, 4.0, ang * 0.5), Desenho.DOURADO)
+			var sp: Vector2 = Vector2(painel.get_center().x + cos(ang) * 14.0, painel.position.y + 9.0 + sin(ang) * 3.0)
+			V.brilho(self, sp, 3.0, Desenho.DOURADO, Color(0.3, 0.18, 0.0))
 	Desenho.texto(self, str(b["tecla"]), Vector2(painel.position.x + 3.0, painel.position.y + 14.0), 15, Color(1, 1, 1), -1.0, 4)
 	# nome do poder e situação
 	var tx: float = painel.end.x + 5.0
@@ -4813,41 +4896,67 @@ func _botao_poder(i: int) -> void:
 	else:
 		txt = "%d s" % ceili(maxf(u.poder_cd, 0.0))
 		cor_s = Color(1.0, 0.95, 0.85)
-	Desenho.texto(self, txt, Vector2(tx, dentro.end.y - 4.0), 17 if pronto and viva else 15, cor_s, -1.0, 4)
+	# ícone do poder no começo da linha de situação (escala 2: a mesma grade de 2 px da arte do botão)
+	IconesPoder.desenhar(self, int(b["poder"]), Vector2(tx + 10.0, dentro.end.y - 10.0), 2, 1.0 if viva else 0.55)
+	Desenho.texto(self, txt, Vector2(tx + 23.0, dentro.end.y - 4.0), 17 if pronto and viva else 15, cor_s, -1.0, 4)
 	if auto:
-		var sr: Rect2 = Rect2(r.end.x - 40.0, r.position.y - 7.0, 34.0, 14.0)
-		draw_rect(sr.grow(1.5), Color(0.15, 0.08, 0.04))
+		# selo AUTO de pixel: plaquinha dourada com contorno e letras 3x5 na grade da luta
+		var sl: float = IconesPoder.largura("AUTO") + V.Q * 2.0
+		var sr: Rect2 = Rect2(V.sn(r.end.x - sl - 6.0), V.sn(r.position.y - 9.0), sl, V.Q * 7.0)
+		draw_rect(sr.grow(V.Q), V.CONT)
 		draw_rect(sr, Desenho.DOURADO)
-		Desenho.texto(self, "AUTO", Vector2(sr.position.x, sr.position.y + 11.0), 11, Color(0.25, 0.12, 0.04), sr.size.x)
-	# brilho que corre pelo botão quando o poder fica pronto
+		draw_rect(Rect2(sr.position.x, sr.end.y - V.Q, sr.size.x, V.Q), V.tom(Desenho.DOURADO, 0.75))
+		draw_rect(Rect2(sr.position.x, sr.position.y, sr.size.x, V.Q), V.tom(Desenho.DOURADO, 1.4))
+		IconesPoder.texto(self, "AUTO", sr.position + Vector2(V.Q, 0.0), Color(0.3, 0.14, 0.04), 3, false)
+	# brilho que corre pelo botão quando o poder fica pronto: faixa inclinada em degraus de quadradinho
 	var bri: float = float(b.get("brilho", 0.0))
 	if bri > 0.0:
-		var xb: float = lerpf(r.end.x + 20.0, r.position.x - 20.0, bri)
-		var faixa_b: PackedVector2Array = PackedVector2Array([Vector2(xb, r.end.y), Vector2(xb + 22, r.end.y), Vector2(xb + 22 + 14, r.position.y), Vector2(xb + 14, r.position.y)])
-		for k in faixa_b.size():
-			faixa_b[k].x = clampf(faixa_b[k].x, r.position.x, r.end.x)
-		draw_colored_polygon(faixa_b, Color(1, 1, 0.92, 0.5 * sin(bri * PI)))
-	# clarão ao disparar
+		var forca: float = sin(bri * PI)
+		var cor_bri := Color(1, 1, 0.92, 0.5 if forca > 0.5 else 0.25)
+		var xb: float = lerpf(r.end.x + 20.0, r.position.x - 40.0, bri)
+		var y_b: float = V.sn(r.position.y)
+		var passo_b: int = 0
+		while y_b < r.end.y:
+			var hb: float = minf(V.Q * 2.0, r.end.y - y_b)
+			var xa: float = V.sn(xb + 14.0 - passo_b * V.Q)   # sobe para a direita, um quadradinho a cada 2 de altura
+			var xf: float = minf(xa + V.Q * 7.0, r.end.x)
+			xa = maxf(xa, r.position.x)
+			if xf > xa:
+				draw_rect(Rect2(xa, maxf(y_b, r.position.y), xf - xa, hb), cor_bri)
+			y_b += V.Q * 2.0
+			passo_b += 1
+	# clarão ao disparar: miolo claro em 3 degraus e moldura de pixel que se abre
 	var fl: float = float(b["flash"])
 	if fl > 0.0:
-		draw_rect(r, Color(1, 1, 1, 0.75 * fl))
-		draw_rect(r.grow((1.0 - fl) * 22.0), Color(cor.r, cor.g, cor.b, fl), false, 4.0)
+		draw_rect(r, Color(1, 1, 1, 0.25 * ceilf(fl * 3.0)))
+		var mf: Rect2 = _rect_grade(r.grow(V.sn((1.0 - fl) * 22.0)))
+		if fl > 0.15:
+			_moldura_px(mf.grow(V.Q), V.CONT)
+		_moldura_px(mf, V.tom(cor, 1.3))
 
 ## Seta de primeira vez, só no primeiro poder pronto de cada luta.
 func _seta_primeira_vez(i: int) -> void:
 	var r: Rect2 = poder_btns[i]["rect"]
 	var cor: Color = poder_btns[i]["cor"]
-	var bob: float = absf(sin(rel * 4.0)) * 7.0
-	var tip: Vector2 = Vector2(r.get_center().x, r.position.y - 8.0 - bob)
-	draw_colored_polygon(PackedVector2Array([tip + Vector2(-11, -15), tip + Vector2(11, -15), tip]), Color(0.08, 0.04, 0.1))
-	draw_colored_polygon(PackedVector2Array([tip + Vector2(-8, -13), tip + Vector2(8, -13), tip + Vector2(0, -3)]), Desenho.DOURADO)
+	var q: float = V.Q
+	var bob: float = V.sn(absf(sin(rel * 4.0)) * 7.0)
+	var tip: Vector2 = Vector2(V.sn(r.get_center().x), V.sn(r.position.y - 8.0) - bob)
+	# seta para baixo em degraus: 5 faixas que afinam até 1 quadradinho, com contorno escuro
+	for k in 5:
+		var hw: float = (4 - k) * q
+		draw_rect(Rect2(tip.x - hw - q, tip.y - (5 - k) * q, hw * 2.0 + q * 3.0, q), V.CONT)
+	draw_rect(Rect2(tip.x, tip.y, q, q), V.CONT)
+	draw_rect(Rect2(tip.x - q * 5.0, tip.y - q * 6.0, q * 11.0, q), V.CONT)
+	for k in 5:
+		var hw2: float = (4 - k) * q
+		draw_rect(Rect2(tip.x - hw2, tip.y - (5 - k) * q, hw2 * 2.0 + q, q), Desenho.DOURADO if k > 0 else V.tom(Desenho.DOURADO, 1.4))
 	var txt: String = "Clique ou aperte %d" % int(poder_btns[i]["tecla"])
-	var tw: float = UIComum.FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(15)).x + 16.0
-	var pl: Rect2 = Rect2(tip.x - tw * 0.5, tip.y - 44.0, tw, 24.0)
-	draw_rect(pl.grow(2.0), Color(0, 0, 0, 0.35))
-	draw_rect(pl, Color(0.08, 0.05, 0.1, 0.88))
-	draw_rect(Rect2(pl.position, Vector2(pl.size.x, 2.0)), Color(cor.r, cor.g, cor.b, 0.9))
-	Desenho.texto(self, txt, Vector2(pl.position.x, pl.position.y + 17.0), 15, Color(1, 0.97, 0.85), pl.size.x)
+	var tw: float = V.sn(UIComum.FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(15)).x + 18.0)
+	var pl: Rect2 = Rect2(V.sn(tip.x - tw * 0.5), tip.y - q * 15.0, tw, q * 8.0)
+	draw_rect(pl.grow(q), V.CONT)
+	draw_rect(pl, Color(0.08, 0.05, 0.1))
+	draw_rect(Rect2(pl.position, Vector2(pl.size.x, q)), cor)
+	Desenho.texto(self, txt, Vector2(pl.position.x, pl.position.y + 18.0), 15, Color(1, 0.97, 0.85), pl.size.x)
 
 ## Dica ao passar o mouse: nome e texto do poder.
 func _dica_poder(i: int) -> void:
@@ -4890,10 +4999,21 @@ func _hud() -> void:
 			var fr_b: float = clampf(ub.vida / ub.vida_max, 0.0, 1.0)
 			var nome_b: String = Fases.CHEFE_NOME[estado.lugar()]
 			Desenho.texto(self, nome_b, Vector2(632, 42), 22, Color(1.0, 0.85, 0.8), 424.0, 4)
-			draw_rect(Rect2(630, 48, 428, 18), Color(0, 0, 0, 0.8))
-			draw_rect(Rect2(634, 52, 420, 10), Color(0.25, 0.08, 0.08))
-			draw_rect(Rect2(634, 52, 420 * fr_b, 10), Color(0.92, 0.25, 0.22))
-			draw_rect(Rect2(634, 52, 420 * fr_b, 3), Color(1, 0.6, 0.5, 0.6))
+			# barra de pixel: 140 quadradinhos x 3, contorno escuro, brilho em cima e sombra embaixo
+			var q: float = V.Q
+			var x0: float = 633.0
+			var y0: float = 51.0
+			var nq: int = 140
+			var cheio: int = clampi(ceili(fr_b * nq - 0.01), 1 if fr_b > 0.0 else 0, nq)
+			var ver := Color(0.92, 0.25, 0.22)
+			draw_rect(Rect2(x0 - q, y0 - q, (nq + 2) * q, q * 5.0), V.CONT)
+			draw_rect(Rect2(x0 + cheio * q, y0, (nq - cheio) * q, q * 3.0), Color(0.25, 0.08, 0.08))
+			if cheio > 0:
+				draw_rect(Rect2(x0, y0, cheio * q, q * 3.0), ver)
+				draw_rect(Rect2(x0, y0, cheio * q, q), V.tom(ver, 1.4))
+				draw_rect(Rect2(x0, y0 + q * 2.0, cheio * q, q), V.tom(ver, 0.72))
+			for k in range(1, 4):
+				draw_rect(Rect2(x0 + nq * q * k * 0.25, y0, q, q * 3.0), V.CONT)   # marcas de quarto de vida
 			break
 	# contador de troféus (perto do contador de blocos): o total já desconta os que ainda estão em voo
 	var mostrados: int = estado.trofeus
@@ -5160,16 +5280,95 @@ func _atualizar_foco(delta: float) -> void:
 	foco_u = _unidade_em(mouse_c)
 
 ## Mira vermelha do alvo prioritário.
+## Em pixel: aro de quadradinhos com contorno, quatro marcas que pulsam um quadradinho e o ponto no meio.
 func _mira(c: Vector2, r: float, alfa: float) -> void:
-	var pu: float = 0.5 + 0.5 * sin(rel * 6.0)
-	var cor := Color(1.0, 0.3, 0.25, alfa)
-	draw_arc(c, r + 2.0, 0.0, TAU, 20, Color(0, 0, 0, 0.75 * alfa), 5.0)
-	draw_arc(c, r + 2.0, 0.0, TAU, 20, cor, 2.5)
+	if alfa <= 0.05:
+		return
+	var q: float = V.Q
+	var cor := Color(1.0, 0.3, 0.25)
+	var x: float = V.sn(c.x)
+	var y: float = V.sn(c.y)
+	var rr: float = maxf(q * 4.0, V.sn(r + 5.0))
+	var pu: float = q if sin(rel * 6.0) > 0.0 else 0.0
+	_anel_px(Vector2(x, y), rr + q, rr + q, V.CONT, 3)
+	_anel_px(Vector2(x, y), rr, rr, cor, 1)
+	var perto: float = rr - q + pu         # marca: 3 quadradinhos cruzando o aro, empurrados pelo pulso
+	var longe: float = rr + q * 2.0 + pu
 	for k in 4:
-		var d: Vector2 = Vector2.RIGHT.rotated(k * PI * 0.5)
-		draw_line(c + d * (r - 3.0 + pu * 2.0), c + d * (r + 8.0 + pu * 2.0), Color(0, 0, 0, 0.75 * alfa), 5.0)
-		draw_line(c + d * (r - 3.0 + pu * 2.0), c + d * (r + 8.0 + pu * 2.0), cor, 2.5)
-	draw_circle(c, 2.5, cor)
+		var mx: float = x
+		var my: float = y
+		var mw: float = q
+		var mh: float = q
+		if k == 0:
+			mx = x + perto
+			mw = q * 3.0
+		elif k == 1:
+			mx = x + q - longe
+			mw = q * 3.0
+		elif k == 2:
+			my = y + perto
+			mh = q * 3.0
+		else:
+			my = y + q - longe
+			mh = q * 3.0
+		draw_rect(Rect2(mx - q, my - q, mw + q * 2.0, mh + q * 2.0), V.CONT)
+		draw_rect(Rect2(mx, my, mw, mh), cor)
+	draw_rect(Rect2(x - q, y - q, q * 3.0, q * 3.0), V.CONT)
+	draw_rect(Rect2(x, y, q, q), V.tom(cor, 1.5))
+
+## Aro (elipse ou círculo) cheio de quadradinhos alinhados à grade, sem falhas: por faixa, a diferença entre a
+## elipse de fora e a de dentro (`esp` quadradinhos de espessura). `ce` é o centro; 2 retângulos por faixa.
+func _anel_px(ce: Vector2, rx: float, ry: float, cor: Color, esp: int = 1) -> void:
+	var q: float = V.Q
+	var ny: int = int(ry / q + 0.5)
+	var nx: float = rx / q
+	var cx: float = floorf(ce.x / q)
+	var cy: float = floorf(ce.y / q)
+	var nyi: int = ny - esp
+	var nxi: float = nx - esp
+	var dn: float = ny * ny + ny * 0.8
+	var dni: float = nyi * nyi + nyi * 0.8
+	for j in range(-ny, ny + 1):
+		var wo: int = int(nx * sqrt(maxf(0.0, 1.0 - float(j * j) / maxf(dn, 0.5))))
+		var wi: int = -1
+		if nyi >= 0 and absi(j) <= nyi and nxi >= 0.0:
+			wi = int(nxi * sqrt(maxf(0.0, 1.0 - float(j * j) / maxf(dni, 0.5))))
+			if nyi == 0:
+				wi = int(nxi)
+		if wi < 0:
+			draw_rect(Rect2((cx - wo) * q, (cy + j) * q, (2 * wo + 1) * q, q), cor)
+		elif wo > wi:
+			draw_rect(Rect2((cx - wo) * q, (cy + j) * q, (wo - wi) * q, q), cor)
+			draw_rect(Rect2((cx + wi + 1) * q, (cy + j) * q, (wo - wi) * q, q), cor)
+
+## "!" de pixel (2 quadradinhos de largura) centrado em `ce`. `abre` > 0 parte o sinal: a haste sobe para a
+## esquerda e o pé desce para a direita, `abre` quadradinhos cada (aviso cortado). `cont` desenha a borda escura.
+func _exclamacao(ce: Vector2, cor: Color, abre: int = 0, cont: bool = false) -> void:
+	var q: float = V.Q
+	var x: float = V.sn(ce.x) - q
+	var y: float = V.sn(ce.y) - q * 4.0
+	var dx: float = abre * q
+	if cont:
+		draw_rect(Rect2(x - dx - q, y - dx - q, q * 4.0, q * 5.0), V.CONT)
+		draw_rect(Rect2(x + dx - q, y + dx + q * 2.0, q * 4.0, q * 4.0), V.CONT)
+		draw_rect(Rect2(x + dx - q, y + dx + q * 5.0, q * 4.0, q * 4.0), V.CONT)
+	draw_rect(Rect2(x - dx, y - dx, q * 2.0, q * 3.0), cor)          # haste de cima
+	draw_rect(Rect2(x + dx, y + dx + q * 3.0, q * 2.0, q * 2.0), cor)  # haste de baixo
+	draw_rect(Rect2(x + dx, y + dx + q * 6.0, q * 2.0, q * 2.0), cor)  # ponto
+
+## Retângulo encostado na grade (cantos arredondados para o quadradinho mais próximo).
+func _rect_grade(r: Rect2) -> Rect2:
+	var x0: float = roundf(r.position.x / V.Q) * V.Q
+	var y0: float = roundf(r.position.y / V.Q) * V.Q
+	return Rect2(x0, y0, roundf(r.end.x / V.Q) * V.Q - x0, roundf(r.end.y / V.Q) * V.Q - y0)
+
+## Moldura de 1 quadradinho por dentro de `r` (4 retângulos), com os cantos cortados (canto de pixel).
+func _moldura_px(r: Rect2, cor: Color) -> void:
+	var q: float = V.Q
+	draw_rect(Rect2(r.position.x + q, r.position.y, r.size.x - q * 2.0, q), cor)
+	draw_rect(Rect2(r.position.x + q, r.end.y - q, r.size.x - q * 2.0, q), cor)
+	draw_rect(Rect2(r.position.x, r.position.y + q, q, r.size.y - q * 2.0), cor)
+	draw_rect(Rect2(r.end.x - q, r.position.y + q, q, r.size.y - q * 2.0), cor)
 
 ## Caixa escura com linhas de texto: [texto, tamanho, cor] ou [nome, valor, tamanho, cor] (duas colunas).
 func _caixa_info(linhas: Array, ancora: Vector2, larg: float, borda: Color) -> void:
@@ -5258,20 +5457,25 @@ func _desenhar_foco() -> void:
 	var aliado: bool = u.equipe == 0
 	var cor: Color = Color(0.55, 0.85, 1.0) if aliado else Color(1.0, 0.5, 0.42)
 	var esc_u: float = ESC * u.escala()
-	draw_set_transform(Vector2(u.vx, u.vy), 0.0, Vector2(1, 0.3))
-	draw_arc(Vector2.ZERO, 46.0 * esc_u, 0.0, TAU, 40, Color(0, 0, 0, 0.6), 12.0)
-	draw_arc(Vector2.ZERO, 46.0 * esc_u, 0.0, TAU, 40, cor, 6.0)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# elipse no chão em quadradinhos: contorno escuro de 3 e a cor no meio
+	var pe_f: Vector2 = Vector2(u.vx, u.vy)
+	var rx_f: float = 46.0 * esc_u
+	_anel_px(pe_f, rx_f + V.Q, rx_f * 0.3 + V.Q, V.CONT, 3)
+	_anel_px(pe_f, rx_f, rx_f * 0.3, cor, 1)
 	var alvo: Unidade = u.alvo
 	if not prep and alvo != null and alvo.vivo:
 		var pa: Vector2 = Vector2(u.vx, u.vy - CORPO_MEIO * esc_u)
 		var pb: Vector2 = Vector2(alvo.vx, alvo.vy - CORPO_MEIO * ESC * alvo.escala())
-		var n: int = maxi(2, int(pa.distance_to(pb) / 14.0))
+		var n: int = maxi(2, int(pa.distance_to(pb) / 15.0))
 		for i in n:
+			# trilha de quadradinhos que crescem (1 -> 2) e clareiam a caminho do alvo
 			var w: float = fposmod((i + rel * 3.0) / n, 1.0)
-			draw_circle(pa.lerp(pb, w), 2.2 + 1.6 * w, Color(cor.r, cor.g, cor.b, 0.35 + 0.5 * w))
-		draw_arc(pb, 16.0, 0.0, TAU, 20, Color(0, 0, 0, 0.6), 5.0)
-		draw_arc(pb, 16.0, 0.0, TAU, 20, cor, 2.5)
+			var pt: Vector2 = pa.lerp(pb, w)
+			var s_t: float = V.Q * (2.0 if w > 0.55 else 1.0)
+			V.quadro(self, pt.x - V.Q, pt.y - V.Q, s_t + V.Q * 2.0, s_t + V.Q * 2.0, V.CONT)
+			V.quadro(self, pt.x, pt.y, s_t, s_t, V.tom(cor, 0.75 + 0.6 * w))
+		_anel_px(pb, 18.0, 18.0, V.CONT, 3)
+		_anel_px(pb, 15.0, 15.0, cor, 1)
 	var linhas: Array = [[_nome_unidade(u), 20, cor.lightened(0.3)]]
 	if aliado:
 		var sub: String = "%s · %s" % [Boneco.LINHA_NOMES[u.linha], Boneco.POSTURA_NOMES[u.postura]]
@@ -5339,18 +5543,25 @@ func _desenhar_prep_chao() -> void:
 	var y0: float = Balanco.CHAO_Y0 - 6.0
 	var y1: float = Balanco.CHAO_Y1 + 4.0
 	var arr_linha: int = Boneco.linha_de_x(prep_arr.x) if prep_arr != null and prep_arr_moveu else -1
+	var q: float = V.Q
+	y0 = V.sn(y0)
+	y1 = V.sn(y1)
 	for z in 3:
 		var li: int = 2 - z   # da torre para fora: fundo, meio, frente
 		var cz: Color = PREP_COR[2 - li]
-		var r := Rect2(xs[z], y0, xs[z + 1] - xs[z], y1 - y0)
+		# faixas na grade, sem se sobrepor (a divisa tracejada fica entre elas)
+		var xa: float = V.sn(xs[z]) + q
+		var r := Rect2(xa, y0, V.sn(xs[z + 1]) - xa, y1 - y0)
 		draw_rect(r, Color(cz.r, cz.g, cz.b, 0.2 if arr_linha == li else 0.08))
 	for z in range(0, 4):
+		# divisa tracejada: traços de 3 quadradinhos com 2 de folga, numa coluna só da grade
+		var xz: float = V.sn(xs[z])
 		var yy: float = y0
 		while yy < y1:
-			draw_line(Vector2(xs[z], yy), Vector2(xs[z], minf(yy + 9.0, y1)), Color(1, 1, 1, 0.3), 2.0)
-			yy += 16.0
+			draw_rect(Rect2(xz, yy, q, minf(q * 3.0, y1 - yy)), Color(1, 1, 1, 0.32))
+			yy += q * 5.0
 	# a prévia da onda fica do lado de fora, atrás de uma linha
-	draw_rect(Rect2(848.0, y0, 404.0, y1 - y0), Color(0.6, 0.1, 0.1, 0.12))
+	draw_rect(Rect2(V.sn(848.0) + q, y0, V.sn(404.0), y1 - y0), Color(0.6, 0.1, 0.1, 0.12))
 	var sob_prep: Unidade = null   # gato sob o mouse (pré-destaque), enquanto ninguém é arrastado
 	if prep_arr == null and mouse_c.x >= 0.0:
 		sob_prep = _unidade_em(mouse_c, true)
@@ -5358,20 +5569,27 @@ func _desenhar_prep_chao() -> void:
 		var a: Unidade = u
 		var sel: bool = a == prep_sel
 		var cp: Color = PREP_COR[a.postura]
+		var pe_a: Vector2 = Vector2(a.vx, a.vy)
+		var ouro := Color(1.0, 0.92, 0.5)
 		if sel:
-			# feixe de luz subindo do gato escolhido
+			# feixe de luz subindo do gato escolhido: degraus de 2 quadradinhos que afinam, em 3 tons de alfa
+			# (cada faixa do feixe é desenhada uma vez só: nada de alfa sobre alfa)
 			var luz := Color(1.0, 0.93, 0.62)
-			draw_polygon(PackedVector2Array([Vector2(a.vx - 60.0, a.vy + 4.0), Vector2(a.vx + 60.0, a.vy + 4.0), Vector2(a.vx + 36.0, a.vy - 150.0), Vector2(a.vx - 36.0, a.vy - 150.0)]),
-					PackedColorArray([Color(luz, 0.3), Color(luz, 0.3), Color(luz, 0.0), Color(luz, 0.0)]))
-		draw_set_transform(Vector2(a.vx, a.vy), 0.0, Vector2(1, 0.3))
-		if sel:
-			draw_arc(Vector2.ZERO, 58.0, 0.0, TAU, 40, Color(0, 0, 0, 0.65), 18.0)
-			draw_circle(Vector2.ZERO, 54.0, Color(1.0, 0.92, 0.5, 0.18))
-			draw_arc(Vector2.ZERO, 58.0, 0.0, TAU, 40, Color(1.0, 0.92, 0.5, 0.8 + 0.2 * sin(rel * 6.0)), 11.0)
+			var xc: float = V.sn(a.vx)
+			var yb: float = V.sn(a.vy) - q * 6.0   # começa acima do halo do chão
+			for k in 24:
+				var f: float = float(k) / 24.0
+				var hw: float = V.sn(lerpf(60.0, 36.0, f))
+				var al_l: float = 0.24 if f < 0.34 else (0.15 if f < 0.67 else 0.07)
+				draw_rect(Rect2(xc - hw, yb - (k + 1) * q * 2.0, hw * 2.0 + q, q * 2.0), Color(luz, al_l))
+			V.elipse(self, pe_a, 54.0, 16.0, Color(ouro, 0.18))
+			_anel_px(pe_a, 58.0 + q, 17.4 + q, V.CONT, 4)
+			_anel_px(pe_a, 58.0, 17.4, V.tom(ouro, 1.0 if sin(rel * 6.0) > -0.2 else 0.8), 2)
 		elif a == sob_prep:
-			draw_arc(Vector2.ZERO, 52.0, 0.0, TAU, 40, Color(1.0, 0.92, 0.5, 0.5), 5.0)
-		draw_arc(Vector2.ZERO, 42.0, 0.0, TAU, 40, Color(cp.r, cp.g, cp.b, 0.75), 6.0)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			_anel_px(pe_a, 52.0 + q, 15.6 + q, V.CONT, 3)
+			_anel_px(pe_a, 52.0, 15.6, V.tom(ouro, 0.8), 1)
+		_anel_px(pe_a, 42.0 + q, 12.6 + q, V.CONT, 3)
+		_anel_px(pe_a, 42.0, 12.6, cp, 1)
 
 ## Prévia da onda, etiquetas dos gatos, botões de ordem e "Começar" (por cima de tudo).
 func _desenhar_prep() -> void:
@@ -5381,15 +5599,13 @@ func _desenhar_prep() -> void:
 		var pos: Vector2 = g["pos"]
 		var e: float = ESC * b.escala()
 		var marcado: bool = sim.prioridade == int(g["prio"])
-		draw_set_transform(pos, 0.0, Vector2(1, 0.3))
-		draw_circle(Vector2.ZERO, 32.0 * e, Color(0, 0, 0, 0.22))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		V.elipse(self, pos, 32.0 * e, 32.0 * e * 0.3, Color(0, 0, 0, 0.22))
 		var resp: float = 1.0 + sin(rel * 2.6 + pos.x) * 0.016
 		Desenho.boneco(self, pos, e * resp, -1.0 / resp, 1, b.pecas, 0.0, 0.0, false, 0.0, 1.0, false, -1, 0.0, b.tipo, false, b.chefe, b.familia, b.elite, b.chefe_tipo, false, false, 0)
 		if marcado:
 			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * e), 10.0, 1.0)
 		if not b.chefe:
-			Desenho.texto(self, "×%d" % int(g["n"]), pos + Vector2(CORPO_LARG * e * 0.55, 4.0), 18, Color(1, 1, 1), -1.0, 4)
+			IconesPoder.texto(self, "x%d" % int(g["n"]), pos + Vector2(CORPO_LARG * e * 0.55, -12.0), Color(1, 1, 1), 3)
 	for i in sim.aliados.size():
 		var a: Unidade = sim.aliados[i]
 		var ea: float = ESC * a.escala()
@@ -5464,9 +5680,14 @@ func _desenhar_avisos() -> void:
 			V.aro(self, centro, cc.z, cc.z * 0.35, cor, fade_a, 1.0)
 		for r in forma.get("ret", []):
 			var rc: Rect2 = r
-			draw_rect(rc, Color(cor.r, cor.g, cor.b, 0.10 + 0.16 * pisca))
-			draw_rect(Rect2(rc.position.x + rc.size.x * (1.0 - prog), rc.position.y, rc.size.x * prog, rc.size.y), Color(cor.r, cor.g, cor.b, 0.16))
 			var rq: Rect2 = Rect2(V.sn(rc.position.x), V.sn(rc.position.y), V.sn(rc.size.x), V.sn(rc.size.y))
+			# miolo na grade, em duas partes que não se sobrepõem: o que já encheu (da direita) e o resto
+			var ench: float = V.sn(rq.size.x * prog)
+			var al_r: float = 0.12 if pisca < 0.5 else 0.22
+			if rq.size.x - ench > 0.0:
+				draw_rect(Rect2(rq.position.x, rq.position.y, rq.size.x - ench, rq.size.y), Color(cor.r, cor.g, cor.b, al_r))
+			if ench > 0.0:
+				draw_rect(Rect2(rq.end.x - ench, rq.position.y, ench, rq.size.y), Color(cor.r, cor.g, cor.b, al_r + 0.14))
 			V.quadro(self, rq.position.x - q, rq.position.y - q, rq.size.x + q * 2.0, q, cont_a)
 			V.quadro(self, rq.position.x - q, rq.end.y, rq.size.x + q * 2.0, q, cont_a)
 			V.quadro(self, rq.position.x - q, rq.position.y, q, rq.size.y, cont_a)
@@ -5496,5 +5717,5 @@ func _desenhar_avisos() -> void:
 		V.quadro(self, V.sn(pb.x) - q, V.sn(pb.y + raio_b) + q * 2.0, q * 3.0, q * 2.0, cont_a)
 		V.disco_c(self, pb, raio_b, cor.lerp(Color(1, 1, 1), 0.35 * pisca), cont_a)
 		V.arco(self, pb, raio_b - 5.0, -PI * 0.5, -PI * 0.5 + TAU * prog, cont_a, 1.0, 1.5)   # enche até soltar
-		Desenho.texto(self, "!", pb + Vector2(-5, 9), 26, Color(0.1, 0.04, 0.12), 12.0)
+		_exclamacao(pb, Color(0.1, 0.04, 0.12))
 		Desenho.texto(self, Pecas.PODER_NOME[cj] + "!", pb + Vector2(-100, -raio_b - 8.0), 22, Color(1, 1, 1, 0.6 + 0.4 * pisca), 200.0, 5)
