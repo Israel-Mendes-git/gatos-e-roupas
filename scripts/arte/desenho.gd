@@ -1140,6 +1140,15 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 			continue   # sem tronco à mostra (a toupeira debaixo da terra): a roupa de corpo não tem onde ficar
 		var rot: float = -sin(golpe / 0.22 * PI) * 0.5 if (onde == RoupaGato.Onde.BOCA and golpe > 0.0) else 0.0
 		var o: Vector2 = RoupaGato.ORIGEM[onde] + BichoPx.desloc(onde, fam, tipo, anim, andando, golpe, ct, parado)
+		if not q.is_empty() and (s == Pecas.SLOT_CABECA or s == Pecas.SLOT_CORPO) and Pecas.SLOT[p.tipo] == s:
+			# chapéu e roupa de corpo têm versão própria para os bichos (RoupaBicho): desenhadas para eles, não convertidas do gato
+			if s == Pecas.SLOT_CABECA:
+				_tr(c, pos, esc, dir, o * GATO_K, 0.0, GATO_K)
+				RoupaBicho.cabeca(c, Pecas.CONJUNTO_DE[p.tipo], int(q.get("c", 10)), f, anim)
+			else:
+				_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+				RoupaBicho.corpo(c, Pecas.CONJUNTO_DE[p.tipo], q, f, anim)
+			continue
 		# peça de mão (presa na boca) em bicho: escala MAO_BICHO; continua presa à boca
 		var k_mao: float = GATO_K * (MAO_BICHO if onde == RoupaGato.Onde.BOCA else 1.0)
 		_tr(c, pos, esc, dir, o * GATO_K, rot, k_mao)
