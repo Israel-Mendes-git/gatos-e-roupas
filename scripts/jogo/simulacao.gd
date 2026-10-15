@@ -1222,7 +1222,7 @@ func _largar(u: Unidade, causa: int) -> void:
 		return
 	if not (u.chefe or u.elite or rng.randf() < Balanco.DROP_CHANCE):
 		return
-	var nivel: int = mini(Balanco.NIVEL_MAX, int(floor((estado.progresso() - 1) * Balanco.DROP_NIVEL_POR_PROG)))
+	var nivel: int = mini(Balanco.DROP_NIVEL_MAX, int(floor((estado.progresso() - 1) * Balanco.DROP_NIVEL_POR_PROG)))
 	for k in mini(vestidas.size(), 2 if u.chefe else 1):
 		var orig: Peca = vestidas.pop_at(rng.randi_range(0, vestidas.size() - 1))
 		var nova := Peca.new(orig.tipo, nivel, _raridade_do_drop(u))

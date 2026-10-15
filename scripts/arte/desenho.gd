@@ -396,12 +396,18 @@ const PIP_BORDA := Color(0.25, 0.15, 0.0, 0.9)
 static func pips(c: CanvasItem, centro: Vector2, nivel: int, raio: float = 2.2, passo: float = 5.6) -> void:
 	if nivel <= 0:
 		return
-	var n: int = nivel
+	var n: int = mini(nivel, Balanco.NIVEL_BASE)
 	var r2: float = raio + 0.9
 	for i in n:
 		var p := Vector2(centro.x + (i - (n - 1) * 0.5) * passo, centro.y)
 		c.draw_circle(p, r2, PIP_BORDA)
 		c.draw_circle(p, raio, DOURADO)
+	# níveis 11 a 15 (valem menos): uma segunda fileira de pontinhos claros, por cima
+	var n2: int = nivel - Balanco.NIVEL_BASE
+	for i in maxi(n2, 0):
+		var p2 := Vector2(centro.x + (i - (n2 - 1) * 0.5) * passo, centro.y - (r2 * 2.0 + 0.5))
+		c.draw_circle(p2, r2, PIP_BORDA)
+		c.draw_circle(p2, raio, Color(0.75, 1.0, 1.0))
 
 ## Pontinhos coloridos das marcas (uma cor por tipo), com contorno escuro.
 static func pontos_marcas(c: CanvasItem, centro: Vector2, marcas: Array, raio: float, passo: float, vertical: bool = false) -> void:
@@ -1168,7 +1174,7 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 	resetar(c)
 
 ## Brilho de raridade centrado em `centro` (coordenadas locais do transform atual).
-## 1 = rara (azul discreto), 2 = épica (roxo, anel duplo), 3 = lendária (dourado com cintilação), 4 = mítica (arco-íris girando).
+## 1 = rara (azul discreto), 2 = épica (roxo, anel duplo), 3 = lendária (dourado com cintilação), 4 = mítica (arco-íris girando), 5 = miaujestosa (branco-pérola e rosa pulsando, estrelinhas e anel duplo).
 static func brilho_raridade(c: CanvasItem, centro: Vector2, raio: float, raridade: int, suave: bool = false) -> void:
 	if raridade <= 0:
 		return
@@ -1189,12 +1195,14 @@ static func brilho_raridade(c: CanvasItem, centro: Vector2, raio: float, raridad
 		c.draw_arc(centro, raio * 0.78, 0.0, TAU, 24, Color(cor.r, cor.g, cor.b, 0.25 + 0.2 * pu), 1.0)
 	if raridade >= 3:
 		c.draw_circle(centro, raio * 0.7, Color(1.0, 0.9, 0.5, 0.12) if raridade == 3 else Color(cor.r, cor.g, cor.b, 0.16))
-		for k in 3:
-			var a: float = t * 1.2 + k * TAU / 3.0
+		if raridade >= 5:
+			c.draw_arc(centro, raio * 1.12, 0.0, TAU, 24, Color(1.0, 1.0, 1.0, 0.25 + 0.3 * pu), 1.0)
+		for k in (3 if raridade < 5 else 5):
+			var a: float = t * 1.2 + k * TAU / (3.0 if raridade < 5 else 5.0)
 			var q: Vector2 = centro + Vector2(cos(a), sin(a) * 0.9) * raio
 			var tw: float = 0.5 + 0.5 * sin(t * 7.0 + k * 2.1)
 			var r: float = 1.4 + 2.2 * tw
-			var cs: Color = Color(1.0, 0.95, 0.7, 0.5 + 0.5 * tw) if raridade == 3 else Color.from_hsv(fposmod(t * 0.4 + k / 3.0, 1.0), 0.5, 1.0, 0.6 + 0.4 * tw)
+			var cs: Color = Color(1.0, 0.95, 0.7, 0.5 + 0.5 * tw) if raridade == 3 else (Color(1.0, 1.0, 1.0, 0.6 + 0.4 * tw).lerp(Color(1.0, 0.7, 0.88, 0.8), 0.5 * (0.5 + 0.5 * sin(t * 2.0 + k))) if raridade >= 5 else Color.from_hsv(fposmod(t * 0.4 + k / 3.0, 1.0), 0.5, 1.0, 0.6 + 0.4 * tw))
 			c.draw_line(q - Vector2(r, 0), q + Vector2(r, 0), cs, 1.2)
 			c.draw_line(q - Vector2(0, r), q + Vector2(0, r), cs, 1.2)
 

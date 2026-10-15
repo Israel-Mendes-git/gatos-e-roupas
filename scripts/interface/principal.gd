@@ -172,7 +172,7 @@ const AJUDA_ATALHOS: Array[String] = [
 ]
 const AJUDA_REGRAS: Array[String] = [
 	"Fantasia: grupo de peças da mesma família. Com 2 ou 3 peças da mesma fantasia num gato vem um bônus; com as 4 (cabeça, corpo, mão e acessório) ele libera o poder da fantasia.",
-	"Raridade: comum, rara, épica, lendária e mítica. Mais raridade dá mais efeito e mais espaço para marcas.",
+	"Raridade: comum, rara, épica, lendária, mítica e miaujestosa (esta só reforçando uma mítica). Mais raridade dá mais efeito e mais espaço para marcas.",
 	"Marca: quando um gato cai na luta, a roupa dele ganha uma marca para sempre. Cada peça comporta um número limitado delas.",
 	"Promover (carretel): sobe o nível da peça e custa blocos. Reforçar (estrela): sobe a raridade e custa troféus.",
 	"Fundir: peça repetida que cai na luta se funde sozinha com a que você já tem, que fica melhor. Você nunca tem duas iguais paradas.",
@@ -2138,8 +2138,8 @@ func _motivo_nivel(p: Peca) -> String:
 
 ## Motivo de a peça não poder subir de raridade agora (vazio se pode).
 func _motivo_reforco(p: Peca) -> String:
-	if p.raridade >= Pecas.Raridade.MITICA:
-		return "Já é mítica"
+	if p.raridade >= Pecas.Raridade.MIAUJESTOSA:
+		return "Raridade máxima"
 	if estado.trofeus < Balanco.custo_reforco(p.raridade):
 		return "Faltam troféus"
 	return ""
@@ -2174,8 +2174,8 @@ func reforcar(peca: Peca) -> bool:
 		Som.tocar("raridade")
 		_flutuar(Pecas.RARIDADE_NOME[peca.raridade], ALVO_ESTRELA.get_center() + Vector2(0, -50), Pecas.cor_rar(peca.raridade).lightened(0.3), 18, 1.3)
 		return true
-	elif m == "Já é mítica":
-		_recado("Já é mítica.")
+	elif m == "Raridade máxima":
+		_recado("Já é miaujestosa, a raridade máxima.")
 	else:
 		_recado("Faltam troféus (custa %d)." % Balanco.custo_reforco(peca.raridade))
 	return false
@@ -2206,7 +2206,7 @@ func _estado_reforcar_tudo(b: Boneco) -> Dictionary:
 	for q in b.pecas:
 		if q != null:
 			vestidas += 1
-			if q.raridade < Pecas.Raridade.MITICA:
+			if q.raridade < Pecas.Raridade.MIAUJESTOSA:
 				barata = mini(barata, Balanco.custo_reforco(q.raridade))
 	if custo == 0:
 		motivo = "%s está sem roupa." % b.nome if vestidas == 0 else "Tudo já é mítico."
@@ -3907,8 +3907,11 @@ func _ladrilho(r: Rect2, p: Peca, escondida: bool = false, sob: bool = false) ->
 			var cr_r: Color = Pecas.cor_rar(p.raridade)
 			_c.draw_rect(r.grow(1), Color(cr_r.r, cr_r.g, cr_r.b, 0.2 + 0.25 * pulso), false, 2.0)
 			_c.draw_rect(r.grow(-2), cr_r, false, 2.0)
-			if p.raridade >= 4:
+			if p.raridade == 4:
 				_c.draw_rect(r.grow(-5), Color.from_hsv(fposmod(t * 0.3 + 0.5, 1.0), 0.6, 1.0, 0.5), false, 1.0)
+			elif p.raridade >= 5:
+				_c.draw_rect(r.grow(-5), Color(1.0, 1.0, 1.0, 0.45 + 0.4 * pulso), false, 1.0)
+				_c.draw_rect(r.grow(3), Color(cr_r.r, cr_r.g, cr_r.b, 0.12 + 0.18 * pulso), false, 1.0)
 	nove(_c, GUI_TEX, R_FINA, M_FINA, r, 0.5)
 	# tarja da fantasia
 	_c.draw_rect(Rect2(r.position.x + 4, r.position.y + 4, r.size.x - 8, 4), Pecas.CONJUNTO_COR[p.conjunto()])
@@ -4226,7 +4229,7 @@ func _bigorna() -> void:
 	# alvo 2: estrela (raridade, custa troféus)
 	var m2: String = _motivo_reforco(pc) if pc != null else ""
 	var c2: String = ""
-	if pc != null and pc.raridade < Pecas.Raridade.MITICA:
+	if pc != null and pc.raridade < Pecas.Raridade.MIAUJESTOSA:
 		c2 = "−%d troféus" % Balanco.custo_reforco(pc.raridade)
 	elif pc == null:
 		c2 = "%d a %d troféus" % [Balanco.REFORCO_CUSTO[0], Balanco.REFORCO_CUSTO[-1]]

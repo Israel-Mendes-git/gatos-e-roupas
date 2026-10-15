@@ -923,7 +923,7 @@ func _consumir() -> void:
 					var pr0: Vector2 = Vector2(e["x"], e["y"] - 60 * ESC)
 					_faisca(pr0, cr, 10 + 8 * rar, 220.0, 0.8, 3.6)
 					particulas.append({"p": pr0, "v": Vector2.ZERO, "vida": 0.5, "max": 0.5, "cor": Color(cr.r, cr.g, cr.b, 0.5), "r": 22.0 + 10.0 * rar, "g": 0.0, "tipo": 1})
-					_numero(pr0 + Vector2(0, -30), Pecas.RARIDADE_NOME[clampi(rar, 0, 4)] + "!", cr, 22 + 2 * rar, 1.4, 160.0)
+					_numero(pr0 + Vector2(0, -30), Pecas.RARIDADE_NOME[clampi(rar, 0, Pecas.RARIDADE_NOME.size() - 1)] + "!", cr, 22 + 2 * rar, 1.4, 160.0)
 					if rar >= 3:
 						tremor = maxf(tremor, 5.0)
 			"marca":

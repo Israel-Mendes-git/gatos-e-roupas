@@ -8,15 +8,18 @@ const ONDAS_TOTAIS := 5         # ondas por fase; o chefe vem na última
 const TIJOLOS_INICIAIS := 30
 const CUSTO_BONECO := 3
 # promover o nível de uma peça com blocos: custo por nível atual da peça (0 -> 1, 1 -> 2, ...); os primeiros níveis custam o de sempre
-const PROMOCAO_CUSTO: Array[int] = [2, 2, 2, 2, 2, 3, 3, 4, 4, 5]
-# reforçar a raridade de uma peça com troféus, por raridade atual: [comum -> rara, rara -> épica, épica -> lendária, lendária -> mítica]
-const REFORCO_CUSTO: Array[int] = [3, 5, 8, 12]
+const PROMOCAO_CUSTO: Array[int] = [2, 2, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7]
+# reforçar a raridade de uma peça com troféus, por raridade atual: [comum -> rara, rara -> épica, épica -> lendária, lendária -> mítica, mítica -> miaujestosa]
+const REFORCO_CUSTO: Array[int] = [3, 5, 8, 12, 18]
 const MAX_BONECOS := 5
 const BONECOS_INICIAIS := 3     # o time é fixo; cresce ao vencer fases, até MAX_BONECOS
-const NIVEL_MAX := 10           # nível máximo de uma peça
+const NIVEL_MAX := 15           # nível máximo de uma peça (do 11 ao 15 cada nível rende menos: BONUS_NIVEL_ALTO)
+const NIVEL_BASE := 10          # até aqui cada nível soma BONUS_NIVEL
+const DROP_NIVEL_MAX := 10      # peça que cai de bicho nunca vem acima disto
 const INIMIGO_NIVEL_MAX := 5    # ...e o das peças que os bichos vestem (a curva deles não acompanha a das peças do jogador)
 const ABATES_BASE := 2          # abates p/ 1º nível; +1 a cada nível
-const BONUS_NIVEL := 0.5       # cada nível soma 35% ao efeito numérico
+const BONUS_NIVEL := 0.5        # cada nível (até NIVEL_BASE) soma 50% ao efeito numérico
+const BONUS_NIVEL_ALTO := 0.25  # ...e cada nível de NIVEL_BASE a NIVEL_MAX soma só 25% (nível 15 = 1 + 5 + 1,25 = 7,25x; antes, 6x no 10)
 const DROP_CHANCE := 0.35
 const COPIAS_MAX := 2            # o guarda-roupa guarda até 2 de cada peça; a pior sobra
 const DROP_NIVEL_POR_PROG := 0.3   # peça largada já vem com nível: cresce com o progresso na campanha
@@ -146,9 +149,10 @@ const CONJ_CAUBOI_RAPIDEZ: Array[float] = [0.1, 0.25]
 const CONJ_PIRATA_ROUBO: Array[float] = [0.1, 0.25]
 const CONJ_MAGO_QUEIMA: Array[float] = [2.0, 5.0]
 
-# ---------- Raridades (comum, rara, épica, lendária, mítica) ----------
-const RARIDADE_PODER: Array[float] = [1.0, 1.15, 1.3, 1.45, 1.6]   # multiplicador do efeito
-const RARIDADE_MARCAS: Array[int] = [2, 3, 3, 4, 5]                # marcas que a peça aguenta
+# ---------- Raridades (comum, rara, épica, lendária, mítica, miaujestosa) ----------
+# A Miaujestosa não cai de bicho nem nasce de fusão: só se chega a ela reforçando uma Mítica (ou como prêmio do chefe secreto).
+const RARIDADE_PODER: Array[float] = [1.0, 1.15, 1.3, 1.45, 1.6, 1.8]   # multiplicador do efeito
+const RARIDADE_MARCAS: Array[int] = [2, 3, 3, 4, 5, 6]                # marcas que a peça aguenta
 # Chances de drop. `g` = "degrau" do lugar: 0..4 nos cômodos, 5..9 fora da casa; a invasão soma mais (INVASAO_DROP_*).
 # Cada raridade só passa a cair depois do degrau `*_DESDE`; a chance cresce `*_FASE` por degrau.
 const DROP_RARA := 0.06            # inimigo comum
@@ -341,7 +345,7 @@ const SEPARA_RAIO := 30.0           # unidades do mesmo lado a menos disto se af
 const SEPARA_VEL := 46.0            # px/s do empurrão
 
 # ---------- Time fixo: nível e treino dos bonecos ----------
-const BONECO_NIVEL_MAX := 30
+const BONECO_NIVEL_MAX := 40       # 4 heranças (aos 10, 20, 30 e 40); a 4ª é prêmio de fim de jogo
 const XP_NIVEL_TETO := 10           # depois deste nível, o custo de cada nível para de crescer
 
 # ---------- Herança: a cada HERANCA_NIVEIS níveis o gato incorpora, como passiva, o poder da fantasia completa que veste ----------

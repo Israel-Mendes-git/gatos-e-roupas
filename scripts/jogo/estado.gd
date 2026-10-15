@@ -457,7 +457,7 @@ func fundir(base: Peca, outra: Peca) -> bool:
 func custo_reforcar_fantasia(b: Boneco) -> int:
 	var total: int = 0
 	for p in b.pecas:
-		if p != null and p.raridade < Pecas.Raridade.MITICA:
+		if p != null and p.raridade < Pecas.Raridade.MIAUJESTOSA:
 			total += Balanco.custo_reforco(p.raridade)
 	return total
 
@@ -465,7 +465,7 @@ func custo_reforcar_fantasia(b: Boneco) -> int:
 ## Devolve quantas subiram.
 func reforcar_fantasia(b: Boneco) -> int:
 	var n: int = 0
-	for rar in [Pecas.Raridade.COMUM, Pecas.Raridade.RARA, Pecas.Raridade.EPICA, Pecas.Raridade.LENDARIA]:
+	for rar in [Pecas.Raridade.COMUM, Pecas.Raridade.RARA, Pecas.Raridade.EPICA, Pecas.Raridade.LENDARIA, Pecas.Raridade.MITICA]:
 		for p in b.pecas:
 			if p != null and not p.raridade_subiu and p.raridade == rar and pode_reforcar(p) and reforcar(p):
 				n += 1
@@ -476,7 +476,7 @@ func reforcar_fantasia(b: Boneco) -> int:
 	return n
 
 func pode_reforcar(p: Peca) -> bool:
-	return p != null and p.raridade < Pecas.Raridade.MITICA and trofeus >= Balanco.custo_reforco(p.raridade)
+	return p != null and p.raridade < Pecas.Raridade.MIAUJESTOSA and trofeus >= Balanco.custo_reforco(p.raridade)
 
 ## Paga troféus para subir a raridade da peça (mais efeito e mais espaço para marcas).
 func reforcar(p: Peca) -> bool:

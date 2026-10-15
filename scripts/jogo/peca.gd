@@ -24,7 +24,7 @@ func conjunto() -> int:
 
 ## Multiplicador do efeito numérico (nível e raridade).
 func poder() -> float:
-	return (1.0 + Balanco.BONUS_NIVEL * nivel) * Balanco.RARIDADE_PODER[raridade] * Pecas.MOLDE_PODER[tipo]
+	return (1.0 + Balanco.BONUS_NIVEL * mini(nivel, Balanco.NIVEL_BASE) + Balanco.BONUS_NIVEL_ALTO * maxi(0, nivel - Balanco.NIVEL_BASE)) * Balanco.RARIDADE_PODER[raridade] * Pecas.MOLDE_PODER[tipo]
 
 ## Tipo cujo efeito esta peça usa.
 func molde() -> int:
@@ -32,7 +32,7 @@ func molde() -> int:
 
 ## Nível usado pelos efeitos em porcentagem (a raridade conta como nível a mais).
 func nivel_efetivo() -> int:
-	return nivel + raridade
+	return mini(nivel, Balanco.NIVEL_BASE) + maxi(0, nivel - Balanco.NIVEL_BASE) / 2 + raridade   # do 11 em diante o nível conta pela metade
 
 func marcas_max() -> int:
 	return Balanco.RARIDADE_MARCAS[raridade]
