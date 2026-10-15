@@ -740,21 +740,26 @@ func _orelha(x: float, y: float, esq: bool, ue: float, miolo: Color) -> void:
 			var ix: float = rx + ue if esq else rx + w - ue - iw
 			draw_rect(Rect2(ix, y + i * ue, iw, ue), miolo)
 
-## Orelha do logotipo: contorno escuro, borda creme e miolo rosa (degraus de 4 px, 7 de largura por 7 de altura).
-func _orelha_logo(x: float, y: float, esq: bool) -> void:
+## Orelha do logotipo (degraus de 4 px, 7 de largura por 7 de altura). `fase` 0: silhueta escura, antes dos
+## contornos das letras; 1: borda creme e miolo rosa, depois do contorno escuro e antes do contorno rosa e do miolo
+## da letra (o pé da orelha fica escondido atrás do "G", como se saísse dele).
+func _orelha_logo(x: float, y: float, esq: bool, fase: int) -> void:
 	var u: float = 4.0
-	for i in 7:
+	for r in 10:
+		var i: int = mini(r, 6)   # as 3 últimas linhas são o pé, reto, escondido atrás da letra
 		var w: float = (i + 2) * u
 		var rx: float = x if esq else x + 7.0 * u - w
-		draw_rect(Rect2(rx, y + i * u, w, u), C_CONT)
+		if fase == 0:
+			draw_rect(Rect2(rx, y + r * u, w, u), C_CONT)
+			continue
 		if i >= 1:
-			var w2: float = (i + 2 - 2) * u
+			var w2: float = i * u
 			var rx2: float = rx + u if esq else rx + w - u - w2
-			draw_rect(Rect2(rx2, y + i * u, w2, u), C_CREME)
-		if i >= 3:
+			draw_rect(Rect2(rx2, y + r * u, w2, u), C_CREME)
+		if i >= 3 and r <= 6:
 			var w3: float = (i - 2) * u
 			var rx3: float = rx + 2.0 * u if esq else rx + w - 2.0 * u - w3
-			draw_rect(Rect2(rx3, y + i * u, w3, u), C_ROSA)
+			draw_rect(Rect2(rx3, y + r * u, w3, u), Color(1.0, 0.5, 0.62))
 
 ## Painel pastel com borda rosa, contorno escuro e orelhinhas nos cantos de cima.
 func _painel_gato(r: Rect2, orelhas: bool = true, fundo: Color = C_CREME) -> void:
@@ -996,16 +1001,21 @@ func _placa_titulo() -> void:
 	var ys: Array[float] = []
 	for k in letras.length():
 		ys.append(base + roundf(sin(t * 2.4 + k * 0.55) * 3.0))
-	# orelhas de gato inteiras sobre o "G": desenhadas ANTES dos contornos, que escondem só o pé delas
+	# orelhas de gato saindo do topo do "G": o pé fica por baixo do contorno e do miolo da letra
 	var topo: float = ys[0] - 0.72 * tam
-	_orelha_logo(x0 + 4.0, topo - 31.0, true)
-	_orelha_logo(x0 + largs[0] - 4.0 - 28.0, topo - 31.0, false)
+	var oy: float = topo - 27.0
+	var ox_e: float = x0 + 12.0
+	var ox_d: float = x0 + largs[0] - 8.0 - 28.0
+	_orelha_logo(ox_e, oy, true, 0)
+	_orelha_logo(ox_d, oy, false, 0)
 	# contorno escuro com sombra, depois contorno rosa
 	var x: float = x0
 	for k in letras.length():
 		draw_string_outline(fonte, Vector2(x, ys[k] + 6.0), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 24, Color(0, 0, 0, 0.3))
 		draw_string_outline(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 22, C_CONT)
 		x += largs[k]
+	_orelha_logo(ox_e, oy, true, 1)
+	_orelha_logo(ox_d, oy, false, 1)
 	x = x0
 	for k in letras.length():
 		draw_string_outline(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, tam, 11, C_ROSA)
