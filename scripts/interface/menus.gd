@@ -988,7 +988,7 @@ func _sombra(p: Vector2, rx: float, ry: float) -> void:
 
 func _placa_titulo() -> void:
 	var fonte: Font = UIComum.FONTE
-	var tam: int = 92
+	var tam: int = 94
 	var letras: String = TITULO_JOGO
 	var largs: Array[float] = []
 	var total: float = 0.0
@@ -1127,6 +1127,11 @@ func _linhas_creditos() -> Array:
 	l.append(["t", "Licença CC BY 4.0", 14, C_TEXTO])
 	l.append(["t", "paperhatlizard.itch.io/cryos-mini-gui", 14, C_LINK])
 	l.append(["pata"])
+	l.append(["t", "Fonte", 14, peq])
+	l.append(["t", "Jersey 10", 22, C_NOME])
+	l.append(["t", "por Sarah Cadigan-Fried", 17, C_TEXTO])
+	l.append(["t", "Licença SIL Open Font 1.1", 14, C_TEXTO])
+	l.append(["pata"])
 	l.append(["t", "Feito com", 14, peq])
 	l.append(["t", "Godot Engine", 22, C_NOME])
 	l.append(["t", "godotengine.org", 14, C_LINK])
@@ -1147,7 +1152,7 @@ func _tela_creditos() -> void:
 			np += 1
 			y += 46.0
 			continue
-		var tam: int = l[2]
+		var tam: int = UIComum.tam(l[2])
 		var ys: float = y + tam
 		if ys > area_cred.position.y - 4.0 and ys - tam < area_cred.end.y + 4.0:
 			_t(l[1], Vector2(area_cred.position.x, ys), tam, l[3], area_cred.size.x)

@@ -22,6 +22,11 @@ https://toffeecraft.itch.io/cat-user-interface
 - Usado em: `assets/terceiros/gui/gato_ui.png` (gatinho dos balões e ícones dos menus).
 - Permite: uso pessoal e comercial, editar. Só pode ser distribuído como parte de um jogo ou produto, nunca avulso.
 
+**Jersey 10**, de Sarah Cadigan-Fried (The Soft Type Project)
+https://github.com/scfried/soft-type-jersey
+- Usado em: `assets/fontes/Jersey10-Regular.ttf`, a fonte de todo o jogo (texto da interface e logotipo). A licença está em `assets/fontes/OFL.txt`.
+- Licença: SIL Open Font License 1.1. Uso comercial permitido; pode ir no repositório e no jogo, desde que a licença acompanhe a fonte e o nome não seja vendido sozinho.
+
 ## Baixado, sem uso
 
 **Cat Pack - Mochi** (pacote gratuito `CatPackFree.zip`), de ToffeeCraft
