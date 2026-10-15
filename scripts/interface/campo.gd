@@ -5,6 +5,7 @@ extends Node2D
 signal terminou(vitoria: bool)
 
 const ESC := 1.35
+const V := preload("res://scripts/interface/vfx_px.gd")   # pedaços de pixel art dos efeitos
 const BAU_POS := Vector2(1205, 672)
 const TORRE_BASE := Vector2(10, 652)
 ## Base da torre alinhada à grade de 4 px quando ela é desenhada em pixel.
@@ -1259,6 +1260,41 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 		sem.append(randf())
 	fx.append({"poder": poder, "p": po, "c": centro, "alvos": alvos, "cor": cor, "t": 0.0, "dur": dur, "sem": sem, "ex": ex})
 
+## Bola de fogo em pixel: lóbulos com contorno vinho, laranja, amarelo e miolo claro. `calor` 1 = recém-explodiu
+## (miolo branco), 0 = brasa apagando.
+func _bola_fogo(ce: Vector2, rr: float, calor: float) -> void:
+	if rr < 4.0:
+		return
+	var lr: float = rr * 0.55
+	var off: float = rr * 0.5
+	var cont := Color(0.3, 0.06, 0.07)
+	for k in 6:
+		var a: float = k * 1.0472 + 0.4
+		V.disco(self, ce + Vector2(cos(a) * off, sin(a) * off * 0.85), lr + V.Q, cont)
+	V.disco(self, ce, rr * 0.75 + V.Q, cont)
+	for k in 6:
+		var a2: float = k * 1.0472 + 0.4
+		V.disco(self, ce + Vector2(cos(a2) * off, sin(a2) * off * 0.85), lr, Color(0.88, 0.25, 0.08))
+	V.disco(self, ce, rr * 0.75, Color(0.88, 0.25, 0.08))
+	for k in 6:
+		var a3: float = k * 1.0472 + 0.4
+		V.disco(self, ce + Vector2(cos(a3) * off * 0.7, sin(a3) * off * 0.6), lr * 0.62, Color(1.0, 0.58, 0.14))
+	V.disco(self, ce, rr * 0.55, Color(1.0, 0.58, 0.14))
+	V.disco(self, ce + Vector2(0, -rr * 0.05), rr * 0.36, Color(1.0, 0.88, 0.38))
+	if calor > 0.35:
+		V.disco(self, ce, rr * 0.18, Color(1.0, 0.98, 0.82))
+
+## Nuvem de fumaça em bolhas que sobem e encolhem (`u` 0..1 do tempo dela).
+func _fumaca_px(base: Vector2, raio: float, n: int, u: float, cor: Color, sem: float) -> void:
+	for k in n:
+		var ang: float = k * 2.399 + sem * 6.0
+		var rr: float = raio * (0.2 + 0.8 * fposmod(k * 0.382 + sem, 1.0))
+		var sobe: float = u * (18.0 + 26.0 * fposmod(k * 0.618, 1.0))
+		var tam: float = (7.0 + 5.0 * (k % 3)) * (1.0 - u * 0.75) * (0.4 + 0.6 * minf(1.0, u * 5.0))
+		if tam < 3.0:
+			continue
+		V.bolha(self, base + Vector2(cos(ang) * rr, sin(ang) * rr * 0.4 - sobe), tam, cor)
+
 func _desenhar_fx(f: Dictionary) -> void:
 	var t: float = f["t"]
 	var u: float = clampf(t / float(f["dur"]), 0.0, 1.0)
@@ -1271,91 +1307,119 @@ func _desenhar_fx(f: Dictionary) -> void:
 	var ex: Dictionary = f.get("ex", {})
 	var gp: Vector2 = p + Vector2(0, 30.0 * ESC)   # chão sob quem usou
 	var qtd: Array = alvos if not alvos.is_empty() else [p]
+	var q: float = V.Q
+	var esc_c: Color = V.tom(c, 0.42)   # tom escuro da cor da fantasia (contorno interno)
+	var clr_c: Color = V.tom(c, 1.6)    # tom claro
 	match int(f["poder"]):
 		Pecas.Poder.RAIO:
-			var quadro: int = int(t * 28.0)
-			var pisca: float = 1.0 if quadro % 2 == 0 else 0.55
-			if u < 0.6:
-				for k in qtd.size():
-					var b: Vector2 = qtd[k]
-					var topo := Vector2(b.x + (sem[k % 8] - 0.5) * 70.0, -10.0)
-					var pts := PackedVector2Array()
-					for i in 11:
-						var w: float = i / 10.0
-						var off: float = 0.0 if (i == 0 or i == 10) else sin(i * 12.9898 + sem[k % 8] * 78.2 + quadro * 1.7) * 20.0
-						pts.append(topo.lerp(b, w) + Vector2(off, 0.0))
-					draw_polyline(pts, Color(c.r, c.g, c.b, 0.35 * pisca), 16.0)
-					draw_polyline(pts, Color(1, 1, 0.9, 0.95 * pisca), 4.0)
-					_anel(b + Vector2(0, 24 * ESC), 10.0 + 60.0 * u, 4.0 + 18.0 * u, Color(1, 1, 0.8, 0.8 * a), 3.0)
-					draw_circle(b, 16.0 * a + 4.0, Color(1, 1, 0.9, 0.5 * pisca))
-			if u < 0.2:
-				draw_rect(Rect2(-20, -20, 1320, 760), Color(1, 1, 1, 0.1 * (1.0 - u / 0.2)))
+			var quad: int = int(t * 18.0)
+			if u < 0.1:
+				draw_rect(Rect2(-20, -20, 1320, 760), Color(1, 1, 0.9, 0.16 * (1.0 - u / 0.1)))
+			for k in qtd.size():
+				var b: Vector2 = qtd[k]
+				var pe: Vector2 = b + Vector2(0, 24 * ESC)
+				var ue: float = 1.0 - pow(1.0 - u, 2.0)
+				V.elipse(self, pe, 46.0 * minf(1.0, u * 8.0), 13.0 * minf(1.0, u * 8.0), Color(0.08, 0.05, 0.1, 0.4 * a))
+				if u < 0.45:
+					var topo := Vector2(b.x + (sem[k % 8] - 0.5) * 60.0, -10.0)
+					V.raio(self, topo, b, Color(1.0, 0.9, 0.35), sem[k % 8] * 9.0 + quad * 1.7, 14.0)
+				V.aro(self, pe, 12.0 + 70.0 * ue, (12.0 + 70.0 * ue) * 0.35, Color(1.0, 0.92, 0.4), a * 1.2, 1.0)
+				if u < 0.3:
+					V.disco_c(self, b, 20.0 * (1.0 - u / 0.3) + 3.0, Color(1.0, 0.98, 0.8), Color(0.5, 0.3, 0.05))
+				for j in 6:
+					var ang: float = j * TAU / 6.0 + sem[k % 8] * 3.0
+					var d: float = 16.0 + 52.0 * ue
+					if a > 0.2:
+						V.brilho(self, b + Vector2(cos(ang) * d, sin(ang) * d * 0.8), 6.0 * a, Color(1.0, 0.9, 0.3), Color(0.35, 0.2, 0.05))
 		Pecas.Poder.EXPLOSAO:
-			# clarão geral curto, bola de fogo em 3 degraus e onda de choque em dois anéis
-			var rr: float = 30.0 + 170.0 * (1.0 - pow(1.0 - u, 3.0))
-			if u < 0.18:
-				draw_rect(Rect2(-20, -20, 1320, 760), Color(1.0, 0.9, 0.6, 0.22 * (1.0 - u / 0.18)))
-			_elipse_cheia(ce + Vector2(0, 26), rr * 1.15, rr * 0.38, Color(0.15, 0.05, 0.02, 0.35 * a))
-			draw_circle(ce, rr, Color(1.0, 0.35, 0.08, 0.30 * a))
-			draw_circle(ce, rr * 0.72, Color(1.0, 0.6, 0.15, 0.40 * a))
-			draw_circle(ce, rr * 0.42, Color(1.0, 0.9, 0.5, 0.55 * a))
-			if u < 0.3:
-				draw_circle(ce, 60.0 * (1.0 - u * 2.0), Color(1, 1, 0.9, 0.9 * (1.0 - u / 0.3)))
-			draw_arc(ce, rr, 0, TAU, 40, Color(1.0, 0.9, 0.5, 0.95 * a), 10.0 * a + 2.0)
-			draw_arc(ce, rr * 0.8, 0, TAU, 40, Color(1.0, 0.5, 0.15, 0.7 * a), 6.0 * a + 1.0)
-			_anel(ce + Vector2(0, 26), rr * 1.25, rr * 0.4, Color(1.0, 0.75, 0.3, 0.8 * a), 5.0)
-			_anel(ce + Vector2(0, 26), rr * 0.9, rr * 0.28, Color(1.0, 0.5, 0.15, 0.6 * a), 3.0)
+			var rr: float = 30.0 + 150.0 * (1.0 - pow(1.0 - u, 3.0))
+			if u < 0.15:
+				draw_rect(Rect2(-20, -20, 1320, 760), Color(1.0, 0.9, 0.6, 0.22 * (1.0 - u / 0.15)))
+			V.elipse(self, ce + Vector2(0, 26), rr * 1.1, rr * 0.34, Color(0.12, 0.05, 0.03, 0.4 * a))
+			_bola_fogo(ce, rr * (1.0 - maxf(0.0, u - 0.55) / 0.45 * 0.6), 1.0 - u * 1.5)
+			V.aro(self, ce + Vector2(0, 26), rr * 1.25, rr * 0.4, Color(1.0, 0.85, 0.4), a * 1.3, 1.5)
+			V.aro(self, ce + Vector2(0, 26), rr * 0.95, rr * 0.3, Color(1.0, 0.5, 0.15), a * 1.1, 1.0)
+			for k in 12:
+				var ang_e: float = k * 0.5236 + sem[k % 8]
+				var d: float = (40.0 + 150.0 * sem[(k + 3) % 8]) * (1.0 - pow(1.0 - u, 2.0))
+				var pf: Vector2 = ce + Vector2(cos(ang_e) * d, sin(ang_e) * d * 0.7 + 180.0 * u * u - 30.0 * u)
+				if a > 0.15:
+					V.disco_c(self, pf, (3.0 + 3.0 * (k % 2)) * a + 2.0, Color(1.0, 0.7, 0.2) if k % 3 != 0 else Color(1.0, 0.95, 0.5), Color(0.35, 0.08, 0.05))
+			if u > 0.35:
+				_fumaca_px(ce + Vector2(0, 14), rr * 0.8, 7, (u - 0.35) / 0.65, Color(0.42, 0.36, 0.38), sem[0])
 		Pecas.Poder.ATORDOA:
-			var fade: float = minf(1.0, a * 3.0)
+			var fade_s: float = minf(1.0, a * 3.0)
 			for b in qtd:
 				var cab: Vector2 = b + Vector2(0, -50 * ESC * 0.8)
-				for k in 3:
-					var ang: float = t * 7.0 + k * TAU / 3.0
-					var sp: Vector2 = cab + Vector2(cos(ang) * 22.0, sin(ang) * 7.0)
-					var estr: PackedVector2Array = _pts_estrela(sp, 7.0, ang * 0.5)
-					draw_colored_polygon(estr, Color(1.0, 0.9, 0.3, fade))
-					estr.append(estr[0])
-					draw_polyline(estr, Color(0.35, 0.2, 0.0, fade), 1.4)
-			_anel(p, 14.0 + 90.0 * u, 8.0 + 40.0 * u, Color(c.r, c.g, c.b, 0.7 * a), 3.0)
+				if u < 0.25:
+					for k in 6:
+						var ang_r: float = k * TAU / 6.0
+						var dr: float = 10.0 + 104.0 * u
+						V.linha(self, cab + Vector2(cos(ang_r), sin(ang_r) * 0.7) * dr, cab + Vector2(cos(ang_r), sin(ang_r) * 0.7) * (dr + 8.0), Color(1.0, 0.95, 0.5), q)
+				if fade_s > 0.2:
+					for k in 3:
+						var ang: float = t * 7.0 + k * TAU / 3.0
+						var sp: Vector2 = cab + Vector2(cos(ang) * 22.0, sin(ang) * 7.0)
+						V.brilho(self, sp, 5.0, Color(1.0, 0.86, 0.2), Color(0.35, 0.2, 0.02))
+			V.aro(self, p + Vector2(0, 30), 14.0 + 90.0 * u, (14.0 + 90.0 * u) * 0.4, clr_c, a * 1.2, 1.0)
 		Pecas.Poder.CURA:
-			for b in qtd:
-				draw_circle(b + Vector2(0, 24 * ESC), 26.0 * minf(1.0, u * 4.0), Color(0.3, 1.0, 0.5, 0.18 * a))
-				for k in 6:
-					var w: float = fposmod(u * 1.1 + k * 0.17, 1.0)
-					var cp: Vector2 = b + Vector2((k - 2.5) * 11.0 + sin(t * 4.0 + k) * 4.0, 10.0 - w * 80.0 - (k % 2) * 12.0)
-					var s: float = 6.0 + (k % 3)
-					var al: float = sin(w * PI) * minf(1.0, a * 2.5)
-					draw_rect(Rect2(cp.x - s * 0.3, cp.y - s, s * 0.6, s * 2.0), Color(0.35, 1.0, 0.5, al))
-					draw_rect(Rect2(cp.x - s, cp.y - s * 0.3, s * 2.0, s * 0.6), Color(0.35, 1.0, 0.5, al))
-					draw_rect(Rect2(cp.x - s * 0.3 + 1, cp.y - s + 1, s * 0.6 - 2, s * 2.0 - 2), Color(0.85, 1.0, 0.9, al * 0.8))
+			var verde := Color(0.38, 0.95, 0.5)
+			var vesc := Color(0.04, 0.3, 0.18)
+			for bi in qtd.size():
+				var b: Vector2 = qtd[bi]
+				var pe: Vector2 = b + Vector2(0, 24 * ESC)
+				V.elipse(self, pe, 36.0 * minf(1.0, u * 4.0), 11.0 * minf(1.0, u * 4.0), Color(0.3, 1.0, 0.5, 0.22 * a))
+				V.aro(self, pe, 14.0 + 30.0 * u, (14.0 + 30.0 * u) * 0.34, verde, a * 1.3, 1.0)
+				for k in 4:
+					var w: float = fposmod(u * 1.1 + k * 0.25, 1.0)
+					var cp: Vector2 = b + Vector2((k - 1.5) * 14.0 + sin(t * 4.0 + k) * 3.0, 10.0 - w * 76.0 - (k % 2) * 10.0)
+					if sin(w * PI) * minf(1.0, a * 3.0) > 0.25:
+						V.cruz(self, cp, 5.0 if k % 2 == 0 else 3.0, verde, vesc)
+				for k in 4:
+					var w2: float = fposmod(u * 1.3 + k * 0.25 + 0.12, 1.0)
+					if a > 0.25:
+						V.brilho(self, b + Vector2((k - 1.5) * 20.0, 20.0 - w2 * 70.0), 3.0, Color(0.85, 1.0, 0.9), vesc)
 		Pecas.Poder.PROTEGE:
 			var pop: float = minf(1.0, u * 6.0)
-			var pulso: float = 0.5 + 0.5 * sin(t * 12.0)
+			var dourado := Color(1.0, 0.9, 0.45)
 			for b in qtd:
 				var bc: Vector2 = b + Vector2(0, 2)
-				var br: float = 30.0 * (0.6 + 0.4 * pop)
-				draw_circle(bc, br, Color(c.r, c.g, c.b, (0.05 + 0.03 * pulso) * minf(1.0, a * 2.0)))
-				draw_arc(bc, br, 0, TAU, 32, Color(1, 1, 1, 0.8 * minf(1.0, a * 2.0)), 2.0)
+				var rx: float = 30.0 * (0.55 + 0.45 * pop)
+				var ry: float = 34.0 * (0.55 + 0.45 * pop)
+				V.elipse(self, bc, rx, ry, Color(c.r, c.g, c.b, 0.12 * minf(1.0, a * 2.0)))
+				V.aro(self, bc, rx + q, ry + q, V.CONT, minf(1.0, a * 2.5), 2.0)
+				V.aro(self, bc, rx, ry, dourado, minf(1.0, a * 2.5), 1.0)
+				if a > 0.3:
+					V.brilho(self, bc + Vector2(-rx * 0.55, -ry * 0.6), 4.0, Color(1, 1, 0.95), Color(0.4, 0.3, 0.05))
 		Pecas.Poder.FRENESI:
 			var lista: Array = qtd.duplicate()
 			lista.append(p)
 			for bi in lista.size():
 				var b: Vector2 = lista[bi]
-				for k in 6:
-					var w: float = fposmod(u * 2.2 + k * 0.19, 1.0)
-					var yy: float = b.y + (k - 2.5) * 11.0
+				for k in 5:
+					var w: float = fposmod(u * 2.2 + k * 0.21, 1.0)
+					var yy: float = b.y + (k - 2.0) * 12.0
 					var x1: float = b.x - 22.0 - w * 24.0
-					var x0: float = x1 - 30.0 - sem[(k + bi) % 8] * 30.0
-					draw_line(Vector2(x0, yy), Vector2(x1, yy), Color(1.0, 0.7, 0.25, 0.85 * a * (1.0 - w * 0.5)), 3.0)
-					draw_line(Vector2(x0 + 8, yy), Vector2(x1, yy), Color(1, 1, 0.8, 0.8 * a), 1.2)
+					var comp: float = 28.0 + sem[(k + bi) % 8] * 28.0
+					if a > 0.2 and w < 0.85:
+						V.quadro(self, x1 - comp - q, yy - q, comp + q * 2.0, q * 3.0, V.CONT)
+						V.quadro(self, x1 - comp, yy, comp, q, Color(1.0, 0.68, 0.22))
+						V.quadro(self, x1 - comp * 0.4, yy, comp * 0.4, q, Color(1.0, 0.97, 0.7))
+				if a > 0.3:
+					V.brilho(self, b + Vector2(8, -34 + sin(t * 10.0 + bi) * 4.0), 4.0, Color(1.0, 0.82, 0.25), Color(0.4, 0.2, 0.02))
 		Pecas.Poder.ATRAVESSA:
-			var alt: float = 3.0 + 15.0 * a
+			var alt: float = V.sn(3.0 + 14.0 * a)
 			var x_ini: float = p.x
-			draw_rect(Rect2(x_ini, p.y - alt * 1.7, 1320.0 - x_ini, alt * 3.4), Color(c.r, c.g, c.b, 0.22 * a))
-			draw_rect(Rect2(x_ini, p.y - alt * 0.7, 1320.0 - x_ini, alt * 1.4), Color(c.r, c.g, c.b, 0.6))
-			draw_rect(Rect2(x_ini, p.y - alt * 0.25, 1320.0 - x_ini, alt * 0.5), Color(1, 1, 1, 0.95))
+			var ancho: float = 1320.0 - x_ini
+			V.quadro(self, x_ini, p.y - alt - q, ancho, alt * 2.0 + q * 2.0, V.CONT)
+			V.quadro(self, x_ini, p.y - alt, ancho, alt * 2.0, c)
+			V.quadro(self, x_ini, p.y - alt * 0.55, ancho, alt * 1.1, clr_c)
+			V.quadro(self, x_ini, p.y - maxf(q, alt * 0.22), ancho, maxf(q, alt * 0.44), V.BRANCO)
+			for k in 8:
+				var xk: float = x_ini + fposmod(k / 8.0 + u * 1.2, 1.0) * ancho
+				V.quadro(self, xk, p.y - alt - q * 3.0 - (k % 3) * q, q, q * 2.0, clr_c)
 			for b in alvos:
-				draw_circle(b, 14.0 * a + 4.0, Color(1, 1, 0.9, 0.7 * a))
+				V.estrela(self, b, 16.0 * a + 4.0, Color(1.0, 0.95, 0.6))
 		Pecas.Poder.RAJADA:
 			var destinos: Array = alvos if not alvos.is_empty() else [p + Vector2(300, 0)]
 			for bi in destinos.size():
@@ -1363,164 +1427,206 @@ func _desenhar_fx(f: Dictionary) -> void:
 				for j in 3:
 					var w: float = (t - j * 0.1 - bi * 0.03) / 0.3
 					if w > 0.0 and w < 1.0:
-						var bp: Vector2 = p.lerp(b, w) + Vector2(0, (j - 1) * 6.0 * (1.0 - w))
-						var cola: Vector2 = p.lerp(b, maxf(0.0, w - 0.18)) + Vector2(0, (j - 1) * 6.0 * (1.0 - w))
-						draw_line(cola, bp, Color(c.r, c.g, c.b, 0.6), 5.0)
-						draw_circle(bp, 6.0, c)
-						draw_circle(bp, 3.0, Color(1, 1, 1))
-					elif w >= 1.0 and w < 1.35:
-						draw_circle(b, 12.0 * (1.35 - w) / 0.35 + 2.0, Color(1, 1, 0.8, 0.6))
+						var off := Vector2(0, (j - 1) * 6.0 * (1.0 - w))
+						for tr in 3:
+							var wt: float = maxf(0.0, w - (tr + 1) * 0.06)
+							V.disco_c(self, p.lerp(b, wt) + off, 3.0 - tr, V.tom(c, 1.0 - tr * 0.2), esc_c)
+						V.disco_c(self, p.lerp(b, w) + off, 6.0, c, esc_c)
+						V.disco(self, p.lerp(b, w) + off + Vector2(-q, -q), 3.0, V.BRANCO)
+					elif w >= 1.0 and w < 1.4:
+						V.brilho(self, b, 14.0 * (1.4 - w) / 0.4 + 3.0, clr_c, esc_c)
 		Pecas.Poder.GELO:
 			if u < 0.8:
-				draw_rect(Rect2(-20, -20, 1320, 760), Color(0.3, 0.6, 1.0, 0.17 * (1.0 - u / 0.8)))
-			var gelo: Color = Color(0.7, 0.92, 1.0)
+				draw_rect(Rect2(-20, -20, 1320, 760), Color(0.3, 0.6, 1.0, 0.15 * (1.0 - u / 0.8)))
+			var gelo := Color(0.5, 0.82, 1.0)
+			var gesc := Color(0.1, 0.18, 0.45)
 			for bi in qtd.size():
 				var b: Vector2 = qtd[bi]
 				var pe: Vector2 = b + Vector2(0, 24 * ESC)
 				var cresce: float = minf(1.0, u * 5.0)
-				var al: float = minf(1.0, a * 2.5)
-				# placa de gelo azul no chão sob o alvo
-				_elipse_cheia(pe + Vector2(0, 4), 70.0 * cresce, 20.0 * cresce, Color(0.3, 0.6, 0.95, 0.40 * al))
-				_elipse_cheia(pe + Vector2(0, 3), 50.0 * cresce, 13.0 * cresce, Color(0.6, 0.85, 1.0, 0.45 * al))
+				var salto: float = 1.0 if a > 0.3 else a / 0.3
+				V.elipse(self, pe + Vector2(0, 4), 66.0 * cresce, 18.0 * cresce, Color(0.3, 0.6, 0.95, 0.42 * minf(1.0, a * 2.5)))
+				V.elipse(self, pe + Vector2(0, 3), 46.0 * cresce, 11.0 * cresce, Color(0.7, 0.92, 1.0, 0.5 * minf(1.0, a * 2.5)))
 				for k in 7:
-					var dx: float = (k - 3) * 13.0
-					var h: float = (44.0 + (k % 3) * 20.0 - absf(k - 3) * 4.0) * cresce
-					var base: Vector2 = pe + Vector2(dx, 5.0 - abs(k - 3) * 2.0)
-					draw_colored_polygon(PackedVector2Array([base + Vector2(-9, 0), base + Vector2(dx * 0.1, -h), base + Vector2(9, 0)]), Color(0.45, 0.75, 1.0, 0.9 * al))
-					draw_colored_polygon(PackedVector2Array([base + Vector2(-9, 0), base + Vector2(dx * 0.1, -h), base + Vector2(-1, 0)]), Color(gelo.r, gelo.g, gelo.b, 0.95 * al))
-					draw_line(base + Vector2(-3, -2), base + Vector2(dx * 0.1, -h + 4.0), Color(1, 1, 1, 0.95 * al), 2.0)
+					var dx: float = (k - 3) * 12.0
+					var h: float = (40.0 + (k % 3) * 20.0 - absf(k - 3) * 4.0) * cresce * salto
+					if h >= q:
+						V.cristal(self, pe + Vector2(dx, 5.0 - absf(k - 3) * 2.0), 9.0, h, gelo, gesc)
 				for k in 5:
 					var w: float = fposmod(t * 0.9 + k * 0.2 + sem[k] * 0.3, 1.0)
-					draw_circle(b + Vector2((k - 2) * 14.0 + sin(t * 3.0 + k) * 5.0, -50.0 + w * 80.0), 2.0, Color(1, 1, 1, 0.8 * al))
-			_anel(p, 10.0 + 120.0 * u, 5.0 + 40.0 * u, Color(0.6, 0.85, 1.0, 0.7 * a), 3.0)
+					if a > 0.2:
+						V.brilho(self, b + Vector2((k - 2) * 15.0 + sin(t * 3.0 + k) * 5.0, -56.0 + w * 84.0), 3.0, V.BRANCO, gesc)
+			V.aro(self, p + Vector2(0, 30), 10.0 + 120.0 * u, (10.0 + 120.0 * u) * 0.35, Color(0.7, 0.92, 1.0), a * 1.2, 1.0)
 		Pecas.Poder.EMPURRA:
 			for k in 3:
 				var w: float = u - k * 0.1
 				if w > 0.0:
 					var rr: float = w * 200.0
-					draw_arc(p, rr, -0.9, 0.9, 14, Color(c.r, c.g, c.b, 0.85 * (1.0 - w)), 7.0 * (1.0 - w) + 1.0)
-					draw_arc(p, rr, -0.9, 0.9, 14, Color(1, 1, 1, 0.8 * (1.0 - w)), 2.0)
-			_anel(p + Vector2(0, 40), 20.0 + 200.0 * u, 6.0 + 40.0 * u, Color(1, 1, 1, 0.4 * a), 3.0)
+					V.arco(self, p, rr + q, -0.9, 0.9, V.CONT, 1.0 - w, 2.0)
+					V.arco(self, p, rr, -0.9, 0.9, c, 1.0 - w, 1.0)
+			V.aro(self, p + Vector2(0, 40), 20.0 + 200.0 * u, (20.0 + 200.0 * u) * 0.25, Color(1, 1, 1), a * 0.9, 1.0)
 			for b in alvos:
-				var bx: Vector2 = b + Vector2(u * 40.0, 0)
-				draw_polyline(PackedVector2Array([bx + Vector2(-14, -12), bx + Vector2(0, 0), bx + Vector2(-14, 12)]), Color(1, 1, 1, 0.9 * a), 4.0)
+				V.seta(self, b + Vector2(u * 40.0, 0), 1.0, Color(1, 1, 0.95))
 		Pecas.Poder.GIRO:
 			var ang0: float = u * TAU * 2.0
-			for k in 8:
-				var al: float = (1.0 - k / 8.0) * 0.85 * minf(1.0, a * 3.0)
-				draw_arc(p, 78.0, ang0 - k * 0.22 - 0.9, ang0 - k * 0.22 - 0.5, 4, Color(c.r, c.g, c.b, al), 14.0 - k)
-			var tip: Vector2 = p + Vector2(cos(ang0), sin(ang0)) * 78.0
-			draw_circle(tip, 7.0, Color(1, 1, 1, 0.95))
-			draw_arc(p, 78.0, ang0 - 0.5, ang0, 4, Color(1, 1, 1, 0.9), 4.0)
+			for k in 12:
+				var ak: float = ang0 - k * 0.13
+				var s: float = (11.0 - k * 0.7) * minf(1.0, a * 3.0)
+				if s < q:
+					continue
+				var pk: Vector2 = p + Vector2(cos(ak), sin(ak)) * 78.0
+				V.quadro(self, pk.x - s * 0.5 - q, pk.y - s * 0.5 - q, s + q * 2.0, s + q * 2.0, V.CONT)
+			for k in 12:
+				var ak2: float = ang0 - k * 0.13
+				var s2: float = (11.0 - k * 0.7) * minf(1.0, a * 3.0)
+				if s2 < q:
+					continue
+				var pk2: Vector2 = p + Vector2(cos(ak2), sin(ak2)) * 78.0
+				V.quadro(self, pk2.x - s2 * 0.5, pk2.y - s2 * 0.5, s2, s2, V.BRANCO if k < 3 else (clr_c if k < 7 else c))
+			V.brilho(self, p + Vector2(cos(ang0), sin(ang0)) * 78.0, 7.0, V.BRANCO, esc_c)
 		Pecas.Poder.DRENO:
+			var rosa := Color(0.98, 0.3, 0.5)
+			var vin := Color(0.35, 0.04, 0.16)
+			var fd: float = minf(1.0, a * 3.0)
 			for bi in qtd.size():
 				var b: Vector2 = qtd[bi]
-				var d: Vector2 = p - b
-				var nrm: Vector2 = d.orthogonal().normalized()
-				var pts := PackedVector2Array()
-				for i in 15:
-					var w: float = i / 14.0
-					pts.append(b.lerp(p, w) + nrm * sin(w * 14.0 - t * 18.0) * 7.0 * sin(w * PI))
-				draw_polyline(pts, Color(0.9, 0.2, 0.45, 0.35 * minf(1.0, a * 3.0)), 8.0)
-				draw_polyline(pts, Color(1.0, 0.7, 0.85, 0.85 * minf(1.0, a * 3.0)), 2.0)
-				for k in 3:
-					var w2: float = fposmod(u * 1.8 + k * 0.33 + bi * 0.1, 1.0)
-					draw_circle(b.lerp(p, w2), 5.0 * (0.6 + w2 * 0.4), Color(1.0, 0.45, 0.6, 0.9 * minf(1.0, a * 3.0)))
-				draw_circle(b, 16.0 * a + 3.0, Color(0.9, 0.2, 0.45, 0.4 * a))
-			draw_circle(p, 22.0 * sin(u * PI), Color(0.4, 1.0, 0.55, 0.35))
+				var nrm: Vector2 = (p - b).orthogonal().normalized()
+				if fd > 0.15:
+					for passo in 2:
+						for i in 13:
+							var w: float = i / 12.0
+							var pt: Vector2 = b.lerp(p, w) + nrm * sin(w * 14.0 - t * 18.0) * 7.0 * sin(w * PI)
+							var s: float = q * 2.0 + (q if passo == 0 else 0.0)
+							V.quadro(self, pt.x - s * 0.5, pt.y - s * 0.5, s, s, vin if passo == 0 else rosa)
+					for k in 3:
+						var w2: float = fposmod(u * 1.8 + k * 0.33 + bi * 0.1, 1.0)
+						V.gota(self, b.lerp(p, w2) + Vector2(0, sin(w2 * 6.0) * 4.0), Color(1.0, 0.45, 0.6), vin)
+				V.disco_c(self, b, 14.0 * a + 3.0, Color(0.9, 0.22, 0.42), vin)
+			V.cruz(self, p + Vector2(0, -34.0 - 20.0 * u), 5.0, Color(0.4, 1.0, 0.55), Color(0.04, 0.3, 0.18))
 		Pecas.Poder.INVOCA:
 			for b in qtd:
-				_anel(b + Vector2(0, 22.0), 10.0 + 26.0 * u, 4.0 + 10.0 * u, Color(c.r, c.g, c.b, 0.8 * a), 3.0)
-			_anel(p, 8.0 + 40.0 * u, 4.0 + 16.0 * u, Color(1, 1, 1, 0.6 * a), 2.0)
+				var pe: Vector2 = b + Vector2(0, 22.0)
+				V.aro(self, pe, 10.0 + 26.0 * u, (10.0 + 26.0 * u) * 0.4, c, a * 1.4, 1.0)
+				V.aro(self, pe, (10.0 + 26.0 * u) * 0.6, (10.0 + 26.0 * u) * 0.24, clr_c, a * 1.4, 1.0)
+				for k in 5:
+					var ang: float = t * 4.0 + k * TAU / 5.0
+					if a > 0.2:
+						V.ponto(self, pe + Vector2(cos(ang) * 22.0 * (0.4 + u), sin(ang) * 9.0 * (0.4 + u)), V.BRANCO)
+				_fumaca_px(b + Vector2(0, 14), 16.0, 4, u, Color(0.86, 0.86, 0.9), sem[1])
+			V.aro(self, p + Vector2(0, 30), 8.0 + 40.0 * u, (8.0 + 40.0 * u) * 0.4, Color(1, 1, 1), a * 1.2, 1.0)
 		Pecas.Poder.TELEPORTE:
 			var ori: Vector2 = alvos[0] if not alvos.is_empty() else p
-			draw_line(ori, p, Color(0.3, 0.7, 1.0, 0.45 * a), 12.0)
-			draw_line(ori, p, Color(0.9, 1.0, 1.0, 0.9 * a), 3.0)
-			draw_circle(ori, 20.0 * a + 3.0, Color(0.5, 0.85, 1.0, 0.55 * a))
-			_anel(p, 8.0 + 60.0 * u, 4.0 + 24.0 * u, Color(0.6, 0.9, 1.0, 0.8 * a), 3.0)
+			var cian := Color(0.45, 0.85, 1.0)
+			var cesc := Color(0.05, 0.15, 0.4)
+			if a > 0.2:
+				for passo in 2:
+					var n_t: int = 14
+					for i in n_t:
+						var w: float = float(i) / (n_t - 1)
+						if w > a * 1.4:
+							continue
+						var s: float = (q * 3.0 if passo == 0 else q) * (0.5 + 0.5 * w)
+						var pt: Vector2 = ori.lerp(p, w)
+						V.quadro(self, pt.x - s * 0.5, pt.y - s * 0.5 + sin(i * 2.0) * 3.0, s, s, cesc if passo == 0 else (cian if i % 2 == 0 else Color(0.9, 1, 1)))
+			if a > 0.1:
+				V.disco_c(self, ori, 20.0 * a + 3.0, cian, cesc)
+			V.aro(self, p + Vector2(0, 28), 8.0 + 60.0 * u, (8.0 + 60.0 * u) * 0.4, cian, a * 1.3, 1.0)
+			for k in 5:
+				var ang: float = k * TAU / 5.0 + u * 6.0
+				if a > 0.25:
+					V.brilho(self, p + Vector2(cos(ang), sin(ang)) * (50.0 * a), 4.0, Color(0.85, 1.0, 1.0), cesc)
 		Pecas.Poder.PUXA:
 			for k in qtd.size():
 				var b2: Vector2 = qtd[k]
 				var alvo_p: Vector2 = p + Vector2(46.0 + (k % 3) * 14.0, 0.0)
 				var cabeca: Vector2 = b2.lerp(alvo_p, minf(1.0, u * 2.0))
-				draw_line(b2, cabeca, Color(c.r, c.g, c.b, 0.35 * a), 7.0)
-				draw_line(b2, cabeca, Color(1, 1, 1, 0.85 * a), 2.0)
-				draw_circle(cabeca, 5.0, Color(1, 1, 1, 0.9 * a))
-			_anel(p, 140.0 * (1.0 - u) + 10.0, 50.0 * (1.0 - u) + 4.0, Color(c.r, c.g, c.b, 0.6 * a), 3.0)
+				if a > 0.15:
+					V.linha(self, b2, cabeca, V.CONT, q * 3.0)
+					V.linha(self, b2, cabeca, c, q * 2.0)
+					V.linha(self, b2, cabeca, V.BRANCO, q)
+					V.estrela(self, cabeca, 5.0, V.BRANCO, esc_c)
+			V.aro(self, p + Vector2(0, 30), 140.0 * (1.0 - u) + 10.0, (140.0 * (1.0 - u) + 10.0) * 0.35, c, a * 1.2, 1.0)
 		Pecas.Poder.ENXAME:
-			_anel(p, 10.0 + 70.0 * u, 5.0 + 28.0 * u, Color(1.0, 0.85, 0.15, 0.7 * a), 3.0)
+			var am := Color(1.0, 0.82, 0.12)
+			V.aro(self, p + Vector2(0, 30), 10.0 + 70.0 * u, (10.0 + 70.0 * u) * 0.4, am, a * 1.3, 1.5)
+			for k in 8:
+				var ang: float = k * TAU / 8.0 + u * 5.0
+				var d: float = 14.0 + 60.0 * u
+				if a > 0.15:
+					var pb: Vector2 = p + Vector2(cos(ang) * d, sin(ang) * d * 0.5 - 14.0)
+					V.quadro(self, pb.x - q * 2.0, pb.y - q * 2.0, q * 4.0, q * 3.0, V.CONT)
+					V.quadro(self, pb.x - q, pb.y - q, q * 2.0, q * 2.0, am)
+					V.quadro(self, pb.x, pb.y - q, q, q * 2.0, V.CONT)
 		Pecas.Poder.RAIZ:
-			# teia: fio do gato até cada bicho e uma teia branca no chão sob ele
+			var branco := Color(0.96, 0.97, 1.0)
+			var cinza := Color(0.28, 0.3, 0.42)
 			for b in qtd:
 				var pe: Vector2 = b + Vector2(0, 24 * ESC)
 				var cr: float = minf(1.0, u * 5.0)
 				var br: float = minf(1.0, a * 2.0)
-				draw_line(p, p.lerp(b, minf(1.0, u * 6.0)), Color(1, 1, 1, 0.85 * br), 2.0)
-				_elipse_cheia(pe, 34.0 * cr, 11.0 * cr, Color(0.85, 0.9, 1.0, 0.2 * br))
-				for k in 8:
-					var ang: float = k * TAU / 8.0
-					draw_line(pe, pe + Vector2(cos(ang) * 34.0, sin(ang) * 11.0) * cr, Color(1, 1, 1, 0.9 * br), 1.6)
-				for rr in [12.0, 23.0, 34.0]:
-					_anel(pe, rr * cr, rr * 0.32 * cr, Color(1, 1, 1, 0.85 * br), 1.5)
+				if cr < 1.0 or br > 0.3:
+					var fio: Vector2 = p.lerp(b, minf(1.0, u * 6.0))
+					V.linha(self, p, fio, cinza, q * 2.0)
+					V.linha(self, p, fio, branco, q)
+					V.elipse(self, pe, 34.0 * cr, 11.0 * cr, Color(0.85, 0.9, 1.0, 0.2 * br))
+					for k in 8:
+						var ang: float = k * TAU / 8.0
+						V.linha(self, pe, pe + Vector2(cos(ang) * 34.0, sin(ang) * 11.0) * cr, branco, q)
+					for rr in [12.0, 23.0, 34.0]:
+						V.aro(self, pe, rr * cr, rr * 0.32 * cr, branco, br, 1.0)
 		Pecas.Poder.SAQUE:
 			if u < 0.25:
-				draw_circle(p + Vector2(22, 0), 12.0 * (1.0 - u / 0.25) + 3.0, Color(1.0, 0.95, 0.6, 0.8))
+				V.estrela(self, p + Vector2(22, 0), 10.0 * (1.0 - u / 0.25) + 3.0, Color(1.0, 0.92, 0.5), Color(0.4, 0.25, 0.05))
+			var queijo := Color(1.0, 0.8, 0.28)
 			for bi in qtd.size():
 				var b: Vector2 = qtd[bi]
 				var w: float = (t - bi * 0.12) / 0.14
 				if w > 0.0 and w < 1.0:
-					var bp: Vector2 = p.lerp(b, w)
-					draw_line(p.lerp(b, maxf(0.0, w - 0.3)), bp, Color(c.r, c.g, c.b, 0.7), 4.0)
-					draw_circle(bp, 4.5, Color(1, 1, 0.8))
+					for tr in 3:
+						V.disco(self, p.lerp(b, maxf(0.0, w - (tr + 1) * 0.1)), 3.0 - tr * 0.8, Color(1.0, 0.95, 0.7))
+					V.disco_c(self, p.lerp(b, w), 5.0, queijo, Color(0.45, 0.25, 0.05))
 				elif w >= 1.0 and w < 2.0:
 					var e2: float = w - 1.0
-					draw_circle(b, 14.0 * (1.0 - e2) + 2.0, Color(1, 0.9, 0.4, 0.7 * (1.0 - e2)))
-					draw_line(b + Vector2(-8, 0) * (1.0 + e2), b + Vector2(8, 0) * (1.0 + e2), Color(1, 1, 0.8, 0.9 * (1.0 - e2)), 2.0)
-					draw_line(b + Vector2(0, -8) * (1.0 + e2), b + Vector2(0, 8) * (1.0 + e2), Color(1, 1, 0.8, 0.9 * (1.0 - e2)), 2.0)
+					V.brilho(self, b, 12.0 * (1.0 - e2) + 3.0, Color(1.0, 0.9, 0.45), Color(0.4, 0.25, 0.05))
+					V.aro(self, b + Vector2(0, 24), 10.0 + 24.0 * e2, (10.0 + 24.0 * e2) * 0.4, Color(1.0, 0.9, 0.5), 1.0 - e2, 1.0)
 		Pecas.Poder.TROVOADA:
-			var quadro_t: int = int(t * 28.0)
-			var pisca_t: float = 1.0 if quadro_t % 2 == 0 else 0.55
+			var quadro_t: int = int(t * 18.0)
+			var roxo := Color(0.78, 0.65, 1.0)
 			if u < 0.2:
 				draw_rect(Rect2(-20, -20, 1320, 760), Color(0.75, 0.7, 1.0, 0.12 * (1.0 - u / 0.2)))
 			for k in qtd.size():
 				var b: Vector2 = qtd[k]
 				var pe: Vector2 = b + Vector2(0, 24 * ESC)
 				var rr_t: float = float(ex.get("raio", 70.0)) * minf(1.0, u * 6.0)
-				_elipse_cheia(pe, rr_t, rr_t * 0.34, Color(0.7, 0.55, 1.0, 0.25 * a))
-				_anel(pe, rr_t, rr_t * 0.34, Color(0.85, 0.75, 1.0, 0.9 * a), 3.0)
-				if u < 0.5:
-					var topo := Vector2(b.x + (sem[k % 8] - 0.5) * 50.0, -10.0)
-					var pts := PackedVector2Array()
-					for i in 11:
-						var wv: float = i / 10.0
-						var off: float = 0.0 if (i == 0 or i == 10) else sin(i * 12.9898 + sem[k % 8] * 78.2 + quadro_t * 1.7) * 24.0
-						pts.append(topo.lerp(b, wv) + Vector2(off, 0.0))
-					draw_polyline(pts, Color(0.7, 0.55, 1.0, 0.4 * pisca_t), 20.0)
-					draw_polyline(pts, Color(1, 1, 1, 0.95 * pisca_t), 5.0)
-				draw_circle(b, 16.0 * a + 3.0, Color(0.9, 0.85, 1.0, 0.5 * pisca_t))
+				V.elipse(self, pe, rr_t, rr_t * 0.34, Color(0.6, 0.45, 1.0, 0.25 * a))
+				V.aro(self, pe, rr_t, rr_t * 0.34, roxo, minf(1.0, a * 2.0), 1.5)
+				if u < 0.45:
+					V.raio(self, Vector2(b.x + (sem[k % 8] - 0.5) * 50.0, -10.0), b, roxo, sem[k % 8] * 9.0 + quadro_t * 1.7, 16.0)
+				if u < 0.3:
+					V.disco_c(self, b, 16.0 * (1.0 - u / 0.3) + 3.0, Color(0.95, 0.9, 1.0), Color(0.25, 0.15, 0.5))
+				for j in 4:
+					var ang: float = j * TAU / 4.0 + sem[k % 8] * 3.0 + u * 2.0
+					if a > 0.25:
+						V.brilho(self, pe + Vector2(cos(ang) * rr_t * 0.8, sin(ang) * rr_t * 0.3), 4.0, roxo, Color(0.2, 0.1, 0.4))
 		Pecas.Poder.CANHAO:
 			if u < 0.28:
 				var wc: float = u / 0.28
+				for k in 5:
+					var wt: float = maxf(0.0, wc - (k + 1) * 0.07)
+					V.bolha(self, p.lerp(ce, wt) + Vector2(0, -90.0 * sin(PI * wt)), 6.0 - k, Color(0.72, 0.72, 0.76))
 				var bc: Vector2 = p.lerp(ce, wc) + Vector2(0, -90.0 * sin(PI * wc))
-				draw_circle(bc, 9.0, Color(0.1, 0.1, 0.12))
-				draw_circle(bc + Vector2(-3, -3), 3.0, Color(0.55, 0.55, 0.6))
-				for k in 4:
-					var wt: float = maxf(0.0, wc - k * 0.06)
-					draw_circle(p.lerp(ce, wt) + Vector2(0, -90.0 * sin(PI * wt)), 6.0 - k, Color(0.8, 0.8, 0.8, 0.3))
+				V.disco_c(self, bc, 9.0, Color(0.2, 0.2, 0.26), V.CONT)
+				V.disco(self, bc + Vector2(-3, -3), 3.0, Color(0.7, 0.72, 0.8))
 			else:
 				var we: float = (u - 0.28) / 0.72
 				var rc: float = float(ex.get("raio", 100.0)) * (1.0 - pow(1.0 - minf(1.0, we * 2.5), 3.0))
-				var ae: float = 1.0 - we
 				if we < 0.15:
 					draw_rect(Rect2(-20, -20, 1320, 760), Color(1.0, 0.85, 0.5, 0.18 * (1.0 - we / 0.15)))
-				_elipse_cheia(ce + Vector2(0, 26), rc * 1.1, rc * 0.36, Color(0.15, 0.05, 0.02, 0.3 * ae))
-				draw_circle(ce, rc, Color(1.0, 0.35, 0.08, 0.32 * ae))
-				draw_circle(ce, rc * 0.65, Color(1.0, 0.65, 0.15, 0.45 * ae))
-				draw_arc(ce, rc, 0, TAU, 36, Color(1.0, 0.9, 0.5, 0.9 * ae), 6.0 * ae + 1.0)
-				for k in 7:
-					var wf: float = fposmod(we * 1.5 + k * 0.14, 1.0)
-					var ang_f: float = k * 2.4
-					draw_circle(ce + Vector2(cos(ang_f) * rc * 0.7, sin(ang_f) * rc * 0.3 - wf * 50.0), 5.0 * (1.0 - wf) + 1.0, Color(1.0, 0.5, 0.1, 0.9 * ae))
+				V.elipse(self, ce + Vector2(0, 26), rc * 1.1, rc * 0.34, Color(0.12, 0.05, 0.03, 0.35 * (1.0 - we)))
+				_bola_fogo(ce, rc * (1.0 - maxf(0.0, we - 0.5) * 0.9), 1.0 - we * 1.6)
+				V.aro(self, ce + Vector2(0, 26), rc * 1.15, rc * 0.38, Color(1.0, 0.85, 0.4), (1.0 - we) * 1.3, 1.5)
+				if we > 0.25:
+					_fumaca_px(ce + Vector2(0, 10), rc * 0.7, 6, (we - 0.25) / 0.75, Color(0.42, 0.36, 0.38), sem[2])
 		Pecas.Poder.MISSEIS:
 			var raio_m: float = float(ex.get("raio", 80.0))
 			for bi in qtd.size():
@@ -1528,72 +1634,79 @@ func _desenhar_fx(f: Dictionary) -> void:
 				var wm: float = (t - bi * 0.18) / 0.3
 				if wm > 0.0 and wm < 1.0:
 					var cab: Vector2 = Vector2(b.x, lerpf(-40.0, b.y, wm * wm))
-					draw_line(cab + Vector2(0, -50), cab, Color(1.0, 0.6, 0.2, 0.5), 7.0)
-					draw_line(cab + Vector2(0, -36), cab, Color(1, 1, 0.85, 0.9), 2.5)
-					draw_colored_polygon(PackedVector2Array([cab + Vector2(-5, 0), cab + Vector2(5, 0), cab + Vector2(0, 14)]), Color(0.85, 0.2, 0.15))
-					draw_rect(Rect2(cab.x - 4, cab.y - 12, 8, 12), Color(0.75, 0.78, 0.85))
+					for k in 4:
+						V.bolha(self, cab + Vector2(sin(k * 2.0 + t * 20.0) * 3.0, -22.0 - k * 12.0), 5.0 - k, Color(0.8, 0.78, 0.76))
+					V.chama(self, cab + Vector2(0, -12), q * 3.0, 14.0, t)
+					V.quadro(self, cab.x - q * 2.0, cab.y - 15.0, q * 4.0 + q, 16.0 + q, V.CONT)
+					V.quadro(self, cab.x - q, cab.y - 12.0, q * 2.0, 12.0, Color(0.78, 0.8, 0.88))
+					V.quadro(self, cab.x - q, cab.y - 3.0, q * 2.0, q, Color(0.85, 0.2, 0.15))
+					V.quadro(self, cab.x - q, cab.y, q * 2.0, q, Color(0.85, 0.2, 0.15))
 				elif wm >= 1.0:
 					var em: float = (wm - 1.0) / 0.9
 					if em < 1.0:
 						var rm: float = raio_m * (1.0 - pow(1.0 - minf(1.0, em * 2.5), 2.0))
-						var am: float = 1.0 - em
-						draw_circle(b, rm, Color(1.0, 0.3, 0.1, 0.35 * am))
-						draw_circle(b, rm * 0.6, Color(1.0, 0.8, 0.3, 0.55 * am))
-						draw_arc(b, rm, 0, TAU, 28, Color(1.0, 0.9, 0.5, 0.9 * am), 5.0 * am + 1.0)
-						_anel(b + Vector2(0, 24 * ESC), rm * 1.1, rm * 0.35, Color(1.0, 0.5, 0.2, 0.7 * am), 3.0)
+						V.elipse(self, b + Vector2(0, 24 * ESC), rm * 1.1, rm * 0.35, Color(0.12, 0.05, 0.03, 0.35 * (1.0 - em)))
+						_bola_fogo(b, rm * (1.0 - maxf(0.0, em - 0.5) * 0.9), 1.0 - em * 1.6)
+						V.aro(self, b + Vector2(0, 24 * ESC), rm * 1.1, rm * 0.35, Color(1.0, 0.85, 0.4), (1.0 - em) * 1.3, 1.0)
 		Pecas.Poder.CANCAO:
 			var fontes: Array = [p]
 			fontes.append_array(alvos)
+			var turq := Color(0.5, 1.0, 0.85)
+			var tesc := Color(0.04, 0.25, 0.3)
 			for fi in fontes.size():
 				var f0: Vector2 = fontes[fi]
 				for k in 3:
 					var wn: float = fposmod(u * 1.3 + k * 0.33 + fi * 0.11, 1.0)
-					var np: Vector2 = f0 + Vector2((k - 1) * 16.0 + sin(t * 6.0 + k + fi) * 6.0, -10.0 - wn * 70.0)
-					var an: float = sin(wn * PI) * minf(1.0, a * 3.0)
-					var cn := Color(0.5, 1.0, 0.85, an)
-					draw_circle(np, 4.5, cn)
-					draw_line(np + Vector2(4, 0), np + Vector2(4, -14), cn, 2.0)
-					draw_line(np + Vector2(4, -14), np + Vector2(10, -9), cn, 2.0)
+					var np: Vector2 = f0 + Vector2((k - 1) * 18.0 + sin(t * 6.0 + k + fi) * 6.0, -10.0 - wn * 70.0)
+					if sin(wn * PI) * minf(1.0, a * 3.0) > 0.2:
+						V.nota(self, np, turq if (k + fi) % 2 == 0 else Color(0.95, 1.0, 0.9), tesc)
 				if fi > 0:
-					_anel(f0 + Vector2(0, 22), 8.0 + 24.0 * u, 3.0 + 9.0 * u, Color(0.5, 1.0, 0.85, 0.7 * a), 2.0)
-			_anel(gp, 10.0 + 130.0 * u, 5.0 + 44.0 * u, Color(0.5, 1.0, 0.85, 0.8 * a), 3.0)
+					V.aro(self, f0 + Vector2(0, 22), 8.0 + 24.0 * u, (8.0 + 24.0 * u) * 0.4, turq, a * 1.3, 1.0)
+			V.aro(self, gp, 10.0 + 130.0 * u, (10.0 + 130.0 * u) * 0.34, turq, a * 1.3, 1.0)
+			V.aro(self, gp, 6.0 + 80.0 * u, (6.0 + 80.0 * u) * 0.34, Color(0.9, 1.0, 0.95), a * 1.3, 1.0)
 		Pecas.Poder.INVESTIDA:
 			var o := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 30.0 * ESC)
-			if absf(p.x - o.x) > 2.0:
-				var larg: float = 3.0 + 13.0 * a
+			if absf(p.x - o.x) > 2.0 and a > 0.1:
+				var larg: float = V.sn(q + 12.0 * a)
 				var xa: float = minf(o.x, p.x)
 				var comp: float = absf(p.x - o.x)
-				draw_rect(Rect2(xa, p.y - larg * 1.5, comp, larg * 3.0), Color(c.r, c.g, c.b, 0.25 * a))
-				draw_rect(Rect2(xa, p.y - larg * 0.5, comp, larg), Color(1, 1, 1, 0.65 * a))
-				for k in 6:
-					var xk: float = o.x + (p.x - o.x) * fposmod(k / 6.0 + u * 0.4, 1.0)
-					draw_polyline(PackedVector2Array([Vector2(xk - 10, p.y - 12), Vector2(xk, p.y), Vector2(xk - 10, p.y + 12)]), Color(1, 1, 1, 0.8 * a), 3.0)
+				V.quadro(self, xa, p.y - larg - q, comp, larg * 2.0 + q * 2.0, V.CONT)
+				V.quadro(self, xa, p.y - larg, comp, larg * 2.0, c)
+				V.quadro(self, xa, p.y - larg * 0.4, comp, larg * 0.8, V.BRANCO)
+				for k in 5:
+					var xk: float = o.x + (p.x - o.x) * fposmod(k / 5.0 + u * 0.4, 1.0)
+					V.seta(self, Vector2(xk, p.y), 1.0, V.BRANCO, esc_c)
 			for b in alvos:
-				draw_colored_polygon(_pts_estrela(b, 20.0 * a + 6.0, u * 3.0), Color(1.0, 0.95, 0.5, 0.85 * a))
-			_anel(gp, 14.0 + 60.0 * u, 6.0 + 24.0 * u, Color(c.r, c.g, c.b, 0.8 * a), 4.0)
+				V.estrela(self, b, 18.0 * a + 5.0, Color(1.0, 0.95, 0.5), Color(0.4, 0.2, 0.05))
+			V.aro(self, gp, 14.0 + 60.0 * u, (14.0 + 60.0 * u) * 0.4, c, a * 1.3, 1.5)
 		Pecas.Poder.FUMACA:
 			var raio_f: float = float(ex.get("raio", 130.0))
 			var cresce_f: float = minf(1.0, u * 4.0)
 			var al_f: float = minf(1.0, a * 1.6)
-			for k in 14:
+			for k in 12:
 				var ang_n: float = k * 2.399
 				var rr_n: float = raio_f * (0.15 + 0.85 * fposmod(k * 0.382, 1.0)) * cresce_f
-				var pc: Vector2 = gp + Vector2(cos(ang_n) * rr_n, sin(ang_n) * rr_n * 0.38 - 6.0 * sin(t * 2.0 + k))
-				draw_circle(pc, 20.0 + 8.0 * (k % 3), Color(0.38, 0.32, 0.45, 0.42 * al_f))
+				var pc: Vector2 = gp + Vector2(cos(ang_n) * rr_n, sin(ang_n) * rr_n * 0.38 - 8.0 - 6.0 * sin(t * 2.0 + k))
+				var tam: float = (16.0 + 7.0 * (k % 3)) * al_f
+				if tam >= 5.0:
+					V.bolha(self, pc, tam, Color(0.5, 0.44, 0.58))
 			for b in alvos:
-				draw_circle(b + Vector2(0, 8), 24.0 * cresce_f, Color(0.5, 0.45, 0.58, 0.3 * al_f))
-			_anel(gp, raio_f * cresce_f, raio_f * 0.38 * cresce_f, Color(0.7, 0.62, 0.85, 0.5 * al_f), 2.0)
+				if al_f > 0.4:
+					V.bolha(self, b + Vector2(0, 8), 20.0 * cresce_f * al_f, Color(0.56, 0.5, 0.64))
+			V.aro(self, gp, raio_f * cresce_f, raio_f * 0.38 * cresce_f, Color(0.72, 0.64, 0.88), al_f * 0.9, 1.0)
 		Pecas.Poder.FURIA:
-			_anel(gp, 16.0 + 90.0 * u, 6.0 + 34.0 * u, Color(1.0, 0.25, 0.15, 0.85 * a), 4.0)
-			for k in 10:
-				var wf2: float = fposmod(u * 1.6 + k * 0.1, 1.0)
-				var xf: float = p.x + (k - 4.5) * 8.0
-				draw_line(Vector2(xf, gp.y), Vector2(xf + sin(t * 9.0 + k) * 4.0, gp.y - wf2 * 80.0), Color(1.0, 0.45, 0.12, 0.85 * (1.0 - wf2)), 4.0)
+			var verm := Color(1.0, 0.28, 0.16)
+			V.aro(self, gp, 16.0 + 90.0 * u, (16.0 + 90.0 * u) * 0.4, verm, a * 1.3, 2.0)
+			for k in 5:
+				var xf: float = p.x + (k - 2) * 14.0
+				if a > 0.15:
+					V.chama(self, Vector2(xf, gp.y - 4.0), 12.0, (30.0 + 26.0 * (k % 2)) * (0.6 + 0.4 * a), t + k)
 			for k in 3:
 				var wr: float = u - k * 0.12
 				if wr > 0.0:
-					draw_arc(p, 20.0 + wr * 110.0, -0.8, 0.8, 10, Color(1, 0.8, 0.6, 0.7 * (1.0 - wr)), 4.0)
-					draw_arc(p, 20.0 + wr * 110.0, PI - 0.8, PI + 0.8, 10, Color(1, 0.8, 0.6, 0.7 * (1.0 - wr)), 4.0)
+					V.arco(self, p, 20.0 + wr * 110.0, -0.8, 0.8, Color(1, 0.85, 0.65), 1.0 - wr, 1.5)
+					V.arco(self, p, 20.0 + wr * 110.0, PI - 0.8, PI + 0.8, Color(1, 0.85, 0.65), 1.0 - wr, 1.5)
+			V.estrela(self, p + Vector2(0, -34), 8.0 * a + 3.0, Color(1.0, 0.5, 0.2), Color(0.4, 0.05, 0.05))
 		Pecas.Poder.PISAO:
 			var o2 := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 30.0 * ESC)
 			var ant: Vector2 = o2
@@ -1603,70 +1716,87 @@ func _desenhar_fx(f: Dictionary) -> void:
 				if wp > 0.0:
 					if wp < 1.0:
 						var pos_p: Vector2 = ant.lerp(dest, wp) + Vector2(0, -80.0 * sin(PI * wp))
-						draw_circle(pos_p + Vector2(0, 34), 8.0, Color(0, 0, 0, 0.2))
-						draw_circle(pos_p, 9.0, Color(c.r, c.g, c.b, 0.9))
-						draw_circle(pos_p, 4.0, Color(1, 1, 1, 0.9))
+						V.elipse(self, ant.lerp(dest, wp) + Vector2(0, 34), 10.0, 3.0, Color(0, 0, 0, 0.28))
+						V.disco_c(self, pos_p, 9.0, c, esc_c)
+						V.disco(self, pos_p + Vector2(-3, -3), 3.0, V.BRANCO)
 					else:
 						var ep: float = (wp - 1.0) / 1.6
 						if ep < 1.0:
-							_anel(dest + Vector2(0, 24 * ESC), 10.0 + 60.0 * ep, 4.0 + 20.0 * ep, Color(1.0, 0.9, 0.5, 0.85 * (1.0 - ep)), 4.0)
-							draw_colored_polygon(_pts_estrela(dest + Vector2(0, -34.0 - 24.0 * ep), 9.0, ep * 4.0), Color(1.0, 0.9, 0.3, 1.0 - ep))
+							var pe: Vector2 = dest + Vector2(0, 24 * ESC)
+							V.aro(self, pe, 10.0 + 60.0 * ep, (10.0 + 60.0 * ep) * 0.35, Color(1.0, 0.92, 0.55), 1.0 - ep, 1.5)
+							if ep < 0.5:
+								V.estrela(self, dest + Vector2(0, -34.0 - 24.0 * ep), 9.0, Color(1.0, 0.9, 0.3), Color(0.4, 0.22, 0.02))
+							for k in 4:
+								var sx: float = (k - 1.5) * 18.0 * (0.4 + ep)
+								V.bolha(self, pe + Vector2(sx, -6.0 - ep * 16.0), 5.0 * (1.0 - ep), Color(0.78, 0.72, 0.62))
 				ant = dest
 		Pecas.Poder.CANTEIRO:
 			var rc2: float = float(ex.get("raio", 110.0)) * u
-			_anel(gp, rc2, rc2 * 0.34, Color(0.95, 0.55, 0.8, 0.85 * a), 3.0)
-			for k in 16:
-				var ang_c: float = k * TAU / 16.0
+			var rosa := Color(1.0, 0.55, 0.78)
+			V.aro(self, gp, rc2, rc2 * 0.34, rosa, a * 1.4, 1.0)
+			for k in 12:
+				var ang_c: float = k * TAU / 12.0
 				var wk: float = fposmod(u * 0.9 + k * 0.13, 1.0)
-				var pet: Vector2 = gp + Vector2(cos(ang_c) * rc2, sin(ang_c) * rc2 * 0.34) + Vector2(0, -wk * 40.0)
-				draw_circle(pet, 4.0, Color(1.0, 0.6, 0.8, a) if k % 2 == 0 else Color(1.0, 0.95, 0.5, a))
+				if a > 0.2:
+					var pet: Vector2 = gp + Vector2(cos(ang_c) * rc2, sin(ang_c) * rc2 * 0.34) + Vector2(0, -wk * 36.0)
+					V.flor(self, pet, rosa if k % 2 == 0 else Color(1.0, 0.95, 0.5), Color(1.0, 0.85, 0.2) if k % 2 == 0 else Color(0.9, 0.4, 0.6), Color(0.3, 0.08, 0.2))
 		Pecas.Poder.TRIAGEM:
+			var verde := Color(0.38, 0.95, 0.5)
+			var vesc := Color(0.04, 0.3, 0.18)
 			for bi in qtd.size():
 				var b: Vector2 = qtd[bi]
 				if bi == 0:
 					var wq: float = minf(1.0, u * 3.0)
 					var fp: Vector2 = b + Vector2(0, -90.0 * (1.0 - wq) - 40.0)
-					var af: float = minf(1.0, a * 3.0)
-					draw_colored_polygon(PackedVector2Array([fp + Vector2(-17, -14), fp + Vector2(17, -14), fp + Vector2(0, 20)]), Color(1.0, 0.8, 0.25, af))
-					draw_line(fp + Vector2(-17, -14), fp + Vector2(17, -14), Color(0.85, 0.5, 0.15, af), 5.0)
-					draw_circle(fp + Vector2(-5, -4), 3.5, Color(0.8, 0.15, 0.1, af))
-					draw_circle(fp + Vector2(5, 2), 3.5, Color(0.8, 0.15, 0.1, af))
-					var br: float = 34.0 * (0.6 + 0.4 * minf(1.0, u * 6.0))
-					draw_arc(b + Vector2(0, 2), br, 0, TAU, 32, Color(1, 1, 1, 0.8 * minf(1.0, a * 2.0)), 2.0)
-					for k in 6:
-						var wh: float = fposmod(u * 1.1 + k * 0.17, 1.0)
-						var cp2: Vector2 = b + Vector2((k - 2.5) * 11.0, 10.0 - wh * 80.0)
-						var al: float = sin(wh * PI) * minf(1.0, a * 2.5)
-						draw_rect(Rect2(cp2.x - 2.5, cp2.y - 9, 5, 18), Color(0.35, 1.0, 0.5, al))
-						draw_rect(Rect2(cp2.x - 9, cp2.y - 2.5, 18, 5), Color(0.35, 1.0, 0.5, al))
+					if a > 0.25:
+						V.quadro(self, fp.x - q * 6.0, fp.y - q * 5.0, q * 12.0, q * 9.0, V.CONT)
+						V.quadro(self, fp.x - q * 5.0, fp.y - q * 4.0, q * 10.0, q * 7.0, Color(0.98, 0.96, 0.9))
+						V.quadro(self, fp.x - q * 5.0, fp.y - q * 4.0, q * 10.0, q, Color(0.8, 0.75, 0.68))
+						V.quadro(self, fp.x - q, fp.y - q * 3.0, q * 2.0, q * 5.0, Color(0.85, 0.15, 0.12))
+						V.quadro(self, fp.x - q * 2.0, fp.y - q, q * 5.0, q * 2.0, Color(0.85, 0.15, 0.12))
+					V.elipse(self, b + Vector2(0, 24 * ESC), 32.0 * minf(1.0, u * 4.0), 10.0 * minf(1.0, u * 4.0), Color(0.3, 1.0, 0.5, 0.22 * a))
+					V.aro(self, b + Vector2(0, 24 * ESC), 14.0 + 28.0 * u, (14.0 + 28.0 * u) * 0.34, verde, a * 1.3, 1.0)
+					for k in 4:
+						var wh: float = fposmod(u * 1.1 + k * 0.25, 1.0)
+						if sin(wh * PI) * minf(1.0, a * 2.5) > 0.25:
+							V.cruz(self, b + Vector2((k - 1.5) * 13.0, 10.0 - wh * 76.0), 5.0, verde, vesc)
 				else:
 					var wh2: float = fposmod(u * 1.1 + bi * 0.2, 1.0)
-					var cp3: Vector2 = b + Vector2(0, 10.0 - wh2 * 60.0)
-					var al2: float = sin(wh2 * PI) * minf(1.0, a * 2.5)
-					draw_rect(Rect2(cp3.x - 1.5, cp3.y - 5, 3, 10), Color(0.5, 1.0, 0.6, al2))
-					draw_rect(Rect2(cp3.x - 5, cp3.y - 1.5, 10, 3), Color(0.5, 1.0, 0.6, al2))
+					if sin(wh2 * PI) * minf(1.0, a * 2.5) > 0.25:
+						V.cruz(self, b + Vector2(0, 10.0 - wh2 * 60.0), 3.0, verde, vesc)
 		Pecas.Poder.MARCA:
-			var alt_m: float = 2.0 + 6.0 * a
-			draw_rect(Rect2(p.x, p.y - alt_m, 1320.0 - p.x, alt_m * 2.0), Color(1.0, 0.2, 0.2, 0.55 * a))
-			draw_rect(Rect2(p.x, p.y - alt_m * 0.3, 1320.0 - p.x, alt_m * 0.6), Color(1, 0.9, 0.9, 0.95 * a))
+			var alt_m: float = V.sn(q + 5.0 * a)
+			var verm := Color(1.0, 0.22, 0.22)
+			V.quadro(self, p.x, p.y - alt_m - q, 1320.0 - p.x, alt_m * 2.0 + q * 2.0, V.CONT)
+			V.quadro(self, p.x, p.y - alt_m, 1320.0 - p.x, alt_m * 2.0, verm)
+			V.quadro(self, p.x, p.y - q * 0.5, 1320.0 - p.x, q, Color(1, 0.92, 0.9))
 			for b in alvos:
-				var r_m: float = 24.0 - 10.0 * minf(1.0, u * 4.0)
+				var r_m: float = 26.0 - 10.0 * minf(1.0, u * 4.0)
 				var am2: float = minf(1.0, a * 1.5)
-				draw_arc(b, r_m, 0, TAU, 24, Color(1.0, 0.2, 0.2, 0.95 * am2), 2.5)
-				for k in 4:
-					var dv := Vector2(cos(k * PI * 0.5), sin(k * PI * 0.5))
-					draw_line(b + dv * (r_m - 6.0), b + dv * (r_m + 7.0), Color(1.0, 0.3, 0.3, 0.95 * am2), 2.5)
-				draw_circle(b, 2.5, Color(1, 0.8, 0.8, am2))
+				V.aro(self, b, r_m + q, r_m + q, V.CONT, am2, 2.0)
+				V.aro(self, b, r_m, r_m, verm, am2, 1.0)
+				if am2 > 0.2:
+					for k in 4:
+						var dv := Vector2(cos(k * PI * 0.5), sin(k * PI * 0.5))
+						V.quadro(self, b.x + dv.x * (r_m + q) - q * 0.5, b.y + dv.y * (r_m + q) - q * 0.5, q * (1.0 + absf(dv.x) * 2.0), q * (1.0 + absf(dv.y) * 2.0), Color(1.0, 0.4, 0.35))
+					V.ponto(self, b, Color(1, 0.85, 0.85))
 		Pecas.Poder.BOLA:
-			for k in 12:
-				var ang_b: float = k * TAU / 12.0 + u * 3.0
-				var r0: float = 14.0 + 56.0 * u
-				var dvb := Vector2(cos(ang_b), sin(ang_b))
-				draw_line(p + dvb * r0, p + dvb * (r0 + 18.0 * a + 4.0), Color(0.9, 0.95, 1.0, 0.95 * a), 3.0)
-				draw_line(p + dvb * r0, p + dvb * (r0 + 12.0 * a + 2.0), Color(c.r, c.g, c.b, 0.9 * a), 5.0)
-			_anel(gp, 20.0 + 70.0 * u, 8.0 + 28.0 * u, Color(c.r, c.g, c.b, 0.7 * a), 3.0)
+			var brc := Color(0.92, 0.96, 1.0)
+			if a > 0.1:
+				for k in 12:
+					var ang_b: float = k * TAU / 12.0 + u * 3.0
+					var r0: float = 14.0 + 56.0 * u
+					var dvb := Vector2(cos(ang_b), sin(ang_b))
+					V.linha(self, p + dvb * r0, p + dvb * (r0 + 14.0 * a + 4.0), V.CONT, q * 3.0)
+				for k in 12:
+					var ang_b2: float = k * TAU / 12.0 + u * 3.0
+					var r1: float = 14.0 + 56.0 * u
+					var dvb2 := Vector2(cos(ang_b2), sin(ang_b2))
+					V.linha(self, p + dvb2 * r1, p + dvb2 * (r1 + 14.0 * a + 4.0), c, q * 2.0)
+					V.linha(self, p + dvb2 * (r1 + 4.0), p + dvb2 * (r1 + 14.0 * a + 4.0), brc, q)
+			V.aro(self, gp, 20.0 + 70.0 * u, (20.0 + 70.0 * u) * 0.4, c, a * 1.3, 1.0)
 		_:
-			_anel(p, 10.0 + 80.0 * u, 5.0 + 30.0 * u, Color(c.r, c.g, c.b, 0.7 * a), 3.0)
+			V.aro(self, p + Vector2(0, 30), 10.0 + 80.0 * u, (10.0 + 80.0 * u) * 0.4, c, a * 1.3, 1.5)
 
 ## Canteiro (Jardineiro): chão florido com flores balançando; no chão, sob os gatos.
 func _desenhar_canteiros() -> void:
@@ -1722,31 +1852,26 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 	var meio: Vector2 = pos + Vector2(0, -CORPO_MEIO * esc_u)
 	if uu.queima_t > 0.0:
 		_chamas(pos, esc_u)
-		for k in 4:
-			var w: float = fposmod(rel * 1.4 + k * 0.25, 1.0)
-			draw_circle(pos + Vector2(sin(rel * 6.0 + k * 2.0) * 10.0 + (k - 1.5) * 18.0, -h * 0.7 - w * 34.0), 2.0, Color(1.0, 0.75, 0.25, 1.0 - w))
 	if uu.frio_t > 0.0:
-		_elipse_cheia(pos + Vector2(0, 2), CORPO_LARG * 1.05 * esc_u, 8.0 * esc_u, Color(0.6, 0.85, 1.0, 0.4))
+		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.05 * esc_u, 8.0 * esc_u, Color(0.6, 0.85, 1.0, 0.4))
 		for k in 5:
-			var bx: float = (k - 2) * 15.0 * esc_u
-			var hh: float = (10.0 + (k % 2) * 6.0 - absf(k - 2) * 1.5) * esc_u
-			draw_colored_polygon(PackedVector2Array([pos + Vector2(bx - 4, 2), pos + Vector2(bx, 2 - hh), pos + Vector2(bx + 4, 2)]), Color(0.75, 0.93, 1.0, 0.9))
-		_elipse_cheia(meio, CORPO_LARG * esc_u, 28.0 * esc_u, Color(0.4, 0.7, 1.0, 0.13))
-		for k in 5:
-			var fr: float = fposmod(rel * 1.6 + k * 0.2, 1.0)
-			var pg: Vector2 = pos + Vector2((k - 2) * 17.0, -h + fr * 36.0)
-			draw_circle(pg, 2.4, Color(0.45, 0.75, 1.0, 0.9 * (1.0 - fr)))
+			var hh: float = (14.0 + (k % 2) * 8.0 - absf(k - 2) * 2.0) * esc_u
+			V.cristal(self, pos + Vector2((k - 2) * 15.0 * esc_u, 3.0), 5.0, hh, Color(0.55, 0.85, 1.0), Color(0.1, 0.18, 0.45))
+		for k in 3:
+			var fr: float = fposmod(rel * 1.6 + k * 0.33, 1.0)
+			V.ponto(self, pos + Vector2((k - 1) * 22.0, -h + fr * 36.0), Color(0.85, 0.95, 1.0))
 	if uu.protegido_t > 0.0:
 		var rx: float = (CORPO_LARG + 2.0) * esc_u
 		var ry: float = (CORPO_MEIO + 4.0) * esc_u
-		_elipse_cheia(meio, rx, ry, Color(1.0, 0.92, 0.55, 0.03 + 0.02 * sin(rel * 6.0)))
-		_anel(meio, rx, ry, Color(1.0, 0.9, 0.5, 0.8), 1.5)
+		V.aro(self, meio, rx, ry, Color(1.0, 0.9, 0.5), 1.0, 1.0)
+		V.brilho(self, meio + Vector2(-rx * 0.6, -ry * 0.6), 3.0, Color(1, 1, 0.95), Color(0.4, 0.3, 0.05))
 	if uu.frenesi_t > 0.0:
 		for k in 4:
 			var w: float = fposmod(rel * 3.0 + k * 0.25, 1.0)
 			var yy: float = pos.y - (9.0 + k * 12.0) * esc_u
 			var x1: float = pos.x - dir * (CORPO_LARG * 0.95 * esc_u + w * 16.0)
-			draw_line(Vector2(x1 - dir * 24.0, yy), Vector2(x1, yy), Color(1.0, 0.7, 0.25, 0.8 * (1.0 - w)), 2.6)
+			if w < 0.8:
+				V.quadro(self, minf(x1, x1 - dir * 24.0), yy, 24.0, V.Q, Color(1.0, 0.7, 0.25))
 	if uu.furia > 0.0:
 		var fa: float = clampf(uu.furia, 0.0, 1.0)
 		_elipse_cheia(pos + Vector2(0, 2), CORPO_LARG * 1.1 * esc_u, 9.0 * esc_u, Color(1.0, 0.2, 0.15, 0.22 * fa + 0.08 * sin(rel * 8.0)))
@@ -1782,11 +1907,7 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 	if uu.atordoado_t > 0.0:
 		for k in 3:
 			var ang: float = rel * 6.0 + k * TAU / 3.0
-			var sp: Vector2 = pos + Vector2(cos(ang) * 22.0, -h - 6.0 + sin(ang) * 6.0)
-			var estr: PackedVector2Array = _pts_estrela(sp, 6.0, ang * 0.5)
-			draw_colored_polygon(estr, Desenho.DOURADO)
-			estr.append(estr[0])
-			draw_polyline(estr, Color(0.3, 0.18, 0.0, 0.95), 1.2)
+			V.brilho(self, pos + Vector2(cos(ang) * 22.0, -h - 6.0 + sin(ang) * 6.0), 4.0, Desenho.DOURADO, Color(0.3, 0.18, 0.0))
 
 ## Fileira de ícones de estado sobre a barra de vida (ver IconesEstado): até `maximo` ícones, na ordem de
 ## prioridade (controle primeiro); se sobrar estado, o último é o "…". Pisca no último 0,5 s.
@@ -2176,24 +2297,22 @@ func _draw() -> void:
 		var sx: float = signf(Balanco.TORRE_X - pp.x if alvo == null else alvo.x - pp.x)
 		if dono == null:
 			pp += _desvio_boca(float(d["x"]))   # o tiro da torre nasce na boca do canhão
-		draw_circle(pp + Vector2(0, altura - 2), 4.0, Color(0, 0, 0, 0.25))
+		V.elipse(self, pp + Vector2(0, altura - 2), 6.0, 2.0, Color(0, 0, 0, 0.25))
 		if dono == null:
-			draw_circle(pp, 13.0, Color(1.0, 0.8, 0.25, 0.25))
-			draw_line(pp, pp - Vector2(sx * 30.0, 0), Color(1.0, 0.8, 0.25, 0.45), 6.0)
-			var est: PackedVector2Array = _pts_estrela(pp, 9.0, rel * 8.0)
-			draw_colored_polygon(est, Color(1.0, 0.88, 0.3))
-			draw_circle(pp, 3.5, Color(1, 1, 0.9))
+			for tr in 3:
+				V.quadro(self, pp.x - sx * (10.0 + tr * 9.0), pp.y - 2.0, 6.0 - tr * 1.5, 6.0 - tr * 1.5, Color(1.0, 0.82, 0.3))
+			V.disco_c(self, pp, 7.0, Color(1.0, 0.84, 0.28), Color(0.4, 0.22, 0.04))
+			V.disco(self, pp + Vector2(-2, -2), 3.0, Color(1, 1, 0.85))
 		elif dono.equipe == 0:
-			draw_line(pp, pp - Vector2(sx * 24.0, 0), Color(0.6, 0.8, 1.0, 0.25), 7.0)
-			draw_line(pp, pp - Vector2(sx * 16.0, 0), Color(0.75, 0.9, 1.0, 0.55), 4.0)
-			draw_circle(pp, 5.0, Color(0.8, 0.92, 1.0))
-			draw_circle(pp, 2.4, Color(1, 1, 1))
+			for tr in 3:
+				V.quadro(self, pp.x - sx * (8.0 + tr * 7.0), pp.y - 1.5, 6.0 - tr * 1.5, 3.0, Color(0.7, 0.88, 1.0))
+			V.disco_c(self, pp, 4.0, Color(0.78, 0.92, 1.0), Color(0.1, 0.2, 0.45))
+			V.disco(self, pp + Vector2(-1, -1), 2.0, Color(1, 1, 1))
 		else:
-			var rot_p: Array = [pp + Vector2(0, -6), pp + Vector2(6, 0), pp + Vector2(0, 6), pp + Vector2(-6, 0)]
-			draw_line(pp, pp - Vector2(sx * 16.0, 0), Color(1.0, 0.4, 0.25, 0.5), 4.0)
-			draw_colored_polygon(PackedVector2Array(rot_p), Color(1.0, 0.45, 0.3))
-			draw_polyline(PackedVector2Array([rot_p[0], rot_p[1], rot_p[2], rot_p[3], rot_p[0]]), Color(0.3, 0.05, 0.05), 1.5)
-			draw_circle(pp, 2.0, Color(1.0, 0.9, 0.7))
+			for tr in 3:
+				V.quadro(self, pp.x - sx * (8.0 + tr * 7.0), pp.y - 1.5, 6.0 - tr * 1.5, 3.0, Color(1.0, 0.45, 0.25))
+			V.disco_c(self, pp, 4.0, Color(1.0, 0.45, 0.3), Color(0.35, 0.04, 0.04))
+			V.disco(self, pp + Vector2(-1, -1), 2.0, Color(1.0, 0.9, 0.7))
 	# poderes das fantasias
 	for f in fx:
 		_desenhar_fx(f)
@@ -2209,14 +2328,29 @@ func _draw() -> void:
 			Desenho.bloco(self, Rect2(-20, -10, 40, 20), p["cor"], Desenho.letra_tijolo(int(p["idx"])), a)
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		elif p["tipo"] == 1:
-			draw_circle(p["p"], p["r"] * (2.2 - a), c)
+			# fumaça/clarão: bolha de pixel que incha e some por encolhimento (sem alfa sobre alfa)
+			var rb: float = p["r"] * (2.2 - a)
+			if rb >= 4.0:
+				if p["r"] >= 14.0 and p["cor"].a < 0.7:
+					V.disco(self, p["p"], rb * a * 1.1 + V.Q, Color(c.r, c.g, c.b, minf(0.55, p["cor"].a)))
+				else:
+					V.bolha(self, p["p"], rb * (0.55 + 0.45 * a), Color(c.r, c.g, c.b, 1.0))
 		elif p["tipo"] == 3:
+			# faísca direcional: quadradinhos alinhados ao movimento
 			var vv: Vector2 = p["v"]
-			draw_line(p["p"], p["p"] - vv.normalized() * (4.0 + 12.0 * a), c, p["r"])
+			var dd: Vector2 = vv.normalized()
+			var s0: float = V.Q if p["r"] < 2.4 else V.Q * 2.0
+			V.quadro(self, p["p"].x - V.Q, p["p"].y - V.Q, s0 + V.Q * 2.0, s0 + V.Q * 2.0, V.CONT)
+			V.quadro(self, p["p"].x, p["p"].y, s0, s0, Color(c.r, c.g, c.b, 1.0))
+			if a > 0.4:
+				V.quadro(self, p["p"].x - dd.x * V.Q * 2.0, p["p"].y - dd.y * V.Q * 2.0, V.Q, V.Q, V.tom(Color(c.r, c.g, c.b, 1.0), 0.7))
 		elif p["tipo"] == 4:
-			draw_colored_polygon(_pts_estrela(p["p"], p["r"] * (0.5 + 0.5 * a), p["rot"]), c)
+			V.brilho(self, p["p"], maxf(V.Q, p["r"] * (0.5 + 0.5 * a)), Color(c.r, c.g, c.b, 1.0))
 		else:
-			draw_circle(p["p"], p["r"] * (0.4 + a * 0.6), c)
+			# fagulha: quadradinho com contorno que encolhe
+			var rf: float = maxf(V.Q, p["r"] * (0.4 + a * 0.6))
+			V.quadro(self, p["p"].x - V.Q, p["p"].y - V.Q, rf + V.Q * 2.0, rf + V.Q * 2.0, V.CONT)
+			V.quadro(self, p["p"].x, p["p"].y, rf, rf, Color(c.r, c.g, c.b, 1.0))
 	_desenhar_tfx()
 	# peças voando para o baú: rastro, brilho e anel na cor da raridade
 	if not voando.is_empty():
@@ -2292,13 +2426,9 @@ func _torre_letras() -> void:
 		Desenho.texto(self, Desenho.letra_tijolo(i), Vector2(ce.x - rr, ce.y + tam * 0.35), tam, cor.darkened(0.4), rr * 2.0)
 
 func _chamas(pos: Vector2, esc_u: float) -> void:
-	_elipse_cheia(pos + Vector2(0, -CORPO_MEIO * esc_u), CORPO_LARG * esc_u, 30.0 * esc_u, Color(1.0, 0.45, 0.1, 0.2))
-	for i in 6:
-		var fxx: float = (i - 2.5) * 12.0 * esc_u
-		var h: float = (16.0 + 8.0 * sin(rel * 14.0 + i * 1.7)) * esc_u
-		var base: Vector2 = pos + Vector2(fxx, -(30.0 + (i % 2) * 12.0 - absf(i - 2.5) * 3.0) * esc_u)
-		draw_colored_polygon(PackedVector2Array([base + Vector2(-5, 0), base + Vector2(0, -h), base + Vector2(5, 0)]), Color(1.0, 0.5, 0.1, 0.9))
-		draw_colored_polygon(PackedVector2Array([base + Vector2(-2.5, 0), base + Vector2(0, -h * 0.55), base + Vector2(2.5, 0)]), Color(1.0, 0.9, 0.3, 0.95))
+	for i in 5:
+		var fxx: float = (i - 2.0) * 13.0 * esc_u
+		V.chama(self, pos + Vector2(fxx, -(24.0 + (i % 2) * 12.0 - absf(i - 2.0) * 3.0) * esc_u), 12.0, (16.0 + 8.0 * sin(rel * 14.0 + i * 1.7)) * esc_u, rel + i)
 
 # ---------------------------------------------------------------- cenários
 ## Fundo estático (parede, móveis, chão): desenhado uma única vez num nó filho
