@@ -223,7 +223,7 @@ const CHEFE_TORRE_DANO := 2         # tijolos por golpe do chefe na torre
 const CHEFE_NIVEL_BONUS := 1        # níveis das peças do chefe acima dos inimigos da onda
 const CHEFE_LACAIOS := 0.6          # fração dos inimigos comuns numa onda de chefe
 const CHEFE_ATRASO := 2.5           # segundos depois do último lacaio
-const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 1.0, 1.0]   # acerto por chefe (a coruja é alta: em pé ocupa muito)
+const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 0.88, 1.0, 1.0, 0.8, 0.64, 0.8, 0.9]   # acerto por chefe: nenhum passa de ~2,1x a altura de um gato (a coruja é alta: em pé ocupa muito)
 const CHEFE_ESCALA := 1.7           # tamanho na tela
 
 # ---------- Chefes de cada fase (ver Fases.Chefe) ----------
