@@ -510,11 +510,15 @@ func _desfecho() -> void:
 		lento_t = 0.4 if velocidade <= 1 else (0.32 if velocidade == 2 else 0.26)
 		var ultima: bool = estado.onda >= Balanco.ONDAS_TOTAIS and not estado.invasao
 		_som("vitoria" if ultima else "vitoria_onda", 1.0, 0.0, true)
+		for k in 4:
+			agenda.append({"t": 0.12 * k, "k": "confete", "p": Vector2(300.0 + 260.0 * k, 120.0)})
 	else:
 		_som("derrota", 1.0, 0.0, true)
 		tremor = maxf(tremor, 12.0)
 		for k in 12:
 			agenda.append({"t": 0.07 * k, "k": "desaba"})
+		for k in 3:
+			agenda.append({"t": 0.2 * k, "k": "fumo", "p": Vector2(90.0 + 30.0 * k, TORRE_BASE.y - 60.0 * k)})
 
 func _agenda_exec(a: Dictionary) -> void:
 	match str(a["k"]):
@@ -531,6 +535,12 @@ func _agenda_exec(a: Dictionary) -> void:
 			_som("trofeu", 0.9, -3.0, true)
 		"poder_fx":
 			_poder_fx(int(a["poder"]), a["po"], a["alvos"], a["cor"], a.get("ex", {}))
+		"confete":
+			_chuva(a["p"], 10)
+		"fumo":
+			var pfu: Vector2 = a["p"]
+			for kf in 3:
+				particulas.append({"p": pfu + Vector2(randf_range(-30, 30), randf_range(-20, 20)), "v": Vector2(randf_range(-10, 30), randf_range(-60, -25)), "vida": 1.0, "max": 1.0, "cor": Color(0.4, 0.34, 0.36, 0.5), "r": randf_range(10, 16), "g": 0.0, "tipo": 1})
 		"desaba":
 			var idx: int = randi() % 16
 			var pb: Vector2 = Vector2(randf_range(20, 150), randf_range(500, 640))
@@ -665,9 +675,18 @@ func _desenhar_faixas() -> void:
 		var cor: Color = f["cor"]
 		var cy: float = 250.0
 		var h: float = 78.0 * clampf(minf(t / 0.12, (dur - t) / 0.18), 0.0, 1.0)
-		draw_rect(Rect2(0, cy - h * 0.5, 1280, h), Color(0.04, 0.02, 0.07, 0.62))
-		draw_rect(Rect2(0, cy - h * 0.5, 1280, 3), Color(cor.r, cor.g, cor.b, 0.85))
-		draw_rect(Rect2(0, cy + h * 0.5 - 3, 1280, 3), Color(cor.r, cor.g, cor.b, 0.85))
+		var y0: float = V.sn(cy - h * 0.5)
+		var yb: float = V.sn(cy + h * 0.5)
+		V.quadro(self, 0.0, y0, 1280.0, maxf(V.Q, yb - y0), Color(0.04, 0.02, 0.07, 0.7))
+		V.quadro(self, 0.0, y0 - V.Q, 1280.0, V.Q, V.CONT)
+		V.quadro(self, 0.0, yb, 1280.0, V.Q, V.CONT)
+		if h > 20.0:
+			# faixa de perigo em listras que correm
+			var desl: float = fposmod(t * 60.0, 48.0)
+			for k in 28:
+				var xs: float = V.sn(k * 48.0 - 48.0 + desl)
+				V.quadro(self, xs, y0, 24.0, V.Q * 2.0, cor)
+				V.quadro(self, 1280.0 - 24.0 - xs, yb - V.Q * 2.0, 24.0, V.Q * 2.0, cor)
 		# o texto entra da esquerda (freia), repousa devagar e sai para a direita (acelera)
 		var x: float = 640.0
 		var ent: float = 0.28
@@ -681,6 +700,10 @@ func _desenhar_faixas() -> void:
 		else:
 			x = 640.0 + (t - ent - (dur - ent - sai) * 0.5) * 14.0
 		Desenho.texto(self, str(f["txt"]), Vector2(x - 400.0, cy + 6.0), 54, cor, 800.0, 8)
+		if h > 60.0:
+			var lw: float = 40.0 + 12.0 * float(str(f["txt"]).length())
+			V.brilho(self, Vector2(x - lw, cy - 8.0), 6.0 + 2.0 * sin(t * 8.0), V.tom(cor, 1.4))
+			V.brilho(self, Vector2(x + lw, cy - 8.0), 6.0 + 2.0 * sin(t * 8.0 + 2.0), V.tom(cor, 1.4))
 		if str(f["sub"]) != "":
 			Desenho.texto(self, str(f["sub"]), Vector2(x - 400.0, cy + 30.0), 18, Color(1, 0.95, 0.85), 800.0, 4)
 
@@ -751,6 +774,7 @@ func _consumir() -> void:
 						particulas.append({"p": p2 + Vector2(randf_range(-14, 14), randf_range(-6, 10)), "v": Vector2(randf_range(-20, 20), randf_range(-30, -8)), "vida": 0.7, "max": 0.7, "cor": Color(0.65, 0.78, 1.0, 0.4), "r": 8.0, "g": 0.0, "tipo": 1})
 					_faisca(p2, Color(0.7, 0.85, 1.0), 6, 70.0, 0.6, 2.4)
 					tremor = maxf(tremor, 3.0)
+					tfx.append({"k": "nocaute", "p": Vector2(e["x"], e["y"] - 20 * ESC), "t": 0.0, "dur": 0.8})
 					caidos.append({"x": e["x"], "y": e["y"], "pecas": e["pecas"], "var": estado.bonecos.find(e["boneco"]), "t": 0.0})
 					_som("nocaute", 1.0, -3.0, true)
 				else:
@@ -858,6 +882,7 @@ func _consumir() -> void:
 				chefe_t = 2.2
 				var nome_ch: String = Fases.CHEFE_NOME[estado.lugar()]
 				_faixa(nome_ch, "CHEFE!", Color(1.0, 0.35, 0.3), 2.0, 0.0, "chefe")
+				tfx.append({"k": "chefe_chega", "p": Vector2(1120.0, 520.0), "t": 0.0, "dur": 1.0})
 				tremor = maxf(tremor, 8.0)
 			"critico":
 				var pk: Vector2 = Vector2(e["x"], e["y"] - 66 * ESC)
@@ -922,11 +947,19 @@ func _consumir() -> void:
 				if rar > 0:
 					var cr: Color = Pecas.cor_rar(rar)
 					var pr0: Vector2 = Vector2(e["x"], e["y"] - 60 * ESC)
-					_faisca(pr0, cr, 10 + 8 * rar, 220.0, 0.8, 3.6)
-					particulas.append({"p": pr0, "v": Vector2.ZERO, "vida": 0.5, "max": 0.5, "cor": Color(cr.r, cr.g, cr.b, 0.5), "r": 22.0 + 10.0 * rar, "g": 0.0, "tipo": 1})
-					_numero(pr0 + Vector2(0, -30), Pecas.RARIDADE_NOME[clampi(rar, 0, Pecas.RARIDADE_NOME.size() - 1)] + "!", cr, 22 + 2 * rar, 1.4, 160.0)
+					# faíscas: a Mítica solta várias cores; a Miaujestosa, pérola e rosa
+					var nf: int = 8 + 6 * rar
+					for kf in nf:
+						var cf: Color = cr
+						if rar == Pecas.Raridade.MITICA:
+							cf = Color.from_hsv(float(kf) / nf, 0.55, 1.0)
+						elif rar >= Pecas.Raridade.MIAUJESTOSA:
+							cf = Color(1.0, 0.97, 0.9) if kf % 2 == 0 else Color(1.0, 0.72, 0.88)
+						_faisca(pr0, cf, 1, 220.0, 0.8, 3.6)
+					tfx.append({"k": "drop_rar", "p": pr0 + Vector2(0, 40 * ESC), "rar": rar, "t": 0.0, "dur": 0.9 + 0.1 * rar})
+					_numero(pr0 + Vector2(0, -30), Pecas.RARIDADE_NOME[clampi(rar, 0, Pecas.RARIDADE_NOME.size() - 1)] + "!", cr, 22 + 2 * rar, 1.4, 280.0)
 					if rar >= 3:
-						tremor = maxf(tremor, 5.0)
+						tremor = maxf(tremor, 5.0 + (rar - 3) * 1.5)
 			"marca":
 				# a morte marcou a roupa: nome da marca sobe na cor dela
 				var mk: int = e["marca"]
@@ -1017,6 +1050,7 @@ func _consumir() -> void:
 				var pf: Vector2 = Vector2(e["x"], e["y"] - 10 * ESC)
 				numeros.append({"p": pf + Vector2(0, -40), "txt": "PLOFT!", "cor": Color(0.85, 0.7, 0.45), "vida": 0.9, "tam": 24, "larg": 140.0, "ct": 6})
 				_faisca(pf, Color(0.7, 0.55, 0.38), 12, 150.0, 0.5, 3.0)
+				tfx.append({"k": "fosso", "p": pf, "t": 0.0, "dur": 0.7})
 				for k in 3:
 					var ang_f: float = -PI * 0.5 + randf_range(-1.0, 1.0)
 					particulas.append({"p": pf + Vector2(0, -40 * ESC), "v": Vector2(cos(ang_f), sin(ang_f)) * randf_range(40, 80), "vida": 0.9, "max": 0.9, "cor": Desenho.DOURADO, "r": 5.0, "g": 80.0, "tipo": 4, "rot": randf() * TAU, "vrot": randf_range(-6, 6)})
@@ -1027,8 +1061,10 @@ func _consumir() -> void:
 				var pr2: Vector2 = _centro_modulo(Torre.Modulo.REFORCO)
 				numeros.append({"p": pr2 + Vector2(0, -44), "txt": "FIRME!", "cor": Color(0.7, 0.88, 1.0), "vida": 0.9, "tam": 22, "larg": 120.0, "ct": 6})
 				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Color(0.7, 0.88, 1.0), 8, 160.0, 0.35, 2.6)
+				tfx.append({"k": "reforco", "p": _centro_modulo(Torre.Modulo.REFORCO) + Vector2(20, -10), "t": 0.0, "dur": 0.5})
 			"luneta":
 				luneta_t = 0.5
+				tfx.append({"k": "luneta", "p": Vector2(e["x"], e["y"] - 40 * ESC), "t": 0.0, "dur": 0.5})
 				_faisca(Vector2(e["x"], e["y"] - 50 * ESC), Color(1.0, 0.95, 0.5), 5, 80.0, 0.4, 2.4)
 			"luneta_crit":
 				_numero(Vector2(e["x"], e["y"] - 70 * ESC), "×2", Color(1.0, 0.9, 0.3), 20, 0.8, 80.0)
@@ -1809,23 +1845,21 @@ func _desenhar_canteiros() -> void:
 		var raio: float = float(z["raio"])
 		var viva: float = clampf(float(z["t"]) / 0.5, 0.0, 1.0) * clampf((float(z["dur"]) - float(z["t"])) / 0.25, 0.0, 1.0)
 		var pulso: float = 0.5 + 0.5 * sin(rel * 3.0)
-		_elipse_cheia(Vector2(cx, cy), raio, raio * 0.36, Color(0.45, 0.85, 0.35, (0.2 + 0.05 * pulso) * viva))
-		_anel(Vector2(cx, cy), raio, raio * 0.36, Color(0.95, 0.55, 0.8, 0.75 * viva), 2.5)
-		for k in 18:
+		V.elipse(self, Vector2(cx, cy), raio, raio * 0.36, Color(0.45, 0.85, 0.35, (0.2 + 0.05 * pulso) * viva))
+		V.aro(self, Vector2(cx, cy), raio, raio * 0.36, Color(0.95, 0.55, 0.8), viva, 1.0)
+		for k in 12:
 			var ang: float = k * 2.399
-			var rr: float = raio * 0.92 * sqrt((k + 0.5) / 18.0)
+			var rr: float = raio * 0.92 * sqrt((k + 0.5) / 12.0)
 			var fp := Vector2(cx + cos(ang) * rr, cy + sin(ang) * rr * 0.36)
-			var balanco: float = sin(rel * 2.0 + k) * 1.5
-			draw_line(fp, fp + Vector2(balanco, -7.0), Color(0.25, 0.6, 0.25, viva), 1.6)
-			var cor_f: Color = [Color(1.0, 0.55, 0.78), Color(1.0, 0.92, 0.45), Color(1, 1, 1)][k % 3]
-			draw_circle(fp + Vector2(balanco, -8.0), 3.2, Color(cor_f.r, cor_f.g, cor_f.b, viva))
-			draw_circle(fp + Vector2(balanco, -8.0), 1.2, Color(0.9, 0.6, 0.1, viva))
-		for k in 4:
-			var wk: float = fposmod(rel * 0.7 + k * 0.25, 1.0)
-			var sp := Vector2(cx + (k - 1.5) * raio * 0.45, cy - wk * 50.0)
-			var al: float = sin(wk * PI) * 0.8 * viva
-			draw_rect(Rect2(sp.x - 1.5, sp.y - 5, 3, 10), Color(0.4, 1.0, 0.55, al))
-			draw_rect(Rect2(sp.x - 5, sp.y - 1.5, 10, 3), Color(0.4, 1.0, 0.55, al))
+			var balanco: float = roundf(sin(rel * 2.0 + k) * 1.5 / V.Q) * V.Q
+			if viva > 0.2:
+				V.quadro(self, fp.x, fp.y - V.Q * 2.0, V.Q, V.Q * 3.0, Color(0.25, 0.6, 0.25))
+				var cor_f: Color = [Color(1.0, 0.55, 0.78), Color(1.0, 0.92, 0.45), Color(1, 1, 1)][k % 3]
+				V.flor(self, fp + Vector2(balanco, -V.Q * 4.0), cor_f, Color(0.9, 0.6, 0.1), Color(0.3, 0.1, 0.2))
+		for k in 3:
+			var wk: float = fposmod(rel * 0.7 + k * 0.33, 1.0)
+			if sin(wk * PI) * viva > 0.3:
+				V.brilho(self, Vector2(cx + (k - 1.0) * raio * 0.5, cy - wk * 50.0), 3.0, Color(0.7, 1.0, 0.75), Color(0.1, 0.3, 0.15))
 
 ## Enxame: pontinhos amarelos e pretos girando sobre a área de cada nuvem ativa (sim.zonas).
 func _desenhar_zonas() -> void:
@@ -1836,14 +1870,18 @@ func _desenhar_zonas() -> void:
 		var centro: Vector2 = Vector2(float(z["x"]), float(z["y"]) - 34.0 * ESC)
 		var raio: float = float(z["raio"])
 		var viva: float = clampf(float(z["t"]) / 0.4, 0.0, 1.0)
-		draw_circle(centro, raio * 0.8, Color(1.0, 0.85, 0.15, 0.10 * viva))
-		_anel(centro + Vector2(0, 30.0), raio, raio * 0.35, Color(1.0, 0.85, 0.15, 0.35 * viva), 2.0)
-		for k in 22:
-			var ang: float = rel * (2.5 + (k % 3)) + k * 2.399
-			var rr: float = raio * (0.25 + 0.75 * fposmod(k * 0.382, 1.0))
-			var pb: Vector2 = centro + Vector2(cos(ang) * rr, sin(ang * 1.3) * rr * 0.45 - 6.0 * sin(rel * 9.0 + k))
-			draw_circle(pb, 3.2, Color(0.1, 0.08, 0.1, 0.95 * viva))
-			draw_circle(pb, 2.2, Color(1.0, 0.85, 0.15, 0.95 * viva) if k % 2 == 0 else Color(0.15, 0.12, 0.12, 0.95 * viva))
+		V.elipse(self, centro + Vector2(0, 30.0), raio, raio * 0.35, Color(1.0, 0.85, 0.15, 0.12 * viva))
+		V.aro(self, centro + Vector2(0, 30.0), raio, raio * 0.35, Color(1.0, 0.85, 0.15), viva, 1.0)
+		if viva > 0.3:
+			for k in 14:
+				var ang: float = rel * (2.5 + (k % 3)) + k * 2.399
+				var rr: float = raio * (0.25 + 0.75 * fposmod(k * 0.382, 1.0))
+				var pb: Vector2 = centro + Vector2(cos(ang) * rr, sin(ang * 1.3) * rr * 0.45 - 6.0 * sin(rel * 9.0 + k))
+				V.quadro(self, pb.x - V.Q, pb.y - V.Q, V.Q * 3.0, V.Q * 2.0, V.CONT)
+				V.quadro(self, pb.x - V.Q, pb.y - V.Q + 0.0, V.Q, V.Q, Color(1.0, 0.85, 0.15) if k % 2 == 0 else Color(0.2, 0.15, 0.15))
+				V.quadro(self, pb.x, pb.y - V.Q, V.Q, V.Q, Color(0.2, 0.15, 0.15) if k % 2 == 0 else Color(1.0, 0.85, 0.15))
+				if sin(rel * 30.0 + k) > 0.0:
+					V.ponto(self, pb + Vector2(0, -V.Q * 2.0), Color(0.9, 0.95, 1.0))
 
 ## Estados visíveis de uma unidade (corpo baixo e comprido): queimando, gelo, atordoada,
 ## protegida, frenesi, fúria. `pos` são os pés; `esc_u` já inclui ESC.
@@ -1880,30 +1918,35 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 			draw_circle(pos + Vector2((k - 1) * 22.0, -h * 0.9 - w * 14.0), 3.0 * (1.0 - w), Color(1.0, 0.4, 0.3, 0.7 * fa))
 	if uu.preso_t > 0.0:
 		var pe_t: Vector2 = pos + Vector2(0, 2)
-		_elipse_cheia(pe_t, CORPO_LARG * esc_u, 9.0 * esc_u, Color(0.9, 0.93, 1.0, 0.3))
-		for k in 8:
-			var ang_t: float = k * TAU / 8.0
-			draw_line(pe_t, pe_t + Vector2(cos(ang_t) * CORPO_LARG * esc_u, sin(ang_t) * 9.0 * esc_u), Color(1, 1, 1, 0.8), 1.4)
-		_anel(pe_t, CORPO_LARG * 0.55 * esc_u, 5.0 * esc_u, Color(1, 1, 1, 0.8), 1.2)
-		_anel(pe_t, CORPO_LARG * esc_u, 9.0 * esc_u, Color(1, 1, 1, 0.8), 1.2)
-		draw_line(pe_t + Vector2(-8, -h * 0.5), pe_t + Vector2(10, -h * 0.9), Color(1, 1, 1, 0.5), 1.2)
+		var wx: float = CORPO_LARG * esc_u
+		var wy: float = 9.0 * esc_u
+		V.elipse(self, pe_t, wx, wy, Color(0.9, 0.93, 1.0, 0.3))
+		V.quadro(self, pe_t.x - wx, pe_t.y, wx * 2.0, V.Q * 0.5, Color(1, 1, 1))
+		V.quadro(self, pe_t.x, pe_t.y - wy, V.Q * 0.5, wy * 2.0, Color(1, 1, 1))
+		V.linha(self, pe_t - Vector2(wx, wy) * 0.7, pe_t + Vector2(wx, wy) * 0.7, Color(1, 1, 1), V.Q * 1.5)
+		V.linha(self, pe_t + Vector2(-wx, wy) * 0.7, pe_t + Vector2(wx, -wy) * 0.7, Color(1, 1, 1), V.Q * 1.5)
+		V.aro(self, pe_t, wx * 0.55, wy * 0.55, Color(1, 1, 1), 1.0, 1.0)
+		V.aro(self, pe_t, wx, wy, Color(1, 1, 1), 1.0, 1.0)
 	if uu.marcado_t > 0.0:
 		var pr_m: float = 0.5 + 0.5 * sin(rel * 8.0)
-		_anel(meio, (CORPO_LARG + 4.0) * esc_u, (CORPO_MEIO + 6.0) * esc_u, Color(1.0, 0.2, 0.2, 0.35 + 0.35 * pr_m), 1.6)
+		V.aro(self, meio, (CORPO_LARG + 4.0) * esc_u, (CORPO_MEIO + 6.0) * esc_u, Color(1.0, 0.25, 0.25), 0.55 + 0.45 * pr_m, 1.0)
 	if uu.furor_t > 0.0:
-		_elipse_cheia(pos + Vector2(0, 2), CORPO_LARG * 1.15 * esc_u, 10.0 * esc_u, Color(1.0, 0.2, 0.1, 0.28 + 0.1 * sin(rel * 12.0)))
-		for k in 5:
-			var wf: float = fposmod(rel * 2.2 + k * 0.2, 1.0)
-			draw_line(pos + Vector2((k - 2) * 14.0 * esc_u, -4.0), pos + Vector2((k - 2) * 14.0 * esc_u + sin(rel * 9.0 + k) * 3.0, -h * (0.4 + wf * 0.7)), Color(1.0, 0.4, 0.1, 0.8 * (1.0 - wf)), 3.0)
+		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.15 * esc_u, 10.0 * esc_u, Color(1.0, 0.2, 0.1, 0.28 + 0.1 * sin(rel * 12.0)))
+		for k in 3:
+			V.chama(self, pos + Vector2((k - 1) * 20.0 * esc_u, -2.0), 10.0, h * (0.35 + 0.15 * (k % 2)), rel + k)
 	if uu.bola_t > 0.0:
-		for k in 12:
-			var ang_s: float = rel * 6.0 + k * TAU / 12.0
+		for k in 8:
+			var ang_s: float = rel * 6.0 + k * TAU / 8.0
 			var dv_s := Vector2(cos(ang_s) * (CORPO_LARG + 2.0) * esc_u, sin(ang_s) * (CORPO_MEIO + 4.0) * esc_u)
-			draw_line(meio + dv_s, meio + dv_s * 1.25, Color(0.92, 0.96, 1.0, 0.95), 2.4)
+			V.quadro(self, meio.x + dv_s.x * 1.2 - V.Q, meio.y + dv_s.y * 1.2 - V.Q, V.Q * 3.0, V.Q * 3.0, V.CONT)
+			V.quadro(self, meio.x + dv_s.x * 1.2, meio.y + dv_s.y * 1.2, V.Q, V.Q, Color(0.92, 0.96, 1.0))
+			V.quadro(self, meio.x + dv_s.x, meio.y + dv_s.y, V.Q, V.Q, Color(0.92, 0.96, 1.0))
 	if uu.oculto_t > 0.0:
 		for k in 3:
 			var wo: float = fposmod(rel * 0.8 + k * 0.33, 1.0)
-			draw_circle(meio + Vector2((k - 1) * 20.0 * esc_u, 14.0 - wo * 30.0 * esc_u), (9.0 + 5.0 * wo) * esc_u * 0.8, Color(0.45, 0.4, 0.55, 0.45 * (1.0 - wo)))
+			var tam_o: float = (9.0 + 5.0 * wo) * esc_u * 0.8 * (1.0 - wo * 0.6)
+			if tam_o >= 4.0:
+				V.bolha(self, meio + Vector2((k - 1) * 20.0 * esc_u, 14.0 - wo * 30.0 * esc_u), tam_o, Color(0.5, 0.45, 0.6))
 	if uu.atordoado_t > 0.0:
 		for k in 3:
 			var ang: float = rel * 6.0 + k * TAU / 3.0
@@ -1991,9 +2034,11 @@ func _desenhar_tfx() -> void:
 				var cel: float = 3.0 if int(f["n"]) < 5 else 4.0
 				for k in range(4, 0, -1):
 					var uu: float = maxf(u - k * 0.03, 0.0)
-					draw_circle(_pos_trofeu(f, uu), 7.0 - k, Color(1.0, 0.85, 0.3, 0.35 * (1.0 - k / 5.0)))
+					var sk: float = 8.0 - k * 1.5
+					var pk: Vector2 = _pos_trofeu(f, uu)
+					V.quadro(self, pk.x - sk * 0.5, pk.y - sk * 0.5, sk, sk, Color(1.0, 0.85, 0.3))
 				var p: Vector2 = _pos_trofeu(f, u)
-				draw_circle(p, 18.0 + 3.0 * sin(rel * 14.0), Color(1.0, 0.85, 0.3, 0.22))
+				V.brilho(self, p + Vector2(18.0, -16.0), 4.0 + 2.0 * sin(rel * 14.0), Color(1.0, 0.95, 0.6), Color(0.4, 0.25, 0.05))
 				TorrePx.desenhar_trofeu(self, p, cel)
 			"onda":
 				var r: float = float(f["raio"]) * (1.0 - (1.0 - u) * (1.0 - u))
@@ -2001,46 +2046,106 @@ func _desenhar_tfx() -> void:
 				var ry: float = 0.4 if f["chao"] else 0.3
 				var pc: Vector2 = f["p"]
 				if f["chao"]:
-					_elipse_cheia(pc, r, r * ry, Color(cor.r, cor.g, cor.b, 0.16 * (1.0 - u)))
-				_anel(pc, r, r * ry, Color(cor.r, cor.g, cor.b, 0.85 * (1.0 - u)), 5.0 * (1.0 - u) + 1.5)
-				_anel(pc, r * 0.9, r * ry * 0.9, Color(1, 0.9, 0.8, 0.5 * (1.0 - u)), 2.0)
+					V.elipse(self, pc, r, r * ry, Color(cor.r, cor.g, cor.b, 0.16 * (1.0 - u)))
+				V.aro(self, pc, r + V.Q, r * ry + V.Q, V.CONT, 1.0 - u, 2.0)
+				V.aro(self, pc, r, r * ry, cor, 1.0 - u, 2.0 if u < 0.5 else 1.0)
+				V.aro(self, pc, r * 0.9, r * ry * 0.9, Color(1, 0.9, 0.8), (1.0 - u) * 0.7, 1.0)
 			"pena":
 				var a: Vector2 = f["a"]
 				var b: Vector2 = f["b"]
 				var cabeca: Vector2 = a.lerp(b, minf(1.0, u / 0.45))
 				var cauda: Vector2 = a.lerp(b, clampf((u - 0.15) / 0.5, 0.0, 1.0))
 				var al: float = 1.0 - clampf((u - 0.6) / 0.4, 0.0, 1.0)
-				draw_line(cauda, cabeca, Color(1.0, 0.55, 0.6, 0.35 * al), 8.0)
-				draw_line(cauda, cabeca, Color(1.0, 0.95, 0.9, 0.95 * al), 3.0)
-				var dirp: Vector2 = (b - a).normalized()
-				var nrm: Vector2 = dirp.orthogonal()
-				var dist: float = cauda.distance_to(cabeca)
-				var passos: int = int(dist / 22.0)
-				for k in passos:
-					var q: Vector2 = cabeca - dirp * (k * 22.0 + 6.0)
-					draw_line(q, q - dirp * 9.0 + nrm * 7.0, Color(1.0, 0.8, 0.85, al), 2.0)
-					draw_line(q, q - dirp * 9.0 - nrm * 7.0, Color(1.0, 0.8, 0.85, al), 2.0)
-				draw_circle(cabeca, 5.0, Color(1, 1, 1, al))
+				if al > 0.15:
+					V.linha(self, cauda, cabeca, V.CONT, V.Q * 3.0)
+					V.linha(self, cauda, cabeca, Color(1.0, 0.95, 0.9), V.Q * 1.5)
+					var dirp: Vector2 = (b - a).normalized()
+					var nrm: Vector2 = dirp.orthogonal()
+					var dist: float = cauda.distance_to(cabeca)
+					for k in mini(int(dist / 28.0), 6):
+						var qq: Vector2 = cabeca - dirp * (k * 28.0 + 6.0)
+						V.linha(self, qq, qq - dirp * 9.0 + nrm * 7.0, Color(1.0, 0.8, 0.85), V.Q)
+						V.linha(self, qq, qq - dirp * 9.0 - nrm * 7.0, Color(1.0, 0.8, 0.85), V.Q)
+					V.brilho(self, cabeca, 5.0, Color(1, 1, 1), V.CONT)
 			"bolha":
 				var ini_b: Vector2 = f["ini"]
 				var fim_b: Vector2 = f["fim"]
 				var pb: Vector2 = ini_b.lerp(fim_b, u) + Vector2(sin(u * 18.0) * 8.0, 0.0)
-				var rb: float = 7.0 + 3.0 * sin(u * 20.0)
-				draw_circle(pb, rb + 2.0, Color(0.2, 0.55, 0.25, 0.8))
-				draw_circle(pb, rb, Color(0.55, 1.0, 0.55, 0.85))
-				draw_circle(pb + Vector2(-2, -2), 2.0, Color(1, 1, 1, 0.9))
+				V.bolha(self, pb, 7.0 + 3.0 * sin(u * 20.0), Color(0.55, 1.0, 0.55), Color(0.1, 0.35, 0.15))
 			"saco":
 				var ini_s: Vector2 = f["ini"]
 				var fim_s: Vector2 = f["fim"]
 				var ps: Vector2 = ini_s.lerp(fim_s, u) + Vector2(0, -190.0 * sin(PI * u))
 				var sombra: Vector2 = ini_s.lerp(fim_s, u)
-				_elipse_cheia(Vector2(sombra.x, fim_s.y if u > 0.5 else sombra.y + 40.0), 12.0 * (1.0 - 0.4 * sin(PI * u)), 4.0, Color(0, 0, 0, 0.25))
-				draw_set_transform(ps, u * TAU * 1.5, Vector2.ONE)
-				draw_rect(Rect2(-12, -12, 24, 24), Color(0.14, 0.09, 0.12))
-				draw_rect(Rect2(-8, -8, 16, 16), Color(0.78, 0.58, 0.32))
-				draw_rect(Rect2(-8, -8, 16, 6), Color(0.92, 0.74, 0.46))
-				draw_rect(Rect2(-4, -16, 8, 6), Color(0.55, 0.12, 0.14))
-				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+				V.elipse(self, Vector2(sombra.x, fim_s.y if u > 0.5 else sombra.y + 40.0), 12.0 * (1.0 - 0.4 * sin(PI * u)), 4.0, Color(0, 0, 0, 0.25))
+				var gi: float = floorf(u * 6.0)   # o saco gira em 4 posições (viradas de 90 graus)
+				var sx: float = V.sn(ps.x)
+				var sy: float = V.sn(ps.y)
+				V.quadro(self, sx - 12.0, sy - 12.0, 24.0, 24.0, V.CONT)
+				V.quadro(self, sx - 9.0, sy - 9.0, 18.0, 18.0, Color(0.78, 0.58, 0.32))
+				V.quadro(self, sx - 9.0, sy - 9.0, 18.0, 6.0 if int(gi) % 2 == 0 else 3.0, Color(0.92, 0.74, 0.46))
+				V.quadro(self, sx - 6.0 + (6.0 if int(gi) % 2 == 1 else 0.0), sy - 15.0, 6.0, 6.0, Color(0.55, 0.12, 0.14))
+			"drop_rar":
+				# pilar de luz que sobe, aros e brilhos na cor da raridade; mais raridade, mais coisa
+				var rar_d: int = int(f["rar"])
+				var cd: Color = Pecas.cor_rar(rar_d)
+				var pd: Vector2 = f["p"]
+				var alt_d: float = 120.0 + 30.0 * rar_d
+				var l_d: float = V.sn(18.0 + 6.0 * rar_d)
+				var fd: float = 1.0 - u
+				V.quadro(self, pd.x - l_d * 0.5, pd.y - alt_d * minf(1.0, u * 5.0), l_d, alt_d * minf(1.0, u * 5.0), Color(cd.r, cd.g, cd.b, 0.22 * fd))
+				V.quadro(self, pd.x - l_d * 0.2, pd.y - alt_d * minf(1.0, u * 5.0), l_d * 0.4, alt_d * minf(1.0, u * 5.0), Color(1, 1, 1, 0.35 * fd))
+				for k in 1 + rar_d / 2:
+					var wd: float = clampf(u * 1.6 - k * 0.2, 0.0, 1.0)
+					V.aro(self, pd + Vector2(0, 28), 10.0 + 60.0 * wd, (10.0 + 60.0 * wd) * 0.35, cd, 1.0 - wd, 1.5)
+				for k in 2 + rar_d:
+					var ad: float = rel * 2.0 + k * TAU / (2.0 + rar_d)
+					var rd: float = 20.0 + 34.0 * u
+					if fd > 0.2:
+						V.brilho(self, pd + Vector2(cos(ad) * rd, sin(ad) * rd * 0.7 - 20.0 * u), 3.0 + rar_d * 0.6, V.tom(cd, 1.3), V.CONT)
+				if rar_d >= 5:
+					draw_rect(Rect2(-20, -20, 1320, 760), Color(1.0, 0.92, 0.96, 0.12 * clampf(1.0 - u * 4.0, 0.0, 1.0)))
+			"nocaute":
+				var pn: Vector2 = f["p"]
+				var fn: float = 1.0 - u
+				V.aro(self, pn + Vector2(0, 24), 10.0 + 44.0 * u, (10.0 + 44.0 * u) * 0.35, Color(0.8, 0.88, 1.0), fn, 1.0)
+				for k in 3:
+					var an: float = u * 10.0 + k * TAU / 3.0
+					V.brilho(self, pn + Vector2(cos(an) * 20.0, -50.0 + sin(an) * 6.0 - 10.0 * u), 4.0, Color(1.0, 0.95, 0.6) if fn > 0.3 else Color(0.8, 0.88, 1.0), Color(0.15, 0.12, 0.3))
+			"chefe_chega":
+				var pch: Vector2 = f["p"]
+				var fc: float = 1.0 - u
+				if u < 0.15:
+					draw_rect(Rect2(-20, -20, 1320, 760), Color(1.0, 0.3, 0.25, 0.14 * (1.0 - u / 0.15)))
+				V.aro(self, pch + Vector2(0, 30), 30.0 + 360.0 * u, (30.0 + 360.0 * u) * 0.3, Color(1.0, 0.5, 0.35), fc, 2.0)
+				V.aro(self, pch + Vector2(0, 30), 20.0 + 240.0 * u, (20.0 + 240.0 * u) * 0.3, Color(1.0, 0.9, 0.7), fc, 1.0)
+				_fumaca_px(pch + Vector2(0, 20), 90.0, 9, u, Color(0.5, 0.44, 0.42), 0.3)
+			"fosso":
+				var pf: Vector2 = f["p"]
+				var ff: float = 1.0 - u
+				V.elipse(self, pf + Vector2(0, 10), 30.0, 9.0, Color(0.1, 0.05, 0.04, 0.8 * minf(1.0, ff * 2.0)))
+				V.aro(self, pf + Vector2(0, 10), 32.0, 10.0, Color(0.55, 0.4, 0.28), ff, 1.5)
+				_fumaca_px(pf, 24.0, 5, u, Color(0.62, 0.5, 0.38), 0.7)
+				for k in 3:
+					V.brilho(self, pf + Vector2((k - 1) * 18.0, -34.0 - 10.0 * sin(u * 8.0 + k)), 4.0, Color(1.0, 0.86, 0.3), Color(0.35, 0.2, 0.02))
+			"reforco":
+				var pr: Vector2 = f["p"]
+				var fr: float = 1.0 - u
+				var rxr: float = 56.0 * (0.7 + 0.3 * minf(1.0, u * 5.0))
+				V.elipse(self, pr, rxr, rxr * 1.2, Color(0.7, 0.88, 1.0, 0.16 * fr))
+				V.aro(self, pr, rxr + V.Q, rxr * 1.2 + V.Q, V.CONT, fr, 2.0)
+				V.aro(self, pr, rxr, rxr * 1.2, Color(0.7, 0.88, 1.0), fr, 1.0)
+				V.brilho(self, pr + Vector2(-rxr * 0.55, -rxr * 0.7), 5.0, Color(1, 1, 1), Color(0.1, 0.2, 0.45))
+			"luneta":
+				var pl: Vector2 = f["p"]
+				var fl: float = 1.0 - u
+				var rl: float = 22.0 - 10.0 * minf(1.0, u * 4.0)
+				V.aro(self, pl, rl + V.Q, rl + V.Q, V.CONT, fl, 2.0)
+				V.aro(self, pl, rl, rl, Color(1.0, 0.92, 0.4), fl, 1.0)
+				for k in 4:
+					var dl := Vector2(cos(k * PI * 0.5), sin(k * PI * 0.5))
+					V.quadro(self, pl.x + dl.x * (rl + V.Q) - V.Q * 0.5, pl.y + dl.y * (rl + V.Q) - V.Q * 0.5, V.Q * (1.0 + absf(dl.x) * 2.0), V.Q * (1.0 + absf(dl.y) * 2.0), Color(1.0, 0.95, 0.6))
+				V.ponto(self, pl, Color(1, 1, 1))
 
 func _elipse_cheia(c: Vector2, rx: float, ry: float, cor: Color) -> void:
 	var pts := PackedVector2Array()
@@ -2175,18 +2280,15 @@ func _draw() -> void:
 	for u in todos:
 		var uu: Unidade = u
 		var alt_s: float = _salto(uu)
-		draw_set_transform(Vector2(uu.vx, uu.vy), 0.0, Vector2(1, 0.3))
-		draw_circle(Vector2.ZERO, 32.0 * ESC * uu.escala() * (1.0 - minf(alt_s, 20.0) * 0.012), Color(0, 0, 0, 0.22 * (1.0 - minf(alt_s, 20.0) * 0.01)))
+		var pe_u: Vector2 = Vector2(uu.vx, uu.vy)
+		V.elipse(self, pe_u, 32.0 * ESC * uu.escala() * (1.0 - minf(alt_s, 20.0) * 0.012), 32.0 * ESC * uu.escala() * 0.3 * (1.0 - minf(alt_s, 20.0) * 0.012), Color(0, 0, 0, 0.22 * (1.0 - minf(alt_s, 20.0) * 0.01)))
 		if uu.coroa_bonus > 0.0:
 			var pc: float = 0.5 + 0.5 * sin(rel * 2.0)
-			draw_arc(Vector2.ZERO, Balanco.COROA_RAIO, 0.0, TAU, 40, Color(1.0, 0.82, 0.2, 0.2 + 0.1 * pc), 3.0)
-			draw_circle(Vector2.ZERO, Balanco.COROA_RAIO, Color(1.0, 0.85, 0.2, 0.06))
+			V.aro(self, pe_u, Balanco.COROA_RAIO, Balanco.COROA_RAIO * 0.3, Color(1.0, 0.82, 0.2), 0.5 + 0.3 * pc, 1.0)
 		if uu.aura_raio > 0.0:
 			var pulso: float = 0.5 + 0.5 * sin(rel * 3.0)
-			draw_arc(Vector2.ZERO, uu.aura_raio, 0.0, TAU, 40, Color(0.7, 0.3, 0.9, 0.25 + 0.15 * pulso), 4.0)
-			draw_circle(Vector2.ZERO, uu.aura_raio, Color(0.6, 0.25, 0.8, 0.07))
-		_anel_poder_chao(uu)   # no chão, com a escala achatada ativa
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			V.aro(self, pe_u, uu.aura_raio, uu.aura_raio * 0.3, Color(0.7, 0.3, 0.9), 0.55 + 0.3 * pulso, 1.5)
+		_anel_poder_chao(uu)
 	for cd in caidos:
 		var tq: float = float(cd.get("t", 1.0))
 		if tq < 0.4:
@@ -2261,14 +2363,15 @@ func _draw() -> void:
 			var bc: Vector2 = pos + Vector2(0, -CORPO_MEIO * esc_u)
 			var brx: float = (CORPO_LARG + 2.0) * esc_u
 			var bry: float = (CORPO_MEIO + 4.0) * esc_u
-			_elipse_cheia(bc, brx, bry, Color(0.45, 0.7, 1.0, 0.03 + 0.02 * sin(rel * 5.0)))
-			_anel(bc, brx, bry, Color(0.6, 0.85, 1.0, 0.6), 1.5)
+			V.aro(self, bc, brx, bry, Color(0.6, 0.85, 1.0), 0.75, 1.0)
 		if uu2.cura_alvo != null:
 			var al: Unidade = uu2.cura_alvo
 			var pa: Vector2 = pos + Vector2(0, -40 * ESC)
 			var pb: Vector2 = Vector2(al.vx, al.vy - 40 * ESC)
-			draw_line(pa, pb, Color(0.3, 1.0, 0.45, 0.55 + 0.25 * sin(rel * 10.0)), 3.0)
-			draw_circle(pb, 6.0 + 2.0 * sin(rel * 10.0), Color(0.3, 1.0, 0.45, 0.5))
+			for k in 4:
+				var wc: float = fposmod(rel * 1.6 + k * 0.25, 1.0)
+				V.cruz(self, pa.lerp(pb, wc), 3.0, Color(0.38, 0.95, 0.5), Color(0.04, 0.3, 0.18))
+			V.disco_c(self, pb, 5.0 + 2.0 * sin(rel * 10.0), Color(0.38, 0.95, 0.5), Color(0.04, 0.3, 0.18))
 			Desenho.texto(self, "+", pb + Vector2(-40, -18 - 6 * fposmod(rel * 2.0, 1.0)), 22, Color(0.5, 1.0, 0.6), 80.0, 3)
 		if uu2.vida < uu2.vida_max - 0.01 or uu2.equipe == 0:
 			# barra fina: contorno escuro de 1px, fundo e cor pela fração (gato: verde->amarelo->vermelho)
@@ -2355,7 +2458,7 @@ func _draw() -> void:
 	# peças voando para o baú: rastro, brilho e anel na cor da raridade
 	if not voando.is_empty():
 		var bp: float = 0.5 + 0.5 * sin(rel * 8.0)
-		draw_arc(BAU_POS + Vector2(0, -10), 40.0 + 4.0 * bp, 0.0, TAU, 28, Color(1.0, 0.9, 0.4, 0.35 + 0.25 * bp), 2.5)
+		V.aro(self, BAU_POS + Vector2(0, -10), 40.0 + 4.0 * bp, 30.0 + 3.0 * bp, Color(1.0, 0.9, 0.4), 0.6 + 0.4 * bp, 1.0)
 	for vo in voando:
 		var v: Dictionary = vo
 		var t: float = v["t"]
@@ -2363,14 +2466,19 @@ func _draw() -> void:
 		var ini: Vector2 = v["ini"]
 		var rar_v: int = int(v.get("rar", 0))
 		var cor_r: Color = Pecas.cor_rar(rar_v) if rar_v > 0 else Color(1.0, 0.9, 0.4)
-		for k in range(7, 0, -1):
-			var tt: float = maxf(t - k * 0.03, 0.0)
+		for k in range(5, 0, -1):
+			var tt: float = maxf(t - k * 0.035, 0.0)
 			var ee: float = tt * tt * (3.0 - 2.0 * tt)
 			var pt: Vector2 = ini.lerp(BAU_POS + Vector2(0, -16), ee) + Vector2(0, -130.0 * sin(PI * tt))
-			draw_circle(pt, 9.0 - k, Color(cor_r.r, cor_r.g, cor_r.b, 0.45 * (1.0 - k / 8.0)))
+			var sk: float = (9.0 - k * 1.4)
+			V.quadro(self, pt.x - sk * 0.5, pt.y - sk * 0.5, sk, sk, V.tom(cor_r, 1.0 - k * 0.1))
 		var pos2: Vector2 = ini.lerp(BAU_POS + Vector2(0, -16), e) + Vector2(0, -130.0 * sin(PI * t))
-		draw_circle(pos2, 28.0 + 6.0 * rar_v, Color(cor_r.r, cor_r.g, cor_r.b, 0.28))
-		draw_arc(pos2, 24.0, 0.0, TAU, 24, Color(cor_r.r, cor_r.g, cor_r.b, 0.9), 2.5 + rar_v)
+		V.aro(self, pos2, 24.0 + 2.0 * rar_v, 24.0 + 2.0 * rar_v, V.CONT, 1.0, 2.0)
+		V.aro(self, pos2, 24.0 + 2.0 * rar_v, 24.0 + 2.0 * rar_v, cor_r, 1.0, 1.0 + 0.4 * minf(rar_v, 3))
+		if rar_v >= 3:
+			for k in rar_v - 1:
+				var ak: float = rel * 3.0 + k * TAU / (rar_v - 1)
+				V.brilho(self, pos2 + Vector2(cos(ak), sin(ak)) * (28.0 + 2.0 * rar_v), 3.0 + 0.5 * rar_v, V.tom(cor_r, 1.3), V.CONT)
 		var mk_v: int = v["marca"]
 		var marcas_v: Array = [mk_v] if mk_v >= 0 else []
 		Desenho.icone(self, v["tipo"], pos2, 34.0 * (1.0 + 0.2 * sin(PI * t)), 0, 0.0, 0.0, marcas_v, rar_v)
@@ -4485,14 +4593,16 @@ func _anel_poder_chao(u: Unidade) -> void:
 	var cor: Color = b["cor"]
 	var esc_u: float = ESC * u.escala()
 	var destaque: bool = poder_hover == i and u.vivo
+	var pe_u: Vector2 = Vector2(u.vx, u.vy)
 	if _poder_aguarda(u) >= 0:
 		var pu: float = 0.5 + 0.5 * sin(rel * 5.0 + i)
-		draw_circle(Vector2.ZERO, 40.0 * esc_u, Color(cor.r, cor.g, cor.b, 0.10 + 0.08 * pu))
-		draw_arc(Vector2.ZERO, 42.0 * esc_u, 0.0, TAU, 40, Color(cor.r, cor.g, cor.b, 0.55 + 0.3 * pu), 9.0)
-		draw_arc(Vector2.ZERO, 36.0 * esc_u, 0.0, TAU, 40, Color(1, 1, 1, 0.25 + 0.25 * pu), 4.0)
+		V.elipse(self, pe_u, 40.0 * esc_u, 12.0 * esc_u, Color(cor.r, cor.g, cor.b, 0.10 + 0.08 * pu))
+		V.aro(self, pe_u, 42.0 * esc_u + V.Q, 13.0 * esc_u + V.Q, V.CONT, 1.0, 2.0)
+		V.aro(self, pe_u, 42.0 * esc_u, 13.0 * esc_u, cor, 0.7 + 0.3 * pu, 1.5)
+		V.aro(self, pe_u, 36.0 * esc_u, 11.0 * esc_u, Color(1, 1, 1), 0.3 + 0.3 * pu, 1.0)
 	if destaque:
-		draw_arc(Vector2.ZERO, 50.0 * esc_u, 0.0, TAU, 40, Color(0.05, 0.03, 0.08, 0.7), 14.0)
-		draw_arc(Vector2.ZERO, 50.0 * esc_u, 0.0, TAU, 40, Color(1.0, 0.97, 0.8, 0.95), 8.0)
+		V.aro(self, pe_u, 50.0 * esc_u, 15.0 * esc_u, V.CONT, 1.0, 3.0)
+		V.aro(self, pe_u, 50.0 * esc_u, 15.0 * esc_u, Color(1.0, 0.97, 0.8), 1.0, 2.0)
 
 ## Ícone sobre a cabeça do gato com poder carregado: o número da tecla, na cor da fantasia.
 func _icone_poder_gato(u: Unidade, pos: Vector2, esc_u: float) -> void:
@@ -4503,12 +4613,15 @@ func _icone_poder_gato(u: Unidade, pos: Vector2, esc_u: float) -> void:
 	var cor: Color = b["cor"]
 	var bob: float = sin(rel * 5.0 + i) * 3.0
 	var p: Vector2 = Vector2(pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u - 20.0 + bob)
-	draw_circle(p, 17.0, Color(cor.r, cor.g, cor.b, 0.22))
-	draw_colored_polygon(PackedVector2Array([p + Vector2(-6, 8), p + Vector2(6, 8), p + Vector2(0, 17)]), Color(0.08, 0.04, 0.1))
-	draw_colored_polygon(PackedVector2Array([p + Vector2(-4, 8), p + Vector2(4, 8), p + Vector2(0, 14)]), cor)
-	draw_circle(p, 12.0, Color(0.08, 0.04, 0.1))
-	draw_circle(p, 10.0, cor)
-	draw_arc(p, 7.5, PI * 1.1, PI * 1.6, 8, Color(1, 1, 1, 0.55), 2.0)
+	V.disco(self, p, 17.0, Color(cor.r, cor.g, cor.b, 0.22))
+	var px_: float = V.sn(p.x)
+	var py_: float = V.sn(p.y)
+	V.quadro(self, px_ - V.Q * 3.0, py_ + V.Q * 2.0, V.Q * 7.0, V.Q * 2.0, V.CONT)
+	V.quadro(self, px_ - V.Q * 2.0, py_ + V.Q * 4.0, V.Q * 5.0, V.Q * 2.0, V.CONT)
+	V.quadro(self, px_ - V.Q, py_ + V.Q * 6.0, V.Q * 3.0, V.Q, V.CONT)
+	V.quadro(self, px_ - V.Q, py_ + V.Q * 2.0, V.Q * 3.0, V.Q * 3.0, cor)
+	V.disco_c(self, p, 9.0, cor, V.CONT)
+	V.quadro(self, px_ - V.Q * 2.0, py_ - V.Q * 2.0, V.Q, V.Q, V.tom(cor, 1.7))
 	Desenho.texto(self, str(b["tecla"]), p + Vector2(-8, 5.5), 15, Color(0.1, 0.05, 0.12), 16.0)
 
 func _btn_em(p: Vector2) -> int:
@@ -5339,41 +5452,49 @@ func _desenhar_avisos() -> void:
 		var prog: float = clampf(1.0 - uu.aviso_t / maxf(uu.aviso_dur, 0.01), 0.0, 1.0)
 		var pisca: float = 0.5 + 0.5 * sin(rel * 22.0)
 		var forma: Dictionary = uu.aviso_forma
+		var q: float = V.Q
+		var cont_a := Color(0.1, 0.03, 0.05)
+		var fade_a: float = 0.7 + 0.3 * pisca
 		for c in forma.get("circ", []):
 			var cc: Vector3 = c
 			var centro := Vector2(cc.x, cc.y)
-			_elipse_cheia(centro, cc.z, cc.z * 0.35, Color(cor.r, cor.g, cor.b, 0.10 + 0.14 * pisca))
-			_elipse_cheia(centro, cc.z * prog, cc.z * 0.35 * prog, Color(cor.r, cor.g, cor.b, 0.22))
-			_anel(centro, cc.z, cc.z * 0.35, Color(0.1, 0.03, 0.05, 0.85), 6.0)
-			_anel(centro, cc.z, cc.z * 0.35, Color(cor.r, cor.g, cor.b, 0.7 + 0.3 * pisca), 3.0)
+			V.elipse(self, centro, cc.z, cc.z * 0.35, Color(cor.r, cor.g, cor.b, 0.10 + 0.14 * pisca))
+			V.elipse(self, centro, cc.z * prog, cc.z * 0.35 * prog, Color(cor.r, cor.g, cor.b, 0.22))
+			V.aro(self, centro, cc.z + q, cc.z * 0.35 + q, cont_a, 1.0, 2.0)
+			V.aro(self, centro, cc.z, cc.z * 0.35, cor, fade_a, 1.0)
 		for r in forma.get("ret", []):
 			var rc: Rect2 = r
 			draw_rect(rc, Color(cor.r, cor.g, cor.b, 0.10 + 0.16 * pisca))
 			draw_rect(Rect2(rc.position.x + rc.size.x * (1.0 - prog), rc.position.y, rc.size.x * prog, rc.size.y), Color(cor.r, cor.g, cor.b, 0.16))
-			draw_rect(rc, Color(0.1, 0.03, 0.05, 0.85), false, 6.0)
-			draw_rect(rc, Color(cor.r, cor.g, cor.b, 0.7 + 0.3 * pisca), false, 3.0)
+			var rq: Rect2 = Rect2(V.sn(rc.position.x), V.sn(rc.position.y), V.sn(rc.size.x), V.sn(rc.size.y))
+			V.quadro(self, rq.position.x - q, rq.position.y - q, rq.size.x + q * 2.0, q, cont_a)
+			V.quadro(self, rq.position.x - q, rq.end.y, rq.size.x + q * 2.0, q, cont_a)
+			V.quadro(self, rq.position.x - q, rq.position.y, q, rq.size.y, cont_a)
+			V.quadro(self, rq.end.x, rq.position.y, q, rq.size.y, cont_a)
+			V.quadro(self, rq.position.x, rq.position.y, rq.size.x, q, cor)
+			V.quadro(self, rq.position.x, rq.end.y - q, rq.size.x, q, cor)
+			V.quadro(self, rq.position.x, rq.position.y, q, rq.size.y, cor)
+			V.quadro(self, rq.end.x - q, rq.position.y, q, rq.size.y, cor)
 		for l in forma.get("lin", []):
 			var a0: Vector2 = l[0] + Vector2(0, -24.0 * ESC)
 			var a1: Vector2 = l[1] + Vector2(0, -24.0 * ESC)
-			draw_line(a0, a1, Color(0.1, 0.03, 0.05, 0.8), 7.0)
-			draw_line(a0, a1, Color(cor.r, cor.g, cor.b, 0.6 + 0.4 * pisca), 3.5)
+			V.linha(self, a0, a1, cont_a, q * 3.0)
+			V.linha(self, a0, a1, cor, q * 1.5)
 		for al in forma.get("alvos", []):
 			var pa: Vector2 = al + Vector2(0, -30.0 * ESC)
 			var rr: float = 26.0 + 14.0 * (1.0 - prog)
-			draw_arc(pa, rr, 0.0, TAU, 28, Color(0.1, 0.03, 0.05, 0.85), 7.0)
-			draw_arc(pa, rr, 0.0, TAU, 28, Color(cor.r, cor.g, cor.b, 0.75 + 0.25 * pisca), 3.5)
+			V.aro(self, pa, rr + q, rr + q, cont_a, 1.0, 2.0)
+			V.aro(self, pa, rr, rr, cor, fade_a, 1.0)
 			for k in 4:
 				var ang: float = k * TAU / 4.0 + rel * 2.0
-				var d: Vector2 = Vector2(cos(ang), sin(ang))
-				draw_line(pa + d * (rr - 6.0), pa + d * (rr + 8.0), Color(1, 1, 1, 0.9), 2.5)
+				V.quadro(self, pa.x + cos(ang) * (rr + 4.0) - q, pa.y + sin(ang) * (rr + 4.0) - q, q * 2.0, q * 2.0, Color(1, 1, 1))
 		# balão sobre o bicho, piscando
 		var esc_u: float = ESC * uu.escala()
 		var pb: Vector2 = Vector2(uu.vx, uu.vy - (CORPO_ALT + 40.0) * esc_u + sin(rel * 14.0) * 2.0)
 		var raio_b: float = 19.0 + 4.0 * pisca
-		draw_circle(pb, raio_b + 5.0, Color(cor.r, cor.g, cor.b, 0.25 * pisca))
-		draw_colored_polygon(PackedVector2Array([pb + Vector2(-7, raio_b - 4), pb + Vector2(7, raio_b - 4), pb + Vector2(0, raio_b + 8)]), Color(0.08, 0.04, 0.1))
-		draw_circle(pb, raio_b + 2.0, Color(0.08, 0.04, 0.1))
-		draw_circle(pb, raio_b, cor.lerp(Color(1, 1, 1), 0.35 * pisca))
-		draw_arc(pb, raio_b - 3.0, -PI * 0.5, -PI * 0.5 + TAU * prog, 24, Color(0.08, 0.04, 0.1, 0.8), 3.0)   # enche até soltar
+		V.quadro(self, V.sn(pb.x) - q * 2.0, V.sn(pb.y + raio_b) - q, q * 5.0, q * 3.0, cont_a)
+		V.quadro(self, V.sn(pb.x) - q, V.sn(pb.y + raio_b) + q * 2.0, q * 3.0, q * 2.0, cont_a)
+		V.disco_c(self, pb, raio_b, cor.lerp(Color(1, 1, 1), 0.35 * pisca), cont_a)
+		V.arco(self, pb, raio_b - 5.0, -PI * 0.5, -PI * 0.5 + TAU * prog, cont_a, 1.0, 1.5)   # enche até soltar
 		Desenho.texto(self, "!", pb + Vector2(-5, 9), 26, Color(0.1, 0.04, 0.12), 12.0)
 		Desenho.texto(self, Pecas.PODER_NOME[cj] + "!", pb + Vector2(-100, -raio_b - 8.0), 22, Color(1, 1, 1, 0.6 + 0.4 * pisca), 200.0, 5)

@@ -63,7 +63,7 @@ static func elipse(c: CanvasItem, ce: Vector2, rx: float, ry: float, cor: Color,
 static func aro(c: CanvasItem, ce: Vector2, rx: float, ry: float, cor: Color, fade: float = 1.0, esp: float = 1.0, q: float = Q) -> void:
 	if fade <= 0.02 or rx < 1.0:
 		return
-	var n: int = clampi(int(TAU * maxf(rx, ry * 2.0) / q * 0.8), 10, 90)
+	var n: int = clampi(int(TAU * maxf(rx, ry * 2.0) / q * 0.62), 8, 64)
 	var s: float = q * esp
 	for i in n:
 		if fposmod(i * 0.7548777, 1.0) >= fade:
