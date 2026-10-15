@@ -287,6 +287,8 @@ const PAUSA_QUADRO := 1.0 / 60.0   # um quadro de hit-stop, em segundos reais
 const ANTECIP_PODER := 0.14        # s (da luta) entre o clarão no gato e o efeito do poder
 var pausa_t: float = 0.0           # hit-stop restante (s reais): a simulação não avança
 var pausa_cd: float = 0.0          # intervalo mínimo entre dois hit-stops comuns
+var _ico_ids := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])   # buffers dos ícones de estado (sem alocar por quadro)
+var _ico_t := PackedFloat32Array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 var lento_t: float = 0.0           # câmera lenta do último bicho (s reais)
 var sons_quadro: int = 0           # sons fortes já tocados neste quadro
 var ju: Dictionary = {}            # Unidade -> {sq, forte, clar, andava, poeira, antecip, hop}
@@ -1745,16 +1747,6 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 		for k in 3:
 			var wo: float = fposmod(rel * 0.8 + k * 0.33, 1.0)
 			draw_circle(meio + Vector2((k - 1) * 20.0 * esc_u, 14.0 - wo * 30.0 * esc_u), (9.0 + 5.0 * wo) * esc_u * 0.8, Color(0.45, 0.4, 0.55, 0.45 * (1.0 - wo)))
-	# ícones pequenos de estado acima da cabeça: preso, marcado, oculto
-	var icones: Array[int] = []
-	if uu.preso_t > 0.0:
-		icones.append(0)
-	if uu.marcado_t > 0.0:
-		icones.append(1)
-	if uu.oculto_t > 0.0:
-		icones.append(2)
-	for i in icones.size():
-		_icone_estado(icones[i], Vector2(pos.x + (i - (icones.size() - 1) * 0.5) * 18.0, pos.y - h - 24.0 * esc_u / ESC))
 	if uu.atordoado_t > 0.0:
 		for k in 3:
 			var ang: float = rel * 6.0 + k * TAU / 3.0
@@ -1764,27 +1756,27 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 			estr.append(estr[0])
 			draw_polyline(estr, Color(0.3, 0.18, 0.0, 0.95), 1.2)
 
-## Ícone de 16 px de um estado: 0 preso (teia), 1 marcado (mira), 2 oculto (nuvem).
-func _icone_estado(tipo: int, c: Vector2) -> void:
-	draw_circle(c, 9.0, Color(0.08, 0.08, 0.12, 0.85))
-	match tipo:
-		0:
-			draw_arc(c, 6.0, 0, TAU, 16, Color(1, 1, 1), 1.4)
-			draw_arc(c, 3.0, 0, TAU, 12, Color(1, 1, 1), 1.2)
-			draw_line(c + Vector2(-6, 0), c + Vector2(6, 0), Color(1, 1, 1), 1.2)
-			draw_line(c + Vector2(0, -6), c + Vector2(0, 6), Color(1, 1, 1), 1.2)
-			draw_line(c + Vector2(-4, -4), c + Vector2(4, 4), Color(1, 1, 1), 1.0)
-			draw_line(c + Vector2(4, -4), c + Vector2(-4, 4), Color(1, 1, 1), 1.0)
-		1:
-			draw_arc(c, 5.0, 0, TAU, 16, Color(1.0, 0.25, 0.25), 1.8)
-			for k in 4:
-				var dv := Vector2(cos(k * PI * 0.5), sin(k * PI * 0.5))
-				draw_line(c + dv * 3.0, c + dv * 8.0, Color(1.0, 0.35, 0.3), 1.8)
-			draw_circle(c, 1.4, Color(1, 0.8, 0.8))
-		2:
-			draw_circle(c + Vector2(-3, 1), 3.2, Color(0.75, 0.7, 0.85))
-			draw_circle(c + Vector2(3, 1), 3.2, Color(0.75, 0.7, 0.85))
-			draw_circle(c + Vector2(0, -2), 3.4, Color(0.85, 0.8, 0.95))
+## Fileira de ícones de estado sobre a barra de vida (ver IconesEstado): até `maximo` ícones, na ordem de
+## prioridade (controle primeiro); se sobrar estado, o último é o "…". Pisca no último 0,5 s.
+## Devolve quantos ícones desenhou.
+func _fila_estados(uu: Unidade, bx: float, by: float, maximo: int) -> int:
+	var n: int = IconesEstado.ativos(uu, sim.zonas, _ico_ids, _ico_t)
+	if n == 0:
+		return 0
+	var mostra: int = mini(n, maximo)
+	var corta: bool = n > maximo
+	var largura: float = mostra * 11.0 - 1.0
+	var x0: float = bx - largura * 0.5 + 5.0
+	var piscar: bool = fposmod(rel * 5.0, 1.0) < 0.5
+	for i in mostra:
+		var id: int = _ico_ids[i]
+		var tp: float = _ico_t[i]
+		if corta and i == mostra - 1:
+			id = IconesEstado.E.MAIS
+		elif tp < 0.5 and piscar:
+			continue
+		IconesEstado.desenhar(self, id, Vector2(x0 + i * 11.0, by - 8.0))
+	return mostra
 
 func _halo(c: Vector2, r: float, cor: Color, n: int = 9) -> void:
 	for g in n:
@@ -2064,6 +2056,7 @@ func _draw() -> void:
 		var esc_f: float = ESC * ug.escala() * (1.0 + 0.1 * sin(uf * PI))
 		var tp_f: int = Unidade.Tipo.GEMEO if ug.pequeno else ug.tipo
 		Desenho.boneco(self, pf, esc_f, -1.0 * (1.0 + 0.2 * (1.0 - uf)), 1, ug.pecas, 1.0 - uf * 0.5, 0.0, false, 0.0, 1.0 - uf * uf, false, -1, 0.0, tp_f, false, ug.chefe, ug.familia, ug.elite, ug.chefe_tipo, ug.parte, false, 0)
+	var ico_max: int = 3 if todos.size() > 24 else 4   # luta pesada: menos ícones por unidade
 	for u in todos:
 		var uu2: Unidade = u
 		var dir: float = 1.0 if uu2.equipe == 0 else -1.0
@@ -2118,8 +2111,6 @@ func _draw() -> void:
 			draw_line(pa, pb, Color(0.3, 1.0, 0.45, 0.55 + 0.25 * sin(rel * 10.0)), 3.0)
 			draw_circle(pb, 6.0 + 2.0 * sin(rel * 10.0), Color(0.3, 1.0, 0.45, 0.5))
 			Desenho.texto(self, "+", pb + Vector2(-40, -18 - 6 * fposmod(rel * 2.0, 1.0)), 22, Color(0.5, 1.0, 0.6), 80.0, 3)
-		if uu2.equipe == 1 and sim.prioritario(uu2):
-			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * esc_u), 9.0, 1.0)
 		if uu2.vida < uu2.vida_max - 0.01 or uu2.equipe == 0:
 			# barra fina: contorno escuro de 1px, fundo e cor pela fração (gato: verde->amarelo->vermelho)
 			var w: float = 70.0 if uu2.chefe else 44.0
@@ -2133,6 +2124,9 @@ func _draw() -> void:
 				cor_b = Color(0.4, 0.92, 0.45) if frac > 0.55 else (Color(0.98, 0.85, 0.3) if frac > 0.28 else Color(0.98, 0.35, 0.3))
 			draw_rect(Rect2(bx, by, w * frac, 3), cor_b)
 			draw_rect(Rect2(bx, by, w * frac, 1), Color(1, 1, 1, 0.35))
+		var n_ico: int = _fila_estados(uu2, pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u, ico_max)
+		if uu2.equipe == 1 and sim.prioritario(uu2):
+			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * esc_u - (12.0 if n_ico > 0 else 0.0)), 9.0, 1.0)
 	# projéteis: torre (estrela dourada grande), gatos (cometa azulado), bichos (losango vermelho)
 	for pr in sim.projeteis:
 		var d: Dictionary = pr
@@ -4893,7 +4887,13 @@ func _caixa_info(linhas: Array, ancora: Vector2, larg: float, borda: Color) -> v
 		var tam: int = int(l[l.size() - 2])
 		var cor: Color = l[l.size() - 1]
 		y += tam
-		if l.size() == 4:
+		if l.size() == 5:
+			# estado: ícone, nome e tempo restante à direita
+			IconesEstado.desenhar(self, int(l[0]), Vector2(r.position.x + 18.0, y - tam * 0.35))
+			Desenho.texto(self, str(l[1]), Vector2(r.position.x + 30.0, y), tam, cor)
+			var tw5: float = ThemeDB.fallback_font.get_string_size(str(l[2]), HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
+			Desenho.texto(self, str(l[2]), Vector2(r.end.x - 12.0 - tw5, y), tam, Color(1.0, 0.95, 0.6))
+		elif l.size() == 4:
 			Desenho.texto(self, str(l[0]), Vector2(r.position.x + 12.0, y), tam, Color(1, 1, 1, 0.7))
 			var tw: float = ThemeDB.fallback_font.get_string_size(str(l[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, tam).x
 			Desenho.texto(self, str(l[1]), Vector2(r.end.x - 12.0 - tw, y), tam, cor)
@@ -4915,40 +4915,36 @@ func _nome_unidade(u: Unidade) -> String:
 		return n
 	return n + (" fantasiada" if u.tipo == Unidade.Tipo.GEMEO else " fantasiado")
 
-## Estados em vigor, por extenso.
-func _estados_txt(u: Unidade) -> String:
-	var e: Array[String] = []
-	if u.atordoado_t > 0.0:
-		e.append("atordoado %s s" % Simulacao.num(u.atordoado_t))
-	if u.queima_t > 0.0:
-		e.append("queimando")
-	if u.frio_t > 0.0:
-		e.append("molhado (lento)")
-	if u.lento < 0.99:
-		e.append("lento a %s" % Simulacao.pct(u.lento))
-	if u.protegido_t > 0.0:
-		e.append("protegido")
-	if u.frenesi_t > 0.0:
-		e.append("frenesi")
-	if u.preso_t > 0.0:
-		e.append("preso na teia %s s" % Simulacao.num(u.preso_t))
-	if u.marcado_t > 0.0:
-		e.append("marcado: +%s de dano recebido" % Simulacao.pct(u.marcado_bonus))
-	if u.oculto_t > 0.0:
-		e.append("oculto na fumaça")
-	if u.furor_t > 0.0:
-		e.append("em fúria")
-	if u.bola_t > 0.0:
-		e.append("bola de espinhos")
+## Linhas da ficha com os estados em vigor: [ícone, nome, tempo, tamanho, cor]; no fim, bônus sem ícone.
+func _estados_linhas(u: Unidade) -> Array:
+	var saida: Array = []
+	var n: int = IconesEstado.ativos(u, sim.zonas, _ico_ids, _ico_t)
+	for i in n:
+		var id: int = _ico_ids[i]
+		var tp: float = _ico_t[i]
+		var nome: String = IconesEstado.NOME[id]
+		match id:
+			IconesEstado.E.LENTO:
+				nome = "Molhado, lento" if u.frio_t > 0.0 else "Lento a %s" % Simulacao.pct(u.lento)
+			IconesEstado.E.MARCADO:
+				nome = "Marcado: +%s de dano" % Simulacao.pct(u.marcado_bonus)
+			IconesEstado.E.OCULTO:
+				nome = "Oculto na fumaça"
+			IconesEstado.E.FURIA:
+				nome = "Em fúria"
+			IconesEstado.E.CURA:
+				nome = "Curando no canteiro"
+			IconesEstado.E.FUGINDO:
+				nome = "Fugindo com %d bloco%s" % [u.carga, "" if u.carga == 1 else "s"]
+		saida.append([id, nome, ("%s s" % Simulacao.num(tp)) if tp < IconesEstado.SEM_TEMPO else "", 13, Color(0.85, 1.0, 0.85)])
+	var extra: Array[String] = []
 	if u.bonus_dano > 1.01:
-		e.append("dano +%s" % Simulacao.pct(u.bonus_dano - 1.0))
+		extra.append("dano +%s" % Simulacao.pct(u.bonus_dano - 1.0))
 	if u.embalo > 0.0:
-		e.append("embalo +%s" % Simulacao.pct(u.embalo))
-	if u.fugindo:
-		e.append("fugindo com %d bloco%s" % [u.carga, "" if u.carga == 1 else "s"])
-	if u.parado:
-		e.append("sem fôlego")
-	return ", ".join(e)
+		extra.append("embalo +%s" % Simulacao.pct(u.embalo))
+	if not extra.is_empty():
+		saida.append([", ".join(extra), 13, Color(0.8, 1.0, 0.8)])
+	return saida
 
 ## Ficha em números da unidade sob o mouse e a linha até quem ela está atacando.
 func _desenhar_foco() -> void:
@@ -4997,9 +4993,7 @@ func _desenhar_foco() -> void:
 			linhas.append(["Atacando", _nome_unidade(alvo), 14, cor.lightened(0.3)])
 		elif not aliado:
 			linhas.append(["Indo para", "a torre", 14, Color(1.0, 0.8, 0.5)])
-		var est: String = _estados_txt(u)
-		if est != "":
-			linhas.append([est, 13, Color(0.8, 1.0, 0.8)])
+		linhas.append_array(_estados_linhas(u))
 	_caixa_info(linhas, Vector2(u.vx + 30.0, u.vy - CORPO_MEIO * esc_u), 262.0, cor)
 
 ## Quebra o texto em linhas de até `n` letras, sem partir palavra.
