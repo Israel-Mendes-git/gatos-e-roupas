@@ -1768,8 +1768,8 @@ func _fila_estados(uu: Unidade, bx: float, by: float, maximo: int) -> int:
 		return 0
 	var mostra: int = mini(n, maximo)
 	var corta: bool = n > maximo
-	var largura: float = mostra * 11.0 - 1.0
-	var x0: float = bx - largura * 0.5 + 5.0
+	var largura: float = mostra * 21.0 - 1.0   # ícones em escala 2 (20 px), legíveis na luta
+	var x0: float = bx - largura * 0.5 + 10.0
 	var piscar: bool = fposmod(rel * 5.0, 1.0) < 0.5
 	for i in mostra:
 		var id: int = _ico_ids[i]
@@ -1778,7 +1778,7 @@ func _fila_estados(uu: Unidade, bx: float, by: float, maximo: int) -> int:
 			id = IconesEstado.E.MAIS
 		elif tp < 0.5 and piscar:
 			continue
-		IconesEstado.desenhar(self, id, Vector2(x0 + i * 11.0, by - 8.0))
+		IconesEstado.desenhar(self, id, Vector2(x0 + i * 21.0, by - 13.0), 2)
 	return mostra
 
 func _halo(c: Vector2, r: float, cor: Color, n: int = 9) -> void:
@@ -2129,7 +2129,7 @@ func _draw() -> void:
 			draw_rect(Rect2(bx, by, w * frac, 1), Color(1, 1, 1, 0.35))
 		var n_ico: int = _fila_estados(uu2, pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u, ico_max)
 		if uu2.equipe == 1 and sim.prioritario(uu2):
-			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * esc_u - (12.0 if n_ico > 0 else 0.0)), 9.0, 1.0)
+			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * esc_u - (22.0 if n_ico > 0 else 0.0)), 9.0, 1.0)
 	_desenhar_avisos()
 	# projéteis: torre (estrela dourada grande), gatos (cometa azulado), bichos (losango vermelho)
 	for pr in sim.projeteis:
