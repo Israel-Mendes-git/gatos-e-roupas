@@ -1564,8 +1564,14 @@ func _indice_bichos(e: Estado) -> void:
 	var pl := Rect2(COL_E_X, 538.0, COL_W, 92.0)
 	draw_rect(pl, PAPEL_ESC)
 	draw_rect(pl, PAPEL_BORDA, false, 2.0)
-	_txt("Como ler o bestiário", Vector2(pl.position.x + 14.0, pl.position.y + 24.0), 16, TINTA)
-	_bloco("Clique num bicho para ver o que ele faz e como enfrentá-lo. Bicho que ainda não apareceu numa luta fica em silhueta. Chefe derrotado ganha uma estrela dourada.", Vector2(pl.position.x + 14.0, pl.position.y + 44.0), pl.size.x - 28.0, [13, 12], 3, TINTA2, 2.0)
+	_txt("Ícones sobre os bichos e gatos na luta", Vector2(pl.position.x + 10.0, pl.position.y + 17.0), 13, TINTA)
+	# legenda dos estados: ícone e nome, 7 por fileira (passar o mouse num bicho na luta mostra o tempo de cada um)
+	var cw: float = (pl.size.x - 12.0) / 7.0
+	for q in IconesEstado.QTD:
+		var cx: float = pl.position.x + 6.0 + (q % 7) * cw + cw * 0.5
+		var cy: float = pl.position.y + 36.0 + (q / 7) * 32.0
+		IconesEstado.desenhar(self, q, Vector2(cx, cy))
+		_txt(IconesEstado.CURTO[q], Vector2(cx - cw * 0.5, cy + 16.0), 10, TINTA2, cw)
 	var pr := Rect2(COL_D_X, 538.0, COL_W, 92.0)
 	draw_rect(pr, PAPEL_ESC)
 	draw_rect(pr, PAPEL_BORDA, false, 2.0)
