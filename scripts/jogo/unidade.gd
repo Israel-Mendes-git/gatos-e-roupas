@@ -95,6 +95,10 @@ var bola_t: float = 0.0         # Bola de espinhos: veloz, espinhento e imune a 
 var bola_vel: float = 1.0
 var bola_espinho: float = 0.0
 var poder_cd_menos: float = 0.0 # Alvo travado: segundos a menos na próxima recarga
+# aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
+var aviso_t: float = 0.0        # segundos que faltam para soltar (0 = sem aviso)
+var aviso_dur: float = 0.0
+var aviso_forma: Dictionary = {}   # "circ": [Vector3(x, y, raio)], "ret": [Rect2], "lin": [[Vector2, Vector2]], "alvos": [Vector2]
 # chefes
 var truque_cd: float = 0.0      # chefes de fora: relógio do truque (mergulho, gás, rasante, latido)
 var reforco_cd: float = 0.0     # General

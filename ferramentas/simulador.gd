@@ -120,7 +120,18 @@ func _imprimir_poderes(n_jogos: int) -> void:
 			if not (k in ["usos", "usos_h", "dano", "abates"]):
 				extras += " %s %.1f" % [k, float(d[k]) / n_jogos]
 		print("     %-16s %-17s usos %6.1f | her %6.1f | dano %8.0f | abates %6.1f |%s" % [Pecas.CONJUNTO_NOME[c], Pecas.PODER_NOME[c], float(d.get("usos", 0.0)) / n_jogos, float(d.get("usos_h", 0.0)) / n_jogos, float(d.get("dano", 0.0)) / n_jogos, float(d.get("abates", 0.0)) / n_jogos, extras])
+	print("   poderes dos bichos (por campanha): usos | dano nos gatos | gatos derrubados | extras")
+	for c in Pecas.CONJUNTO_NOME.size():
+		var di: Dictionary = Simulacao.tele_i.get(c, {})
+		if di.is_empty():
+			continue
+		var ex_i: String = ""
+		for k in di.keys():
+			if not (k in ["usos", "usos_h", "dano", "abates"]):
+				ex_i += " %s %.1f" % [k, float(di[k]) / n_jogos]
+		print("     [bicho] %-16s %-17s usos %6.1f | dano %8.0f | derrubados %6.1f |%s" % [Pecas.CONJUNTO_NOME[c], Pecas.PODER_NOME[c], float(di.get("usos", 0.0)) / n_jogos, float(di.get("dano", 0.0)) / n_jogos, float(di.get("abates", 0.0)) / n_jogos, ex_i])
 	Simulacao.tele.clear()
+	Simulacao.tele_i.clear()
 
 ## Ondas de invasão vencidas até a torre cair (limite de 60).
 func _jogar_invasao(pol: String, e: Estado, f: int, fora: bool, semente: int) -> int:

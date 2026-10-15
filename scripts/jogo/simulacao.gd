@@ -326,6 +326,15 @@ func calcular(u: Unidade) -> void:
 				u.roubo += Balanco.CONJ_PIRATA_ROUBO[g]
 			Pecas.Conjunto.MAGO:
 				u.tocha_dps += Balanco.CONJ_MAGO_QUEIMA[g]
+	if u.equipe == 1:
+		# poder de bicho: só fantasiado com a fantasia completa (já em u.poder) e chefe (poder fixo por chefe)
+		if u.chefe and u.chefe_tipo >= 0:
+			var cj: int = Balanco.CHEFE_PODER_CONJ[u.chefe_tipo]
+			u.poder = Pecas.PODER_TIPO[cj]
+			u.poder_conj = cj
+		elif not u.elite:
+			u.poder = -1
+			u.poder_conj = -1
 	u.atordoa_chance = 0.0
 	u.gelo_chance = 0.0
 	u.furo = minf(u.furo, Balanco.MARCA_FURO_MAX)
@@ -424,6 +433,7 @@ func _spawnar(item: Dictionary) -> void:
 	calcular(u)
 	u.vida = u.vida_max
 	u.cd = rng.randf_range(0.0, 0.5)
+	u.poder_cd = Balanco.PODER_CHEFE_PRIMEIRO if chefe else Balanco.PODER_INIMIGO_PRIMEIRO + rng.randf_range(0.0, 4.0)
 	inimigos.append(u)
 
 func passo(dt: float) -> void:
@@ -841,10 +851,18 @@ func _agir(u: Unidade, dt: float) -> void:
 	if u.atordoado_t > 0.0:
 		u.atordoado_t -= dt
 		u.andando = false
+		if u.aviso_t > 0.0:
+			u.aviso_t = 0.0   # atordoado no meio da carga: o poder se perde
+			u.aviso_forma = {}
+			u.poder_cd = maxf(u.poder_cd, Balanco.PODER_INIMIGO_INTERROMPIDO)
+			_ev({"t": "aviso_cortado", "x": u.x, "y": u.y})
 		return
 	if u.chefe and not _chefe_age(u, dt):
 		return
-	if u.poder >= 0:
+	if u.equipe == 1 and u.poder >= 0:
+		if not _poder_de_bicho(u, dt):
+			return
+	elif u.poder >= 0:
 		u.poder_cd -= dt
 		u.poder_pronto = u.poder_cd <= 0.0
 		if u.poder_pronto and not (poder_manual and u.equipe == 0) and _usar_poder(u):
@@ -1200,7 +1218,7 @@ func disparar_poder(u: Unidade) -> bool:
 
 ## Fração dos poderes de apoio (cura, proteção, frenesi) quando o disparo é uma herança: sobe com o grau.
 func _frac_apoio() -> float:
-	return minf(1.0, Balanco.HERANCA_APOIO * Balanco.heranca_mult(heranca_grau)) if em_heranca else 1.0
+	return (minf(1.0, Balanco.HERANCA_APOIO * Balanco.heranca_mult(heranca_grau)) if em_heranca else 1.0) * _fi
 
 ## Heranças: cada poder incorporado dispara sozinho, mais fraco que o da roupa, no seu próprio relógio.
 ## Devolve false se o gato caiu por causa do disparo.
@@ -1241,14 +1259,17 @@ func carga_poder(u: Unidade) -> float:
 ## Medição por fantasia (só o simulador liga): usos, dano, abates e efeitos de cada poder.
 static var medir: bool = false
 static var tele: Dictionary = {}
+static var tele_i: Dictionary = {}   # idem, dos poderes dos bichos
+var _eq_tele: int = 0
 var _conj_tele: int = -1   # fantasia cujo poder está agindo agora (para a telemetria)
 
 func _tele(conj: int, chave: String, v: float) -> void:
 	if not medir or conj < 0:
 		return
-	var d: Dictionary = tele.get(conj, {})
+	var alvo_t: Dictionary = tele_i if _eq_tele == 1 else tele
+	var d: Dictionary = alvo_t.get(conj, {})
 	d[chave] = float(d.get(chave, 0.0)) + v
-	tele[conj] = d
+	alvo_t[conj] = d
 
 ## O dano extra de um alvo marcado (Alvo travado) conta para o poder que marcou.
 func _tele_marca(v: Unidade, d: float) -> void:
@@ -1258,11 +1279,224 @@ func _tele_marca(v: Unidade, d: float) -> void:
 ## Dispara o poder da fantasia completa. Devolve false se agora não há em quem usar.
 func _usar_poder(u: Unidade) -> bool:
 	_conj_tele = u.poder_conj
+	_eq_tele = u.equipe
+	_fi = _fator_inimigo(u) if u.equipe == 1 else 1.0
 	var ok: bool = _usar_poder_i(u)
 	if ok:
 		_tele(u.poder_conj, "usos_h" if em_heranca else "usos", 1.0)
 	_conj_tele = -1
+	_eq_tele = 0
+	_fi = 1.0
 	return ok
+
+## Salvas da Salva de mísseis: cada uma cai no grupo mais perto da torre, depois no seguinte.
+func _centros_misseis(alvos: Array) -> Array:
+	var perto_t: Array = []
+	for v in alvos:
+		if v.x - Balanco.TORRE_X <= Balanco.PODER_MISSEIS_ALCANCE:
+			perto_t.append(v)
+	var centros: Array = []
+	perto_t.sort_custom(func(a: Unidade, b: Unidade) -> bool: return a.x < b.x)
+	for vm in perto_t:
+		if not vm.vivo or centros.size() >= ceili(Balanco.PODER_MISSEIS_N * _frac_apoio()):
+			continue
+		var livre: bool = true
+		for c0 in centros:
+			if _dentro(vm, c0.x, c0.y, Balanco.PODER_MISSEIS_RAIO):
+				livre = false
+		if livre:
+			centros.append(Vector2(vm.x, vm.y))
+	return centros
+
+# ---------- Poderes de bicho (fantasiado com fantasia completa e chefe) ----------
+## Intensidade do poder do bicho em relação ao do gato: menor, e sobe um pouco com o ato.
+var _fi: float = 1.0
+
+func _fator_inimigo(u: Unidade) -> float:
+	var f: float = Balanco.PODER_INIMIGO_FATOR + Balanco.PODER_INIMIGO_FATOR_ATO * (estado.ato - 1)
+	if u.chefe:
+		f += Balanco.PODER_INIMIGO_FATOR_CHEFE
+	return f
+
+## Relógio do poder de um bicho. Devolve false enquanto ele carrega o aviso (fica parado, sem golpear).
+func _poder_de_bicho(u: Unidade, dt: float) -> bool:
+	if u.aviso_t > 0.0:
+		u.andando = false
+		u.aviso_t -= dt
+		if u.aviso_t > 0.0:
+			return false
+		u.aviso_forma = {}
+		if _usar_poder(u):
+			u.poder_cd = Balanco.PODER_CHEFE_INTERVALO if u.chefe else Balanco.PODER_INIMIGO_INTERVALO
+		else:
+			u.poder_cd = Balanco.PODER_INIMIGO_SEM_ALVO
+		return u.vivo
+	u.poder_cd -= dt
+	if u.poder_cd > 0.0 or u.x > Balanco.VISIVEL_X:
+		return true
+	var forma: Dictionary = _forma_aviso(u)
+	_fi = 1.0
+	if forma.is_empty():
+		u.poder_cd = Balanco.PODER_INIMIGO_SEM_ALVO
+		return true
+	u.aviso_forma = forma
+	u.aviso_t = Balanco.PODER_AVISO_T
+	u.aviso_dur = Balanco.PODER_AVISO_T
+	_ev({"t": "aviso", "x": u.x, "y": u.y, "poder": u.poder, "conj": u.poder_conj, "chefe": u.chefe})
+	u.andando = false
+	return false
+
+## O que o poder do bicho vai atingir se fosse solto agora (para o aviso). Vazio: nada a atingir, não carrega.
+## Espelha a escolha de alvos de `_usar_poder_i`.
+func _forma_aviso(u: Unidade) -> Dictionary:
+	var gatos: Array[Unidade] = []
+	for v in aliados:
+		if v.vivo and v.x <= Balanco.VISIVEL_X:
+			gatos.append(v)
+	if gatos.is_empty():
+		return {}
+	_fi = _fator_inimigo(u)
+	var circ: Array = []
+	var ret: Array = []
+	var lin: Array = []
+	var alvos: Array = []
+	var ux: float = u.x
+	var uy: float = u.y
+	match u.poder:
+		Pecas.Poder.ATORDOA, Pecas.Poder.EMPURRA, Pecas.Poder.GIRO, Pecas.Poder.PUXA:
+			var raio: float = Balanco.PODER_ATORDOA_RAIO
+			if u.poder == Pecas.Poder.EMPURRA:
+				raio = Balanco.PODER_EMPURRA_RAIO
+			elif u.poder == Pecas.Poder.PUXA:
+				raio = Balanco.PODER_PUXA_RAIO
+			elif u.poder == Pecas.Poder.GIRO:
+				raio = Balanco.PODER_GIRO_RAIO
+			for v in gatos:
+				if _dentro(v, ux, uy, raio):
+					alvos.append(Vector2(v.x, v.y))
+			if alvos.is_empty():
+				return {}
+			circ.append(Vector3(ux, uy, raio))
+		Pecas.Poder.RAIO:
+			var forte: Unidade = null
+			for v in gatos:
+				if forte == null or v.vida > forte.vida:
+					forte = v
+			alvos.append(Vector2(forte.x, forte.y))
+		Pecas.Poder.DRENO:
+			var perto: Unidade = _mais_perto(u, gatos, Balanco.PODER_DRENO_ALCANCE)
+			if perto == null:
+				return {}
+			alvos.append(Vector2(perto.x, perto.y))
+			lin.append([Vector2(ux, uy), Vector2(perto.x, perto.y)])
+		Pecas.Poder.RAIZ:
+			var ord: Array[Unidade] = gatos.duplicate()
+			ord.sort_custom(func(a: Unidade, b: Unidade) -> bool: return (a.x - ux) * (a.x - ux) + (a.y - uy) * (a.y - uy) < (b.x - ux) * (b.x - ux) + (b.y - uy) * (b.y - uy))
+			for k in mini(ceili(Balanco.PODER_RAIZ_N * _fi), ord.size()):
+				alvos.append(Vector2(ord[k].x, ord[k].y))
+		Pecas.Poder.SAQUE:
+			var fraco: Unidade = null
+			for v in gatos:
+				if fraco == null or v.vida < fraco.vida:
+					fraco = v
+			alvos.append(Vector2(fraco.x, fraco.y))
+		Pecas.Poder.GELO:
+			for v in gatos:
+				alvos.append(Vector2(v.x, v.y))
+		Pecas.Poder.TROVOADA:
+			for c in _aglomerados(gatos, Balanco.PODER_TROVOADA_RAIO, ceili(Balanco.PODER_TROVOADA_N * _fi)):
+				circ.append(Vector3(c.x, c.y, Balanco.PODER_TROVOADA_RAIO))
+			if circ.is_empty():
+				return {}
+		Pecas.Poder.CANHAO:
+			var cs: Array = _aglomerados(gatos, Balanco.PODER_CANHAO_RAIO, 1)
+			if cs.is_empty():
+				return {}
+			circ.append(Vector3(cs[0].x, cs[0].y, Balanco.PODER_CANHAO_RAIO))
+		Pecas.Poder.MISSEIS:
+			for c in _centros_misseis(gatos):
+				circ.append(Vector3(c.x, c.y, Balanco.PODER_MISSEIS_RAIO))
+			if circ.is_empty():
+				return {}
+		Pecas.Poder.ENXAME:
+			var cen: Unidade = _mais_perto(u, gatos, 1e9)
+			var sx: float = 0.0
+			var sy: float = 0.0
+			var n: int = 0
+			for v in gatos:
+				if _dentro(v, cen.x, cen.y, Balanco.PODER_ENXAME_RAIO * 1.2):
+					sx += v.x
+					sy += v.y
+					n += 1
+			circ.append(Vector3(sx / n, sy / n, Balanco.PODER_ENXAME_RAIO))
+		Pecas.Poder.INVESTIDA, Pecas.Poder.MARCA:
+			var alc: float = Balanco.PODER_ATRAVESSA_ALCANCE
+			if u.poder == Pecas.Poder.INVESTIDA:
+				alc = Balanco.PODER_INVESTIDA_ALCANCE + 30.0
+			for v in gatos:
+				if ux - v.x >= -20.0 and ux - v.x <= alc and absf(v.y - uy) <= Balanco.PODER_ATRAVESSA_LARGURA:
+					alvos.append(Vector2(v.x, v.y))
+			if alvos.is_empty():
+				return {}
+			ret.append(Rect2(ux - alc, uy - Balanco.PODER_ATRAVESSA_LARGURA, alc + 20.0, Balanco.PODER_ATRAVESSA_LARGURA * 2.0))
+		Pecas.Poder.TELEPORTE:
+			var fundo: Unidade = null
+			for v in gatos:
+				if fundo == null or v.x < fundo.x:
+					fundo = v
+			alvos.append(Vector2(fundo.x, fundo.y))
+			lin.append([Vector2(ux, uy), Vector2(fundo.x, fundo.y)])
+		Pecas.Poder.PISAO:
+			var cand: Array = gatos.duplicate()
+			var px: float = ux
+			var py: float = uy
+			for k in Balanco.PODER_PISAO_N:
+				var alvo_p: Unidade = null
+				for v in cand:
+					if _dentro(v, px, py, Balanco.PODER_PISAO_ALCANCE) and (alvo_p == null or v.vida > alvo_p.vida):
+						alvo_p = v
+				if alvo_p == null:
+					break
+				cand.erase(alvo_p)
+				alvos.append(Vector2(alvo_p.x, alvo_p.y))
+				lin.append([Vector2(px, py), Vector2(alvo_p.x, alvo_p.y)])
+				px = alvo_p.x + 30.0
+				py = alvo_p.y
+			if alvos.is_empty():
+				return {}
+		Pecas.Poder.CANCAO:
+			for v in gatos:
+				if v.poder >= 0 or not v.heranca_cd.is_empty():
+					alvos.append(Vector2(v.x, v.y))
+			if alvos.is_empty():
+				return {}
+		Pecas.Poder.FUMACA:
+			circ.append(Vector3(ux, uy, Balanco.PODER_FUMACA_RAIO))
+		Pecas.Poder.CANTEIRO:
+			var ferido: bool = false
+			for v in inimigos:
+				if v.vivo and v.vida < v.vida_max * 0.9:
+					ferido = true
+			if not ferido:
+				return {}
+			circ.append(Vector3(ux, uy, Balanco.PODER_CANTEIRO_RAIO))
+		Pecas.Poder.TRIAGEM:
+			var pior: Unidade = null
+			for v in inimigos:
+				if v.vivo and not v.clone and v.vida < v.vida_max * Balanco.PODER_TRIAGEM_LIMIAR and (pior == null or v.vida / v.vida_max < pior.vida / pior.vida_max):
+					pior = v
+			if pior == null:
+				return {}
+			circ.append(Vector3(pior.x, pior.y, 46.0))
+		Pecas.Poder.PROTEGE, Pecas.Poder.FRENESI:
+			for v in inimigos:
+				if v.vivo and v.x <= Balanco.VISIVEL_X and not v.clone:
+					circ.append(Vector3(v.x, v.y, 34.0))
+		Pecas.Poder.INVOCA:
+			circ.append(Vector3(ux, uy, 60.0))
+		_:
+			circ.append(Vector3(ux, uy, 50.0))   # Fúria, Bola de espinhos: ele mesmo
+	return {"circ": circ, "ret": ret, "lin": lin, "alvos": alvos}
 
 ## Centros dos `n` maiores aglomerados (sem repetir bicho): cada centro é um bicho, contando quem está a `raio` dele.
 func _aglomerados(lista: Array, raio: float, n: int) -> Array:
@@ -1316,7 +1550,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 			outros.append(v)
 	if u.equipe == 1 and u.x > Balanco.VISIVEL_X:
 		return false
-	var base: float = Balanco.PODER_DANO * u.poder_forca * u.esc_dano
+	var base: float = Balanco.PODER_DANO * u.poder_forca * u.esc_dano * _fi
 	var pontos: Array = []   # onde o efeito acertou (para o desenho)
 	var extra: Dictionary = {}   # campos a mais do evento (teletransporte, enxame)
 	match u.poder:
@@ -1379,7 +1613,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 			if outros.is_empty():
 				return false
 			for v in outros:
-				v.frio_t = Balanco.PODER_GELO_T
+				v.frio_t = Balanco.PODER_GELO_T * _fi
 				pontos.append(Vector2(v.x, v.y))
 				_dano_poder(u, v, base * Balanco.PODER_GELO_DANO)
 		Pecas.Poder.ATRAVESSA:
@@ -1545,22 +1779,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 					_ev({"t": "devolve", "x": cc.x, "y": cc.y, "n": saque})
 		Pecas.Poder.MISSEIS:
 			# qualquer inimigo na metade da torre dispara; as explosões caem nos maiores bandos dessa metade
-			var perto_t: Array = []
-			for v in outros:
-				if v.x - Balanco.TORRE_X <= Balanco.PODER_MISSEIS_ALCANCE:
-					perto_t.append(v)
-			# cada salva cai no grupo mais perto da torre, depois no seguinte
-			var centros_m: Array = []
-			perto_t.sort_custom(func(a: Unidade, b: Unidade) -> bool: return a.x < b.x)
-			for vm in perto_t:
-				if not vm.vivo or centros_m.size() >= ceili(Balanco.PODER_MISSEIS_N * _frac_apoio()):
-					continue
-				var livre_m: bool = true
-				for c0 in centros_m:
-					if _dentro(vm, c0.x, c0.y, Balanco.PODER_MISSEIS_RAIO):
-						livre_m = false
-				if livre_m:
-					centros_m.append(Vector2(vm.x, vm.y))
+			var centros_m: Array = _centros_misseis(outros)
 			if centros_m.is_empty():
 				return false
 			for c in centros_m:
@@ -1573,7 +1792,23 @@ func _usar_poder_i(u: Unidade) -> bool:
 			if outros.is_empty():
 				return false
 			var seg: float = Balanco.PODER_CANCAO_SEG * _frac_apoio()
-			for v in meus:
+			if u.equipe == 1:
+				# versão bicho: em vez de adiantar os aliados, atrasa a recarga dos poderes dos gatos
+				var atraso: float = Balanco.PODER_CANCAO_INIMIGO * _fi
+				for v in outros:
+					var atrasou: bool = false
+					if v.poder >= 0:
+						v.poder_cd += atraso
+						atrasou = true
+					for i in v.heranca_cd.size():
+						v.heranca_cd[i] += atraso
+						atrasou = true
+					if atrasou:
+						pontos.append(Vector2(v.x, v.y))
+						_tele(u.poder_conj, "segundos", atraso)
+				if pontos.is_empty():
+					return false
+			for v in (meus if u.equipe == 0 else []):
 				if v == u or not v.vivo:
 					continue
 				var mexeu: bool = false
@@ -1628,7 +1863,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 			else:
 				for v in meus:
 					if v.vivo and _dentro(v, u.x, u.y, Balanco.PODER_FUMACA_RAIO):
-						v.oculto_t = maxf(v.oculto_t, Balanco.PODER_FUMACA_T)
+						v.oculto_t = maxf(v.oculto_t, Balanco.PODER_FUMACA_T * _fi)
 						pontos.append(Vector2(v.x, v.y))
 						_tele(u.poder_conj, "ocultos", 1.0)
 			for e in (inimigos if u.equipe == 0 else aliados):
@@ -1661,7 +1896,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 					break
 				cand.erase(forte)
 				pontos.append(Vector2(forte.x, forte.y))
-				forte.atordoado_t = maxf(forte.atordoado_t, Balanco.PODER_PISAO_T * (Balanco.PODER_RAIZ_CHEFE if forte.chefe else 1.0))
+				forte.atordoado_t = maxf(forte.atordoado_t, Balanco.PODER_PISAO_T * _fi * (Balanco.PODER_RAIZ_CHEFE if forte.chefe else 1.0))
 				var fx_x: float = forte.x
 				var fx_y: float = forte.y
 				_dano_poder(u, forte, base * Balanco.PODER_PISAO_DANO * pow(Balanco.PODER_PISAO_CRESCE, k))
@@ -1734,7 +1969,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 			if outros.is_empty():
 				return false
 			u.bola_t = Balanco.PODER_BOLA_T * _frac_apoio()
-			u.bola_vel = 1.0 if em_heranca else Balanco.PODER_BOLA_VEL
+			u.bola_vel = 1.0 if em_heranca else 1.0 + (Balanco.PODER_BOLA_VEL - 1.0) * _fi
 			u.bola_espinho = base * Balanco.PODER_BOLA_ESPINHO
 			u.atordoado_t = 0.0
 			pontos.append(Vector2(u.x, u.y))
@@ -1754,7 +1989,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 				pontos.append(Vector2(v.x, v.y))
 				match u.poder:
 					Pecas.Poder.ATORDOA:
-						v.atordoado_t = Balanco.PODER_ATORDOA_T * (Balanco.PODER_ATORDOA_CHEFE if v.chefe else 1.0)
+						v.atordoado_t = Balanco.PODER_ATORDOA_T * _fi * (Balanco.PODER_ATORDOA_CHEFE if v.chefe else 1.0)
 						_dano_poder(u, v, base * Balanco.PODER_ATORDOA_DANO)
 					Pecas.Poder.EMPURRA:
 						if not v.chefe and v.tipo != Unidade.Tipo.GIGANTE:

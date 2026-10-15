@@ -510,6 +510,31 @@ const PODER_MARCA_RECARGA_MIN := 3
 const PODER_BOLA_T := 4.0
 const PODER_BOLA_VEL := 1.8
 const PODER_BOLA_ESPINHO := 0.7     # x dano base devolvido a cada golpe corpo a corpo recebido
+# Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
+const PODER_INIMIGO_FATOR := 0.6        # dano, duração e quantidade, sobre o poder do gato
+const PODER_INIMIGO_FATOR_ATO := 0.08   # soma por ato depois do primeiro
+const PODER_INIMIGO_FATOR_CHEFE := 0.1  # o chefe usa o poder um pouco mais forte
+const PODER_AVISO_T := 1.0              # segundos de aviso (o bicho para e carrega)
+const PODER_INIMIGO_INTERVALO := 16.0   # fantasiado
+const PODER_INIMIGO_PRIMEIRO := 7.0     # primeiro uso do fantasiado (mais um sorteio de 0 a 4 s)
+const PODER_CHEFE_INTERVALO := 13.0
+const PODER_CHEFE_PRIMEIRO := 6.0
+const PODER_INIMIGO_SEM_ALVO := 1.5     # sem ninguém para atingir: tenta de novo daqui a pouco
+const PODER_INIMIGO_INTERROMPIDO := 4.0 # atordoado durante o aviso: perde a carga e espera isto
+const PODER_CANCAO_INIMIGO := 3.5       # Canção do tempo do bicho: atrasa os poderes dos gatos (x fator)
+## Poder fixo de cada chefe (Fases.Chefe); o valor é a fantasia que dá o poder (cor e nome do aviso)
+const CHEFE_PODER_CONJ: Array[int] = [
+	Pecas.Conjunto.REI,          # Rei dos Ratos: Ordem real (os ratos atacam em dobro)
+	Pecas.Conjunto.ENCANADOR,    # Guaxinim Glutão: Pisão (barrigada no gato mais forte)
+	Pecas.Conjunto.CAVALEIRO,    # Raposa Ligeira: Carga de lança
+	Pecas.Conjunto.TROVAO,       # Corvo Velho: Trovoada
+	Pecas.Conjunto.ARANHA,       # Sapo-Rei: Teia (prende os gatos mais perto)
+	Pecas.Conjunto.TUBARAO,      # Toupeira: Arrastão (puxa os gatos para o buraco)
+	Pecas.Conjunto.ABELHA,       # Gambá: Enxame (nuvem fedida)
+	Pecas.Conjunto.MAGO,         # Coruja: Relâmpago
+	Pecas.Conjunto.VIKING,       # Vira-Lata: Fúria
+	Pecas.Conjunto.OURICO,       # Texugo-Rei: Bola de espinhos
+]
 
 # ---------- Geometria do campo ----------
 const TORRE_X := 175.0

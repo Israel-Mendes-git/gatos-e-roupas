@@ -831,6 +831,9 @@ func _consumir() -> void:
 					alvos_p = [Vector2(float(e.get("x0", e["x"])), float(e.get("y0", e["y"])) - 24 * ESC)]   # no teleporte, o risco vai da origem ao destino
 				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp,
 					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0))}})
+			"aviso":
+				# um bicho carrega o poder: ping de alerta (o desenho da área sai de _desenhar_avisos)
+				_som("poder_pronto", 0.6 if e.get("chefe", false) else 0.8, -2.0, true)
 			"clone_fim":
 				# clone que some (fim do tempo ou derrotado): fumacinha, sem som e sem nocaute
 				var pcl: Vector2 = Vector2(e["x"], e["y"] - 22 * ESC)
@@ -2127,6 +2130,7 @@ func _draw() -> void:
 		var n_ico: int = _fila_estados(uu2, pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u, ico_max)
 		if uu2.equipe == 1 and sim.prioritario(uu2):
 			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * esc_u - (12.0 if n_ico > 0 else 0.0)), 9.0, 1.0)
+	_desenhar_avisos()
 	# projéteis: torre (estrela dourada grande), gatos (cometa azulado), bichos (losango vermelho)
 	for pr in sim.projeteis:
 		var d: Dictionary = pr
@@ -5137,3 +5141,54 @@ func _desenhar_prep() -> void:
 			alvo_txt = "Alvo: %s" % gd2["nome"]
 	if alvo_txt != "":
 		Desenho.texto(self, alvo_txt, Vector2(851.0, Balanco.CHAO_Y0 - 40.0), 15, Color(1.0, 0.7, 0.6), 398.0, 4)
+
+## Aviso dos poderes de bicho (fantasiado e chefe): enquanto carrega (~1 s) o bicho para, um balão com o nome
+## do poder pisca sobre ele e a área ou o alvo aparece marcado no chão. Atordoar o bicho corta o poder.
+func _desenhar_avisos() -> void:
+	for u in sim.inimigos:
+		var uu: Unidade = u
+		if not uu.vivo or uu.aviso_t <= 0.0:
+			continue
+		var cj: int = clampi(uu.poder_conj, 0, Pecas.PODER_NOME.size() - 1)
+		var cor: Color = _cor_legivel(Pecas.CONJUNTO_COR[cj], 0.7)
+		var prog: float = clampf(1.0 - uu.aviso_t / maxf(uu.aviso_dur, 0.01), 0.0, 1.0)
+		var pisca: float = 0.5 + 0.5 * sin(rel * 22.0)
+		var forma: Dictionary = uu.aviso_forma
+		for c in forma.get("circ", []):
+			var cc: Vector3 = c
+			var centro := Vector2(cc.x, cc.y)
+			_elipse_cheia(centro, cc.z, cc.z * 0.35, Color(cor.r, cor.g, cor.b, 0.10 + 0.14 * pisca))
+			_elipse_cheia(centro, cc.z * prog, cc.z * 0.35 * prog, Color(cor.r, cor.g, cor.b, 0.22))
+			_anel(centro, cc.z, cc.z * 0.35, Color(0.1, 0.03, 0.05, 0.85), 6.0)
+			_anel(centro, cc.z, cc.z * 0.35, Color(cor.r, cor.g, cor.b, 0.7 + 0.3 * pisca), 3.0)
+		for r in forma.get("ret", []):
+			var rc: Rect2 = r
+			draw_rect(rc, Color(cor.r, cor.g, cor.b, 0.10 + 0.16 * pisca))
+			draw_rect(Rect2(rc.position.x + rc.size.x * (1.0 - prog), rc.position.y, rc.size.x * prog, rc.size.y), Color(cor.r, cor.g, cor.b, 0.16))
+			draw_rect(rc, Color(0.1, 0.03, 0.05, 0.85), false, 6.0)
+			draw_rect(rc, Color(cor.r, cor.g, cor.b, 0.7 + 0.3 * pisca), false, 3.0)
+		for l in forma.get("lin", []):
+			var a0: Vector2 = l[0] + Vector2(0, -24.0 * ESC)
+			var a1: Vector2 = l[1] + Vector2(0, -24.0 * ESC)
+			draw_line(a0, a1, Color(0.1, 0.03, 0.05, 0.8), 7.0)
+			draw_line(a0, a1, Color(cor.r, cor.g, cor.b, 0.6 + 0.4 * pisca), 3.5)
+		for al in forma.get("alvos", []):
+			var pa: Vector2 = al + Vector2(0, -30.0 * ESC)
+			var rr: float = 26.0 + 14.0 * (1.0 - prog)
+			draw_arc(pa, rr, 0.0, TAU, 28, Color(0.1, 0.03, 0.05, 0.85), 7.0)
+			draw_arc(pa, rr, 0.0, TAU, 28, Color(cor.r, cor.g, cor.b, 0.75 + 0.25 * pisca), 3.5)
+			for k in 4:
+				var ang: float = k * TAU / 4.0 + rel * 2.0
+				var d: Vector2 = Vector2(cos(ang), sin(ang))
+				draw_line(pa + d * (rr - 6.0), pa + d * (rr + 8.0), Color(1, 1, 1, 0.9), 2.5)
+		# balão sobre o bicho, piscando
+		var esc_u: float = ESC * uu.escala()
+		var pb: Vector2 = Vector2(uu.vx, uu.vy - (CORPO_ALT + 40.0) * esc_u + sin(rel * 14.0) * 2.0)
+		var raio_b: float = 19.0 + 4.0 * pisca
+		draw_circle(pb, raio_b + 5.0, Color(cor.r, cor.g, cor.b, 0.25 * pisca))
+		draw_colored_polygon(PackedVector2Array([pb + Vector2(-7, raio_b - 4), pb + Vector2(7, raio_b - 4), pb + Vector2(0, raio_b + 8)]), Color(0.08, 0.04, 0.1))
+		draw_circle(pb, raio_b + 2.0, Color(0.08, 0.04, 0.1))
+		draw_circle(pb, raio_b, cor.lerp(Color(1, 1, 1), 0.35 * pisca))
+		draw_arc(pb, raio_b - 3.0, -PI * 0.5, -PI * 0.5 + TAU * prog, 24, Color(0.08, 0.04, 0.1, 0.8), 3.0)   # enche até soltar
+		Desenho.texto(self, "!", pb + Vector2(-5, 9), 26, Color(0.1, 0.04, 0.12), 12.0)
+		Desenho.texto(self, Pecas.PODER_NOME[cj] + "!", pb + Vector2(-100, -raio_b - 8.0), 22, Color(1, 1, 1, 0.6 + 0.4 * pisca), 200.0, 5)
