@@ -49,7 +49,7 @@ const _PAL: Array = [
 	{"a": Color("f2de59"), "A": Color("fff59e"), "d": Color("c8b030"), "b": Color("4aa83a"), "B": Color("8ad860"), "e": Color("f2c230")},   # milhau
 	{"a": Color("ffb826"), "A": Color("ffe070"), "d": Color("c88010"), "b": Color("5aa83a"), "B": Color("8ad860"), "e": Color("6a4220")},   # giramiau
 	{"a": Color("b28c59"), "A": Color("d9b886"), "d": Color("7c5c34"), "b": Color("4a74c0"), "B": Color("80a8e8"), "e": Color("5aa83a")},   # stardew miaulley
-	{"a": Color("73b34d"), "A": Color("a8e080"), "d": Color("4a7a30"), "b": Color("33b3b3"), "B": Color("80e0e0"), "e": Color("2e58c8")},   # miaucraft
+	{"a": Color("6b4423"), "A": Color("8f5e30"), "d": Color("3e2511"), "b": Color("33b3b3"), "B": Color("80e0e0"), "e": Color("2e58c8")},   # miaucraft
 	{"a": Color("4d8c8c"), "A": Color("80c0c0"), "d": Color("2e5c5c"), "b": Color("f2e6c0"), "B": Color("fff8e0"), "e": Color("2a2630")},   # miaulax
 ]
 
@@ -62,6 +62,10 @@ const _PAL_CORPO: Dictionary = {
 	10: {"a": Color("2c2e3c"), "A": Color("50546a"), "d": Color("16161e")},
 	23: {"a": Color("5a7894"), "A": Color("98b4cc"), "d": Color("34485e")},
 	30: {"a": Color("f6f2ea"), "A": Color("ffffff"), "d": Color("bfb9c6")},
+	32: {"a": Color("4aa83a"), "A": Color("8ad860"), "d": Color("2f7a34"), "b": Color("f2de59")},
+	33: {"a": Color("4aa83a"), "A": Color("8ad860"), "d": Color("2f7a34")},
+	34: {"a": Color("3e62a8"), "A": Color("6a90d8"), "d": Color("24407a"), "b": Color("d8323a"), "B": Color("f4f0e8")},
+	35: {"a": Color("33b3c0"), "A": Color("7ae0e8"), "d": Color("1f7a88"), "b": Color("3a3ca8"), "B": Color("6a6ae0")},
 }
 static var corpo_vez: bool = false
 
@@ -362,54 +366,57 @@ const _CHAPEU: Array = [
 		".oAaaaaaddo",
 		"obBbBbBbBbo",
 		".ooooooooo."]},
-	# 31 disparamiau: cúpula de ervilha com o cano na testa
+	# 31 disparamiau: cúpula de ervilha com tufo de folhas atrás e a sobrancelha de determinação
 	{"cheio": false, "l": [
-		"....ooo....",
-		"...oAAao...",
-		"..oAAaaado.",
-		".oAaaaaaado",
-		".oaaaadddoo",
+		"bB....bB...",
+		"bBb..bBb...",
+		".obooBbo...",
+		"..oAAAaao..",
+		".oAAaaaaado",
+		".oaaaddddoo",
 		".ooooooooo."]},
-	# 32 milhau: folhas de milho em torno de uma espiga
+	# 32 milhau: espiga de grãos com as folhas verdes da palha como cabelo
 	{"cheio": false, "l": [
-		"b..b.b..b..",
-		".bBb.bBb.b.",
-		"..obBbbBbo.",
-		"..oYaaaaao.",
-		".oYaaaaaado",
-		".oaaaadddo."]},
-	# 33 giramiau: pétalas de girassol em volta do rosto
+		"b...bB...b.",
+		"bb..bB..bb.",
+		".bBbbBbbBb.",
+		"..oYaYaao..",
+		".oAdAdAdAdo",
+		".odAdAdAdAo",
+		".ooooooooo."]},
+	# 33 giramiau: pétalas de girassol em volta do rosto, miolo marrom
 	{"cheio": false, "l": [
 		"y..y.y.y..y",
 		".yYyYyYyYy.",
-		"yYyaeeeayYy",
-		".yyeeeeeyy.",
-		"..ooeeeoo.."]},
-	# 34 stardew miaulley: boné de fazenda com um brotinho
-	{"cheio": true, "l": [
-		"....B.B....",
-		"....bBb....",
-		"...ooooo...",
-		"..oAAaaaoo.",
-		".oAaaaaaado",
-		"obbbbbbbbbo"]},
-	# 35 miaucraft: capacete em cubo
+		"yYyyeeeyyYy",
+		"yyyeedeeyyy",
+		".yoeeeeeoy.",
+		"..ooooooo.."]},
+	# 34 stardew miaulley: chapéu de palha de aba larga com fita verde e um broto
+	{"cheio": false, "l": [
+		".....l.l.....",
+		"......e......",
+		"....ooooo....",
+		"...oAaaaao...",
+		"..oAaAaaaao..",
+		"..oeeeeeeeo..",
+		".oAaAdAaAdAo.",
+		"ooooooooooooo"]},
+	# 35 miaucraft: cabelo de bloco do Steve, com a franja quadrada
 	{"cheio": true, "l": [
 		"ooooooooooo",
-		"oAAAAaaAAAo",
-		"oAaaaaaaaao",
-		"oaaddaaddao",
-		"odddddddddo",
-		".ooooooooo."]},
-	# 36 miaulax: touca de soneca caída de lado
+		"oaAaaaAaaAo",
+		"oaaaAaaaaao",
+		"oddaaaaaddo",
+		"od.......do"]},
+	# 36 miaulax: capuz de Snorlax, de orelhas pontudas e a mancha creme na testa
 	{"cheio": false, "l": [
-		"...oooo....",
-		"..oAAaaoo..",
-		".oAaaaaaao.",
-		"oaaaaaaaaado",
-		"obbbbbbbbbo",
-		"..oBBo.....",
-		"..oBo......"]},
+		"..o.....o..",
+		".oao...oao.",
+		"oaaaooooaao",
+		"oAAaaaaaaao",
+		"oAaaabbbbao",
+		".ooooooooo."]},
 ]
 ## Quantos pixels a última linha do chapéu fica abaixo do topo do crânio.
 const _DESCE := 1
@@ -773,12 +780,12 @@ const _EMBLEMA: Array = [
 	[],                                          # fênix miaussimo
 	[],                                          # mimiau
 	["r.r", "rrr", ".r."],                       # jimiau: copas
-	[".B.", "BbB"],                              # disparamiau: broto
+	[],                                          # disparamiau: folhas no enfeite
 	[],                                          # milhau
 	[".y.", "yey", ".y."],                       # giramiau: sol
-	["bB", "Bb"],                                # stardew miaulley: remendo
-	["bB", "Bb"],                                # miaucraft: pixel
-	["BB", "BB"],                                # miaulax: barriga
+	[],                                          # stardew miaulley: bolso no enfeite
+	[],                                          # miaucraft
+	[],                                          # miaulax: barriga no enfeite
 ]
 ## Fantasias com barra de outra cor na bainha (a letra da barra).
 const _BARRA: Dictionary = {0: "b", 1: "b", 3: "y", 4: "", 6: "b", 7: "B", 11: "b", 13: "b", 16: "", 17: "b", 20: "b", 21: "b", 22: "b", 25: "b", 27: "b", 30: "b"}
@@ -1035,6 +1042,7 @@ static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary
 				if dentro.call(v) and posmod(v.x - x1, 4) >= 2:
 					px[v] = C.call("b") if px[v] != C.call("A") else C.call("B")
 			_asas(px, tp, xm)
+	_enfeitar_lote2(conj, px, area, cx, tp, bs, dentro, C)
 	# emblema no meio da manta
 	var em: Array = _EMBLEMA[conj]
 	if not em.is_empty() and _FORMA[conj] != "capa":
@@ -1048,6 +1056,80 @@ static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary
 				var v2 := Vector2i(ex + i, ey + j)
 				if s2[i] != "." and dentro.call(v2):
 					px[v2] = C.call(s2[i])
+
+## Enfeites das fantasias do lote 2 (Quintal e Toca): nervuras de folha, palha de milho, sóis, macacão, blocos e barriga de Snorlax.
+static func _enfeitar_lote2(conj: int, px: Dictionary, area: Dictionary, cx: Rect2i, tp: Dictionary, bs: Dictionary, dentro: Callable, C: Callable) -> void:
+	var x0: int = cx.position.x
+	var x1: int = cx.end.x - 1
+	var xm: int = x0 + cx.size.x / 2
+	match conj:
+		Pecas.Conjunto.DISPARAMIAU:
+			for p in area.keys():
+				var v: Vector2i = p
+				if dentro.call(v) and px[v] == C.call("a") and posmod(v.x * 2 + v.y, 5) == 0:
+					px[v] = C.call("A")
+			_gola(px, tp, x1, C.call("B"), C.call("o"))
+		Pecas.Conjunto.MILHAU:
+			for p in area.keys():
+				var v: Vector2i = p
+				if dentro.call(v) and px[v] == C.call("a") and posmod(v.x + v.y * 2, 4) == 0:
+					px[v] = C.call("d")
+			for x in range(xm, xm + 3):
+				if tp.has(x):
+					for y in range(tp[x] + 2, tp[x] + 5):
+						if dentro.call(Vector2i(x, y)):
+							px[Vector2i(x, y)] = C.call("b") if (x + y) % 2 == 0 else C.call("e")
+			_gola(px, tp, x1, C.call("e"), _COMUM["Y"])
+		Pecas.Conjunto.GIRAMIAU:
+			for x in range(x0 + 1, x1, 2):
+				if bs.has(x) and dentro.call(Vector2i(x, bs[x] - 1)):
+					px[Vector2i(x, bs[x] - 1)] = _COMUM["y"]
+			for x in [x0 + 3, x1 - 3]:
+				if tp.has(x) and dentro.call(Vector2i(x, tp[x] + 2)):
+					px[Vector2i(x, tp[x] + 2)] = _COMUM["y"]
+		Pecas.Conjunto.STARDEW_MIAULLEY:
+			for x in range(x0, x1 + 1):
+				if not tp.has(x):
+					continue
+				for y in range(tp[x] + 1, tp[x] + 3):
+					if dentro.call(Vector2i(x, y)):
+						px[Vector2i(x, y)] = C.call("b") if (x + y) % 2 == 0 else C.call("B")
+			for x in [x1 - 3, x0 + 3]:
+				if not tp.has(x):
+					continue
+				for y in range(tp[x] + 1, tp[x] + 4):
+					if dentro.call(Vector2i(x, y)):
+						px[Vector2i(x, y)] = C.call("A")
+				if dentro.call(Vector2i(x, tp[x] + 3)):
+					px[Vector2i(x, tp[x] + 3)] = _COMUM["y"]
+			var by: int = cx.position.y + cx.size.y * 2 / 3
+			for y in range(by, by + 2):
+				for x in range(xm - 1, xm + 2):
+					if dentro.call(Vector2i(x, y)):
+						px[Vector2i(x, y)] = C.call("d")
+		Pecas.Conjunto.MIAUCRAFT:
+			for p in area.keys():
+				var v: Vector2i = p
+				if not dentro.call(v) or not tp.has(v.x):
+					continue
+				var h: int = bs[v.x] - tp[v.x]
+				if v.y >= tp[v.x] + roundi(h * 0.55) and px[v] != C.call("d"):
+					px[v] = C.call("b")
+				if posmod(v.x * 7 + v.y * 13, 5) == 0:
+					if px[v] == C.call("a"):
+						px[v] = C.call("A")
+					elif px[v] == C.call("b"):
+						px[v] = C.call("B")
+		Pecas.Conjunto.MIAULAX:
+			var cyy: float = cx.position.y + cx.size.y * 0.55
+			for p in area.keys():
+				var v: Vector2i = p
+				if not dentro.call(v):
+					continue
+				var dx: float = (v.x - xm) / maxf(1.0, cx.size.x * 0.34)
+				var dy: float = (v.y - cyy) / maxf(1.0, cx.size.y * 0.36)
+				if dx * dx + dy * dy <= 1.0:
+					px[v] = C.call("B") if dy < -0.55 else C.call("b")
 
 ## Gola alta na frente (pescoço): duas colunas um pixel acima do dorso.
 static func _gola(px: Dictionary, tp: Dictionary, x1: int, cor: Color, borda: Color) -> void:

@@ -1116,7 +1116,7 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		# camadas atrás do corpo do bicho (capa, aljava, roda)
 		for s in [1, 3, 0, 2]:
 			var pa: Peca = pecas[s]
-			if pa == null or not RoupaGatoF.tem_atras(pa.tipo):
+			if pa == null or not (RoupaGatoF.tem_atras(pa.tipo) or RoupaGatoG.tem_atras(pa.tipo)):
 				continue
 			var oa: int = RoupaGato.onde(pa.tipo)
 			var dpa: Vector2 = BichoPx.desloc(oa, fam, tipo, anim, andando, golpe, ct, parado)
@@ -1251,7 +1251,7 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		# camadas que ficam ATRÁS do corpo (capa, aljava, roda): desenhadas antes do gato, só aparece o que sai da silhueta
 		for s in [1, 3, 0, 2]:
 			var pa: Peca = pecas[s]
-			if pa == null or not RoupaGatoF.tem_atras(pa.tipo):
+			if pa == null or not (RoupaGatoF.tem_atras(pa.tipo) or RoupaGatoG.tem_atras(pa.tipo)):
 				continue
 			_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.onde(pa.tipo), q) * GATO_K, 0.0, GATO_K)
 			RoupaGato.passo = 1
