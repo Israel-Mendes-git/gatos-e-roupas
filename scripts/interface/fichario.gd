@@ -458,8 +458,19 @@ static func ajustar(txt: String, tams: Array, larg: float, max_linhas: int) -> D
 	for tm in tams:
 		linhas = quebrar(txt, int(tm), larg)
 		tam = int(tm)
-		if linhas.size() <= max_linhas:
+		var cabe: bool = linhas.size() <= max_linhas
+		for ln in linhas:
+			if largura(ln, tam) > larg:
+				cabe = false   # uma palavra comprida sozinha não cabe: tenta o tamanho menor
+		if cabe:
 			break
+	if max_linhas >= 2 and linhas.size() == 1 and largura(linhas[0], tam) > larg * 1.12:
+		# uma palavra só e comprida (Miauchelangelo): parte com hífen em vez de vazar da miniatura
+		var palavra: String = linhas[0]
+		var corte: int = palavra.length() - 1
+		while corte > 1 and largura(palavra.substr(0, corte) + "-", tam) > larg:
+			corte -= 1
+		linhas = [palavra.substr(0, corte) + "-", palavra.substr(corte)]
 	if linhas.size() > max_linhas:
 		linhas = linhas.slice(0, max_linhas)
 		linhas[max_linhas - 1] = cortar(linhas[max_linhas - 1] + " …", tam, larg)
@@ -1183,7 +1194,7 @@ func _tile(e: Estado, c: int, r: Rect2) -> void:
 	if e.ja_teve(cab):
 		Desenho.icone(self, cab, centro, 50.0)
 	# nome em até duas linhas
-	var aj: Dictionary = ajustar(Pecas.CONJUNTO_NOME[c], [12, 11, 10, 9], r.size.x - 8.0, 2)
+	var aj: Dictionary = ajustar(Pecas.CONJUNTO_NOME[c], [12, 11, 10, 9, 8], r.size.x - 8.0, 2)
 	var yy: float = r.position.y + 70.0
 	for ln in aj["linhas"]:
 		_txt(ln, Vector2(r.position.x + 4.0, yy), aj["tam"], TINTA, r.size.x - 8.0)
