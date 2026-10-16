@@ -2277,27 +2277,35 @@ func _poder_olhar(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base
 			v.queima_fonte = u
 	return true
 
-## Objeção! (Fênix Miaussimo): só dispara com um bicho carregando poder; corta o aviso e anima o time.
+## Objeção! (Fênix Miaussimo): com um bicho carregando poder, corta o aviso e anima o time; sem nenhum, vira o Protesto (mais fraco).
 func _poder_objecao(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
 	var alvo: Unidade = null
 	for v in outros:
 		if v.vivo and v.aviso_t > 0.0 and (alvo == null or (v.chefe and not alvo.chefe) or (v.chefe == alvo.chefe and v.vida > alvo.vida)):
 			alvo = v
+	var com_aviso: bool = alvo != null
 	if alvo == null:
-		return false
-	alvo.aviso_t = 0.0
-	alvo.aviso_forma = {}
-	alvo.atordoado_t = maxf(alvo.atordoado_t, Balanco.PODER_OBJECAO_ATORDOA_CHEFE if alvo.chefe else Balanco.PODER_OBJECAO_ATORDOA)
-	alvo.poder_cd = maxf(alvo.poder_cd, 0.0) + Balanco.PODER_OBJECAO_ATRASO
+		# sem poder de bicho carregando: Protesto, a versão fraca (atordoa o mais forte à vista e anima menos o time)
+		for v in outros:
+			if v.vivo and v.x <= Balanco.VISIVEL_X and not v.clone and (alvo == null or v.vida > alvo.vida):
+				alvo = v
+		if alvo == null:
+			return false
+	var fr: float = 1.0 if com_aviso else Balanco.PODER_PROTESTO_FATOR
+	if com_aviso:
+		alvo.aviso_t = 0.0
+		alvo.aviso_forma = {}
+		alvo.poder_cd = maxf(alvo.poder_cd, 0.0) + Balanco.PODER_OBJECAO_ATRASO
+	alvo.atordoado_t = maxf(alvo.atordoado_t, (Balanco.PODER_OBJECAO_ATORDOA_CHEFE if alvo.chefe else Balanco.PODER_OBJECAO_ATORDOA) * fr)
 	_ev({"t": "aviso_cortado", "x": alvo.x, "y": alvo.y})
 	pontos.append(Vector2(alvo.x, alvo.y))
 	if not em_heranca:
 		for v in meus:
 			if v.vivo and not v.clone:
-				v.buff_dano = Balanco.PODER_OBJECAO_BONUS
-				v.buff_dano_t = maxf(v.buff_dano_t, Balanco.PODER_OBJECAO_BONUS_T)
-		extra["texto"] = "Contra-prova!"
-	_dano_poder(u, alvo, base * Balanco.PODER_OBJECAO_DANO)
+				v.buff_dano = Balanco.PODER_OBJECAO_BONUS * fr
+				v.buff_dano_t = maxf(v.buff_dano_t, Balanco.PODER_OBJECAO_BONUS_T * fr)
+		extra["texto"] = "Contra-prova!" if com_aviso else "Protesto!"
+	_dano_poder(u, alvo, base * Balanco.PODER_OBJECAO_DANO * fr)
 	return true
 
 ## Imitar (Mimiau): repete o último poder da luta; sem nenhum (ou sem alvo para ele), vira um Disfarce.
@@ -2315,6 +2323,7 @@ func _poder_imitar(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], bas
 			extra["imitou"] = true
 			return true
 	u.disfarce_t = Balanco.PODER_DISFARCE_T
+	u.vida = minf(u.vida_max, u.vida + u.vida_max * Balanco.PODER_DISFARCE_CURA)
 	pontos.append(Vector2(u.x, u.y))
 	extra["texto"] = "Disfarce!"
 	return true

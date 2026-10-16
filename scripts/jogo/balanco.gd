@@ -153,9 +153,9 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.SUPER_MIAU: [0.25, 0.5],           # cantil: fração da vida curada uma vez
 	Pecas.Conjunto.ARQUEIRO_MIAU: [0.15, 0.35],       # chance de crítico
 	Pecas.Conjunto.MOTOQUEIRO_MIAUSMA: [3.0, 6.0],    # queimadura por segundo
-	Pecas.Conjunto.FENIX_MIAUSSIMO: [2.0, 5.0],       # armadura
-	Pecas.Conjunto.MIMIAU: [9.0, 5.0],                # segundos entre barreiras
-	Pecas.Conjunto.JIMIAU: [0.08, 0.2],               # recarga do poder mais curta
+	Pecas.Conjunto.FENIX_MIAUSSIMO: [3.0, 7.0],       # armadura
+	Pecas.Conjunto.MIMIAU: [7.0, 3.0],                # segundos entre barreiras
+	Pecas.Conjunto.JIMIAU: [0.05, 0.12],              # recarga do poder mais curta
 }
 const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
 
@@ -557,9 +557,9 @@ const PODER_RICOCHETE_DANO := 0.7
 const PODER_RICOCHETE_CRESCE := 1.15
 # Olhar da Penitência (Motoqueiro Miausma): dano em % da vida máxima dos de maior vida
 const PODER_OLHAR_N := 3
-const PODER_OLHAR_FRACAO := 0.2
+const PODER_OLHAR_FRACAO := 0.25
 const PODER_OLHAR_MIN := 1.0            # x dano base
-const PODER_OLHAR_MAX := 6.0
+const PODER_OLHAR_MAX := 7.0
 const PODER_OLHAR_CHEFE_FRACAO := 0.05
 const PODER_OLHAR_CHEFE_MAX := 4.0
 const PODER_OLHAR_QUEIMA_T := 3.0
@@ -573,16 +573,18 @@ const PODER_OBJECAO_DANO := 1.3
 const PODER_OBJECAO_ATRASO := 6.0       # segundos a mais na recarga do poder do bicho
 const PODER_OBJECAO_BONUS := 0.15       # dano do time
 const PODER_OBJECAO_BONUS_T := 4.0
+const PODER_PROTESTO_FATOR := 0.5      # sem aviso para cortar: atordoamento, dano e bônus do time nesta fração
 # Imitar (Mimiau)
 const PODER_IMITAR_JANELA := 12.0       # segundos em que o último poder ainda vale
-const PODER_IMITAR_FORCA := 0.85
-const PODER_DISFARCE_T := 6.0           # sem poder para copiar: barreira que anula um golpe
-const PODER_DISFARCE_ATORDOA := 0.8
+const PODER_IMITAR_FORCA := 1.0
+const PODER_DISFARCE_T := 8.0           # sem poder para copiar: barreira que anula um golpe
+const PODER_DISFARCE_ATORDOA := 1.5
+const PODER_DISFARCE_CURA := 0.12       # fração da vida máxima que o Disfarce cura ao ser armado
 # Mão de pôquer (Jimiau): dano no maior bando, por categoria da mão (carta alta ... straight flush)
 const PODER_POQUER_RAIO := 110.0
 const PODER_POQUER_CARTAS := 7   # a spec fala em 8, mas o valor esperado dela (~1,35 x base) é o de 7 cartas: com 8 dava 1,68
 const PODER_POQUER_CARTAS_HER := 5
-const PODER_POQUER_DANO: Array[float] = [0.7, 1.0, 1.5, 2.2, 2.8, 3.0, 3.6, 5.5, 8.0]
+const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
 # Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
 const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato
 const PODER_INIMIGO_FATOR_ATO := 0.08   # soma por ato depois do primeiro
