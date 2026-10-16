@@ -808,7 +808,7 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 			qtd += 1
 		qtd = clampi(qtd, 0, Pecas.SLOTS)
 		var slots: Array = [0, 1, 2, 3]
-		slots.shuffle()  # (usa o rng global; só afeta a variedade)
+		_embaralhar(slots, rng)
 		if p == 1:
 			slots = [0, 1, 3]  # onda de aquecimento: ninguém vem armado
 			qtd = mini(qtd, 2)
@@ -826,6 +826,14 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 	_sortear_elites(plano, fase + (Fases.TOTAL if ato > 1 else 0), onda, nivel, rng)
 	return plano
 
+## Embaralha com o rng da luta (o shuffle() do Godot usa o rng global e tira a repetibilidade das ondas).
+static func _embaralhar(a: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(a.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var t: Variant = a[i]
+		a[i] = a[j]
+		a[j] = t
+
 ## Distribui tipos especiais no plano: tipo novo entra garantido; teto de ESPECIAL_FRACAO.
 static func _sortear_tipos(plano: Array, prog: int, rng: RandomNumberGenerator) -> void:
 	var teto: int = int(floor(plano.size() * ESPECIAL_FRACAO))
@@ -839,7 +847,7 @@ static func _sortear_tipos(plano: Array, prog: int, rng: RandomNumberGenerator) 
 	if disponiveis.is_empty() or teto <= 0:
 		return
 	var vagas: Array = range(plano.size())
-	vagas.shuffle()
+	_embaralhar(vagas, rng)
 	var usados: int = 0
 	for t in novos:
 		if usados < teto:

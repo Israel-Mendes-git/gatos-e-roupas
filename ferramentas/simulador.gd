@@ -380,6 +380,32 @@ func _melhor_livre(livres: Array[Peca], s: int, c: int) -> Peca:
 ## Cada campanha joga o 1º ato normalmente; depois, com o time do fim do 1º ato, o último gato veste cada fantasia completa
 ## (nível e raridade médios do time) e luta as MESMAS lutas fixas (invasão lá fora, ondas 2, 4 e 6 em dois lugares,
 ## mesmas sementes). Sem gravar nada no estado. A linha "sem kit" é a referência (o último gato com as próprias peças).
+## Estado que uma luta muda (tijolos da torre; vivo, saúde, marcas e progresso das peças), para o modo kits restaurar entre lutas.
+func _foto(e: Estado) -> Array:
+	var f: Array = [e.tijolos]
+	for b in e.bonecos:
+		var ps: Array = []
+		for p in b.pecas:
+			ps.append(null if p == null else [p, p.nivel, p.abates, p.prog, p.nova, p.marcas.duplicate()])
+		f.append([b, b.saude, b.vivo, b.postura, ps])
+	return f
+
+func _restaurar(e: Estado, f: Array) -> void:
+	e.tijolos = f[0]   # a torre volta inteira: tijolo perdido numa luta não pesa na seguinte
+	for fb in f.slice(1):
+		var b: Boneco = fb[0]
+		b.saude = fb[1]
+		b.vivo = fb[2]
+		b.postura = fb[3]
+		for fp in fb[4]:
+			if fp != null:
+				var p: Peca = fp[0]
+				p.nivel = fp[1]
+				p.abates = fp[2]
+				p.prog = fp[3]
+				p.nova = fp[4]
+				p.marcas.assign(fp[5])
+
 func _modo_kits(n_jogos: int, pol: String) -> void:
 	Simulacao.medir = true
 	var primeiro_novo: int = Pecas.Conjunto.SUPER_MIAU
@@ -431,13 +457,17 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 					npc += 1
 		var nivel: int = int(round(soma_n / maxi(1, npc)))
 		var rar: int = int(round(soma_r / maxi(1, npc)))
+		var base: Array = _foto(e)   # o time antes de qualquer kit: cada kit parte dele
 		for c in lista + [-1]:
+			_restaurar(e, base)
 			for s in Pecas.SLOTS:
 				b0.pecas[s] = originais[s] if c < 0 else Peca.new(Pecas.CONJUNTO_PECAS[c][s], nivel, rar)
 			_linhas(e, false)
 			Simulacao.tele.clear()
+			var foto: Array = _foto(e)
 			for li in 2:
 				for oi in ondas.size():
+					_restaurar(e, foto)   # cada luta parte do mesmo time: sem nocaute nem marca herdados do kit anterior
 					e.iniciar_invasao((g + li * 2) % Fases.TOTAL + 1, true)
 					e.onda_invasao = ondas[oi]
 					e.onda = (ondas[oi] - 1) % Balanco.ONDAS_TOTAIS + 1
@@ -449,6 +479,8 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 					while not sim.terminada:
 						sim.passo(Balanco.DT)
 					var a: Dictionary = acc[c]
+					if OS.get_environment("DBG") != "":
+						print("DBG g%d kit%d li%d oi%d vit %s t %.3f vivos %d" % [g, c, li, oi, sim.vitoria, sim.tempo, sim.aliados.size()])
 					a["lutas"] += 1
 					a["vitorias"] += 1 if sim.vitoria else 0
 					a["vivos"] += sim.aliados.size()
