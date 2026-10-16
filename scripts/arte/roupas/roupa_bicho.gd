@@ -51,6 +51,13 @@ const _PAL: Array = [
 	{"a": Color("b28c59"), "A": Color("d9b886"), "d": Color("7c5c34"), "b": Color("4a74c0"), "B": Color("80a8e8"), "e": Color("5aa83a")},   # stardew miaulley
 	{"a": Color("6b4423"), "A": Color("8f5e30"), "d": Color("3e2511"), "b": Color("33b3b3"), "B": Color("80e0e0"), "e": Color("2e58c8")},   # miaucraft
 	{"a": Color("4d8c8c"), "A": Color("80c0c0"), "d": Color("2e5c5c"), "b": Color("f2e6c0"), "B": Color("fff8e0"), "e": Color("2a2630")},   # miaulax
+	# lote 3 da expansão (37 a 42)
+	{"a": Color("3a6ee8"), "A": Color("7aa0ff"), "d": Color("1f3fa0"), "b": Color("4a9a3a"), "B": Color("8ad060"), "e": Color("ffd138")},   # leonarmiau
+	{"a": Color("9955cc"), "A": Color("c490f0"), "d": Color("5e2f8c"), "b": Color("4a9a3a"), "B": Color("8ad060"), "e": Color("5ad4ff")},   # donatemiau
+	{"a": Color("e03030"), "A": Color("ff7a6a"), "d": Color("8c1a1a"), "b": Color("4a9a3a"), "B": Color("8ad060"), "e": Color("2a2630")},   # rafamiau
+	{"a": Color("26a0ff"), "A": Color("7fd0ff"), "d": Color("1060b0"), "b": Color("ff8a1c"), "B": Color("ffc060"), "e": Color("ffffff")},   # rocket miaugue
+	{"a": Color("cc1a26"), "A": Color("ff5a60"), "d": Color("80101a"), "b": Color("2a2630"), "B": Color("5a5666"), "e": Color("ffffff")},   # deadmiau
+	{"a": Color("8c7355"), "A": Color("b89a73"), "d": Color("5a4630"), "b": Color("e8c860"), "B": Color("fff0a0"), "e": Color("2a2630")},   # meon
 ]
 
 ## Cores da roupa de corpo que diferem das do chapéu (o barril do circo é de madeira, o avental do jardineiro é verde).
@@ -417,6 +424,53 @@ const _CHAPEU: Array = [
 		"oAAaaaaaaao",
 		"oAaaabbbbao",
 		".ooooooooo."]},
+	# 37 leonarmiau: bandana azul com as duas pontas ao vento
+	{"cheio": false, "l": [
+		"..ooooooo..",
+		".oAAaaaaao.",
+		"oAaaaaaaaao",
+		"obbbbbbbbbo",
+		"...oo...oo.",
+		"..oao.oao.."]},
+	# 38 donatemiau: bandana roxa com os óculos de soldador na testa
+	{"cheio": false, "l": [
+		"..ooooooo..",
+		".oAAaaaaao.",
+		"oaaaaaaaaao",
+		"oeeoaaaoeeo",
+		"oeBoaaaoeBo",
+		".oo.....oo."]},
+	# 39 rafamiau: bandana vermelha torta, de sobrancelhas franzidas
+	{"cheio": false, "l": [
+		"..ooooooo..",
+		".oAAaaaaaoo",
+		"oAaaaaaaaao",
+		"oeeoaaaoeeo",
+		"obbbbbbbbbo",
+		"..........o"]},
+	# 40 rocket miaugue: capacete com a antena de rádio
+	{"cheio": true, "l": [
+		"..........o",
+		"..ooooooo.o",
+		".oAAaaaaaoo",
+		"oAaaaaaaaao",
+		"oaBBBBBBbao",
+		"odddddddddo"]},
+	# 41 deadmiau: máscara vermelha de olhos brancos
+	{"cheio": true, "l": [
+		"...ooooo...",
+		"..oAaaaao..",
+		".oaaaaaaao.",
+		"oaeeaaaeeao",
+		"oaeeaaaeeao",
+		".oddddddo.."]},
+	# 42 meon: franja loira cobrindo um olho
+	{"cheio": false, "l": [
+		"..ooooooo..",
+		".oBBBBBBBo.",
+		"oBBbBBBBBBo",
+		"oBbb.BBBo.o",
+		"oBb.....o.."]},
 ]
 ## Quantos pixels a última linha do chapéu fica abaixo do topo do crânio.
 const _DESCE := 1
@@ -511,6 +565,7 @@ const _FORMA: Array[String] = [
 	"colete", "colete", "casco", "colete", "colete", "capa", "capa", "colete", "colete", "colete", "colete", "colete",
 	"colete", "colete", "colete", "colete", "colete", "colete",
 	"colete", "colete", "colete", "colete", "colete", "colete",
+	"casco", "casco", "casco", "colete", "colete", "colete",
 ]
 const _MEDIDA: Array = [
 	[0.06, 1.0, 0.80], [0.06, 1.0, 0.78], [0.0, 0.92, 0.85], [0.06, 1.0, 0.80], [0.10, 1.0, 0.58], [0.06, 1.0, 0.80],
@@ -520,6 +575,7 @@ const _MEDIDA: Array = [
 	[0.04, 1.0, 0.84],
 	[0.06, 1.0, 0.82], [0.06, 1.0, 0.80], [0.06, 1.0, 0.82], [0.06, 1.0, 0.82], [0.04, 1.0, 0.84], [0.06, 1.0, 0.80],
 	[0.06, 1.0, 0.82], [0.06, 1.0, 0.84], [0.06, 1.0, 0.84], [0.06, 1.0, 0.82], [0.06, 1.0, 0.84], [0.04, 1.0, 0.92],
+	[0.05, 0.95, 0.62], [0.05, 0.95, 0.62], [0.05, 0.95, 0.62], [0.06, 1.0, 0.84], [0.06, 1.0, 0.82], [0.06, 1.0, 0.84],
 ]
 
 ## Pixels pintados da roupa: {Vector2i: Color}.
@@ -786,6 +842,12 @@ const _EMBLEMA: Array = [
 	[],                                          # stardew miaulley: bolso no enfeite
 	[],                                          # miaucraft
 	[],                                          # miaulax: barriga no enfeite
+	["b", "b"],                                  # leonarmiau: fivela do cinto
+	["e", "e"],                                  # donatemiau: tela do computador
+	["b", "b"],                                  # rafamiau: fivela do cinto
+	["bB", "Bb"],                                # rocket miaugue: chama pintada
+	["bB", "Bb"],                                # deadmiau: remendo
+	[],                                          # meon
 ]
 ## Fantasias com barra de outra cor na bainha (a letra da barra).
 const _BARRA: Dictionary = {0: "b", 1: "b", 3: "y", 4: "", 6: "b", 7: "B", 11: "b", 13: "b", 16: "", 17: "b", 20: "b", 21: "b", 22: "b", 25: "b", 27: "b", 30: "b"}
