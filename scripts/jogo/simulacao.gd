@@ -186,6 +186,7 @@ func calcular(u: Unidade) -> void:
 	u.sementes = 0.0
 	u.cantil = 0.0
 	u.roubo = 0.0
+	u.recarga_menos = 0.0
 	u.molha = false
 	u.perfura = false
 	u.fraq_fogo = 1.0
@@ -329,33 +330,42 @@ func calcular(u: Unidade) -> void:
 			for p in u.pecas:
 				soma += p.poder()
 			u.poder_forca = soma / Pecas.SLOTS
+		var kv: float = Balanco.conj_valor(c, g)
 		match Pecas.CONJUNTO_MOLDE[c]:
 			Pecas.Conjunto.CAVALEIRO:
-				u.armadura += Balanco.CONJ_CAVALEIRO_ARMADURA[g]
+				u.armadura += kv
 			Pecas.Conjunto.GUARDIAO:
-				vida_mult += Balanco.CONJ_GUARDIAO_VIDA[g]
+				vida_mult += kv
 			Pecas.Conjunto.REI:
-				u.coroa_bonus += Balanco.CONJ_REI_DANO[g]
+				u.coroa_bonus += kv
 			Pecas.Conjunto.CIRCO:
-				u.barril_dano += Balanco.CONJ_CIRCO_EXPLOSAO[g]
+				u.barril_dano += kv
 			Pecas.Conjunto.VIKING:
-				dano_mult += Balanco.CONJ_VIKING_DANO[g]
+				dano_mult += kv
 			Pecas.Conjunto.JARDINEIRO:
-				u.regen += Balanco.CONJ_JARDINEIRO_REGEN[g]
+				u.regen += kv
 			Pecas.Conjunto.CAUBOI:
-				rapidez += Balanco.CONJ_CAUBOI_RAPIDEZ[g]
+				rapidez += kv
 			Pecas.Conjunto.PIRATA:
-				u.roubo += Balanco.CONJ_PIRATA_ROUBO[g]
+				u.roubo += kv
 			Pecas.Conjunto.MAGO:
-				u.tocha_dps += Balanco.CONJ_MAGO_QUEIMA[g]
+				u.tocha_dps += kv
+			Pecas.BONUS_CANTIL:
+				u.cantil += kv
+			Pecas.BONUS_CRITICO:
+				u.critico = minf(Balanco.CRITICO_MAX, u.critico + kv)
+			Pecas.BONUS_BARREIRA:
+				u.barreira_int = kv if u.barreira_int <= 0.0 else minf(u.barreira_int, kv)
+			Pecas.BONUS_CARGA:
+				u.recarga_menos += kv
 	if u.equipe == 1:
 		# poder de bicho: só fantasiado com a fantasia completa (já em u.poder) e chefe (poder fixo por chefe)
 		if u.chefe and u.chefe_tipo >= 0:
 			var cj: int = Balanco.CHEFE_PODER_CONJ[u.chefe_tipo]
 			u.poder = Pecas.PODER_TIPO[cj]
 			u.poder_conj = cj
-		elif not u.elite:
-			u.poder = -1
+		elif not u.elite or u.poder in Pecas.PODER_SO_GATO:
+			u.poder = -1   # o fantasiado só ganha o bônus de kit
 			u.poder_conj = -1
 	u.atordoa_chance = 0.0
 	u.gelo_chance = 0.0
@@ -890,6 +900,8 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.oculto_t = maxf(0.0, u.oculto_t - dt)
 	u.furor_t = maxf(0.0, u.furor_t - dt)
 	u.bola_t = maxf(0.0, u.bola_t - dt)
+	u.disfarce_t = maxf(0.0, u.disfarce_t - dt)
+	u.buff_dano_t = maxf(0.0, u.buff_dano_t - dt)
 	if u.bola_t > 0.0:
 		u.atordoado_t = 0.0   # Bola de espinhos: ninguém atordoa
 	u.barreira_cd = maxf(0.0, u.barreira_cd - dt)
@@ -925,7 +937,7 @@ func _agir(u: Unidade, dt: float) -> void:
 		u.poder_cd -= dt
 		u.poder_pronto = u.poder_cd <= 0.0
 		if u.poder_pronto and not (poder_manual and u.equipe == 0) and _usar_poder(u):
-			u.poder_cd = Balanco.PODER_INTERVALO - u.poder_cd_menos
+			u.poder_cd = _intervalo_poder(u)
 			u.poder_cd_menos = 0.0
 			u.poder_pronto = false
 			if not u.vivo:
@@ -988,7 +1000,7 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 		return
 	u.cd = u.intervalo
 	u.golpe = 0.22
-	var dm: float = u.dano * u.bonus_dano * (1.0 + u.furia_k * u.furia) * (1.0 + u.embalo)
+	var dm: float = u.dano * u.bonus_dano * (1.0 + u.furia_k * u.furia) * (1.0 + u.embalo) * (1.0 + (u.buff_dano if u.buff_dano_t > 0.0 else 0.0))
 	if u.critico > 0.0 and rng.randf() < u.critico:
 		dm *= Balanco.CARTOLA_MULT
 		_ev({"t": "critico", "x": a.x, "y": a.y})
@@ -1103,6 +1115,11 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		return
 	if alvo.barreira_int > 0.0 and alvo.barreira_cd <= 0.0:
 		alvo.barreira_cd = alvo.barreira_int  # Manto: o golpe some
+		_ev({"t": "barreira", "x": alvo.x, "y": alvo.y})
+		return
+	if alvo.disfarce_t > 0.0 and atk != null:
+		alvo.disfarce_t = 0.0   # Disfarce (Mimiau): o golpe some e quem bateu leva um susto
+		atk.atordoado_t = maxf(atk.atordoado_t, Balanco.PODER_DISFARCE_ATORDOA)
 		_ev({"t": "barreira", "x": alvo.x, "y": alvo.y})
 		return
 	var d: float
@@ -1278,7 +1295,7 @@ func disparar_poder(u: Unidade) -> bool:
 		return false
 	if not _usar_poder(u):
 		return false
-	u.poder_cd = Balanco.PODER_INTERVALO - u.poder_cd_menos
+	u.poder_cd = _intervalo_poder(u)
 	u.poder_cd_menos = 0.0
 	u.poder_pronto = false
 	return true
@@ -1317,17 +1334,23 @@ func _herancas_agem(u: Unidade, dt: float) -> bool:
 			return false
 	return true
 
+## Intervalo até o próximo poder: o padrão, menos o kit do Jimiau e (se `com_menos`) os segundos tirados por Alvo travado.
+func _intervalo_poder(u: Unidade, com_menos: bool = true) -> float:
+	return maxf(1.0, Balanco.PODER_INTERVALO * (1.0 - u.recarga_menos) - (u.poder_cd_menos if com_menos else 0.0))
+
 ## Fração da carga do poder do gato (1 = pronto).
 func carga_poder(u: Unidade) -> float:
 	if u == null or u.poder < 0:
 		return 0.0
-	return clampf(1.0 - u.poder_cd / Balanco.PODER_INTERVALO, 0.0, 1.0)
+	return clampf(1.0 - u.poder_cd / _intervalo_poder(u, false), 0.0, 1.0)
 
 ## Medição por fantasia (só o simulador liga): usos, dano, abates e efeitos de cada poder.
 static var medir: bool = false
 static var tele: Dictionary = {}
 static var tele_i: Dictionary = {}   # idem, dos poderes dos bichos
 var _eq_tele: int = 0
+var ultimo_conj: int = -1   # fantasia do último poder disparado em campo (o Imitar copia)
+var ultimo_t: float = -999.0
 var _conj_tele: int = -1   # fantasia cujo poder está agindo agora (para a telemetria)
 
 func _tele(conj: int, chave: String, v: float) -> void:
@@ -1350,6 +1373,9 @@ func _usar_poder(u: Unidade) -> bool:
 	_fi = _fator_inimigo(u) if u.equipe == 1 else 1.0
 	var ok: bool = _usar_poder_i(u)
 	if ok:
+		if not (u.poder_conj in Pecas.IMITAR_EXCLUI):
+			ultimo_conj = u.poder_conj
+			ultimo_t = tempo
 		_tele(u.poder_conj, "usos_h" if em_heranca else "usos", 1.0)
 	_conj_tele = -1
 	_eq_tele = 0
@@ -1555,6 +1581,23 @@ func _forma_aviso(u: Unidade) -> Dictionary:
 			if pior == null:
 				return {}
 			circ.append(Vector3(pior.x, pior.y, 46.0))
+		Pecas.Poder.RICOCHETE:
+			var alvo_r: Unidade = _mais_perto(u, gatos, Balanco.PODER_RICOCHETE_ALCANCE)
+			if alvo_r == null:
+				return {}
+			alvos.append(Vector2(alvo_r.x, alvo_r.y))
+			lin.append([Vector2(ux, uy), Vector2(alvo_r.x, alvo_r.y)])
+		Pecas.Poder.OLHAR:
+			var forte_o: Unidade = null
+			for v in gatos:
+				if forte_o == null or v.vida > forte_o.vida:
+					forte_o = v
+			alvos.append(Vector2(forte_o.x, forte_o.y))
+		Pecas.Poder.POQUER:
+			var cs_p: Array = _aglomerados(gatos, Balanco.PODER_POQUER_RAIO, 1)
+			if cs_p.is_empty():
+				return {}
+			circ.append(Vector3(cs_p[0].x, cs_p[0].y, Balanco.PODER_POQUER_RAIO))
 		Pecas.Poder.PROTEGE, Pecas.Poder.FRENESI:
 			for v in inimigos:
 				if v.vivo and v.x <= Balanco.VISIVEL_X and not v.clone:
@@ -2136,6 +2179,163 @@ func _poder_atordoa_empurra_giro(u: Unidade, meus: Array[Unidade], outros: Array
 				_dano_poder(u, v, base * Balanco.PODER_GIRO_DANO)
 	return true
 
+# ---------- Lote 1 da expansão de fantasias (ver Balanco.PODER_SALVAMENTO_* e seguintes) ----------
+## Salvamento (Super Miau): leva o aliado mais ferido de volta ao posto, cura e soca o chão onde ele estava.
+func _poder_salvamento(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var ferido: Unidade = null
+	for v in meus:
+		if not v.vivo or v.clone or v.cao or (v == u and not em_heranca):
+			continue
+		if v.vida >= v.vida_max * Balanco.PODER_SALVAMENTO_LIMIAR:
+			continue
+		if ferido == null or v.vida / v.vida_max < ferido.vida / ferido.vida_max:
+			ferido = v
+	if ferido == null:
+		return false
+	var ax: float = ferido.x
+	var ay: float = ferido.y
+	pontos.append(Vector2(ax, ay))
+	if em_heranca:
+		var antes_h: float = ferido.vida
+		ferido.vida = minf(ferido.vida_max, ferido.vida + ferido.vida_max * Balanco.PODER_SALVAMENTO_HER_CURA)
+		ferido.protegido_t = maxf(ferido.protegido_t, Balanco.PODER_SALVAMENTO_PROTEGE * _frac_apoio())
+		_tele(u.poder_conj, "cura", ferido.vida - antes_h)
+		return true
+	for v in outros:
+		if v.vivo and _dentro(v, ax, ay, Balanco.PODER_SALVAMENTO_RAIO):
+			v.atordoado_t = maxf(v.atordoado_t, Balanco.PODER_SALVAMENTO_ATORDOA * (Balanco.PODER_ATORDOA_CHEFE if v.chefe else 1.0))
+			_dano_poder(u, v, base * Balanco.PODER_SALVAMENTO_DANO)
+	extra["x0"] = u.x
+	extra["y0"] = u.y
+	extra["raio"] = Balanco.PODER_SALVAMENTO_RAIO
+	ferido.x = clampf(ferido.casa_x, Balanco.TORRE_X + 20.0, Balanco.VISIVEL_X)
+	ferido.y = ferido.casa_y
+	ferido.vx = -9999.0
+	ferido.alvo = null
+	ferido.retarget = 0.0
+	if ferido != u:
+		u.x = ferido.x - 26.0
+		u.y = ferido.y
+		u.vx = -9999.0
+		u.alvo = null
+		u.retarget = 0.0
+	var antes: float = ferido.vida
+	ferido.vida = minf(ferido.vida_max, ferido.vida + ferido.vida_max * Balanco.PODER_SALVAMENTO_CURA)
+	_tele(u.poder_conj, "cura", ferido.vida - antes)
+	ferido.protegido_t = maxf(ferido.protegido_t, Balanco.PODER_SALVAMENTO_PROTEGE)
+	u.protegido_t = maxf(u.protegido_t, Balanco.PODER_SALVAMENTO_PROTEGE)
+	return true
+
+## Flecha ricochete (Arqueiro Miau): acerta o mais perto e salta de inimigo em inimigo, cada acerto mais forte.
+func _poder_ricochete(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var atual: Unidade = _mais_perto(u, outros, Balanco.PODER_RICOCHETE_ALCANCE)
+	if atual == null:
+		return false
+	var dano: float = base * Balanco.PODER_RICOCHETE_DANO
+	var acertados: Array[Unidade] = []
+	for k in ceili(Balanco.PODER_RICOCHETE_ALVOS * _frac_apoio()):
+		if atual == null:
+			break
+		acertados.append(atual)
+		pontos.append(Vector2(atual.x, atual.y))
+		var ax: float = atual.x
+		var ay: float = atual.y
+		_dano_poder(u, atual, dano)
+		dano *= Balanco.PODER_RICOCHETE_CRESCE
+		atual = null
+		var md: float = Balanco.PODER_RICOCHETE_SALTO * Balanco.PODER_RICOCHETE_SALTO
+		for v in outros:
+			if not v.vivo or acertados.has(v):
+				continue
+			var d2: float = (v.x - ax) * (v.x - ax) + (v.y - ay) * (v.y - ay)
+			if d2 <= md:
+				md = d2
+				atual = v
+	return true
+
+## Olhar da Penitência (Motoqueiro Miausma): dano em % da vida máxima dos de maior vida, mais queimadura.
+func _poder_olhar(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	if outros.is_empty():
+		return false
+	var cand: Array[Unidade] = outros.duplicate()
+	cand.sort_custom(func(a: Unidade, b: Unidade) -> bool: return a.vida > b.vida)
+	var n: int = 1 if (em_heranca or u.equipe == 1) else Balanco.PODER_OLHAR_N
+	var frac: float = Balanco.PODER_OLHAR_FRACAO
+	if em_heranca:
+		frac = Balanco.PODER_OLHAR_HER_FRACAO
+	elif u.equipe == 1:
+		frac = Balanco.PODER_OLHAR_BICHO_FRACAO * _fi
+	for k in mini(n, cand.size()):
+		var v: Unidade = cand[k]
+		var fr: float = Balanco.PODER_OLHAR_CHEFE_FRACAO if v.chefe else frac
+		var teto: float = Balanco.PODER_OLHAR_CHEFE_MAX if v.chefe else Balanco.PODER_OLHAR_MAX
+		pontos.append(Vector2(v.x, v.y))
+		_dano_poder(u, v, clampf(v.vida_max * fr, base * Balanco.PODER_OLHAR_MIN, base * teto))
+		if v.vivo:
+			v.queima_t = Balanco.PODER_OLHAR_QUEIMA_T
+			v.queima_dps = base * Balanco.PODER_OLHAR_QUEIMA_DPS
+			v.queima_fonte = u
+	return true
+
+## Objeção! (Fênix Miaussimo): só dispara com um bicho carregando poder; corta o aviso e anima o time.
+func _poder_objecao(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var alvo: Unidade = null
+	for v in outros:
+		if v.vivo and v.aviso_t > 0.0 and (alvo == null or (v.chefe and not alvo.chefe) or (v.chefe == alvo.chefe and v.vida > alvo.vida)):
+			alvo = v
+	if alvo == null:
+		return false
+	alvo.aviso_t = 0.0
+	alvo.aviso_forma = {}
+	alvo.atordoado_t = maxf(alvo.atordoado_t, Balanco.PODER_OBJECAO_ATORDOA_CHEFE if alvo.chefe else Balanco.PODER_OBJECAO_ATORDOA)
+	alvo.poder_cd = maxf(alvo.poder_cd, 0.0) + Balanco.PODER_OBJECAO_ATRASO
+	_ev({"t": "aviso_cortado", "x": alvo.x, "y": alvo.y})
+	pontos.append(Vector2(alvo.x, alvo.y))
+	if not em_heranca:
+		for v in meus:
+			if v.vivo and not v.clone:
+				v.buff_dano = Balanco.PODER_OBJECAO_BONUS
+				v.buff_dano_t = maxf(v.buff_dano_t, Balanco.PODER_OBJECAO_BONUS_T)
+		extra["texto"] = "Contra-prova!"
+	_dano_poder(u, alvo, base * Balanco.PODER_OBJECAO_DANO)
+	return true
+
+## Imitar (Mimiau): repete o último poder da luta; sem nenhum (ou sem alvo para ele), vira um Disfarce.
+func _poder_imitar(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	if ultimo_conj >= 0 and tempo - ultimo_t <= Balanco.PODER_IMITAR_JANELA:
+		var p0: int = u.poder
+		var f0: float = u.poder_forca
+		u.poder = Pecas.PODER_TIPO[ultimo_conj]
+		if not em_heranca:
+			u.poder_forca *= Balanco.PODER_IMITAR_FORCA
+		var deu: bool = _usar_poder_i(u)
+		u.poder = p0
+		u.poder_forca = f0
+		if deu:
+			extra["imitou"] = true
+			return true
+	u.disfarce_t = Balanco.PODER_DISFARCE_T
+	pontos.append(Vector2(u.x, u.y))
+	extra["texto"] = "Disfarce!"
+	return true
+
+## Mão de pôquer (Jimiau): saca cartas, joga a melhor mão de 5 e fere o maior bando conforme a mão.
+func _poder_poquer(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var cs: Array = _aglomerados(outros, Balanco.PODER_POQUER_RAIO, 1)
+	if cs.is_empty():
+		return false
+	var cc: Vector2 = cs[0]
+	var mao: int = Poquer.melhor_mao(Poquer.sacar(rng, Balanco.PODER_POQUER_CARTAS_HER if em_heranca else Balanco.PODER_POQUER_CARTAS))
+	pontos.append(cc)
+	for v in outros:
+		if v.vivo and _dentro(v, cc.x, cc.y, Balanco.PODER_POQUER_RAIO):
+			_dano_poder(u, v, base * Balanco.PODER_POQUER_DANO[mao])
+	extra["raio"] = Balanco.PODER_POQUER_RAIO
+	extra["texto"] = Poquer.NOME[mao] + "!"
+	extra["mao"] = mao
+	_tele(u.poder_conj, "mao", float(mao))
+	return true
+
 func _usar_poder_i(u: Unidade) -> bool:
 	var meus: Array[Unidade] = aliados if u.equipe == 0 else inimigos
 	var outros: Array[Unidade] = []
@@ -2225,6 +2425,26 @@ func _usar_poder_i(u: Unidade) -> bool:
 				return false
 		Pecas.Poder.BOLA:
 			if not _poder_bola(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.SALVAMENTO:
+			if not _poder_salvamento(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.RICOCHETE:
+			if not _poder_ricochete(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.OLHAR:
+			if not _poder_olhar(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.OBJECAO:
+			if not _poder_objecao(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.IMITAR:
+			if not _poder_imitar(u, meus, outros, base, pontos, extra):
+				return false
+			if extra.has("imitou"):
+				return true   # o poder copiado já mandou o seu próprio evento
+		Pecas.Poder.POQUER:
+			if not _poder_poquer(u, meus, outros, base, pontos, extra):
 				return false
 		Pecas.Poder.ATORDOA, Pecas.Poder.EMPURRA, Pecas.Poder.GIRO:
 			if not _poder_atordoa_empurra_giro(u, meus, outros, base, pontos, extra):

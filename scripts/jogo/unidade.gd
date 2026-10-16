@@ -96,6 +96,10 @@ var bola_t: float = 0.0         # Bola de espinhos: veloz, espinhento e imune a 
 var bola_vel: float = 1.0
 var bola_espinho: float = 0.0
 var poder_cd_menos: float = 0.0 # Alvo travado: segundos a menos na próxima recarga
+var recarga_menos: float = 0.0  # kit do Jimiau: fração a menos no intervalo entre poderes
+var disfarce_t: float = 0.0     # Disfarce (Mimiau): anula o próximo golpe e atordoa quem bateu
+var buff_dano_t: float = 0.0    # Objeção!: dano a mais por alguns segundos
+var buff_dano: float = 0.0
 # aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
 var aviso_t: float = 0.0        # segundos que faltam para soltar (0 = sem aviso)
 var aviso_dur: float = 0.0

@@ -17,7 +17,7 @@ const ORIGEM: Array[Vector2] = [
 ]
 # qual linha de GatoDados.ANCORAS dá o movimento de cada lugar ao longo da animação
 const _SEGUE: Array[int] = [0, 1, 0, 3, 0, 2, 0]
-const _FAIXA := 21   # tipos por arquivo: A 0..20, B 21..41, C 42..62, D 63..83, E 84..99
+const _FAIXA := 21   # tipos por arquivo: A 0..20, B 21..41, C 42..62, D 63..83, E 84..99, F 100 em diante (expansão)
 
 ## Origem do lugar `onde` no quadro `quadro` do atlas (acompanha a animação).
 static func origem(onde: int, quadro: int) -> Vector2:
@@ -47,6 +47,17 @@ static func onde(tipo: int) -> int:
 		Pecas.SLOT_CORPO:
 			return Onde.CORPO
 	var o: int = -1
+	if tipo >= RoupaGatoF.PRIMEIRO:
+		o = RoupaGatoF.onde(tipo)
+	else:
+		o = _onde_arquivo(tipo)
+	if o >= 0:
+		return o
+	# sem escolha do arquivo da peça: a de mão vai na boca; o acessório, na traseira
+	return Onde.BOCA if Pecas.SLOT[tipo] == Pecas.SLOT_MAO else Onde.TRASEIRA
+
+static func _onde_arquivo(tipo: int) -> int:
+	var o: int = -1
 	match tipo / _FAIXA:
 		0:
 			o = RoupaGatoA.onde(tipo)
@@ -66,6 +77,9 @@ static func onde(tipo: int) -> int:
 ## Desenha a peça em torno da origem do transform atual (1 unidade = 1 pixel do gato).
 static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 	_tipo_vez = tipo
+	if tipo >= RoupaGatoF.PRIMEIRO:
+		RoupaGatoF.desenhar(c, tipo, f, anim)
+		return
 	match tipo / _FAIXA:
 		0:
 			RoupaGatoA.desenhar(c, tipo, f, anim)
