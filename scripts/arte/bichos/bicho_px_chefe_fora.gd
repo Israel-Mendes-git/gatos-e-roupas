@@ -39,20 +39,6 @@ const _CAB: Dictionary = {
 		"..dmmmmmmmmd....",
 		"...dddddddd.....",
 	]},
-	"V": {"js": 8, "ms": 14, "ab": 3, "ex": 8, "ey": 3, "rows": [   # vira-lata
-		"....llllllll..........",
-		"..llllllllllll........",
-		".llllllllllllllllll...",
-		"llllllmmmmmmmmllllnnn.",
-		"lllllmmmmmmmmmmvvvvnnn",
-		"llllmmmmmmmmmmmvvvvvvn",
-		"mmmmmmmmmmmmmmmvvvvvv.",
-		"mmmmmmmmmmmmmmmmvvvvv.",
-		".mmmmmmmmmmmmmvvvvvvv.",
-		"..dmmmmmmmmmmmvvvvvv..",
-		"...ddmmmmmmmmmdddd....",
-		".....dddddddddd.......",
-	]},
 	"T": {"js": 6, "ms": 8, "ab": 3, "ex": 9, "ey": 3, "rows": [   # texugo
 		"....wwwwwwwwww....",
 		"..wwwwwwwwwwwwww..",
@@ -75,8 +61,8 @@ static func _hx(s: String, a: float = 1.0) -> Color:
 static func _pal(ct: int, alfa: float) -> Dictionary:
 	var P: Dictionary = {"w": Color("ffffff"), "k": Color("120c14")}
 	match ct:
-		5:   # toupeira: veludo roxo-acinzentado, mãos rosas, capacete amarelo
-			P.merge({"o": Color("1a121c"), "l": Color("8a7894"), "m": Color("5d4c68"), "d": Color("3a2f45"),
+		5:   # toupeira: veludo cinza-escuro, focinho e mãos rosas, garras cremes, capacete amarelo
+			P.merge({"o": Color("1a121c"), "l": Color("7c7488"), "m": Color("524c5e"), "d": Color("332e3c"),
 				"P": Color("f5bcba"), "p": Color("e48e98"), "Q": Color("b2606f"), "n": Color("6e2f40"), "q": Color("7a1f2a"),
 				"c": Color("f6edd2"), "C": Color("ffffff"), "s": Color("b3a374"),
 				"Y": Color("f6c61f"), "y": Color("b8860f"), "h": Color("fff08a"), "g": Color("a4afba"), "G": Color("5c6672"), "W": Color("fffbd0"),
@@ -418,98 +404,76 @@ const _LAMPADA: Array = [
 	"gWWg",
 	"GGGG",
 ]
-const _FOCINHO: Array = [
-	"PPPPp....",
-	"PPPPPPp..",
-	"PPPPPPpQn",
-	"pppppppQn",
-	".QQQQQQ..",
+## Corpo de veludo em gota, sem pescoço: a frente afina e vira a cabeça (o capacete fica nela).
+const _TP_CORPO: Array = [
+	"......lllllll.................",
+	"...lllllllllllll..............",
+	".llllmmmmmmmmllllllllll.......",
+	"llmmmmmmmmmmmmmmmmlllllllll...",
+	"lmmmmmmmmmmmmmmmmmmmmmmmmlll..",
+	"mmmmmmmmmmmmmmmmmmmmmmmmmmmll.",
+	"mmmmmmmmmmmmmmmmmmmmmmmmmmmmm.",
+	"mmmmmmmmmmmmmmmmmmmmmmmmmmmmm.",
+	"dmmmmmmmmmmmmmmmmmmmmmmmmmmmd.",
+	"ddmmmmmmmmmmmmmmmmmmmmmmmmdd..",
+	".dddmmmmmmmmmmmmmmmmmmmmdd....",
+	"..ddddddddddddddddddddddd.....",
+	"....dddddddddddddddddd........",
 ]
+## Focinho rosa comprido e pontudo, com os tentáculos da estrela na ponta.
+const _TP_FOCINHO: Array = [
+	"PPPPp.......",
+	"PPPPPPPp.P..",
+	"PPPPPPPPPPP.",
+	"PPPPPPPPPPPP",
+	"pppppppppPP.",
+	".QQQQQQQ.P..",
+]
+## Mãos de cavar enormes, em pá, com três garras compridas (a de longe mais escura).
+const _TP_MAO: Array = [".PPPPPP.", "PPPPPPPP", "PPPPPPPp", "pPPPPPpp", ".pppppp.", "..pQQQ.."]
+const _TP_MAO_L: Array = ["..ppppp.", ".ppppppp", "pppppppQ", "ppppppQQ", ".pQQQQQ."]
+const _TP_GARRAS: Array = ["cccC", "....", "ccccC", "....", "cccC"]
+const _TP_GARRAS_L: Array = ["sss", "...", "ssss", "...", "sss"]
+const _TP_PE: Array = [".PPPP", "PPPPPp"]
+const _TP_PE_L: Array = [".pppp", "ppppQQ"]
 
 static func _geo5(g: Dictionary, tk: int) -> void:
 	var q: int = g["q"]
 	var ph: int = g["ph"]
-	var e: int = [0, -1, 2, 3, 1][ph]
-	var bx: int = -12
-	var bw: int = 18
-	var by0: int = -15 + int(g["bob"]) - int(g["resp"])
-	var bh: int = 13 + int(g["resp"])
-	var hx: int = 2 + e
-	var hy: int = by0 - 1
+	var bx: int = -16
+	var by0: int = -14 + int(g["bob"]) - int(g["resp"])
 	var ax: int = 0
 	var ay: int = 0
-	var abre: int = 0
 	if ph > 0:
-		ax = [0, -2, 5, 6, 3][ph]
-		ay = [0, -5, 0, 3, 0][ph]
-		abre = [0, 0, 1, 1, 0][ph]
+		ax = [0, -2, 4, 5, 2][ph]
+		ay = [0, -4, -1, 0, 0][ph]
 	elif g["andando"]:
 		ax = [-1, 1, 2, 2, 0, -1][q]
 		ay = [0, -1, -1, -1, 0, 0][q]
-	g["e"] = e
+	g["e"] = ax
 	g["bx"] = bx
-	g["bw"] = bw
 	g["by0"] = by0
-	g["bh"] = bh
-	g["hx"] = hx
-	g["hy"] = hy
-	g["ax"] = 9 + ax
-	g["ay"] = -5 + ay + int(g["bob"]) - int(g["resp"])
-	g["fx"] = 4 - (ax if ph == 0 else 1)
-	g["fy"] = -5 + (-ay if ph == 0 else -1)
-	g["abre"] = abre
+	g["ax"] = ax
+	g["ay"] = ay
 	g["dente"] = ph == 2 or ph == 3
-	g["cx0"] = hx - 1
-	g["cy0"] = hy - 5
-	g["gx"] = hx + 6
-	g["gy"] = hy + 3
+	g["cx0"] = bx + 14
+	g["cy0"] = by0 - 4
 	if g["parado"]:
 		g["ext"] = (tk / 140) % 4
 		g["cx0"] = -8
 		g["cy0"] = -20
-		g["gx"] = -2
-		g["gy"] = -15
 		g["a"] = [Vector2(0, -14), Vector2(0, -8), Vector2(10, -11), Vector2(-8, -9), Vector2(0, -11), Vector2(0, 0), Vector2(1, -14)]
 		g["patas"] = Vector2(0, 5000)
 		return
-	g["a"] = [Vector2(hx + 6, hy + 1), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + 18, hy + 6), Vector2(bx + 3, by0 + 2),
-		Vector2(hx + 3, hy + 8), Vector2(g["gx"] + 2, g["gy"] + 2), Vector2(hx + 12, hy + 4)]
+	g["a"] = [Vector2(bx + 21, by0 + 1), Vector2(bx + 12, by0 + 6), Vector2(bx + 38, by0 + 7), Vector2(bx + 2, by0 + 4),
+		Vector2(bx + 23, by0 + 9), Vector2(bx + 25, by0 + 4), Vector2(bx + 25, by0 + 3)]
 	g["patas"] = Vector2(-3, 0)
-
-## Braço com a mão rosa (as garras vão por cima, em _garras). (cx, cy) = centro da mão; `longe` = o braço de trás (mais escuro).
-static func _braco(L: PackedInt32Array, sx: int, sy: int, cx: int, cy: int, longe: bool) -> void:
-	_trazo(L, sx, sy, cx - 2, cy - 1, 4, "d" if longe else "m")
-	if longe:
-		_elip(L, cx - 3, cy - 3, 8, 7, "p", "Q", "Q")
-	else:
-		_elip(L, cx - 3, cy - 3, 8, 7, "P", "p", "Q")
-
-## Três garras claras, finas, sobre a ponta da mão (sem contorno, para não virar listras).
-static func _garras(G: PackedInt32Array, cx: int, cy: int, longe: bool, abre: int, ph: int) -> void:
-	var L := _nova()
-	var cl: String = "s" if longe else "c"
-	var baixo: int = 2 if ph == 3 else 0
-	for i in 3:
-		var y0: int = cy - 3 + i * 3
-		var y1: int = y0 + (i - 1) * 2 + baixo
-		var x1: int = cx + 8 + abre
-		_trazo(L, cx + 2, y0, x1, y1, 1, cl)
-		_px(L, x1 + 1, y1, "C" if not longe else cl)
-	_luz_forte(G, L)
 
 ## sobrepõe o efeito a tudo (inclusive ao contorno e ao corpo)
 static func _luz_forte(G: PackedInt32Array, L: PackedInt32Array) -> void:
 	for k in L.size():
 		if L[k] != 0:
 			G[k] = L[k]
-
-static func _lente(B: PackedInt32Array, gx: int, gy: int) -> void:
-	_rect(B, gx, gy, 6, 6, "g")
-	_rect(B, gx, gy + 5, 6, 1, "G")
-	_rect(B, gx + 1, gy + 1, 4, 4, "B")
-	_rect(B, gx + 2, gy + 2, 3, 3, "k")
-	_px(B, gx + 1, gy + 1, "w")
-	_px(B, gx + 2, gy + 2, "w")
 
 static func _feixe(G: PackedInt32Array, lx: int, ly: int, n: int) -> void:
 	var F := _nova()
@@ -520,105 +484,123 @@ static func _feixe(G: PackedInt32Array, lx: int, ly: int, n: int) -> void:
 			_px(F, lx + dx, cy + dy, "j" if absf(float(dy)) <= meio * 0.55 else "J")
 	_luz(G, F)
 
+## capacete de mineiro com a lanterna (sai quando a toupeira veste chapéu)
+static func _capacete5(G: PackedInt32Array, cx0: int, cy0: int) -> void:
+	var C := _nova()
+	_bmp(C, cx0, cy0, _HELM)
+	_rect(C, cx0 + 5, cy0 + 1, 1, 4, "y")
+	_bmp(C, cx0 + 11, cy0 + 1, _LAMPADA)
+	_px(C, cx0 + 2, cy0 + 3, "h")
+	_comp(G, C)
+
 static func _monta5(G: PackedInt32Array, g: Dictionary) -> void:
 	var q: int = g["q"]
 	var ph: int = g["ph"]
 	var bx: int = g["bx"]
 	var by0: int = g["by0"]
-	var bh: int = g["bh"]
-	var hx: int = g["hx"]
-	var hy: int = g["hy"]
+	var ax: int = g["ax"]
+	var ay: int = g["ay"]
 	var pe: Array = [0, 2, 0, -2, 0, 1]
 	var lv: Array = [0, 0, 1, 1, 0, 0]
-	var L1 := _nova()
-	var L2 := _nova()
 	var fl: int = 0
 	var nl: int = 0
+	var fu: int = 0
+	var nu: int = 0
 	if g["andando"]:
 		fl = int(pe[(q + 3) % 6])
 		nl = int(pe[q])
-	_elip(L1, bx + 1 + fl, -3 - (int(lv[(q + 3) % 6]) if g["andando"] else 0), 6, 3, "p", "Q", "Q")
-	_elip(L2, bx + 8 + nl, -3 - (int(lv[q]) if g["andando"] else 0), 6, 3, "P", "p", "Q")
+		fu = int(lv[(q + 3) % 6])
+		nu = int(lv[q])
+	# rabinho, pé e mão de longe (com as garras dela)
+	var R := _nova()
+	_bmp(R, bx - 2, by0 + 7, ["pp", "Qp"])
+	_comp(G, R)
+	var L1 := _nova()
+	_bmp(L1, bx + 5 + fl, by0 + 12 - fu, _TP_PE_L)
 	_comp(G, L1)
-	_comp(G, L2)
-	# braço de longe
+	var fax: int = -ax / 2 if ph == 0 else 0
 	var A := _nova()
-	_braco(A, 3, by0 + 5, int(g["fx"]), int(g["fy"]), true)
+	_bmp(A, bx + 24 + fax, by0 + 9, _TP_MAO_L)
 	_comp(G, A)
-	# corpo redondo + cabeça + focinho
+	var AG := _nova()
+	_bmp(AG, bx + 31 + fax, by0 + 9, _TP_GARRAS_L)
+	_comp(G, AG)
+	# corpo; o molde do tronco é o corpo sem a cabeça (a roupa não cobre a cara)
 	var B := _nova()
-	_elip(B, bx, by0, int(g["bw"]), bh)
+	_bmp(B, bx, by0, _TP_CORPO)
 	_tr = B.duplicate()
+	for j in 13:
+		for i in range(21, 30):
+			_tr[(by0 + j + _OY) * _W + bx + i + _OX] = 0
 	_cr = 12
-	_tinta(B, bx + 3, by0 + bh - 6, 12, 6, "d")
-	_elip(B, hx, hy, 12, 11)
-	_bmp(B, hx + 9, hy + 4, _FOCINHO)
-	if g["dente"]:
-		_rect(B, hx + 12, hy + 9, 4, 3, "q")
-		_rect(B, hx + 12, hy + 9, 2, 3, "w")
-	var gx: int = g["gx"]
-	var gy: int = g["gy"]
-	_rect(B, hx + 1, gy + 1, gx - hx - 1, 2, "S")
-	_lente(B, gx, gy)
-	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
-	# capacete com lanterna (sai quando a toupeira veste chapéu, como os gorros dos bichos)
+	# olhinho minúsculo com brilho, logo abaixo da aba do capacete
+	var O := _nova()
+	_bmp(O, bx + 24, by0 + 3, ["ll", "kw"])
+	_luz_forte(G, O)
+	# focinho em camada própria; boca com dentinhos no bote
+	var F := _nova()
+	_bmp(F, bx + 27, by0 + 3, _TP_FOCINHO)
+	if g["dente"]:
+		_rect(F, bx + 29, by0 + 8, 4, 1, "q")
+		_px(F, bx + 30, by0 + 7, "w")
+		_px(F, bx + 32, by0 + 7, "w")
+	_comp(G, F)
+	# pé de perto
+	var L2 := _nova()
+	_bmp(L2, bx + 2 + nl, by0 + 12 - nu, _TP_PE)
+	_comp(G, L2)
+	# capacete
 	var cx0: int = g["cx0"]
 	var cy0: int = g["cy0"]
 	if not BichoPx.cabeca_coberta:
-		var C := _nova()
-		_bmp(C, cx0, cy0, _HELM)
-		_rect(C, cx0 + 5, cy0 + 1, 1, 4, "y")
-		_bmp(C, cx0 + 11, cy0 + 1, _LAMPADA)
-		_px(C, cx0 + 2, cy0 + 3, "h")
-		_comp(G, C)
-	# braço de perto
+		_capacete5(G, cx0, cy0)
+	# mão de perto com as garras (remando no passo, arranhando no golpe)
 	var D := _nova()
-	_braco(D, 2, by0 + 4, int(g["ax"]), int(g["ay"]), false)
+	_bmp(D, bx + 21 + ax, by0 + 8 + ay, _TP_MAO)
 	_comp(G, D)
-	_garras(G, int(g["fx"]), int(g["fy"]), true, 0, 0)
-	_garras(G, int(g["ax"]), int(g["ay"]), false, int(g["abre"]), ph)
+	var DG := _nova()
+	var abre: int = 1 if ph == 2 or ph == 3 else 0
+	_bmp(DG, bx + 28 + ax + abre, by0 + 8 + ay, _TP_GARRAS)
+	_comp(G, DG)
 	if not BichoPx.cabeca_coberta:
 		_feixe(G, cx0 + 15, cy0 + 2, 12)
 	if ph == 2 or ph == 3:
 		var X := _nova()
-		var hxm: int = int(g["ax"])
-		var hym: int = int(g["ay"])
+		var hxm: int = bx + 30 + ax
+		var hym: int = by0 + 11 + ay
 		_trazo(X, hxm - 3, hym - 12, hxm + 6, hym - 7, 1, "x")
 		_trazo(X, hxm + 6, hym - 7, hxm + 10, hym + 1, 1, "x")
 		_luz(G, X)
 	if ph == 3:
 		var Tt := _nova()
-		_rect(Tt, int(g["ax"]) + 9, int(g["ay"]) + 5, 2, 2, "T")
-		_rect(Tt, int(g["ax"]) + 12, int(g["ay"]) + 7, 2, 1, "t")
+		_rect(Tt, bx + 38 + ax, by0 + 12, 2, 1, "T")
+		_rect(Tt, bx + 41 + ax, by0 + 11, 2, 1, "t")
 		_luz(G, Tt)
 
 static func _monta5_monte(G: PackedInt32Array, g: Dictionary) -> void:
 	var f: int = g["ext"]
 	var up: int = 1 if (f == 1 or f == 2) else 0
+	# cabeça espiando do monte: veludo, olhinho e o focinho rosa
 	var B := _nova()
-	_elip(B, -6, -15 - up, 12, 11)
-	var gx: int = -2
-	var gy: int = -14 - up
-	_rect(B, gx - 4, gy + 1, 4, 2, "S")
-	_lente(B, gx, gy)
-	_bmp(B, 3, -11 - up, ["PPPp", "PPPPQ", "pppQ"])
+	_elip(B, -6, -17 - up, 13, 11)
+	_bmp(B, 1, -14 - up, ["ll", "kw"])
 	_comp(G, B)
+	var Fo := _nova()
+	_bmp(Fo, 5, -14 - up, ["PPPp...", "PPPPPPP", "ppppPPP", ".QQQ.P."])
+	_comp(G, Fo)
 	var cx0: int = -8
-	var cy0: int = -20 - up
+	var cy0: int = -22 - up
 	if not BichoPx.cabeca_coberta:
-		var C := _nova()
-		_bmp(C, cx0, cy0, _HELM)
-		_rect(C, cx0 + 5, cy0 + 1, 1, 4, "y")
-		_bmp(C, cx0 + 11, cy0 + 1, _LAMPADA)
-		_px(C, cx0 + 2, cy0 + 3, "h")
-		_comp(G, C)
+		_capacete5(G, cx0, cy0)
 	if f == 1 or f == 3:
 		var A := _nova()
 		var ya: int = -10 - (3 if f == 1 else 0)
-		_elip(A, -20, ya, 7, 6, "P", "p", "Q")
+		_bmp(A, -22, ya - 2, ["..PPPP", ".PPPPP", "PPPPPP", "pPPPpp", ".pppp."])
 		_comp(G, A)
-		_garras(G, -20, ya + 3, false, 0, 0)
+		var AG := _nova()
+		_bmp(AG, -25, ya - 2, ["Cccc", "....", "Ccccc", "....", "Cccc"])
+		_comp(G, AG)
 	var M := _nova()
 	_elip(M, -18, -10, 36, 20, "u", "T", "t")
 	_comp(G, _corta(M))
@@ -896,7 +878,6 @@ static func _monta7(G: PackedInt32Array, g: Dictionary) -> void:
 	# corpo ovo, peito creme com penugem em V
 	var B := _nova()
 	_elip(B, -9, -27 - lift - resp, 19, 24 + resp)
-	_tr = B.duplicate()
 	_cr = 16   # a cabeça larga tem 21, mas metade é o disco do rosto e as orelhas de pena: o chapéu fica no alto dela
 	_tinta(B, -2, -25 - lift - resp, 12, 20 + resp, "m")
 	_elip(B, 0, -25 - lift - resp, 10, 19 + resp, "v", "v", "V")
@@ -906,6 +887,7 @@ static func _monta7(G: PackedInt32Array, g: Dictionary) -> void:
 			var x: int = 2 + i * 3 + (j % 2) * 1
 			_px(B, x, py + j * 3, "M")
 			_px(B, x + 1, py + j * 3 + 1, "M")
+	_tr = B.duplicate()   # o molde é o corpo inteiro, peito incluído: a roupa veste a frente, não só uma faixa do flanco
 	# cabeça larga com orelhas de pena
 	var tx: int = 6 if boca else 0
 	_trazo(B, hcx - 8, hcy - 6, hcx - 10 - tx / 2, hcy - 12 - (tx / 3), 3, "m")
@@ -915,11 +897,13 @@ static func _monta7(G: PackedInt32Array, g: Dictionary) -> void:
 	_px(B, hcx - 9 - tx / 2, hcy - 10 - (tx / 3), "l")
 	_px(B, hcx + 9 + tx / 2, hcy - 10 - (tx / 3), "l")
 	_elip(B, hcx - 9, hcy - 8, 21, 16)
-	# disco facial
+	# disco facial com aro escuro (o que faz ler "coruja" de longe)
+	_elip(B, hcx - 9, hcy - 6, 11, 14, "D", "D", "D")
+	_elip(B, hcx - 1, hcy - 6, 13, 15, "D", "D", "D")
 	_elip(B, hcx - 8, hcy - 5, 9, 12, "v", "v", "V")
 	_elip(B, hcx, hcy - 5, 11, 13, "v", "v", "V")
 	_px(B, hcx, hcy - 4, "V")
-	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
+	BichoPx.manter_iguais(_tr, B, _W)   # a cabeça fica por cima da roupa de corpo
 	_comp(G, B)
 	# olhos enormes (dois discos amarelos com aro laranja e pupila)
 	var E := _nova()
@@ -979,22 +963,56 @@ static func _monta7(G: PackedInt32Array, g: Dictionary) -> void:
 	_comp(G, W2)
 
 # ================================================================ 8 VIRA-LATA CHEFÃO
+## Cabeça de perfil: crânio redondo, focinho comprido e mais baixo com o nariz preto na ponta, bochecha e queixo cremes.
+const _VL_CAB: Array = [
+	"...mmmmm..........",
+	"..mlllllmm........",
+	".mllllllllm.......",
+	"mlllllllllmm......",
+	"mllllllkklllm.....",
+	"mlllllkwklllvvvvnn",
+	"mmllllllllvvvvvvnn",
+	"mmmlllllvvvvvvvvv.",
+	"dmmmmmvvvvvvvvvv..",
+	".dmmmvvvvvvvvvv...",
+	"..ddVVVVVVVVV.....",
+	"....VVVVVV........",
+]
+const _VL_CAB_INFO: Dictionary = {"js": 8, "ms": 8, "ab": 2, "ex": 6, "ey": 4}
+## Orelha de perto, caída por trás do olho, com a ponta rasgada; a de longe só aparece a ponta atrás do crânio.
+const _VL_ORELHA: Array = ["eee..", "eEee.", "eEeee", "eEeee", "eEeee", ".eEee", ".eEe.", "..ee."]
+const _VL_ORELHA_L: Array = ["EE.", "EEE", ".EE"]
+## Corpo comprido com tufos no lombo, mancha escura de vira-lata na anca, peito creme subindo pelo pescoço.
+const _VL_CORPO: Array = [
+	"..................mmmm....",
+	".................mmmmmv...",
+	".......l..l.l...mmmmmvv...",
+	"......llllllllllmmmmmvvv..",
+	"...llllllllllllllmmmvvvvv.",
+	".lllmmlllllllllllllmvvvvvv",
+	"lllmmmmmmmllllllllllvvvvvv",
+	"llmmeeeemmmmmmmmmmmmvvvvvv",
+	"lmmeeeeeemmmmmmmmmmmvvvvvv",
+	"mmmmeeeemmmmmmmmmmmmmvvvvv",
+	"mmmmmmmmmmmmmmmmmmmmmvvvv.",
+	"dmmmmmmmmmmmmmmmmmmmmmvv..",
+	".ddmmmmmmmmmmmmmmmmmmmd...",
+	"...ddddVVVVVVVVVVVVddd....",
+]
+const _VL_RABO: Array = ["...ll", "..lml", ".lmm.", "lmm..", "mm...", "m...."]
+const _VL_RABO_CAIDO: Array = ["m....", "mm...", ".mm..", ".mm..", "..mm.", "..ll.", "..ll."]
+
 static func _geo8(g: Dictionary, tk: int) -> void:
-	var q: int = g["q"]
 	var ph: int = g["ph"]
 	var parado: bool = g["parado"]
-	var e: int = [0, -2, 4, 3, 1][ph]
-	var bx: int = -13
-	var bw: int = 24
-	var bh: int = 12
+	var e: int = [0, -2, 3, 2, 1][ph]
 	var ofeg: int = (tk / 120) % 2 if parado else 0
-	var by0: int = -21 + int(g["bob"]) - int(g["resp"])
-	bh += int(g["resp"]) + ofeg
-	var cb: Dictionary = _cabk("V", 1.2)
-	var hw: int = cb["hw"]
-	var hh: int = cb["hh"]
-	var hx: int = 2 + (1 if parado else e)
-	var hy: int = by0 - 8 + (9 if parado else 0)
+	var bx: int = -15
+	var bw: int = 26
+	var bh: int = 14
+	var by0: int = -20 + int(g["bob"]) - int(g["resp"]) + (1 if parado else 0)
+	var hx: int = bx + 18 + e
+	var hy: int = by0 - 5 + (4 if parado else 0) + (1 if ph == 1 else 0) + ofeg
 	g["e"] = e
 	g["bx"] = bx
 	g["bw"] = bw
@@ -1005,8 +1023,8 @@ static func _geo8(g: Dictionary, tk: int) -> void:
 	g["ofeg"] = ofeg
 	g["ext"] = ofeg
 	g["boca"] = ph == 2 or ph == 3 or parado
-	g["a"] = [Vector2(hx + 9, hy - 1), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + hw - 1, hy + hh * 0.45), Vector2(bx + 2, by0 + 2),
-		Vector2(hx + 4, hy + hh - 2), Vector2(hx + cb["ex"] + 2, hy + cb["ey"] + 2), Vector2(hx + cb["ex"] + 2, hy + cb["ey"] + 1)]
+	g["a"] = [Vector2(hx + 6, hy + 1), Vector2(bx + 12, by0 + 8), Vector2(hx + 17, hy + 6), Vector2(bx + 2, by0 + 5),
+		Vector2(hx + 4, hy + 9), Vector2(hx + 8, hy + 5), Vector2(hx + 8, hy + 4)]
 	g["patas"] = Vector2(1, 0)
 
 static func _monta8(G: PackedInt32Array, g: Dictionary) -> void:
@@ -1014,109 +1032,71 @@ static func _monta8(G: PackedInt32Array, g: Dictionary) -> void:
 	var ph: int = g["ph"]
 	var parado: bool = g["parado"]
 	var bx: int = g["bx"]
-	var bw: int = g["bw"]
-	var bh: int = g["bh"]
 	var by0: int = g["by0"]
 	var hx: int = g["hx"]
 	var hy: int = g["hy"]
 	var ofeg: int = g["ofeg"]
-	# rabo grosso: erguido e balançando, caído quando sem fôlego
+	# rabo: erguido e abanando; caído quando sem fôlego
 	var R := _nova()
 	if parado:
-		_trazo(R, bx + 1, by0 + 5, bx - 5, by0 + 15, 3, "m")
-		_px(R, bx - 5, by0 + 16, "l")
-		_rect(R, bx - 6, by0 + 15, 3, 3, "l")
+		_bmp(R, bx - 3, by0 + 6, _VL_RABO_CAIDO)
 	else:
-		var wag: int = [0, 1, 2, 1, 0, -1][q] if g["andando"] else 0
+		var wag: int = [0, 1, 0, -1, 0, 1][q] if g["andando"] else 0
 		if ph == 1 or ph == 2:
-			wag = 3
-		_trazo(R, bx + 1, by0 + 4, bx - 4 + wag, by0 - 5, 3, "m")
-		_trazo(R, bx - 4 + wag, by0 - 5, bx - 5 + wag * 2, by0 - 9, 3, "m")
-		_rect(R, bx - 6 + wag * 2, by0 - 11, 4, 3, "l")
-		_rect(R, bx - 5 + wag * 2, by0 - 9, 3, 2, "l")
+			wag = 1
+		_bmp(R, bx - 3 + wag, by0 + 0 - absi(wag), _VL_RABO)
 	_comp(G, R)
-	# patas: grossas, meias cremes
+	# patas de longe, orelha de longe
 	var L1 := _nova()
 	var L2 := _nova()
-	var hip: int = by0 + bh - 4
-	_pernas(L1, L2, g, 6, -9, hip, 3, "d", "m", "v", 3)
+	var hip: int = by0 + 11
+	_pernas(L1, L2, g, bx + 17, bx + 1, hip, 4, "d", "m", "v", 2)
 	_comp(G, L1)
-	_comp(G, L2)
-	# orelha de longe, de pé, atrás da cabeça
 	var OL := _nova()
-	_bmp(OL, hx + 10, hy - 5, _esc([".EE.", "EEEE", "EEEE", "EEEE", "EEEE"], 1.2))
+	_bmp(OL, hx + 2, hy - 1 - (1 if ph == 2 or ph == 3 else 0), _VL_ORELHA_L)
 	_comp(G, OL)
-	# corpo + coxa + peito + pescoço + cabeça
+	# corpo (o molde do tronco é ele inteiro) e patas de perto
 	var B := _nova()
-	_elip(B, bx, by0, bw, bh)
-	_elip(B, bx + 1, by0 + 3, 11, 13, "l", "m", "d")
+	_bmp(B, bx, by0, _VL_CORPO)
 	_tr = B.duplicate()
-	_cr = BichoPx.cranio(_cabk("V", 1.2)["rows"])
-	_tinta(B, bx + bw - 12, by0 + bh - 8, 13, 9, "v")
-	_tinta(B, bx + 11, by0 - 1, 8, 5, "e")
-	var cb: Dictionary = _cabk("V", 1.2)
-	var hw: int = cb["hw"]
-	var hh: int = cb["hh"]
-	var js: int = cb["js"]
-	var ms: int = cb["ms"]
-	_elip(B, hx - 6, hy + 5, 15, 19)
-	_tinta(B, hx - 4, hy + 15, 10, 9, "v")
-	var cab: Array = _cab_rows(cb, g["boca"])
-	_bmp(B, hx, hy, cab)
-	# olho (escuro, grande, brilho), sobrancelha de cenho fechado e cicatriz
-	var ex: int = hx + int(cb["ex"])
-	var ey: int = hy + int(cb["ey"])
-	_rect(B, ex, ey + 1, 4, 4, "k")
-	_px(B, ex, ey + 1, "w")
-	_px(B, ex + 1, ey + 1, "w")
-	_trazo(B, ex - 2, ey - 1 + (1 if parado else 0), ex + 5, ey + 1, 1, "E")
-	_trazo(B, ex - 2, ey - 2, ex + 2, ey - 2, 1, "E")
-	_px(B, ex + 6, ey, "a")
-	_px(B, ex + 6, ey + 1, "a")
-	_px(B, ex + 7, ey + 2, "a")
-	# focinho: nariz grande com brilho, presas
-	_px(B, hx + hw - 3, hy + 4, "N")
-	if g["boca"] and not parado:
-		_rect(B, hx + hw - 8, hy + js - 1, 2, 2, "w")
-		_rect(B, hx + hw - 4, hy + js - 1, 2, 2, "w")
-		_rect(B, hx + hw - 7, hy + js + 3, 2, 2, "w")
-		_rect(B, hx + hw - 4, hy + js + 3, 2, 2, "w")
-	# língua de fora (sem fôlego)
-	if parado:
-		var lg: int = 5 + ofeg
-		_rect(B, hx + ms + 2, hy + js + 2, 5, lg, "T")
-		_rect(B, hx + ms + 2, hy + js + 2 + lg - 2, 5, 2, "t")
-		_px(B, hx + ms + 4, hy + js + 2, "t")
-	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
+	for i in 16:   # os tufos do lombo ficam fora do molde: a roupa tem a borda lisa
+		_tr[(by0 + 2 + _OY) * _W + bx + i + _OX] = 0
 	_comp(G, B)
-	# orelha de perto, caída e rasgada
+	_comp(G, L2)
+	# cabeça em camada própria, boca aberta no golpe e sem fôlego
+	var H := _nova()
+	var cb: Dictionary = _VL_CAB_INFO.duplicate()
+	cb["rows"] = _VL_CAB
+	var cab: Array = _cab_rows(cb, g["boca"])
+	_bmp(H, hx, hy, cab)
+	_cr = BichoPx.cranio(_VL_CAB)
+	# cenho fechado e cicatriz no focinho (chefão de rua)
+	_px(H, hx + 6, hy + 3, "E")
+	_px(H, hx + 7, hy + 3, "E")
+	_px(H, hx + 8, hy + 3 + (1 if parado else 0), "E")
+	_px(H, hx + 10, hy + 3, "a")
+	_px(H, hx + 11, hy + 4, "a")
+	_px(H, hx + 11, hy + 5, "a")
+	if parado:
+		_px(H, hx + 7, hy + 5, "k")   # olho cansado, meio fechado
+		var lg: int = 4 + ofeg
+		_rect(H, hx + 10, hy + 10, 3, lg, "T")
+		_rect(H, hx + 10, hy + 10 + lg - 1, 3, 1, "t")
+		_px(H, hx + 11, hy + 10, "t")
+	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy + _OY, cab)
+	_comp(G, H)
+	# orelha de perto, caída por trás do olho (sobe um pouco no bote)
 	var OP := _nova()
-	_bmp(OP, hx + 4, hy + 2, [
-		"eee...",
-		"eeeer.",
-		"eeeeee",
-		"eEeeee",
-		"eEeeeE",
-		"eEeeE.",
-		".eEeE.",
-		"..EE..",
-	])
+	_bmp(OP, hx - (1 if ph == 2 or ph == 3 else 0), hy + 1 - (1 if ph == 2 or ph == 3 else 0), _VL_ORELHA)
 	_comp(G, OP)
-	# coleira simples: faixa preta com 3 pregos claros
+	# coleira escura com rebites no pescoço
 	var Co := _nova()
-	_trazo(Co, hx + 1, hy + hh - 5, hx + 8, hy + hh + 2, 3, "C")
+	_bmp(Co, hx + 3, hy + 8, ["CC", "SC", "CC", "CS", "CC"])
 	_comp(G, Co)
-	var Sp := _nova()
-	for i in 3:
-		var sx: int = hx + 3 + i * 3
-		var sy: int = hy + hh - 5 + i * 3
-		_rect(Sp, sx + 1, sy - 2, 1, 3, "S")
-		_px(Sp, sx + 1, sy - 3, "S")
-	_comp(G, Sp)
 	if parado:
 		var Su := _nova()
-		_rect(Su, hx + 8, hy - 4 - ofeg, 1, 3, "B")
-		_px(Su, hx + 8, hy - 5 - ofeg, "w")
+		_rect(Su, hx + 5, hy - 3 - ofeg, 1, 2, "B")
+		_px(Su, hx + 5, hy - 4 - ofeg, "w")
 		_luz(G, Su)
 
 # ================================================================ 9 TEXUGO-REI

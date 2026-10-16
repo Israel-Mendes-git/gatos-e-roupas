@@ -72,16 +72,19 @@ const _CAB: Array = [
 		".dmmmmmmmm.......",
 		"..dddddddd.......",
 	]},
-	{"js": 5, "ms": 4, "ab": 3, "ct": 5.0, "cy": 0, "ex": 3, "ey": 1, "mb": 5, "rows": [   # Sapo-Rei
-		"..lllllll........",
-		".leeewweell......",
-		".leeekkeelllllllm",
-		".leeekkeellllnnm.",
+	{"js": 9, "ms": 1, "ab": 3, "ct": 11.0, "cy": 0, "ex": 11, "ey": 2, "mb": 7, "rows": [   # Sapo-Rei (desenhado à mão)
+		"..........ggg....",
+		".........leeel...",
+		"........leeekkl..",
+		"........leeekkl..",
+		".lllllllleeeelll.",
+		"lmmmmmmmmmmmmmmnm",
 		"mmmmmmmmmmmmmmmmm",
-		"mmmmoooooooooooo.",
-		".mvvvvvvvvvvvvv..",
+		"nnmmmmmmmmmmmmmmm",
+		".nnnnnnnnnnnnnnnn",
+		"vvvvvvvvvvvvvvvv.",
+		".vvvvvvvvvvvvvv..",
 		"..vvvvvvvvvvv....",
-		"...dvvvvvvvv.....",
 	]},
 ]
 
@@ -93,7 +96,7 @@ const _ESP: Array = [
 	{"bx": -12, "bw": 24, "bh": 14, "pe": 3, "hx": 6, "hoff": -2, "pf": 8, "pt": -10, "lw": 3, "str": 2.0, "lift": 2.0, "dedo": "a", "socks": 0},
 	{"bx": -11, "bw": 21, "bh": 9, "pe": 8, "hx": 4, "hoff": -3, "pf": 5, "pt": -9, "lw": 2, "str": 3.5, "lift": 3.0, "dedo": "f", "socks": 4},
 	{"bx": -11, "bw": 21, "bh": 13, "pe": 5, "hx": 3, "hoff": -7, "pf": 2, "pt": -2, "lw": 1, "str": 3.0, "lift": 3.0, "dedo": "p", "socks": 0},
-	{"bx": -11, "bw": 22, "bh": 14, "pe": 2, "hx": 2, "hoff": -2, "pf": 0, "pt": 0, "lw": 2, "str": 0.0, "lift": 0.0, "dedo": "v", "socks": 0, "amp": 3, "fl": 12, "thw": 12, "thh": 10, "pw": 7},
+	{"bx": -14, "bw": 26, "bh": 14, "pe": 2, "hx": 1, "hoff": -4, "pf": 0, "pt": 0, "lw": 2, "str": 0.0, "lift": 0.0, "dedo": "v", "socks": 0, "amp": 3},
 ]
 
 # ---------------------------------------------------------------- paleta
@@ -450,7 +453,7 @@ static func _orelha_c(L: PackedInt32Array, x: int, y: int, w: int, h: int, longe
 
 # ---------------------------------------------------------------- montagem do quadro
 static func _chave(g: Dictionary) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], int(g["andando"]), g["q"], g["ei"], int(g["boca"]), g["resp"], g["bob"], g["salto"], g["aire"], g["sq"], int(g["parado"]), g["sw"], g["dr"], g["ala"], g["tl"], int(BichoPx.cabeca_coberta)]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], int(g["andando"]), g["q"], g["ei"], int(g["boca"]), g["resp"], g["bob"], g["salto"], g["aire"], g["sq"], int(g["parado"]), g["sw"], g["dr"], g["ala"], g["tl"], int(BichoPx.cabeca_coberta) * 2 + int(BichoPx.corpo_coberto)]
 
 ## Molde do tronco do quadro em montagem (cada _monta_* grava aqui o corpo antes do pescoço): as roupas de corpo se ajustam a ele.
 static var _tr: PackedInt32Array = PackedInt32Array()
@@ -963,118 +966,149 @@ static func _monta_corvo(G: PackedInt32Array, g: Dictionary) -> void:
 	_comp(G, MO, false)
 
 # ================================================================ 4. SAPO-REI
+## Desenhado à mão em camadas (membros de longe, corpo, coxa, cabeça + papo, braço, coroa, colar): sapo imenso sentado, dorso largo e
+## liso (a roupa de corpo veste ele inteiro), olho amarelo saltado, boca larga de canto a canto, barriga creme e verrugas.
+const _SAPO_CORPO: Array = [
+	"......llllllll............",
+	"...lllllllllllllll........",
+	"..llllmmmmmmmmmllllll.....",
+	".llmmmmmmmmmmmmmmmmlllll..",
+	"llmmmXmmmmmmXmmmmmmmmmlll.",
+	"lmmmmmmmmmmmmmmmmmmmmmmmml",
+	"mmmmmmmmmXmmmmmmmmXmmmmmmm",
+	"mmmmmmmmmmmmmmmmmmmmmmmmmm",
+	"mmmmmmmmmmmmmmmmmmmmmmmmvv",
+	"dmmmmmmmmmmmmmmmmmmmmmvvvv",
+	"ddmmmmmmmmmmmmmmmmmmvvvvvv",
+	".dddmmmmmmmmmmmmmmvvvvvvv.",
+	"..ddddddddddddvvvvvvvvvv..",
+	"....dddddddddvvvvvvvv.....",
+]
+## Boca escancarada (golpe): a mandíbula cai três linhas e a língua sai do vão.
+const _SAPO_CAB_ABERTA: Array = [
+	"..........ggg....",
+	".........leeel...",
+	"........leeekkl..",
+	"........leeekkl..",
+	".lllllllleeeelll.",
+	"lmmmmmmmmmmmmmmnm",
+	"mmmmmmmmmmmmmmmmm",
+	"nnmmmmmmmmmmmmmmm",
+	".nnnnnnnnnnnnnnnn",
+	".qqqqqqqqqqqqqqq.",
+	"..qqqqqqqqqqqqq..",
+	"nnnqqqqqqqqqqn...",
+	"vvvvvvvvvvvvvvvv.",
+	".vvvvvvvvvvvvvv..",
+	"..vvvvvvvvvvv....",
+]
+const _SAPO_COXA: Array = [
+	"...lllll....",
+	".lmmmmmmmm..",
+	"lmmmmmmmmmm.",
+	"mmmmmXmmmmmm",
+	"mmmmmmmmmmmm",
+	"dmmmmmmmmmmd",
+	".ddmmmmmmdd.",
+	"...dddddd...",
+]
+const _SAPO_PE: Array = ["mmmmmmmmmvv", "ddddddddvvv"]
+const _SAPO_BRACO: Array = ["mmm", "mmm", "mmm", "mmm", "mmmvv", "mmvvv"]
+const _SAPO_COROA: Array = ["Y.Y.Y.Y.Y", "YYYYYYYYY", "yyryyByyy", "yyyyyyyyy"]
+
 static func _monta_sapo(G: PackedInt32Array, g: Dictionary) -> void:
-	var esp: Dictionary = g["esp"]
 	var ch: Dictionary = g["ch"]
 	var bx: int = g["bx"]
-	var bw: int = g["bw"]
-	var bh: int = g["bh"]
 	var by0: int = g["by0"]
 	var hx: int = g["hx"]
 	var hy: int = g["hy"]
 	var hw: int = g["hw"]
-	var hh: int = g["hh"]
 	var aire: int = g["aire"]
-	var salto: int = g["salto"]
-	var fl: int = esp["fl"]
-	var tb: int = by0 + bh - 1
-	var fy: int = -2 - salto
-	var fx: int = bx + 5
-	var ax: int = hx + 3
-	var top: int = by0 + bh - 5
-	# membros de longe
+	var tb: int = by0 + 13          # última linha do corpo
+	var fy: int = -2 - int(g["salto"])   # pé no chão (sobe junto no pulo)
+	# membros de longe (mais escuros)
 	var L1 := _nova()
 	if aire == 1:
-		_trazo(L1, bx + 6, tb - 3, bx - 4, tb + 2, 3, "d")
+		_trazo(L1, bx + 8, tb - 3, bx - 2, tb + 3, 3, "d")
+		_trazo(L1, hx + 10, by0 + 9, hx + 15, by0 + 11, 2, "d")
+	elif aire == 2:
+		_trazo(L1, hx + 10, by0 + 9, hx + 13, by0 + 14, 2, "d")
 	else:
-		_rect(L1, fx + 3, fy, fl, 2, "d")
-	if aire == 0:
-		_rect(L1, ax + 4, top + 1, 3, fy - top - 1, "d")
-		_rect(L1, ax + 4, fy, 5, 2, "d")
-	elif aire == 1:
-		_trazo(L1, ax + 3, top + 1, ax + 8, top + 3, 2, "d")
-	else:
-		_trazo(L1, ax + 3, top + 1, ax + 6, top + 6, 2, "d")
+		_bmp(L1, bx + 3, fy, [String(_SAPO_PE[0]).replace("m", "d"), String(_SAPO_PE[1]).replace("v", "V")])
+		var bl: Array = []
+		for r in _SAPO_BRACO:
+			bl.append(String(r).replace("m", "d").replace("v", "V"))
+		_bmp(L1, hx + 8, by0 + 10, bl)
 	_comp(G, L1)
-	# corpo + pescoço + cabeça numa camada só
+	# corpo: o molde do tronco é ele inteiro (a roupa de corpo veste o dorso todo); cabeça, coxa e braço ficam por cima dela
 	var B := _nova()
-	_elip(B, bx, by0, bw, bh)
+	_bmp(B, bx, by0, _SAPO_CORPO)
 	_tr = B.duplicate()
-	_elip(B, hx - 1, hy + 3, 10, maxi(4, tb - (hy + 3)))
-	_tinta(B, bx + 4, by0 + bh - 9, bw - 8, 9, "v")      # barrigão amarelado
-	_bmp(B, hx, hy, _cab_rows(4, ch, g["boca"]))
-	# verrugas
-	for w in [[3, 3], [7, 2], [11, 4], [15, 2], [19, 5], [5, 6], [13, 7], [9, 5]]:
-		_rect(B, bx + int(w[0]), by0 + int(w[1]), 2, 2, "X")
-		_tp(B, bx + int(w[0]), by0 + int(w[1]), "g")
-	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
-	# coxa traseira de perto + pé (ou perna esticada no ar)
+	# coxa de perto dobrada com o pé chato no chão (ou a perna esticada no ar)
 	var CX := _nova()
-	var thw: int = esp["thw"]
-	var thh: int = esp["thh"]
 	if aire == 1:
-		_trazo(CX, bx + 5, tb - 5, bx - 8, tb + 2, 4, "m")
-		_rect(CX, bx - 12, tb + 1, 5, 3, "v")
+		_trazo(CX, bx + 6, tb - 5, bx - 7, tb + 2, 4, "m")
+		_rect(CX, bx - 11, tb + 1, 5, 3, "v")
 	else:
-		_elip(CX, bx + 1, tb - thh + 1, thw, thh)
-		if tb + 1 < fy:
-			_trazo(CX, bx + 5, tb - 1, bx + 4, fy - 1, 3, "m")
-		_rect(CX, fx, fy, fl, 1, "m")
-		_rect(CX, fx, fy + 1, fl, 1, "d")
-		_rect(CX, fx + fl - 3, fy, 3, 2, "v")
+		_bmp(CX, bx - 1, by0 + 6, _SAPO_COXA)
+		_bmp(CX, bx + 5, fy, _SAPO_PE)
+	_tira_camada(_tr, CX)
 	_comp(G, CX)
-	# papo: infla e desinfla com a respiração
-	if not g["andando"] and not g["boca"] and g["ei"] == 0:
-		var PL := _nova()
+	# cabeça + papo numa camada (o papo infla com a respiração)
+	var H := _nova()
+	var cab: Array = _SAPO_CAB_ABERTA if g["boca"] else ch["rows"]
+	_bmp(H, hx, hy, cab)
+	if not g["andando"] and not g["boca"] and g["ei"] == 0 and g["resp"] > 0:
 		var rs: int = g["resp"]
-		var pw: int = int(esp["pw"]) + 2 * rs
-		_elip(PL, hx + 1, hy + hh - 4, pw, 4 + 2 * rs, "v", "v", "V")
-		_comp(G, PL)
-	# colar de ouro com pingente
-	var CO := _nova()
-	var cxx: int = hx + 1
-	var cyy: int = hy + hh - 2
-	for i in 9:
-		_px(CO, cxx + i, cyy + int(2.0 * sin(PI * float(i) / 8.0)), "Y" if i % 2 == 0 else "y")
-	_rect(CO, cxx + 3, cyy + 3, 3, 3, "Y")
-	_px(CO, cxx + 4, cyy + 4, "r")
-	_comp(G, CO)
+		_elip(H, hx + 2, hy + 9, 9 + 2 * rs, 3 + 2 * rs, "v", "v", "V")
+	_tira_camada(_tr, H)
+	_comp(G, H)
 	# braço de perto
 	var CA := _nova()
-	if aire == 0:
-		_rect(CA, ax, top, 3, fy - top, "m")
-		_rect(CA, ax, fy, 5, 2, "m")
-		_rect(CA, ax + 3, fy, 2, 2, "v")
-	elif aire == 1:
-		_trazo(CA, ax, top, ax + 6, top + 2, 3, "m")
-		_rect(CA, ax + 6, top + 2, 3, 3, "v")
+	if aire == 1:
+		_trazo(CA, hx + 6, by0 + 9, hx + 12, by0 + 11, 3, "m")
+		_rect(CA, hx + 12, by0 + 11, 3, 3, "v")
+	elif aire == 2:
+		_trazo(CA, hx + 6, by0 + 9, hx + 9, by0 + 14, 3, "m")
+		_rect(CA, hx + 9, by0 + 14, 4, 2, "v")
 	else:
-		_trazo(CA, ax, top, ax + 3, top + 6, 3, "m")
-		_rect(CA, ax + 3, top + 6, 4, 2, "v")
+		_bmp(CA, hx + 5, by0 + 10, _SAPO_BRACO)
+	_tira_camada(_tr, CA)
 	_comp(G, CA)
-	# coroa de ouro torta, sobre os olhos (sai quando o sapo veste chapéu)
+	# colar de ouro com pingente logo abaixo da boca, por cima do braço (sai quando o sapo veste roupa de corpo)
+	if not BichoPx.corpo_coberto:
+		var CO := _nova()
+		var cxx: int = hx + 1
+		var cyy: int = hy + 11 + int(g["resp"])
+		for i in 10:
+			_px(CO, cxx + i, cyy + int(1.6 * sin(PI * float(i) / 9.0)), "Y" if i % 2 == 0 else "y")
+		_rect(CO, cxx + 4, cyy + 2, 2, 2, "Y")
+		_px(CO, cxx + 4, cyy + 3, "r")
+		_comp(G, CO)
+	# coroa de ouro atrás do olho (fica sempre: o Sapo-Rei não tira a coroa)
 	if not BichoPx.cabeca_coberta:
 		var CR := _nova()
-		_bmp(CR, hx + 2, hy - 4, [
-			"Y.Y.Y.Y.Y",
-			"YYYYYYYYY",
-			"yyryybyyy",
-			"yyyyyyyyy",
-		])
+		_bmp(CR, hx - 1, hy + 1, _SAPO_COROA)
 		_comp(G, CR)
 	# língua do golpe
 	if g["tl"] > 0:
 		var TL := _nova()
 		var tl: int = g["tl"]
 		var x0: int = hx + int(ch["ms"]) + 1
-		var yt: int = hy + int(ch["js"]) + int(ch["ab"]) - 2
+		var yt: int = hy + int(ch["js"]) + 1
 		_rect(TL, x0, yt, tl + hw - int(ch["ms"]) - 2, 1, "T")
 		_rect(TL, x0, yt + 1, tl + hw - int(ch["ms"]) - 2, 1, "U")
 		var xe: int = x0 + tl + hw - int(ch["ms"]) - 2
 		_rect(TL, xe, yt - 1, 3, 2, "T")
 		_rect(TL, xe, yt + 1, 3, 2, "U")
 		_comp(G, TL)
+
+## Tira do molde do tronco os pixels de uma camada pintada depois do corpo (ela fica por cima da roupa de corpo).
+static func _tira_camada(TR: PackedInt32Array, L: PackedInt32Array) -> void:
+	for k in L.size():
+		if L[k] != 0:
+			TR[k] = 0
 
 static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andando: bool, golpe: float, f: float, alfa: float, carregando: bool, filhote: bool, chefe_tipo: int, parte: bool, parado: bool) -> void:
 	var g: Dictionary = _geo(chefe_tipo, anim, andando, golpe, parado)
