@@ -662,15 +662,12 @@ const PODER_SONO_CHEFE := 1.2
 const PODER_COCHILO_HER_CURA := 0.25
 const PODER_COCHILO_HER_RAIO := 90.0
 const PODER_COCHILO_HER_T := 2.0
-const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
-# Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
-const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato
 # ---- Lote 3 da expansão
 const ATORDOA_KIT_T := 0.8             # golpe que atordoa pelo kit do Donatemiau
 # Plano de ataque (Leonarmiau): o time foca o inimigo de maior vida; o líder dá dois cortes
 const PODER_PLANO_T := 5.0
-const PODER_PLANO_BONUS := 0.3         # dano a mais no alvo focado
-const PODER_PLANO_CORTE := 0.9         # x dano base, cada um dos dois cortes
+const PODER_PLANO_BONUS := 0.45        # dano a mais no alvo focado
+const PODER_PLANO_CORTE := 1.3         # x dano base, cada um dos dois cortes
 const PODER_PLANO_RECARGA := 3.0       # segundos a menos na recarga se o alvo cair
 const PODER_PLANO_HER_T := 3.0
 const PODER_PLANO_HER_BONUS := 0.15
@@ -695,13 +692,13 @@ const PODER_LOBO_HER_T := 3.0
 const PODER_LOBO_HER_DANO := 0.3
 # Turbo (Rocket Miaugue): corrida em linha com atropelo e rastro de chamas azuis
 const PODER_TURBO_ALCANCE := 420.0
-const PODER_TURBO_DANO := 0.8
+const PODER_TURBO_DANO := 1.3
 const PODER_TURBO_DERRUBA := 0.4
-const PODER_TURBO_PROTEGE := 1.5
+const PODER_TURBO_PROTEGE := 2.0
 const PODER_TURBO_RASTRO_N := 9
 const PODER_TURBO_RASTRO_RAIO := 28.0
 const PODER_TURBO_RASTRO_T := 4.0
-const PODER_TURBO_RASTRO_DPS := 0.5
+const PODER_TURBO_RASTRO_DPS := 0.8
 const PODER_TURBO_RASTRO_LENTO := 0.8
 const PODER_TURBO_HER_N := 5
 const PODER_TURBO_HER_T := 2.0
@@ -725,6 +722,9 @@ const PODER_PARRY_CHUTE_RAIO := 85.0
 const PODER_PARRY_EMPURRA := 60.0
 const PODER_PARRY_HER_N := 2
 const PODER_PARRY_VE := 170.0          # só usa se houver inimigo a esta distância
+const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
+# Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
+const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato
 const PODER_INIMIGO_FATOR_ATO := 0.08   # soma por ato depois do primeiro
 const PODER_INIMIGO_FATOR_CHEFE := 0.1  # o chefe usa o poder um pouco mais forte
 const PODER_INIMIGO_PISAO := 0.7        # o Pisão do bicho fere menos (era o que mais derrubava gatos)
