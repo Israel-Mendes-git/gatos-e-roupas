@@ -37,6 +37,13 @@ const _PAL: Array = [
 	{"a": Color("2e78e0"), "A": Color("6ab4ff"), "d": Color("1a4490"), "b": Color("a8e0ff"), "B": Color("e4f6ff"), "e": Color("f2c230")},   # robô azul
 	{"a": Color("7a90a8"), "A": Color("b0c4d8"), "d": Color("4a5a70"), "b": Color("f2f2ec"), "B": Color("ffffff"), "e": Color("d8302e")},   # tubarão
 	{"a": Color("f2c230"), "A": Color("ffe68a"), "d": Color("b08418"), "b": Color("2a2630"), "B": Color("4a4654"), "e": Color("c8ecff")},   # abelha
+	# lote 1 da expansão (25 a 30)
+	{"a": Color("3366f2"), "A": Color("73a6ff"), "d": Color("1a38a8"), "b": Color("db1f29"), "B": Color("ff6157"), "e": Color("ffdb33")},   # super miau
+	{"a": Color("339947"), "A": Color("73d980"), "d": Color("1a5c29"), "b": Color("80511f"), "B": Color("c78f4a"), "e": Color("e62e2e")},   # arqueiro miau
+	{"a": Color("33333f"), "A": Color("666680"), "d": Color("14141c"), "b": Color("ff8519"), "B": Color("ffdb40"), "e": Color("949bb8")},   # motoqueiro miausma
+	{"a": Color("385cc7"), "A": Color("7aa3f7"), "d": Color("1f3380"), "b": Color("db1f29"), "B": Color("fafaff"), "e": Color("ffd138")},   # fênix miaussimo
+	{"a": Color("fadb57"), "A": Color("fff59e"), "d": Color("cca32e"), "b": Color("eb3333"), "B": Color("ff8066"), "e": Color("734d24")},   # mimiau
+	{"a": Color("8c40d9"), "A": Color("bf80f2"), "d": Color("592194"), "b": Color("4dc24d"), "B": Color("99e68c"), "e": Color("ffd638")},   # jimiau
 ]
 
 ## Cores da roupa de corpo que diferem das do chapéu (o barril do circo é de madeira, o avental do jardineiro é verde).
@@ -47,6 +54,7 @@ const _PAL_CORPO: Dictionary = {
 	5: {"a": Color("4a9a34"), "A": Color("82d05a"), "d": Color("2a5e1e"), "b": Color("e8dcb4")},
 	10: {"a": Color("2c2e3c"), "A": Color("50546a"), "d": Color("16161e")},
 	23: {"a": Color("5a7894"), "A": Color("98b4cc"), "d": Color("34485e")},
+	30: {"a": Color("f6f2ea"), "A": Color("ffffff"), "d": Color("bfb9c6")},
 }
 static var corpo_vez: bool = false
 
@@ -289,6 +297,62 @@ const _CHAPEU: Array = [
 		".okkkkko.",
 		"okkkkkkko",
 		".ooooooo."]},
+	# 25 super miau: topete preto com o cacho caído na testa
+	{"cheio": true, "l": [
+		"...ooooo...",
+		"..okgkkkoo.",
+		".okkgkkkkko",
+		"okkkkkkkkko",
+		"ookk.ookkko",
+		".o...ookko.",
+		"......ooko."]},
+	# 26 arqueiro miau: chapéu verde com pluma
+	{"cheio": false, "l": [
+		"......rR...",
+		"...ooooo.rR",
+		"..oAAaaaoo.",
+		".oAaaaaaado",
+		"ooaaaaaaaoo",
+		"obbbbbbbbbo",
+		".ooooooooo."]},
+	# 27 motoqueiro miausma: caveira em chamas
+	{"cheio": true, "l": [
+		"..b..B.b...",
+		".bBb.....bBb",
+		".bBBb.bBbBb.",
+		"..ooooooo..",
+		".owwwwwwwo.",
+		"owkkwwwkkwo",
+		"owkkwwwkkwo",
+		".owwwwwwwo.",
+		"..owowowo.."]},
+	# 28 fênix miaussimo: três espetos de cabelo
+	{"cheio": false, "l": [
+		"..o..o..o..",
+		".okoookoook.",
+		"okkgkkkgkko",
+		"okkkkkkkkko",
+		".ooooooooo."]},
+	# 29 mimiau: capuz de pano com orelhas de ponta preta
+	{"cheio": false, "l": [
+		"k.........k",
+		"ok.......ko",
+		"oao.....oao",
+		"oaaooooooao",
+		"oaAaaaaaado",
+		"oaakaaakaao",
+		"oaaaaaaaaao",
+		"ooooooooooo"]},
+	# 30 jimiau: chapéu de bobo de três pontas
+	{"cheio": false, "l": [
+		"y....y....y",
+		"ao..obo..oa",
+		".ao.obo.oa.",
+		"..ooaboaoo.",
+		"..oAaaaado.",
+		".oAaaaaaddo",
+		"obBbBbBbBbo",
+		".ooooooooo."]},
 ]
 ## Quantos pixels a última linha do chapéu fica abaixo do topo do crânio.
 const _DESCE := 1
@@ -381,6 +445,7 @@ static func _anima(conj: int) -> bool:
 const _FORMA: Array[String] = [
 	"colete", "colete", "capa", "colete", "manta", "colete", "manta", "colete", "capa", "colete", "capa", "colete", "colete",
 	"colete", "colete", "casco", "colete", "colete", "capa", "capa", "colete", "colete", "colete", "colete", "colete",
+	"colete", "colete", "colete", "colete", "colete", "colete",
 ]
 const _MEDIDA: Array = [
 	[0.06, 1.0, 0.80], [0.06, 1.0, 0.78], [0.0, 0.92, 0.85], [0.06, 1.0, 0.80], [0.10, 1.0, 0.58], [0.06, 1.0, 0.80],
@@ -388,6 +453,7 @@ const _MEDIDA: Array = [
 	[0.06, 1.0, 0.82], [0.06, 1.0, 0.80], [0.06, 1.0, 0.84], [0.05, 0.95, 0.62], [0.06, 1.0, 0.62], [0.06, 1.0, 0.80],
 	[0.0, 0.92, 0.82], [0.0, 0.94, 0.85], [0.06, 1.0, 0.84], [0.06, 1.0, 0.84], [0.06, 1.0, 0.80], [0.04, 1.0, 0.80],
 	[0.04, 1.0, 0.84],
+	[0.06, 1.0, 0.82], [0.06, 1.0, 0.80], [0.06, 1.0, 0.82], [0.06, 1.0, 0.82], [0.04, 1.0, 0.84], [0.06, 1.0, 0.80],
 ]
 
 ## Pixels pintados da roupa: {Vector2i: Color}.
@@ -642,9 +708,15 @@ const _EMBLEMA: Array = [
 	[".B.", "BeB", ".B."],                       # robô azul: luz
 	[],                                          # tubarão
 	[],                                          # abelha
+	["yrr", "yry", "rry"],                       # super miau: escudo do peito
+	[],                                          # arqueiro miau
+	[],                                          # motoqueiro miausma
+	[],                                          # fênix miaussimo
+	[],                                          # mimiau
+	["r.r", "rrr", ".r."],                       # jimiau: copas
 ]
 ## Fantasias com barra de outra cor na bainha (a letra da barra).
-const _BARRA: Dictionary = {0: "b", 1: "b", 3: "y", 4: "", 6: "b", 7: "B", 11: "b", 13: "b", 16: "", 17: "b", 20: "b", 21: "b", 22: "b"}
+const _BARRA: Dictionary = {0: "b", 1: "b", 3: "y", 4: "", 6: "b", 7: "B", 11: "b", 13: "b", 16: "", 17: "b", 20: "b", 21: "b", 22: "b", 25: "b", 27: "b", 30: "b"}
 
 ## Enfeites de cada fantasia sobre a roupa já sombreada (barra, emblema, listras, golas).
 static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary) -> void:
@@ -841,6 +913,45 @@ static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary
 				for y in [bs[x] - 1, bs[x] - 2]:
 					if dentro.call(Vector2i(x, y)) and y > tp[x] + 2:
 						px[Vector2i(x, y)] = C.call("b") if y == bs[x] - 1 else C.call("B")
+		Pecas.Conjunto.ARQUEIRO_MIAU:
+			# cinto marrom na cintura do colete, com fivela dourada
+			for x in range(x0, x1 + 1):
+				if tp.has(x) and bs.has(x):
+					var yc: int = (tp[x] + bs[x]) / 2 + 1
+					if dentro.call(Vector2i(x, yc)) and yc < bs[x] - 1:
+						px[Vector2i(x, yc)] = C.call("b")
+			if tp.has(x1 - 2) and bs.has(x1 - 2):
+				var yf: int = (tp[x1 - 2] + bs[x1 - 2]) / 2 + 1
+				if dentro.call(Vector2i(x1 - 2, yf)):
+					px[Vector2i(x1 - 2, yf)] = C.call("e") if false else _COMUM["y"]
+		Pecas.Conjunto.MOTOQUEIRO_MIAUSMA:
+			# tachas de prata nos ombros
+			for x in range(x0 + 1, x1, 3):
+				if tp.has(x) and dentro.call(Vector2i(x, tp[x] + 1)):
+					px[Vector2i(x, tp[x] + 1)] = C.call("e")
+		Pecas.Conjunto.FENIX_MIAUSSIMO:
+			# camisa branca em V na frente e a gravata vermelha
+			for k in 2:
+				var xc: int = x1 - 3 + k
+				if not tp.has(xc):
+					continue
+				for y in range(tp[xc] + 1, tp[xc] + 4 - k):
+					if dentro.call(Vector2i(xc, y)):
+						px[Vector2i(xc, y)] = C.call("B")
+			if tp.has(x1 - 3):
+				for y in range(tp[x1 - 3] + 1, bs[x1 - 3] - 1):
+					if dentro.call(Vector2i(x1 - 3, y)):
+						px[Vector2i(x1 - 3, y)] = C.call("b")
+		Pecas.Conjunto.MIMIAU:
+			# bochecha vermelha a caneta e costura torta
+			var yb: int = cx.position.y + cx.size.y / 2
+			for y in range(yb, yb + 2):
+				for x in range(x1 - 4, x1 - 2):
+					if dentro.call(Vector2i(x, y)):
+						px[Vector2i(x, y)] = C.call("b")
+			for x in range(x0 + 2, x1 - 5, 2):
+				if tp.has(x) and dentro.call(Vector2i(x, tp[x] + 2)):
+					px[Vector2i(x, tp[x] + 2)] = C.call("e")
 		Pecas.Conjunto.ABELHA:
 			for p in area.keys():
 				var v: Vector2i = p
