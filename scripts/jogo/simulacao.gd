@@ -181,6 +181,7 @@ func calcular(u: Unidade) -> void:
 	u.cerco = 0.0
 	u.furo = 0.0
 	u.apara = 0.0
+	u.tiro_atordoa = 0.0
 	u.critico = 0.0
 	u.saque = 0.0
 	u.aura_dano = 0.0
@@ -393,6 +394,9 @@ func calcular(u: Unidade) -> void:
 				vel_kit += kv
 			Pecas.BONUS_APARA:
 				u.apara += kv
+				u.tiro_atordoa += Balanco.MEON_TIRO_ATORDOA[g]
+				vida_mult += Balanco.MEON_VIDA[g]
+				u.recarga_menos += Balanco.MEON_RECARGA[g]
 	if u.equipe == 0 and Pecas.Conjunto.MIMIAU in u.herancas:
 		u.disfarce_atordoa = maxf(u.disfarce_atordoa, Balanco.DISFARCE_HER_ATORDOA)   # herança: o Disfarce, mais fraco
 	if u.equipe == 1:
@@ -1191,6 +1195,9 @@ func _mover_projeteis(dt: float) -> void:
 				_acerta_ervilha(p, a)
 			else:
 				_dano(p["dono"], a, p["dano"], false)
+				var dn: Unidade = p["dono"]
+				if dn != null and dn.tiro_atordoa > 0.0 and a.vivo and not a.chefe and not a.bola_t > 0.0 and rng.randf() < dn.tiro_atordoa:
+					a.atordoado_t = maxf(a.atordoado_t, Balanco.TIRO_ATORDOA_T)   # tiro na perna (Meon)
 				if p.has("torre") and estado.tem_modulo(Torre.Modulo.BALISTA):
 					_balista(a, p["dano"] * Torre.BALISTA_DANO)
 		else:

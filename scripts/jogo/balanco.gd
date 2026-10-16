@@ -169,7 +169,7 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.RAFAMIAU: [0.5, 1.4],              # chifres: dano a mais com a vida perto de zero
 	Pecas.Conjunto.ROCKET_MIAUGUE: [0.2, 0.45],       # velocidade de movimento
 	Pecas.Conjunto.DEADMIAU: [3.0, 6.0],              # regeneração por segundo
-	Pecas.Conjunto.MEON: [0.15, 0.3],                 # chance de aparar um golpe corpo a corpo com a faca
+	Pecas.Conjunto.MEON: [0.2, 0.4],                  # chance de aparar um golpe corpo a corpo com a faca
 }
 const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
 
@@ -722,9 +722,9 @@ const PODER_ESFORCO_RAIO := 100.0
 const PODER_ESFORCO_HER_T := 4.0
 const PODER_ESFORCO_HER_REGEN := 0.03
 # Chute giratório (Meon): chute curto em volta, empurra e atordoa; quem já estava atordoado apanha muito mais
-const PODER_CHUTE_RAIO := 125.0
-const PODER_CHUTE_DANO := 2.0          # x dano base
-const PODER_CHUTE_DANO_ATORDOADO := 4.5   # x dano base em quem já estava atordoado
+const PODER_CHUTE_RAIO := 170.0
+const PODER_CHUTE_DANO := 3.0          # x dano base
+const PODER_CHUTE_DANO_ATORDOADO := 6.5   # x dano base em quem já estava atordoado
 const PODER_CHUTE_ATORDOA := 1.2
 const PODER_CHUTE_CHEFE := 0.4         # fração do atordoamento que vale para chefe
 const PODER_CHUTE_EMPURRA := 70.0
@@ -734,6 +734,10 @@ const PODER_CHUTE_HER_ATORDOADO := 2.4
 const PODER_CHUTE_HER_ATORDOA := 0.6
 const PODER_CHUTE_HER_EMPURRA := 40.0
 # Aparar com a faca (kit do Meon): o golpe corpo a corpo some (dano 0) e volta como facada
+const MEON_TIRO_ATORDOA: Array[float] = [0.15, 0.4]   # kit do Meon: chance de o tiro (na perna) atordoar o alvo
+const TIRO_ATORDOA_T := 1.0            # segundos de atordoamento do tiro na perna
+const MEON_VIDA: Array[float] = [0.3, 0.8]        # kit do Meon: vida a mais
+const MEON_RECARGA: Array[float] = [0.0, 0.35]    # kit do Meon: poder recarrega mais rápido
 const APARA_DANO := 2.5                # x dano de ataque de quem aparou
 const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
 # Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor

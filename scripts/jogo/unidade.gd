@@ -135,6 +135,7 @@ var esforco_regen: float = 0.0
 var esforco_usado: bool = true  # já levantou (ou não pode levantar)
 var esforco_base: float = 0.0   # dano base da explosão ao levantar
 var esforco_conj: int = -1
+var tiro_atordoa: float = 0.0   # kit do Meon: chance de o tiro atordoar (tiro na perna)
 var apara: float = 0.0          # kit do Meon: chance de aparar um golpe corpo a corpo com a faca
 # aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
 var aviso_t: float = 0.0        # segundos que faltam para soltar (0 = sem aviso)

@@ -590,5 +590,5 @@ static func conjunto_bonus(c: int, grau: int) -> String:
 		BONUS_VELOCIDADE:
 			return "anda %d%% mais rápido" % int(round(v * 100.0))
 		BONUS_APARA:
-			return "Aparar com a faca: %d%% dos golpes de perto são aparados e devolvidos" % int(round(v * 100.0))
+			return "Apara %d%% dos golpes de perto; tiro na perna atordoa" % int(round(v * 100.0))
 	return ""
