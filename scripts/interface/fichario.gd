@@ -109,6 +109,7 @@ const PX_GRUPO: Dictionary = {
 
 # ---- estado da tela ----
 var estado: Estado = null
+var fora_pag: int = 0              # índice, seção "Lado de fora": página de 5 miniaturas (são mais de 5 desde a expansão)
 var metas_pag: int = 0             # aba Metas: 0 = Campanha, Guarda-roupa, Invasão e Fantasias; 1 = Lado de fora
 var em_metas: bool = false          # a aba "Metas" está aberta (ocupa as duas páginas)
 var metas_novas: Array[String] = [] # metas cumpridas e ainda não vistas (o dono preenche antes de abrir)
@@ -289,6 +290,15 @@ static func ordem_das_fantasias() -> Array[int]:
 				o.append(int(c))
 	o.append_array(fantasias_so_de_fora())
 	return o
+
+const FORA_POR_PAG := 5
+
+static func fora_paginas(n: int) -> int:
+	return maxi(1, ceili(float(n) / FORA_POR_PAG))
+
+## Setas da seção "Lado de fora" do índice (dir -1 = página anterior, 1 = próxima).
+static func rect_seta_fora(dir: int) -> Rect2:
+	return Rect2(COL_D_X + COL_W - 62.0 + (30.0 if dir > 0 else 0.0), rect_tile_fora(0).position.y - 30.0, 28.0, 22.0)
 
 ## Retângulo da miniatura da k-ésima fantasia da seção "Lado de fora" (página direita do índice, terceira fileira).
 static func rect_tile_fora(k: int) -> Rect2:
@@ -496,8 +506,12 @@ func _montar() -> void:
 				if not estado.ja_teve(cab):
 					_jobs.append({"k": "icone", "tipo": cab, "centro": r.position + Vector2(TILE_W * 0.5, TILE_ICO_Y), "tam": 50.0})
 		var fo: Array[int] = fantasias_so_de_fora()
-		for k in mini(fo.size(), 5):
-			var rf: Rect2 = rect_tile_fora(k)
+		fora_pag = clampi(fora_pag, 0, fora_paginas(fo.size()) - 1)
+		if fora_paginas(fo.size()) > 1:
+			itens.append({"id": "pgf_ant", "r": rect_seta_fora(-1), "on": fora_pag > 0})
+			itens.append({"id": "pgf_prox", "r": rect_seta_fora(1), "on": fora_pag < fora_paginas(fo.size()) - 1})
+		for k in range(fora_pag * FORA_POR_PAG, mini(fo.size(), (fora_pag + 1) * FORA_POR_PAG)):
+			var rf: Rect2 = rect_tile_fora(k - fora_pag * FORA_POR_PAG)
 			itens.append({"id": "f%d" % fo[k], "r": rf, "on": true})
 			var cabf: int = Pecas.CONJUNTO_PECAS[fo[k]][0]
 			if not estado.ja_teve(cabf):
@@ -535,6 +549,13 @@ func acionar(id: String) -> void:
 		return
 	if id == "x":
 		fechar()
+		return
+	if id == "pgf_ant" or id == "pgf_prox":
+		var np_f: int = clampi(fora_pag + (1 if id == "pgf_prox" else -1), 0, fora_paginas(fantasias_so_de_fora().size()) - 1)
+		if np_f != fora_pag:
+			fora_pag = np_f
+			Som.tocar("pagina")
+			_montar()
 		return
 	if id.begins_with("aba") and int(id.substr(3)) != aba_atual():
 		Som.tocar("aba")
@@ -1034,7 +1055,7 @@ func _botoes() -> void:
 	for i in itens.size():
 		var it: Dictionary = itens[i]
 		var id: String = it["id"]
-		if id.begins_with("aba") or _eh_tile(id):
+		if id.begins_with("aba") or _eh_tile(id) or id.begins_with("pgf"):
 			continue
 		var txt: String = "Fechar" if id == "fechar" else ("Voltar" if id == "ant" else "Avançar")
 		var cor: Color = UIComum.B_MARROM if id == "fechar" else UIComum.B_OURO
@@ -1102,9 +1123,18 @@ func _pagina_indice(e: Estado) -> void:
 		var lblf: String = "Lado de fora  ·  %d/%d completas" % [completas_so_de_fora(e), fo2.size()]
 		draw_rect(Rect2(rf0.position.x, rf0.position.y - 24.0, 5.0, 16.0), COR_ABA[ABA_FORA].darkened(0.1))
 		_txt(lblf, Vector2(rf0.position.x + 11.0, rf0.position.y - 10.0), 16, TINTA)
-		_txt("só caem fora da casa", Vector2(rf0.position.x + 11.0 + largura(lblf, 16) + 10.0, rf0.position.y - 10.0), 12, TINTA2)
-		for k in mini(fo2.size(), 5):
-			_tile(e, fo2[k], rect_tile_fora(k))
+		var np_i: int = fora_paginas(fo2.size())
+		if np_i <= 1:
+			_txt("só caem fora da casa", Vector2(rf0.position.x + 11.0 + largura(lblf, 16) + 10.0, rf0.position.y - 10.0), 12, TINTA2)
+		else:
+			_txt("pág. %d/%d" % [fora_pag + 1, np_i], Vector2(rect_seta_fora(-1).position.x - 58.0, rf0.position.y - 10.0), 12, TINTA2)
+			for it_f in itens:
+				var id_f: String = it_f["id"]
+				if id_f == "pgf_ant" or id_f == "pgf_prox":
+					var o_f: Dictionary = {"on": it_f["on"], "foco": foco >= 0 and itens[foco]["id"] == id_f and it_f["on"], "h": UIComum.anim_h(anim, id_f), "p": UIComum.anim_p(anim, id_f), "tam": 15}
+					UIComum.botao(self, it_f["r"], "<" if id_f == "pgf_ant" else ">", UIComum.B_OURO, o_f, t)
+		for k in range(fora_pag * FORA_POR_PAG, mini(fo2.size(), (fora_pag + 1) * FORA_POR_PAG)):
+			_tile(e, fo2[k], rect_tile_fora(k - fora_pag * FORA_POR_PAG))
 	# painéis de baixo: como ler o índice (esquerda) e o progresso (direita)
 	var pl := Rect2(COL_E_X, 538.0, COL_W, 92.0)
 	draw_rect(pl, PAPEL_ESC)
