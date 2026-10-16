@@ -1,5 +1,5 @@
 extends SceneTree
-## Teste headless do lote 1 de fantasias (Super Miau, Arqueiro Miau, Motoqueiro Miausma, Fênix Miaussimo, Mimiau, Jimiau).
+## Teste headless dos lotes 1 e 2 de fantasias (Super Miau ... Jimiau; Disparamiau, Milhau, Giramiau, Stardew Miaulley, Miaucraft, Miaulax).
 ## Uso: godot --headless --path <projeto> --script res://ferramentas/teste_lote1.gd
 ## Confere tabelas paralelas, a mão de pôquer com mãos fixas e dispara cada poder novo numa luta de verdade.
 
@@ -92,14 +92,14 @@ func _init() -> void:
 ## Varre as constantes de todas as classes do projeto: lista de 25 itens (tamanho antigo de Conjunto) ou 100 (antigo de Tipo)
 ## é tabela paralela que não ganhou as fantasias do lote 1 (foi assim que RoupaBicho estourou no índice 26).
 func _tabelas_paralelas(nc: int, nt: int) -> void:
-	var antigos: Array[int] = [nc - 6, nt - 24]
+	var antigos: Array[int] = [nc - 12, nt - 48, nc - 6, nt - 24]   # tamanhos antes do lote 1 e antes do lote 2
 	for gc in ProjectSettings.get_global_class_list():
 		var sc: Script = load(gc["path"])
 		var m: Dictionary = sc.get_script_constant_map()
 		for k in m:
 			var v: Variant = m[k]
 			if v is Array and (v as Array).size() in antigos:
-				_ok(false, "%s.%s tem %d itens (tamanho antigo): falta o lote 1" % [gc["class"], k, (v as Array).size()])
+				_ok(false, "%s.%s tem %d itens (tamanho antigo): falta o lote 1 ou 2" % [gc["class"], k, (v as Array).size()])
 	_ok(IconesPoder.BITS.size() >= Pecas.Poder.size(), "IconesPoder.BITS menor que Poder")
 	for c in nc:
 		_ok(Balanco.conj_valor(c, 0) != 0.0 and Balanco.conj_valor(c, 1) != 0.0, "conjunto %d sem valor de bônus" % c)
@@ -196,6 +196,146 @@ func _efeitos_diretos() -> void:
 	var n0: int = sim.eventos.size()
 	_ok(sim.disparar_poder(mm), "Imitar não disparou")
 	print("Imitar com último poder = pôquer: ok")
+	_efeitos_lote2()
 	# kits de 4 peças: números dos bônus
 	for c in range(Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.size()):
 		print("%-20s 2 peças: %s | 4 peças: %s" % [Pecas.CONJUNTO_NOME[c], Pecas.conjunto_bonus(c, 1), Pecas.conjunto_bonus(c, 2)])
+
+func _lote2_aliado_ferido(sim: Simulacao, sm: Unidade) -> Unidade:
+	for a in sim.aliados:
+		if a != sm and not a.clone and a.pecas.any(func(x: Variant) -> bool: return x != null):
+			return a
+	return null
+
+func _efeitos_lote2() -> void:
+	# Torre de ervilha: nasce uma estrutura que atira; a nova troca a velha; some no prazo
+	var sim := _cena(Pecas.Conjunto.DISPARAMIAU, 11)
+	var dg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.DISPARAMIAU)
+	_ok(dg != null, "Disparamiau sem poder")
+	dg.poder_cd = 0.0
+	var tem_inimigo: bool = false
+	for b in sim.inimigos:
+		if b.vivo and b.x <= Balanco.VISIVEL_X:
+			tem_inimigo = true
+	if tem_inimigo:
+		_ok(sim.disparar_poder(dg), "Torre não disparou")
+		sim.nascidos_aliados.size()
+		var n_torres: int = 0
+		for _i in 2:
+			sim.passo(Balanco.DT)
+		for a in sim.aliados:
+			if a.estrutura and a.vivo:
+				n_torres += 1
+		_ok(n_torres == 1, "torre: esperava 1 estrutura, achou %d" % n_torres)
+		dg.poder_cd = 0.0
+		sim.disparar_poder(dg)
+		for _i in 2:
+			sim.passo(Balanco.DT)
+		n_torres = 0
+		for a in sim.aliados:
+			if a.estrutura and a.vivo:
+				n_torres += 1
+		_ok(n_torres <= 1, "torre: a nova não trocou a velha (%d)" % n_torres)
+	# Reviver: levanta o caído e apaga a marca de nocaute da roupa
+	sim = _cena(Pecas.Conjunto.GIRAMIAU, 12)
+	var gi: Unidade = _gato_do_poder(sim, Pecas.Conjunto.GIRAMIAU)
+	_ok(gi != null, "Giramiau sem poder")
+	gi.poder_cd = 0.0
+	_ok(not sim.disparar_poder(gi), "Reviver disparou sem caído")
+	var vit: Unidade = _lote2_aliado_ferido(sim, gi)
+	if vit != null:
+		var marcas0: int = 0
+		for pc in vit.pecas:
+			if pc != null:
+				marcas0 += pc.marcas.size()
+		sim._matar(vit, null, Pecas.Marca.CICATRIZ)
+		var marcas1: int = 0
+		for pc in vit.pecas:
+			if pc != null:
+				marcas1 += pc.marcas.size()
+		_ok(not vit.vivo and marcas1 > marcas0, "o caído não ganhou marca de nocaute")
+		gi.poder_cd = 0.0
+		_ok(sim.disparar_poder(gi), "Reviver não disparou com caído")
+		var marcas2: int = 0
+		for pc in vit.pecas:
+			if pc != null:
+				marcas2 += pc.marcas.size()
+		_ok(vit.vivo and marcas2 == marcas0, "Reviver não apagou a marca (%d -> %d -> %d)" % [marcas0, marcas1, marcas2])
+		_ok(vit.boneco.vivo and vit.vida > 0.0, "caído não voltou à vida")
+		gi.poder_cd = 0.0
+		_ok(not sim.disparar_poder(gi), "Reviver disparou duas vezes na mesma luta")
+	# Manteiga: o bando desliza para o fundo
+	sim = _cena(Pecas.Conjunto.MILHAU, 13)
+	var mi: Unidade = _gato_do_poder(sim, Pecas.Conjunto.MILHAU)
+	_ok(mi != null, "Milhau sem poder")
+	mi.poder_cd = 0.0
+	var alvo_m: Unidade = null
+	for b in sim.inimigos:
+		if b.vivo and not b.chefe and b.tipo != Unidade.Tipo.GIGANTE and b.x <= Balanco.VISIVEL_X - 200.0:
+			alvo_m = b
+			break
+	if alvo_m != null:
+		var x0: float = alvo_m.x
+		alvo_m.atordoado_t = 5.0
+		if sim.disparar_poder(mi):
+			for _i in 30:
+				sim.passo(Balanco.DT)
+			_ok(alvo_m.x > x0 + 5.0 or not alvo_m.vivo, "a manteiga não deslocou o alvo")
+	# Colheita: 3 mudas, cada uma vira evento ao amadurecer
+	sim = _cena(Pecas.Conjunto.STARDEW_MIAULLEY, 14)
+	var st: Unidade = _gato_do_poder(sim, Pecas.Conjunto.STARDEW_MIAULLEY)
+	_ok(st != null, "Stardew sem poder")
+	st.poder_cd = 0.0
+	sim.zonas.clear()
+	sim.gerar_eventos = true
+	if sim.disparar_poder(st):
+		var mudas: int = 0
+		for z in sim.zonas:
+			if z.get("tipo", "") == "muda":
+				mudas += 1
+		_ok(mudas == Balanco.PODER_COLHEITA_N, "Colheita: %d mudas" % mudas)
+		sim.eventos.clear()
+		for _i in int((Balanco.PODER_COLHEITA_T + 0.5) / Balanco.DT):
+			sim._zonas(Balanco.DT)   # direto: a luta de teste pode acabar antes
+		var amadureceram: int = 0
+		for ev in sim.eventos:
+			if ev["t"] == "muda":
+				amadureceram += 1
+		_ok(amadureceram == Balanco.PODER_COLHEITA_N, "Colheita: %d mudas amadureceram" % amadureceram)
+	# Construir: blocos provocam e explodem ao cair
+	sim = _cena(Pecas.Conjunto.MIAUCRAFT, 15)
+	var mc: Unidade = _gato_do_poder(sim, Pecas.Conjunto.MIAUCRAFT)
+	_ok(mc != null, "Miaucraft sem poder")
+	mc.poder_cd = 0.0
+	if sim.disparar_poder(mc):
+		sim.passo(Balanco.DT)
+		var blocos: int = 0
+		for a in sim.aliados:
+			if a.estrutura and a.vivo and a.provoca and a.estr_explode > 0.0:
+				blocos += 1
+		_ok(blocos == Balanco.PODER_CONSTRUIR_N, "Construir: %d blocos" % blocos)
+	# Cochilo: dorme, imune a atordoar, e o inimigo em volta dorme e acorda ao levar dano
+	sim = _cena(Pecas.Conjunto.MIAULAX, 16)
+	var ml: Unidade = _gato_do_poder(sim, Pecas.Conjunto.MIAULAX)
+	_ok(ml != null, "Miaulax sem poder")
+	ml.poder_cd = 0.0
+	ml.vida = ml.vida_max * 0.4
+	var perto: Unidade = null
+	for b in sim.inimigos:
+		if b.vivo and not b.chefe:
+			perto = b
+			break
+	if perto != null:
+		perto.x = ml.x + 40.0
+		perto.y = ml.y
+		_ok(sim.disparar_poder(ml), "Cochilo não disparou")
+		_ok(ml.cochilo_t > 2.0, "o gato não dormiu")
+		_ok(perto.sono_t > 2.0, "o inimigo não dormiu")
+		ml.atordoado_t = 3.0
+		sim.passo(Balanco.DT)
+		_ok(ml.atordoado_t == 0.0, "dormindo, o gato devia ser imune a atordoar")
+		sim._dano_poder(ml, perto, 0.1)
+		_ok(perto.sono_t == 0.0 or not perto.vivo, "o dano não acordou o inimigo")
+		for _i in int(3.0 / Balanco.DT):
+			sim.passo(Balanco.DT)
+		_ok(ml.vida > ml.vida_max * 0.8, "o Cochilo não curou o bastante (%.2f)" % (ml.vida / ml.vida_max))
