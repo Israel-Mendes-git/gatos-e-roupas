@@ -330,7 +330,7 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 	return g
 
 static func _chave(g: Dictionary) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], g["q"], g["ph"], g["bob"], g["resp"], int(g["andando"]), int(g["parado"]), g["ext"], int(BichoPx.cabeca_coberta)]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], g["q"], g["ph"], g["bob"], g["resp"], int(g["andando"]), int(g["parado"]), g["ext"], int(BichoPx.cabeca_coberta) * 2 + int(BichoPx.corpo_coberto)]
 
 ## Molde do tronco e largura do crânio do quadro em montagem (cada _monta* grava aqui): as roupas de corpo e o chapéu se ajustam.
 static var _tr: PackedInt32Array = PackedInt32Array()
@@ -1127,21 +1127,48 @@ const _COROA: Array = [
 	"GGRGGGRGG",
 	"ggggggggg",
 ]
+## Cabeça de perfil em cunha: faixa branca do focinho até a orelha por cima, faixa preta pelo olho até o nariz, bochecha branca.
+const _TEX_CAB: Array = [
+	"..kk..........",
+	".kwwk.........",
+	".kwwwwwww.....",
+	"kkkwwwwwwwww..",
+	"kkkkkkwwwwwwww.",
+	"kkkkkkkkkwwwwww",
+	"kkkkwykkkkkkkkwn",
+	"wkkkyykkkkkkkkkn",
+	"wwwkkkkkkkkkkkn.",
+	"wwwwwwwkkkkk....",
+	".wwwwwwwwww.....",
+	"...wwwwww.......",
+]
+const _TEX_CAB_INFO: Dictionary = {"js": 8, "ms": 8, "ab": 2, "ex": 4, "ey": 6}
+## Corpo baixo e largo, grisalho por cima (pelos claros soltos), barriga escura.
+const _TEX_CORPO: Array = [
+	".......l.l.l.l.l..............",
+	".....lvlllvlllvlllll..........",
+	"...llllllmllllllmllllll.......",
+	"..llmmmlmmmmmlmmmmmmlllll.....",
+	".lmmmmmmmmmmmmmmmmmmmmmmmll...",
+	"lmmmmdmmmmmdmmmmmdmmmmmmmmml..",
+	"mmmmmmmmmmmmmmmmmmmmmmmmmmmmml",
+	"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
+	"dmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
+	".ddmmmmmmmmmmmmmmmmmmmmmmmmmmd",
+	"..dddKKKKKKKKKKKKKKKKKKKKKKdd.",
+	"....KKKKKKKKKKKKKKKKKKKKKKK...",
+]
+const _TEX_RABO: Array = ["..ll.", "llmml", "lmmmd", ".mmd."]
 
 static func _geo9(g: Dictionary, tk: int) -> void:
-	var q: int = g["q"]
 	var ph: int = g["ph"]
 	var e: int = [0, -2, 3, 2, 1][ph]
-	var bx: int = -15
-	var bw: int = 27
+	var bx: int = -17
+	var bw: int = 30
 	var bh: int = 12
-	var by0: int = -17 + int(g["bob"]) - int(g["resp"])
-	bh += int(g["resp"])
-	var cb: Dictionary = _cabk("T", 1.3)
-	var hw: int = cb["hw"]
-	var hh: int = cb["hh"]
-	var hx: int = 5 + e
-	var hy: int = by0 - 3
+	var by0: int = -16 + int(g["bob"]) - int(g["resp"])
+	var hx: int = bx + 28 + e
+	var hy: int = by0 - 2 + (1 if ph == 1 else 0)
 	g["e"] = e
 	g["bx"] = bx
 	g["bw"] = bw
@@ -1151,8 +1178,8 @@ static func _geo9(g: Dictionary, tk: int) -> void:
 	g["hy"] = hy
 	g["boca"] = ph == 2 or ph == 3
 	g["ext"] = (tk / 240) % 3
-	g["a"] = [Vector2(hx + hw * 0.5, hy + 1), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + hw - 1, hy + hh * 0.5), Vector2(bx + 3, by0 + 1),
-		Vector2(hx + 3, hy + hh - 1), Vector2(hx + cb["ex"] + 2, hy + cb["ey"] + 1), Vector2(hx + cb["ex"] + 2, hy + cb["ey"])]
+	g["a"] = [Vector2(hx + 6, hy + 2), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + 15, hy + 7), Vector2(bx + 3, by0 + 1),
+		Vector2(hx + 2, hy + 10), Vector2(hx + 5, hy + 6), Vector2(hx + 5, hy + 6)]
 	g["patas"] = Vector2(0, 0)
 
 static func _monta9(G: PackedInt32Array, g: Dictionary) -> void:
@@ -1167,103 +1194,70 @@ static func _monta9(G: PackedInt32Array, g: Dictionary) -> void:
 	var fl: int = g["ext"]
 	# rabo curto
 	var Ra := _nova()
-	_elip(Ra, bx - 4, by0 + 3, 7, 6)
+	_bmp(Ra, bx - 2, by0 + 1, _TEX_RABO)
 	_comp(G, Ra)
-	# capa vermelha, atrás do corpo, com o ouro na barra, balançando
+	# capa vermelha por cima do dorso: presa no pescoço, cai pelas costas e passa da anca, com barra de ouro e ondulando
 	var Ca := _nova()
-	var nk: int = bx + bw - 7
-	var tras: int = bx - 5 - (3 if g["andando"] else 0) - (2 if ph == 1 else 0)
+	var nk: int = bx + bw - 4
+	var tras: int = bx - 3 - (2 if g["andando"] else 0) - (2 if ph == 1 else 0)
 	for x in range(tras, nk + 1):
-		var u: float = float(x - tras) / float(maxi(1, nk - tras))
-		var topo: int = by0 + 1 + roundi(2.0 * (1.0 - u) * (1.0 - u))
-		var onda: int = roundi(1.6 * sin(float(x) * 0.8 + float(fl) * 2.1 + (float(q) if g["andando"] else 0.0)))
-		var fim: int = -4 + onda + roundi(5.0 * (1.0 - u) * (1.0 if g["andando"] else 0.4))
+		var u: float = float(x - tras) / float(maxi(1, nk - tras))   # 0 atrás, 1 no pescoço
+		var topo: int = by0 - 1 + (1 if x < bx + 2 else 0)
+		var onda: int = roundi(1.2 * sin(float(x) * 0.7 + float(fl) * 2.1 + (float(q) if g["andando"] else 0.0)))
+		var fim: int = by0 + roundi(5.0 * (1.0 - u) * (1.0 - u)) + 1 + (onda if u < 0.7 else 0)
 		for y in range(topo, fim + 1):
 			var ch: String = "A"
-			if y <= topo + 1:
+			if y == topo:
 				ch = "z"
-			elif (x - tras) % 5 == 2:
-				ch = "a"
-			elif y >= fim - 1:
+			elif posmod(x - tras, 4) == 1 and y > topo + 1:
 				ch = "a"
 			_px(Ca, x, y, ch)
 		_px(Ca, x, fim, "G")
-	_comp(G, Ca)
-	# patas: curtas e grossas, pretas
+	_rect(Ca, nk - 1, by0, 2, 2, "G")
+	# patas: curtas e grossas, pretas (as de longe mais claras)
 	var L1 := _nova()
 	var L2 := _nova()
-	var hip: int = by0 + bh - 4
-	_pernas(L1, L2, g, 4, -9, hip, 3, "k", "K", "k", 4)
+	var hip: int = by0 + bh - 3
+	var pf: int = bx + 23
+	var pt: int = bx + 5
+	_pernas(L1, L2, g, pf, pt, hip, 4, "K", "k", "k", 2)
 	_comp(G, L1)
-	_comp(G, L2)
-	# garras brancas nas patas da frente (de perto aumentam no golpe)
-	var Cl := _nova()
-	var gf: int = 7 + (3 + int(g["e"]) if g["e"] > 0 else 0)
-	if g["e"] > 0:
-		var fy: int = maxi(hip + 2, -2 - 2 * int(g["e"]))
-		_rect(Cl, 4 + 2 + int(g["e"]) + 3, fy - 1, 1, 1, "c")
-		_trazo(Cl, 4 + 2 + int(g["e"]) + 3, fy - 2, 4 + 2 + int(g["e"]) + 7, fy - 2 + 1, 1, "c")
-		_trazo(Cl, 4 + 2 + int(g["e"]) + 3, fy, 4 + 2 + int(g["e"]) + 8, fy + 1, 1, "c")
-		_trazo(Cl, 4 + 2 + int(g["e"]) + 3, fy + 2, 4 + 2 + int(g["e"]) + 7, fy + 4, 1, "c")
-	else:
-		var a1: int = 0
-		var a2: int = 0
-		if g["andando"]:
-			var ph1: float = fposmod(float(q) / 6.0, 1.0)
-			a1 = roundi(2.5 * cos(TAU * ph1))
-			var ph2: float = fposmod(float(q) / 6.0 + 0.5, 1.0)
-			a2 = roundi(2.5 * cos(TAU * ph2))
-		_rect(Cl, 4 + 3 + a1, -1, 3, 1, "c")
-		_rect(Cl, 7 + 3 + a2, -1, 3, 1, "c")
-	_luz(G, Cl)
-	# orelha de longe
-	var OL := _nova()
-	_bmp(OL, hx + 3, hy - 3, ["kkk", "kkkk", "kkkk", "kkkk"])
-	_comp(G, OL)
-	# corpo roliço de ombros altos, grisalho; barriga preta
+	# corpo: o molde do tronco é ele inteiro (a roupa de corpo veste o dorso)
 	var B := _nova()
-	_elip(B, bx, by0, bw, bh)
-	_elip(B, bx + bw - 14, by0 - 1, 14, 12)
+	_bmp(B, bx, by0, _TEX_CORPO)
 	_tr = B.duplicate()
-	_cr = BichoPx.cranio(_cabk("T", 1.3)["rows"])
-	_tinta(B, bx + 2, by0 + bh - 4, bw - 6, 5, "K")
-	for j in range(by0 - 3, by0 + bh):
-		for i in range(bx, bx + bw):
-			if _lido(B, i, j) == "m".unicode_at(0):
-				if (i * 5 + j * 3) % 7 == 0:
-					_px(B, i, j, "l")
-				elif (i * 3 + j * 7) % 11 == 0:
-					_px(B, i, j, "d")
-	var cb: Dictionary = _cabk("T", 1.3)
-	var hw: int = cb["hw"]
-	var hh: int = cb["hh"]
-	_elip(B, hx - 5, hy + 2, 11, 10, "m", "m", "d")
-	var cab: Array = _cab_rows(cb, g["boca"])
-	_bmp(B, hx, hy, cab)
-	_bmp(B, hx + 2, hy - 3, [".kk.", "kwwk", "kkkk"])
-	# olho amarelo no vão preto, sobrancelha pesada
-	var ex: int = hx + int(cb["ex"])
-	var ey: int = hy + int(cb["ey"])
-	_rect(B, ex, ey, 5, 4, "y")
-	_rect(B, ex + 3, ey, 2, 4, "k")
-	_px(B, ex, ey, "w")
-	_px(B, ex + 1, ey, "w")
-	_trazo(B, ex - 2, ey - 1, ex + 4, ey - 1 + (1 if ph > 0 else 0), 1, "k")
-	if g["boca"]:
-		_rect(B, hx + hw - 6, hy + int(cb["js"]) - 1, 2, 2, "w")
-		_rect(B, hx + hw - 9, hy + int(cb["js"]) + 3, 2, 2, "w")
-	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
+	_cr = 12
 	_comp(G, B)
-	# gola de arminho no pescoço e fecho de ouro
-	var Go := _nova()
-	_elip(Go, hx - 5, hy + hh - 6, 10, 6, "w", "w", "v")
-	for p in [Vector2(-3, -5), Vector2(0, -3), Vector2(-4, -3), Vector2(2, -5)]:
-		_px(Go, hx + int(p.x), hy + hh + int(p.y), "k")
-	_px(Go, hx, hy + hh - 1, "G")
-	_px(Go, hx + 1, hy + hh - 1, "G")
-	_comp(G, Go)
+	if not BichoPx.corpo_coberto:
+		_comp(G, Ca)
+	_comp(G, L2)
+	# garras brancas na pata da frente de perto (acompanham o passo e o bote)
+	var Cl := _nova()
+	var gx: int = pf
+	var gy: int = -1
+	if g["andando"]:
+		var ph2: float = fposmod(float(q) / 6.0 + 0.5, 1.0)
+		gx = pf + roundi(2.5 * cos(TAU * ph2))
+		gy = -1 - maxi(0, roundi(2.0 * sin(TAU * ph2)))
+	if int(g["e"]) > 0:
+		gx = pf + 2 + int(g["e"])
+		gy = maxi(hip + 2, -2 - 2 * int(g["e"]))
+	_rect(Cl, gx + 4, gy, 3, 1, "c")
+	_px(Cl, gx + 3, gy, "c")
+	_comp(G, Cl)
+	# cabeça em camada própria, com a boca aberta no golpe
+	var H := _nova()
+	var cb: Dictionary = _TEX_CAB_INFO.duplicate()
+	cb["rows"] = _TEX_CAB
+	var cab: Array = _cab_rows(cb, g["boca"])
+	_bmp(H, hx, hy, cab)
+	if ph > 0:
+		_px(H, hx + 3, hy + 5, "k")
+		_px(H, hx + 6, hy + 5, "k")
+	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy + _OY, cab)
+	_comp(G, H)
 	# coroa de ouro com gemas (sai quando o texugo veste chapéu)
 	if not BichoPx.cabeca_coberta:
 		var Cr := _nova()
-		_bmp(Cr, hx + (hw - 9) / 2 - 1, hy - 6, _COROA)
+		_bmp(Cr, hx + 1, hy - 4, _COROA)
 		_comp(G, Cr)

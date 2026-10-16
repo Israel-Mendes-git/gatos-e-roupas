@@ -17,6 +17,10 @@ static var pose_truque: int = -1
 ## Só vale durante a chamada de desenhar().
 static var cabeca_coberta: bool = false
 
+## O bicho veste uma roupa de corpo: capas, golas e mantos que já vêm no desenho do chefe saem, para a roupa não brigar com eles.
+## Só vale durante a chamada de desenhar().
+static var corpo_coberto: bool = false
+
 ## Arte nova (refeita do zero) de cada família de bichos comuns, um arquivo por família. Enquanto o arquivo
 ## de uma família não existe, ela continua com o desenho antigo (BichoPxA/BichoPxB).
 const NOVOS: Array[String] = ["res://scripts/arte/bichos/bicho_px_rato.gd", "res://scripts/arte/bichos/bicho_px_guaxinim.gd", "res://scripts/arte/bichos/bicho_px_raposa.gd", "res://scripts/arte/bichos/bicho_px_corvo.gd", "res://scripts/arte/bichos/bicho_px_sapo.gd"]

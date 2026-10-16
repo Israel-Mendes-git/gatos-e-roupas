@@ -1106,9 +1106,11 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	# chefe de coroa (ver BichoPx.coroa_fixa) não veste peça de cabeça: a coroa fica
 	var sem_chapeu: bool = chefe and BichoPx.coroa_fixa(ct)
 	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null and not sem_chapeu
+	BichoPx.corpo_coberto = pecas.size() > 1 and pecas[1] != null
 	BichoPx.ultimo_quadro = {}
 	BichoPx.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando and tipo == Unidade.Tipo.LADRAO, filhote, ct, parte, parado)
 	BichoPx.cabeca_coberta = false
+	BichoPx.corpo_coberto = false
 	if parte or filhote:
 		resetar(c)
 		return
