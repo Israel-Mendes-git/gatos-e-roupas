@@ -70,6 +70,7 @@ func iniciar(e: Estado, semente: int = 0) -> void:
 			u.casa_x = Balanco.RECUAR_X
 		u.x = Balanco.TORRE_X + 10.0
 		calcular(u)
+		u.disfarcado = u.disfarce_atordoa > 0.0   # a onda começa disfarçado
 		u.vida = u.vida_max * (b.saude if Balanco.FERIDA_PERSISTE else 1.0)
 		aliados.append(u)
 	if e.tem_modulo(Torre.Modulo.CASINHA):
@@ -182,6 +183,7 @@ func calcular(u: Unidade) -> void:
 	u.cura_abate = 0.0
 	u.embalo_k = 0.0
 	u.barreira_int = 0.0
+	u.disfarce_atordoa = 0.0
 	u.regen_aura = 0.0
 	u.sementes = 0.0
 	u.cantil = 0.0
@@ -355,9 +357,15 @@ func calcular(u: Unidade) -> void:
 			Pecas.BONUS_CRITICO:
 				u.critico = minf(Balanco.CRITICO_MAX, u.critico + kv)
 			Pecas.BONUS_BARREIRA:
-				u.barreira_int = kv if u.barreira_int <= 0.0 else minf(u.barreira_int, kv)
+				if g == 1:
+					# Mimiau completo: Disfarce (kv = segundos de atordoamento; o bicho fantasiado atordoa menos)
+					u.disfarce_atordoa = kv * (Balanco.DISFARCE_BICHO_FATOR if u.equipe == 1 else 1.0)
+				else:
+					u.barreira_int = kv if u.barreira_int <= 0.0 else minf(u.barreira_int, kv)
 			Pecas.BONUS_CARGA:
 				u.recarga_menos += kv
+	if u.equipe == 0 and Pecas.Conjunto.MIMIAU in u.herancas:
+		u.disfarce_atordoa = maxf(u.disfarce_atordoa, Balanco.DISFARCE_HER_ATORDOA)   # herança: o Disfarce, mais fraco
 	if u.equipe == 1:
 		# poder de bicho: só fantasiado com a fantasia completa (já em u.poder) e chefe (poder fixo por chefe)
 		if u.chefe and u.chefe_tipo >= 0:
@@ -463,6 +471,7 @@ func _spawnar(item: Dictionary) -> void:
 	u.x = Balanco.INIMIGO_X0
 	u.y = rng.randf_range(Balanco.CHAO_Y0, Balanco.CHAO_Y1)
 	calcular(u)
+	u.disfarcado = u.disfarce_atordoa > 0.0
 	u.vida = u.vida_max
 	u.cd = rng.randf_range(0.0, 0.5)
 	u.poder_cd = Balanco.PODER_CHEFE_PRIMEIRO if chefe else Balanco.PODER_INIMIGO_PRIMEIRO + rng.randf_range(0.0, 4.0)
@@ -900,7 +909,7 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.oculto_t = maxf(0.0, u.oculto_t - dt)
 	u.furor_t = maxf(0.0, u.furor_t - dt)
 	u.bola_t = maxf(0.0, u.bola_t - dt)
-	u.disfarce_t = maxf(0.0, u.disfarce_t - dt)
+	u.disfarce_rasgou_t += dt
 	u.buff_dano_t = maxf(0.0, u.buff_dano_t - dt)
 	if u.bola_t > 0.0:
 		u.atordoado_t = 0.0   # Bola de espinhos: ninguém atordoa
@@ -1117,10 +1126,13 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		alvo.barreira_cd = alvo.barreira_int  # Manto: o golpe some
 		_ev({"t": "barreira", "x": alvo.x, "y": alvo.y})
 		return
-	if alvo.disfarce_t > 0.0 and atk != null:
-		alvo.disfarce_t = 0.0   # Disfarce (Mimiau): o golpe some e quem bateu leva um susto
-		atk.atordoado_t = maxf(atk.atordoado_t, Balanco.PODER_DISFARCE_ATORDOA)
-		_ev({"t": "barreira", "x": alvo.x, "y": alvo.y})
+	if alvo.disfarcado and atk != null:
+		# Disfarce (Mimiau): o 1º golpe some, o pano rasga e quem bateu leva um susto (chefe, menos)
+		alvo.disfarcado = false
+		alvo.disfarce_rasgou_t = 0.0
+		if atk.vivo and not atk.bola_t > 0.0:
+			atk.atordoado_t = maxf(atk.atordoado_t, alvo.disfarce_atordoa * (Balanco.DISFARCE_CHEFE_FATOR if atk.chefe else 1.0))
+		_ev({"t": "disfarce_rasga", "x": alvo.x, "y": alvo.y, "eq": alvo.equipe})
 		return
 	var d: float
 	if atk != null and atk.perfura:
@@ -2308,7 +2320,7 @@ func _poder_objecao(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 	_dano_poder(u, alvo, base * Balanco.PODER_OBJECAO_DANO * fr)
 	return true
 
-## Imitar (Mimiau): repete o último poder da luta; sem nenhum (ou sem alvo para ele), vira um Disfarce.
+## Imitar (Mimiau): repete o último poder da luta; sem nenhum (ou sem alvo para ele), refaz o Disfarce rasgado e cura um pouco.
 func _poder_imitar(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
 	if ultimo_conj >= 0 and tempo - ultimo_t <= Balanco.PODER_IMITAR_JANELA:
 		var p0: int = u.poder
@@ -2322,10 +2334,13 @@ func _poder_imitar(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], bas
 		if deu:
 			extra["imitou"] = true
 			return true
-	u.disfarce_t = Balanco.PODER_DISFARCE_T
-	u.vida = minf(u.vida_max, u.vida + u.vida_max * Balanco.PODER_DISFARCE_CURA)
+	if u.disfarcado or u.disfarce_atordoa <= 0.0:
+		return false   # nada para copiar e o Disfarce está inteiro: espera um dos dois
+	u.disfarcado = true
+	u.vida = minf(u.vida_max, u.vida + u.vida_max * (Balanco.DISFARCE_RASGA_CURA_HER if em_heranca else Balanco.DISFARCE_RASGA_CURA))
 	pontos.append(Vector2(u.x, u.y))
-	extra["texto"] = "Disfarce!"
+	extra["texto"] = "Disfarce refeito!"
+	_ev({"t": "disfarce_refaz", "x": u.x, "y": u.y})
 	return true
 
 ## Mão de pôquer (Jimiau): saca cartas, joga a melhor mão de 5 e fere o maior bando conforme a mão.

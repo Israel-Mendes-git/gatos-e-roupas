@@ -168,14 +168,34 @@ func _efeitos_diretos() -> void:
 	sim = _cena(Pecas.Conjunto.MIMIAU, 3)
 	var mm: Unidade = _gato_do_poder(sim, Pecas.Conjunto.MIMIAU)
 	mm.poder_cd = 0.0
+	mm.disfarcado = true
+	mm.poder_cd = 0.0
+	_ok(not sim.disparar_poder(mm), "Imitar gastou o poder com o Disfarce inteiro")
+	# rasgar: o golpe some e quem bateu fica atordoado
+	var vit: Unidade = null
+	for b in sim.inimigos:
+		if b.vivo:
+			vit = b
+			break
+	if vit != null:
+		vit.atordoado_t = 0.0
+		mm.esquiva = 0.0
+		mm.barreira_int = 0.0
+		var vida0: float = mm.vida
+		sim._dano(vit, mm, 50.0, true)
+		_ok(not mm.disfarcado and mm.vida == vida0 and vit.atordoado_t > 0.5, "Disfarce não rasgou direito")
+		sim._dano(vit, mm, 5.0, true)
+		_ok(mm.vida < vida0, "o 2º golpe devia ferir")
+	mm.vida = mm.vida_max * 0.5
+	mm.poder_cd = 0.0
 	sim.ultimo_conj = -1
-	_ok(sim.disparar_poder(mm) and mm.disfarce_t > 5.0, "Disfarce não armou")
+	_ok(sim.disparar_poder(mm) and mm.disfarcado and mm.vida > mm.vida_max * 0.55, "Disfarce não refeito com cura")
 	mm.poder_cd = 0.0
 	sim.ultimo_conj = Pecas.Conjunto.JIMIAU
 	sim.ultimo_t = sim.tempo
 	var n0: int = sim.eventos.size()
 	_ok(sim.disparar_poder(mm), "Imitar não disparou")
-	print("Imitar com último poder = pôquer: ok (disfarce_t=%.1f)" % mm.disfarce_t)
+	print("Imitar com último poder = pôquer: ok")
 	# kits de 4 peças: números dos bônus
 	for c in range(Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.size()):
 		print("%-20s 2 peças: %s | 4 peças: %s" % [Pecas.CONJUNTO_NOME[c], Pecas.conjunto_bonus(c, 1), Pecas.conjunto_bonus(c, 2)])

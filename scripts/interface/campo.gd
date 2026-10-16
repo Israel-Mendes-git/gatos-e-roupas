@@ -937,6 +937,17 @@ func _consumir() -> void:
 				particulas.append({"p": pb2, "v": Vector2.ZERO, "vida": 0.4, "max": 0.4, "cor": Color(0.45, 0.7, 1.0, 0.6), "r": 22.0, "g": 0.0, "tipo": 1})
 				_faisca(pb2, Color(0.6, 0.85, 1.0), 10, 200.0, 0.4, 3.0)
 				_numero(pb2 + Vector2(0, -34), "barreira", Color(0.6, 0.85, 1.0), 16)
+			"disfarce_rasga":
+				var pd: Vector2 = Vector2(e["x"], e["y"] - 36 * ESC)
+				_som("barreira", 0.8, -4.0)
+				_faisca(pd, Color(1.0, 0.9, 0.3), 14, 220.0, 0.8, 5.0)
+				_faisca(pd, Color(0.98, 0.75, 0.2), 8, 160.0, 0.9, 4.0)
+				_faisca(pd, Color(0.35, 0.2, 0.15), 6, 190.0, 0.7, 3.0)
+				particulas.append({"p": pd, "v": Vector2.ZERO, "vida": 0.35, "max": 0.35, "cor": Color(1.0, 0.95, 0.5, 0.6), "r": 26.0, "g": 0.0, "tipo": 1})
+				_numero(pd + Vector2(0, -36), "Disfarce rasgou!", Color(1.0, 0.9, 0.35), 20, 1.3, 190.0)
+			"disfarce_refaz":
+				var pr2: Vector2 = Vector2(e["x"], e["y"] - 36 * ESC)
+				_faisca(pr2, Color(1.0, 0.92, 0.45), 10, 120.0, 0.6, 3.0)
 			"cantil":
 				var pc2: Vector2 = Vector2(e["x"], e["y"] - 46 * ESC)
 				_faisca(pc2, Color(0.4, 0.95, 0.6), 8, 110.0, 0.6, 3.0)
@@ -2573,6 +2584,9 @@ func _draw() -> void:
 			var brx: float = (CORPO_LARG + 2.0) * esc_u
 			var bry: float = (CORPO_MEIO + 4.0) * esc_u
 			V.aro(self, bc, brx, bry, Color(0.6, 0.85, 1.0), 0.75, 1.0)
+		if uu2.disfarcado:
+			var dc: Vector2 = pos + Vector2(0, -CORPO_MEIO * esc_u)
+			V.aro(self, dc, (CORPO_LARG + 4.0) * esc_u, (CORPO_MEIO + 6.0) * esc_u, Color(1.0, 0.9, 0.35), 0.55 + 0.2 * sin(rel * 4.0), 1.0)
 		if uu2.cura_alvo != null:
 			var al: Unidade = uu2.cura_alvo
 			var pa: Vector2 = pos + Vector2(0, -40 * ESC)
@@ -5631,6 +5645,8 @@ func _estados_linhas(u: Unidade) -> Array:
 				nome = "Marcado: +%s de dano" % Simulacao.pct(u.marcado_bonus)
 			IconesEstado.E.OCULTO:
 				nome = "Oculto na fumaça"
+			IconesEstado.E.DISFARCADO:
+				nome = "Disfarçado: anula o próximo golpe"
 			IconesEstado.E.FURIA:
 				nome = "Em fúria"
 			IconesEstado.E.CURA:

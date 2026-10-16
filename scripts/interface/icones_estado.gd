@@ -4,14 +4,14 @@ extends RefCounted
 ## A ordem do enum é a prioridade: controle primeiro, depois dano, depois os bônus.
 ## Os mesmos ícones aparecem sobre os bichos, na ficha do mouse e na legenda do Fichário.
 
-enum E { ATORDOADO, PRESO, LENTO, MARCADO, QUEIMA, SEM_FOLEGO, OCULTO, PROTEGIDO, FRENESI, FURIA, BOLA, CURA, FUGINDO, MAIS }
+enum E { ATORDOADO, PRESO, LENTO, MARCADO, QUEIMA, SEM_FOLEGO, OCULTO, PROTEGIDO, DISFARCADO, FRENESI, FURIA, BOLA, CURA, FUGINDO, MAIS }
 
 const TAM := 10           # lado de um ícone no atlas (8 + contorno de 1 px)
-const QTD := 13           # estados de verdade (MAIS é só o "…" do excesso)
+const QTD := 14           # estados de verdade (MAIS é só o "…" do excesso)
 const SEM_TEMPO := 99.0   # estado sem relógio (dura enquanto a condição valer)
 
-const NOME: Array[String] = ["Atordoado", "Preso na teia", "Lento", "Marcado", "Queimando", "Sem fôlego", "Oculto", "Protegido", "Frenesi", "Fúria", "Bola de espinhos", "Curando", "Fugindo", "Mais"]
-const CURTO: Array[String] = ["Atordoado", "Preso", "Lento", "Marcado", "Queimando", "Sem fôlego", "Oculto", "Protegido", "Frenesi", "Fúria", "Espinhos", "Curando", "Fugindo", "Mais"]
+const NOME: Array[String] = ["Atordoado", "Preso na teia", "Lento", "Marcado", "Queimando", "Sem fôlego", "Oculto", "Protegido", "Disfarçado", "Frenesi", "Fúria", "Bola de espinhos", "Curando", "Fugindo", "Mais"]
+const CURTO: Array[String] = ["Atordoado", "Preso", "Lento", "Marcado", "Queimando", "Sem fôlego", "Oculto", "Protegido", "Disfarçado", "Frenesi", "Fúria", "Espinhos", "Curando", "Fugindo", "Mais"]
 const DICA: Array[String] = [
 	"não age e não anda",
 	"não anda, mas ataca quem alcançar",
@@ -21,6 +21,7 @@ const DICA: Array[String] = [
 	"robô sem corda: parado",
 	"os inimigos não o escolhem como alvo",
 	"escudo: aguenta mais dano",
+	"o próximo golpe é anulado e quem bateu fica atordoado",
 	"ataca mais rápido",
 	"golpes em área e rouba vida",
 	"veloz, espinhento e não atordoa",
@@ -64,6 +65,8 @@ const BITS: Array = [
 	["........", "...gg...", "..gggg.g", ".gggggg.", "gggggggg", "gGgggGgg", ".GGGGGG.", "........"],
 	# PROTEGIDO: escudo azul
 	["bbbbbbbb", "bccbbbbb", "bcbbbbbB", "bbbbbbbB", "bbbbbbBB", ".bbbbBB.", "..bBBB..", "...BB..."],
+	# DISFARCADO: pano amarelo de carinha riscada
+	[".yy..yy.", ".yyyyyy.", "yyyyyyyy", "yNyyyyNy", "yyyyyyyy", "ryyyyyyr", ".yyyyyY.", "..YYYY.."],
 	# FRENESI: setas duplas verde-limão
 	["x..x....", ".x..x...", "..x..x..", "...x..x.", "...X..X.", "..X..X..", ".X..X...", "X..X...."],
 	# FÚRIA: chifres
@@ -142,6 +145,8 @@ static func tempo(u: Unidade, id: int) -> float:
 			return u.oculto_t if u.oculto_t > 0.0 else -1.0
 		E.PROTEGIDO:
 			return u.protegido_t if u.protegido_t > 0.0 else -1.0
+		E.DISFARCADO:
+			return SEM_TEMPO if u.disfarcado else -1.0
 		E.FRENESI:
 			return u.frenesi_t if u.frenesi_t > 0.0 else -1.0
 		E.FURIA:

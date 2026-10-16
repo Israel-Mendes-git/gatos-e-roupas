@@ -154,7 +154,7 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.ARQUEIRO_MIAU: [0.15, 0.35],       # chance de crítico
 	Pecas.Conjunto.MOTOQUEIRO_MIAUSMA: [3.0, 6.0],    # queimadura por segundo
 	Pecas.Conjunto.FENIX_MIAUSSIMO: [3.0, 7.0],       # armadura
-	Pecas.Conjunto.MIMIAU: [7.0, 3.0],                # segundos entre barreiras
+	Pecas.Conjunto.MIMIAU: [7.0, 1.2],                # 2 ou 3 peças: segundos entre barreiras; 4 peças: Disfarce (segundos de atordoamento)
 	Pecas.Conjunto.JIMIAU: [0.05, 0.12],              # recarga do poder mais curta
 }
 const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
@@ -577,9 +577,12 @@ const PODER_PROTESTO_FATOR := 0.5      # sem aviso para cortar: atordoamento, da
 # Imitar (Mimiau)
 const PODER_IMITAR_JANELA := 12.0       # segundos em que o último poder ainda vale
 const PODER_IMITAR_FORCA := 1.0
-const PODER_DISFARCE_T := 8.0           # sem poder para copiar: barreira que anula um golpe
-const PODER_DISFARCE_ATORDOA := 1.5
-const PODER_DISFARCE_CURA := 0.12       # fração da vida máxima que o Disfarce cura ao ser armado
+# Disfarce (Mimiau, Disguise do Mimikyu): a luta começa disfarçado; o 1º golpe é anulado e quem bateu fica atordoado
+const DISFARCE_CHEFE_FATOR := 0.35      # chefe que rasga o Disfarce: atordoa nesta fração
+const DISFARCE_BICHO_FATOR := 0.7       # bicho fantasiado de Mimiau: atordoa nesta fração
+const DISFARCE_HER_ATORDOA := 0.7       # herança: segundos de atordoamento (uma vez por onda)
+const DISFARCE_RASGA_CURA := 0.12       # Imitar sem o que copiar: refaz o Disfarce e cura esta fração da vida máxima
+const DISFARCE_RASGA_CURA_HER := 0.06
 # Mão de pôquer (Jimiau): dano no maior bando, por categoria da mão (carta alta ... straight flush)
 const PODER_POQUER_RAIO := 110.0
 const PODER_POQUER_CARTAS := 7   # a spec fala em 8, mas o valor esperado dela (~1,35 x base) é o de 7 cartas: com 8 dava 1,68

@@ -346,7 +346,7 @@ const PODER_DICA: Array[String] = [
 	"uma flecha salta de inimigo em inimigo, mais forte a cada salto",
 	"queima os 3 inimigos de maior vida: dano em % da vida máxima deles",
 	"corta o poder que um bicho está carregando e anima o time (só com aviso)",
-	"repete o último poder usado na luta; sem nenhum, vira um Disfarce",
+	"repete o último poder; sem nenhum, refaz o Disfarce e cura",
 	"saca cartas e joga a melhor mão: quanto melhor, mais dano no bando",
 ]
 const CONJUNTO_MIN := 2   # peças para o bônus parcial; com as 4, bônus completo
@@ -426,6 +426,8 @@ static func conjunto_bonus(c: int, grau: int) -> String:
 		BONUS_CRITICO:
 			return "+%d%% de chance de golpe crítico" % int(round(v * 100.0))
 		BONUS_BARREIRA:
+			if g == 1 and c == Conjunto.MIMIAU:
+				return "Disfarce: começa a luta disfarçado; anula o 1º golpe e atordoa %s s quem bateu" % Simulacao.num(v)
 			return "anula um golpe a cada %d s" % int(v)
 		BONUS_CARGA:
 			return "o poder recarrega %d%% mais depressa" % int(round(v * 100.0))

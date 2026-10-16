@@ -97,7 +97,9 @@ var bola_vel: float = 1.0
 var bola_espinho: float = 0.0
 var poder_cd_menos: float = 0.0 # Alvo travado: segundos a menos na próxima recarga
 var recarga_menos: float = 0.0  # kit do Jimiau: fração a menos no intervalo entre poderes
-var disfarce_t: float = 0.0     # Disfarce (Mimiau): anula o próximo golpe e atordoa quem bateu
+var disfarcado: bool = false     # Disfarce (Mimiau): o próximo golpe é anulado e quem bateu fica atordoado
+var disfarce_atordoa: float = 0.0   # segundos de atordoamento em quem rasga o Disfarce (0 = sem a passiva)
+var disfarce_rasgou_t: float = 99.0  # quanto tempo faz que rasgou (só desenho)
 var buff_dano_t: float = 0.0    # Objeção!: dano a mais por alguns segundos
 var buff_dano: float = 0.0
 # aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
