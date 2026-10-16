@@ -235,6 +235,38 @@ const CONJUNTO_NOME: Array[String] = ["Cavaleiro", "Guardamiau", "Sua Miauestade
 	"Super Miau", "Arqueiro Miau", "Motoqueiro Miausma", "Fênix Miaussimo", "Mimiau", "Jimiau",
 	"Disparamiau", "Milhau", "Giramiau", "Stardew Miaulley", "Miaucraft", "Miaulax",
 ]
+## Fantasias retiradas do jogo: os ids ficam nos enums (o save grava índices), mas não caem, não aparecem no fichário nem contam em metas.
+const RETIRADAS: Array[int] = [Conjunto.MILHAU]
+
+static func retirada(c: int) -> bool:
+	return c in RETIRADAS
+
+## Quantas fantasias o jogador pode ver e juntar.
+static func n_ativas() -> int:
+	return CONJUNTO_NOME.size() - RETIRADAS.size()
+
+## Posição da fantasia na lista visível (sem as retiradas); -1 se ela foi retirada.
+static func posicao_ativa(c: int) -> int:
+	if retirada(c):
+		return -1
+	var k: int = 0
+	for r in RETIRADAS:
+		if r < c:
+			k += 1
+	return c - k
+
+## Fantasia da posição visível `i` (inverso de posicao_ativa).
+static func conj_da_posicao(i: int) -> int:
+	var c: int = i
+	for r in RETIRADAS:
+		if r <= c:
+			c += 1
+	return c
+
+## Peças que o jogador pode ter (sem as das fantasias retiradas).
+static func n_pecas_ativas() -> int:
+	return SLOT.size() - SLOTS * RETIRADAS.size()
+
 ## Peças de cada fantasia, na ordem dos espaços: cabeça, corpo, mão, acessório.
 const CONJUNTO_PECAS: Array = [
 	[Tipo.CAPACETE, Tipo.COLETE, Tipo.LANCA, Tipo.BOTAS],

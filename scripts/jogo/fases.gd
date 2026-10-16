@@ -89,7 +89,7 @@ const CONJUNTOS: Array = [
 	# Expansão (lote 1): Motoqueiro Miausma e Jimiau na Garagem, Super Miau e Arqueiro Miau no Telhado, Fênix Miaussimo na Rua, Mimiau na Toca.
 	# fora da casa caem as mesmas fantasias, redistribuídas, mais 4 kits novos só daqui: Abelha no Quintal, Robô Azul na Garagem, Ninja da Folha no Telhado, Tubarão na Rua
 	[Pecas.Conjunto.CAVALEIRO, Pecas.Conjunto.JARDINEIRO, Pecas.Conjunto.BOSQUE, Pecas.Conjunto.OURICO, Pecas.Conjunto.ABELHA,
-		Pecas.Conjunto.MIAULAX, Pecas.Conjunto.DISPARAMIAU, Pecas.Conjunto.MILHAU, Pecas.Conjunto.GIRAMIAU, Pecas.Conjunto.STARDEW_MIAULLEY],
+		Pecas.Conjunto.MIAULAX, Pecas.Conjunto.DISPARAMIAU, Pecas.Conjunto.GIRAMIAU, Pecas.Conjunto.STARDEW_MIAULLEY],
 	[Pecas.Conjunto.ENCANADOR, Pecas.Conjunto.FERRO, Pecas.Conjunto.CIRCO, Pecas.Conjunto.TARTARUGA, Pecas.Conjunto.ROBO_AZUL,
 		Pecas.Conjunto.MOTOQUEIRO_MIAUSMA, Pecas.Conjunto.JIMIAU],
 	[Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.MAGO, Pecas.Conjunto.TROVAO, Pecas.Conjunto.NINJA_FOLHA,

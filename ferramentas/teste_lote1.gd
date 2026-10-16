@@ -1,5 +1,5 @@
 extends SceneTree
-## Teste headless dos lotes 1 e 2 de fantasias (Super Miau ... Jimiau; Disparamiau, Milhau, Giramiau, Stardew Miaulley, Miaucraft, Miaulax).
+## Teste headless dos lotes 1 e 2 de fantasias (Super Miau ... Jimiau; Disparamiau, Milhau (retirado), Giramiau, Stardew Miaulley, Miaucraft, Miaulax).
 ## Uso: godot --headless --path <projeto> --script res://ferramentas/teste_lote1.gd
 ## Confere tabelas paralelas, a mão de pôquer com mãos fixas e dispara cada poder novo numa luta de verdade.
 
@@ -60,6 +60,8 @@ func _init() -> void:
 	# lutas: cada fantasia nova vestida por um gato, poder disparado de verdade
 	Simulacao.medir = true
 	for c in range(Pecas.Conjunto.SUPER_MIAU, nc):
+		if Pecas.retirada(c):
+			continue   # fantasia retirada do jogo (Milhau): o poder existe no código, mas ninguém o veste
 		Simulacao.tele.clear()
 		var usos: int = 0
 		for semente in 6:
@@ -86,6 +88,7 @@ func _init() -> void:
 		usos = int(d.get("usos", 0.0))
 		print("%-20s %-20s usos em 6 lutas: %d | %s" % [Pecas.CONJUNTO_NOME[c], Pecas.PODER_NOME[c], usos, str(d)])
 	_efeitos_diretos()
+	_retiradas()
 	print("FALHAS: %d" % falhas)
 	quit(1 if falhas > 0 else 0)
 
@@ -106,6 +109,40 @@ func _tabelas_paralelas(nc: int, nt: int) -> void:
 		_ok(Pecas.PODER_TIPO[c] < Pecas.Poder.size(), "PODER_TIPO %d fora do enum" % c)
 
 ## Cenas montadas à mão para os poderes que dependem de uma situação (ferido, aviso, último poder).
+## Milhau retirado: não cai, não conta, e o save antigo troca as peças dele por peças do Quintal.
+func _retiradas() -> void:
+	var mil: int = Pecas.Conjunto.MILHAU
+	_ok(Pecas.retirada(mil) and not Pecas.retirada(Pecas.Conjunto.DISPARAMIAU), "Milhau devia estar retirado (e só ele)")
+	for f in Fases.CONJUNTOS:
+		_ok(not (f as Array).has(mil), "Milhau ainda cai em algum lugar")
+	for m in Metas.lista():
+		_ok(str(m["id"]) != "fantasia_%d" % mil, "meta de fantasia do Milhau ainda existe")
+	_ok(Pecas.n_ativas() == Pecas.Conjunto.size() - 1, "n_ativas %d" % Pecas.n_ativas())
+	for c in Pecas.Conjunto.size():
+		var pos: int = Pecas.posicao_ativa(c)
+		_ok((c == mil) == (pos < 0) and (pos < 0 or Pecas.conj_da_posicao(pos) == c), "posição visível incoerente na fantasia %d" % c)
+	var e := Estado.new(77)
+	e.novo_jogo()
+	e.persistir = false
+	e.iniciar_fase(1)
+	var antes: int = e.fantasias_completas()
+	for k in Pecas.SLOTS:
+		e.registrar(Pecas.CONJUNTO_PECAS[mil][k])
+	_ok(e.fantasias_completas() == antes, "fantasia retirada contou como completa")
+	e.guarda.append(Peca.new(Pecas.CONJUNTO_PECAS[mil][1], 7, 2))
+	e.bonecos[0].pecas[0] = Peca.new(Pecas.CONJUNTO_PECAS[mil][0], 3, 1)
+	e.bonecos[0].herancas.append(mil)
+	e.bonecos[0].graus.append(1)
+	e._converter_retiradas()
+	var quintal: Array = Fases.CONJUNTOS[Fases.TOTAL]
+	for p in e.todas_as_pecas():
+		_ok(not Pecas.retirada(p.conjunto()), "sobrou peça do Milhau depois de converter")
+	var pg: Peca = e.guarda[e.guarda.size() - 1]
+	_ok(pg.slot() == 1 and pg.nivel == 7 and pg.raridade == 2 and quintal.has(pg.conjunto()), "peça do guarda-roupa convertida errado")
+	var pb: Peca = e.bonecos[0].pecas[0]
+	_ok(pb.slot() == 0 and pb.nivel == 3 and pb.raridade == 1 and quintal.has(pb.conjunto()), "peça do gato convertida errado")
+	_ok(not e.bonecos[0].herancas.has(mil) and e.bonecos[0].graus.size() == e.bonecos[0].herancas.size(), "herança do Milhau sobrou")
+
 func _cena(c: int, semente: int) -> Simulacao:
 	var e := Estado.new(500 + semente)
 	e.novo_jogo()

@@ -772,7 +772,7 @@ func _linhas_total() -> int:
 
 func _rolagem_max() -> int:
 	if aba == ABA_FANTASIAS:
-		return maxi(0, int(ceil(Pecas.CONJUNTO_PECAS.size() / float(FANT_COLS))) - FANT_LINHAS)
+		return maxi(0, int(ceil(Pecas.n_ativas() / float(FANT_COLS))) - FANT_LINHAS)
 	var n: int = int(ceil(_lista.size() / float(TILE_COLS)))
 	return maxi(0, n - TILE_LINHAS)
 
@@ -1322,16 +1322,21 @@ func _tile_em(p: Vector2) -> int:
 # ---- aba "Fantasias": a fantasia inteira com um clique
 ## Retângulo do cartão da fantasia c (grade de 7 colunas por 3 linhas).
 func rect_cartao_fant(c: int) -> Rect2:
-	var lin: int = c / FANT_COLS - rolagem
+	var pos: int = Pecas.posicao_ativa(c)
+	if pos < 0:
+		return Rect2()
+	var lin: int = pos / FANT_COLS - rolagem
 	if lin < 0 or lin >= FANT_LINHAS:
 		return Rect2()
-	return Rect2(PAINEL.position.x + 14 + (c % FANT_COLS) * (FANT_W + FANT_GAP), TILE_Y0 + lin * (FANT_H + FANT_GAP), FANT_W, FANT_H)
+	return Rect2(PAINEL.position.x + 14 + (pos % FANT_COLS) * (FANT_W + FANT_GAP), TILE_Y0 + lin * (FANT_H + FANT_GAP), FANT_W, FANT_H)
 
 ## Fantasia sob o ponto p (só vale na aba Fantasias); -1 se nenhuma.
 func _cartao_fant_em(p: Vector2) -> int:
 	if aba != ABA_FANTASIAS:
 		return -1
 	for c in Pecas.CONJUNTO_PECAS.size():
+		if Pecas.retirada(c):
+			continue
 		if rect_cartao_fant(c).has_point(p):
 			return c
 	return -1
@@ -1396,6 +1401,8 @@ func _fantasias_prontas() -> int:
 	var mapa: Dictionary = _mapa_guarda_desenho()
 	var n: int = 0
 	for c in Pecas.CONJUNTO_PECAS.size():
+		if Pecas.retirada(c):
+			continue
 		var st: Dictionary = _situacao_fantasia(c, alvo, mapa)
 		if int(st["gato"]) + int(st["guarda"]) >= Pecas.SLOTS:
 			n += 1
@@ -1822,6 +1829,8 @@ func _planejar(bis: Array) -> Dictionary:
 		for bi in livres:
 			var b: Boneco = estado.bonecos[bi]
 			for c in Pecas.Conjunto.size():
+				if Pecas.retirada(c):
+					continue
 				var pcs: Array = [null, null, null, null]
 				var k: int = 0
 				var soma: float = 0.0
@@ -4311,6 +4320,8 @@ func _cartoes_fantasias() -> void:
 	var fonte: Font = UIComum.FONTE
 	var sob_c: int = _cartao_fant_em(mouse) if arrasto.is_empty() else -1
 	for c in Pecas.CONJUNTO_PECAS.size():
+		if Pecas.retirada(c):
+			continue
 		var r: Rect2 = rect_cartao_fant(c)
 		if r.size.x <= 0.0:
 			continue
@@ -4399,7 +4410,7 @@ func _barra_fantasias() -> void:
 	var trilho := Rect2(PAINEL.end.x - 30, TILE_Y0, 10, h)
 	draw_rect(trilho.grow(2.0), Color(0.07, 0.04, 0.05))
 	draw_rect(trilho, Color(0.2, 0.13, 0.12))
-	var total: int = int(ceil(Pecas.CONJUNTO_PECAS.size() / float(FANT_COLS)))
+	var total: int = int(ceil(Pecas.n_ativas() / float(FANT_COLS)))
 	var alt: float = h * FANT_LINHAS / float(total)
 	var topo: float = (h - alt) * rolagem / float(maxi(1, total - FANT_LINHAS))
 	draw_rect(Rect2(trilho.position.x, trilho.position.y + topo, trilho.size.x, alt), Color(0.85, 0.65, 0.4))

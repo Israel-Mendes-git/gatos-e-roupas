@@ -344,6 +344,8 @@ func _vestir_fantasias(e: Estado) -> void:
 		var melhor_n: int = 0
 		var melhor_v: int = -1
 		for c in Pecas.CONJUNTO_NOME.size():
+			if Pecas.retirada(c):
+				continue
 			var n: int = 0
 			var v: int = 0
 			for s in Pecas.SLOTS:
@@ -385,11 +387,14 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 	var k: String = str(opcoes["kits"])
 	if k == "todos" or k == "novos" or k == "antigos":
 		for c in Pecas.CONJUNTO_NOME.size():
+			if Pecas.retirada(c):
+				continue
 			if k == "todos" or (k == "novos") == (c >= primeiro_novo):
 				lista.append(c)
 	else:
 		for t in k.split(","):
-			lista.append(int(t))
+			if not Pecas.retirada(int(t)):
+				lista.append(int(t))
 	var ondas: Array[int] = [2, 4, 6]
 	# acumuladores por kit (-1 = sem kit)
 	var acc: Dictionary = {}

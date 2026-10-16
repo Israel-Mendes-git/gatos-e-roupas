@@ -1463,8 +1463,8 @@ func _cena_final() -> void:
 		["Gatos nocauteados", str(cnt.call(int(e.estat.get("nocautes", 0))))],
 		["Bichos derrotados", str(cnt.call(int(e.estat.get("abates", 0))))],
 		["Derrotas", str(cnt.call(int(e.estat.get("derrotas", 0))))],
-		["Fantasias completas", "%d de %d" % [cnt.call(e.fantasias_completas()), Pecas.CONJUNTO_PECAS.size()]],
-		["Peças encontradas", "%d de %d" % [cnt.call(e.pecas_tidas()), Pecas.SLOT.size()]],
+		["Fantasias completas", "%d de %d" % [cnt.call(e.fantasias_completas()), Pecas.n_ativas()]],
+		["Peças encontradas", "%d de %d" % [cnt.call(e.pecas_tidas()), Pecas.n_pecas_ativas()]],
 		["Troféus", str(cnt.call(e.trofeus))],
 	]
 	for k in linhas.size():

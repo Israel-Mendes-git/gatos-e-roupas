@@ -321,14 +321,15 @@ static func rect_linha_peca(i: int) -> Rect2:
 static func pecas_obtidas(e: Estado) -> int:
 	var n: int = 0
 	for c in Pecas.CONJUNTO_PECAS.size():
-		n += e.pecas_da_fantasia(c)
+		if not Pecas.retirada(c):
+			n += e.pecas_da_fantasia(c)
 	return n
 
 static func pecas_possiveis() -> int:
-	return Pecas.CONJUNTO_PECAS.size() * Pecas.SLOTS
+	return Pecas.n_ativas() * Pecas.SLOTS
 
 static func texto_totais(e: Estado) -> String:
-	return "Fantasias completas: %d de %d  ·  Peças: %d de %d" % [e.fantasias_completas(), Pecas.CONJUNTO_PECAS.size(), pecas_obtidas(e), pecas_possiveis()]
+	return "Fantasias completas: %d de %d  ·  Peças: %d de %d" % [e.fantasias_completas(), Pecas.n_ativas(), pecas_obtidas(e), pecas_possiveis()]
 
 ## Quantas fantasias completas há no cômodo `i`.
 static func completas_do_comodo(e: Estado, i: int) -> int:
@@ -1048,7 +1049,7 @@ func _abas(e: Estado) -> void:
 		elif i == ABA_FORA:
 			sub = "%d/%d" % [completas_so_de_fora(e), fantasias_so_de_fora().size()]
 		elif i == 0:
-			sub = "%d/%d" % [e.fantasias_completas(), Pecas.CONJUNTO_PECAS.size()]
+			sub = "%d/%d" % [e.fantasias_completas(), Pecas.n_ativas()]
 		else:
 			sub = "%d/%d" % [completas_do_comodo(e, i - 1), Fases.CONJUNTOS[i - 1].size()]
 		var cx: float = r.position.x + 28.0 + (r.size.x - 28.0 - 12.0) * 0.5
@@ -1157,7 +1158,7 @@ func _pagina_indice(e: Estado) -> void:
 	draw_rect(pr, PAPEL_BORDA, false, 2.0)
 	_txt("Seu progresso", Vector2(pr.position.x + 14.0, pr.position.y + 24.0), 16, TINTA)
 	var comp: int = e.fantasias_completas()
-	var nf: int = Pecas.CONJUNTO_PECAS.size()
+	var nf: int = Pecas.n_ativas()
 	var po: int = pecas_obtidas(e)
 	var lb: float = (pr.size.x - 28.0 - 14.0) * 0.5
 	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(comp) / nf, "Completas: %d de %d" % [comp, nf], Color(0.95, 0.72, 0.15))

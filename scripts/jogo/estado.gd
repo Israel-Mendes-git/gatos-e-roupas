@@ -278,7 +278,7 @@ func pecas_da_fantasia(c: int) -> int:
 func fantasias_completas() -> int:
 	var n: int = 0
 	for c in Pecas.CONJUNTO_PECAS.size():
-		if pecas_da_fantasia(c) >= Pecas.SLOTS:
+		if not Pecas.retirada(c) and pecas_da_fantasia(c) >= Pecas.SLOTS:
 			n += 1
 	return n
 
@@ -573,7 +573,11 @@ func todas_as_pecas() -> Array[Peca]:
 
 func pecas_tidas() -> int:
 	_garantir_colecao()
-	return colecao.count(true)
+	var n: int = 0
+	for t in colecao.size():
+		if colecao[t] and not Pecas.retirada(Pecas.CONJUNTO_DE[t]):
+			n += 1
+	return n
 
 ## Paga (uma vez só) as metas que acabaram de ser cumpridas. Devolve os ids pagos agora;
 ## eles também ficam em `metas_novas` até a interface mostrá-los.
@@ -733,6 +737,31 @@ func _migrar_raridades(dados: Dictionary) -> void:
 					pd["raridade"] = int(pd["raridade"]) + 1
 
 ## Carrega a campanha gravada. Devolve false se não há gravação válida.
+## Fantasias retiradas do jogo (Pecas.RETIRADAS): as peças delas viram a peça do mesmo espaço de outra fantasia do Quintal, com a mesma
+## raridade e nível, e as heranças delas somem. Roda ao carregar o save.
+func _converter_retiradas() -> void:
+	var alvos: Array[int] = []
+	for c in Fases.CONJUNTOS[Fases.TOTAL]:
+		if not Pecas.retirada(c):
+			alvos.append(c)
+	if alvos.is_empty():
+		return
+	var k: int = 0
+	var listas: Array = [guarda]
+	for b in bonecos:
+		listas.append(b.pecas)
+	for l in listas:
+		for p in l:
+			if p != null and Pecas.retirada(p.conjunto()):
+				p.tipo = Pecas.CONJUNTO_PECAS[alvos[k % alvos.size()]][p.slot()]
+				k += 1
+	for b in bonecos:
+		for i in range(b.herancas.size() - 1, -1, -1):
+			if Pecas.retirada(b.herancas[i]):
+				b.herancas.remove_at(i)
+				if i < b.graus.size():
+					b.graus.remove_at(i)
+
 func carregar() -> bool:
 	gravar_pendente()
 	if not FileAccess.file_exists(ARQUIVO):
@@ -759,6 +788,7 @@ func carregar() -> bool:
 	for d in dados.get("bonecos", []):
 		if typeof(d) == TYPE_DICTIONARY and bonecos.size() < Balanco.MAX_BONECOS:
 			bonecos.append(Boneco.de_dados(d))
+	_converter_retiradas()
 	trofeus = maxi(0, int(dados.get("trofeus", 0)))
 	melhorias = [0, 0, 0, 0]
 	var ml: Array = dados.get("melhorias", [])
