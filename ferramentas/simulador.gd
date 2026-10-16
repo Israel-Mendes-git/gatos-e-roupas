@@ -1,6 +1,7 @@
 extends SceneTree
 ## Simulador headless da campanha: mesma lógica de combate (Simulacao), sem desenho.
 ## Uso: godot --headless --path <projeto> --script res://ferramentas/simulador.gd -- 30 [politica] [v]
+## Modo kits: kits=todos|novos|antigos|lista [equipe=1] (equipe: os outros gatos também de fantasia completa).
 ## Cada campanha joga as fases em ordem; ao perder, tenta de novo (o guarda-roupa fica).
 
 const PRIORIDADE: Array[int] = [
@@ -457,6 +458,17 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 					npc += 1
 		var nivel: int = int(round(soma_n / maxi(1, npc)))
 		var rar: int = int(round(soma_r / maxi(1, npc)))
+		if opcoes.has("equipe"):
+			# equipe=1: os outros gatos também vestem fantasias completas (parceiras fixas na campanha, variando entre campanhas),
+			# para medir poderes de grupo (Canção do tempo, Imitar, auras); a linha "sem kit" é o último gato sem kit nesse time
+			var todos_k: Array[int] = []
+			for k2 in Pecas.CONJUNTO_NOME.size():
+				if not Pecas.retirada(k2):
+					todos_k.append(k2)
+			for i in e.bonecos.size() - 1:
+				var pk: int = todos_k[(g * 5 + i * 11) % todos_k.size()]
+				for s in Pecas.SLOTS:
+					e.bonecos[i].pecas[s] = Peca.new(Pecas.CONJUNTO_PECAS[pk][s], nivel, rar)
 		var base: Array = _foto(e)   # o time antes de qualquer kit: cada kit parte dele
 		for c in lista + [-1]:
 			_restaurar(e, base)
@@ -491,7 +503,7 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 				tel[kk] = float(tel.get(kk, 0.0)) + float(d[kk])
 		for s in Pecas.SLOTS:
 			b0.pecas[s] = originais[s]
-	print("kits (%s), %d campanhas, 6 lutas fixas por campanha e kit; último gato veste o kit" % [pol, n_jogos])
+	print("kits (%s), %d campanhas, 6 lutas fixas por campanha e kit; último gato veste o kit%s" % [pol, n_jogos, "; os outros vestem fantasias parceiras" if opcoes.has("equipe") else ""])
 	print("  %-20s %-22s vitoria%% | vivos | tempo |  usos  |  dano  | abates | extras (por luta)" % ["fantasia", "poder"])
 	for c in lista + [-1]:
 		var a: Dictionary = acc[c]

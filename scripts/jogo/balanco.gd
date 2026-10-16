@@ -160,7 +160,7 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.DISPARAMIAU: [0.15, 0.35],         # chance de atirar duas vezes
 	Pecas.Conjunto.MILHAU: [0.25, 0.5],               # chance de o golpe deixar o alvo lento
 	Pecas.Conjunto.GIRAMIAU: [1.5, 4.0],              # vida/s nos aliados em volta
-	Pecas.Conjunto.STARDEW_MIAULLEY: [0.15, 0.35],    # sementes: fração da vida curada nos aliados ao cair
+	Pecas.Conjunto.STARDEW_MIAULLEY: [0.25, 0.5],     # sementes: fração da vida curada nos aliados ao cair
 	Pecas.Conjunto.MIAUCRAFT: [12.0, 30.0],           # explode ao morrer (Circo)
 	Pecas.Conjunto.MIAULAX: [0.1, 0.15],              # vida a mais (Guardião)
 	# lote 3
@@ -444,8 +444,8 @@ const PODER_KIT_FORCA: Dictionary = {
 	Pecas.Conjunto.NINJA_FOLHA: 2.5, Pecas.Conjunto.CAVALEIRO: 1.3, Pecas.Conjunto.OURICO: 2.5,
 	Pecas.Conjunto.VIKING: 1.7, Pecas.Conjunto.CIRCO: 3.0, Pecas.Conjunto.FENIX_MIAUSSIMO: 2.3,
 	Pecas.Conjunto.ARANHA: 1.15, Pecas.Conjunto.ROCKET_MIAUGUE: 1.4, Pecas.Conjunto.SOMBRIO: 1.7, Pecas.Conjunto.TUBARAO: 1.2,
-	Pecas.Conjunto.STARDEW_MIAULLEY: 1.8, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
-	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7,
+	Pecas.Conjunto.STARDEW_MIAULLEY: 2.2, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
+	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7, Pecas.Conjunto.MIMIAU: 0.6,
 }
 # Acerto da recarga por fantasia (x PODER_INTERVALO), medido com o simulador (kits=todos): >1 recarrega mais devagar.
 const PODER_KIT_INTERVALO: Dictionary = {
@@ -456,7 +456,7 @@ const PODER_KIT_INTERVALO: Dictionary = {
 	Pecas.Conjunto.OURICO: 0.75, Pecas.Conjunto.VIKING: 0.75, Pecas.Conjunto.CIRCO: 0.6,
 	Pecas.Conjunto.ROCKET_MIAUGUE: 0.75, Pecas.Conjunto.STARDEW_MIAULLEY: 0.8, Pecas.Conjunto.SOMBRIO: 0.8,
 	Pecas.Conjunto.GELO: 0.8, Pecas.Conjunto.FENIX_MIAUSSIMO: 0.8, Pecas.Conjunto.MEON: 0.85,
-	Pecas.Conjunto.MAGO: 0.9,
+	Pecas.Conjunto.MAGO: 0.9, Pecas.Conjunto.PIRATA: 1.15,
 }
 const PODER_PRIMEIRO := 3.5         # segundos até o primeiro uso
 const PODER_DANO := 14.0            # dano de referência (x força média das peças)
@@ -610,7 +610,7 @@ const PODER_OBJECAO_BONUS_T := 4.0
 const PODER_PROTESTO_FATOR := 0.5      # sem aviso para cortar: atordoamento, dano e bônus do time nesta fração
 # Imitar (Mimiau)
 const PODER_IMITAR_JANELA := 12.0       # segundos em que o último poder ainda vale
-const PODER_IMITAR_FORCA := 1.0
+const PODER_IMITAR_FORCA := 0.6    # o poder copiado sai mais fraco (em equipe o Imitar dominava: 82% no teste de equipe)
 # Disfarce (Mimiau, Disguise do Mimikyu): a luta começa disfarçado; o 1º golpe é anulado e quem bateu fica atordoado
 const DISFARCE_CHEFE_FATOR := 0.35      # chefe que rasga o Disfarce: atordoa nesta fração
 const DISFARCE_BICHO_FATOR := 0.7       # bicho fantasiado de Mimiau: atordoa nesta fração
@@ -622,7 +622,7 @@ const DISFARCE_SUSTO_T := 0.8
 const DISFARCE_REARMA_T := 7.0          # o pano rasgado se refaz sozinho depois disto (o Imitar refaz na hora)
 const DISFARCE_REVIDE := 3.5            # quem rasga o Disfarce leva este tanto x dano de referência de volta
 const DISFARCE_PROTEGE := 2.0           # segundos de proteção do Mimiau depois que o pano rasga
-const PODER_IMITAR_RECARGA := 0.35      # o Imitar recarrega mais depressa (fração a menos)
+const PODER_IMITAR_RECARGA := 0.1       # o Imitar recarrega mais depressa (fração a menos)
 const DISFARCE_KIT_DANO := 0.7        # kit completo do Mimiau: dano a mais
 const DISFARCE_KIT_CRIT := 0.3        # kit completo do Mimiau: chance de crítico
 const DISFARCE_GARRA := 0.8            # Garra Sombria: com o pano inteiro, os golpes causam este tanto a mais (kit completo)
