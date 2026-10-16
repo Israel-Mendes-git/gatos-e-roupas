@@ -464,9 +464,8 @@ const _CHAPEU: Array = [
 	{"cheio": true, "l": [
 		"...ooooo...",
 		"..oAaaaao..",
-		".oaaaaaaao.",
-		"okeeaaakeko",
-		"okeeaaakeko",
+		".oakkaakkao",
+		"oakeekkeeko",
 		".oddddddo.."]},
 	# 42 meon: franja loira cobrindo um olho
 	{"cheio": false, "l": [
@@ -737,7 +736,7 @@ static func _casco(g: Dictionary, med: Array) -> Dictionary:
 		var t: int = g["topo"][x]
 		var b: int = g["base"][x]
 		var borda: int = mini(x - de, ate - x)
-		var sobe: int = 2 if borda >= 3 else (1 if borda >= 1 else 0)
+		var sobe: int = 1 if borda >= 2 else 0
 		var alt: int = maxi(3, roundi((b - t + 1) * float(med[2])))
 		for y in range(t - sobe, t + alt):
 			area[Vector2i(x, y)] = true
@@ -824,7 +823,7 @@ const _EMBLEMA: Array = [
 	[],                                          # cavaleiro estelar
 	["rGe", "GGG"],                              # lorde sombrio: painel
 	[".y.", "y.y"],                              # herói do bosque: três triângulos
-	["e", "e"],                                  # tartaruga: fivela do cinto
+	[],                                          # tartaruga
 	[],                                          # ouriço
 	[".e.", "eWe", ".e."],                       # armadura de ferro: reator
 	[],                                          # deus do trovão
@@ -1000,13 +999,9 @@ static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary
 			for x in range(x0, x1 + 1):
 				if not bs.has(x):
 					continue
-				# plastrão bege embaixo, cinto fino marrom logo acima e uma fivela dourada de 1 px na frente
+				# plastrão bege embaixo
 				if area.has(Vector2i(x, bs[x])):
 					px[Vector2i(x, bs[x])] = C.call("b")
-				if bs[x] - 2 > tp[x] and dentro.call(Vector2i(x, bs[x] - 2)):
-					px[Vector2i(x, bs[x] - 2)] = C.call("t")
-			if bs.has(x1 - 2) and dentro.call(Vector2i(x1 - 2, bs[x1 - 2] - 2)):
-				px[Vector2i(x1 - 2, bs[x1 - 2] - 2)] = C.call("e")
 		Pecas.Conjunto.OURICO:
 			# espinhos para trás no dorso
 			for x in range(x0 + 2, x1 - 1, 3):
