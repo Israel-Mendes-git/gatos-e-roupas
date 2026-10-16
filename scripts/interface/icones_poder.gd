@@ -8,9 +8,9 @@ extends RefCounted
 const TAM := 10           # lado de um ícone no atlas (8 + contorno de 1 px)
 const CONTORNO := Color("140c1c")
 
-## Ícones de apoio, depois dos 36 poderes.
-const BLOCO := 36         # bloco da torre (contador de blocos)
-const PECA := 37          # roupinha (caixa de peças)
+## Ícones de apoio, depois dos 42 poderes.
+const BLOCO := 42         # bloco da torre (contador de blocos)
+const PECA := 43          # roupinha (caixa de peças)
 
 const PALETA := {
 	"w": Color("ffffff"), "W": Color("b8c4dc"),
@@ -103,6 +103,18 @@ const BITS: Array = [
 	["..yyyy..", ".yyyyyy.", "yykyykyy", "yyyyyyyy", "yrryyrry", "yyykkyyy", "yYyyyyYy", "Y.Y.Y.Y."],
 	# POQUER (Mão de pôquer): carta com copas
 	["..sssss.", ".swwwwwS", "swrwrwwS", "swrrrwwS", "swwrwwwS", "swwwwwwS", ".SSSSSS.", "........"],
+	# TORRE (Torre de ervilha): ervilha verde com cano
+	["..xxxx..", ".xxxxxx.", "xxkxxkxx", "xxxxxxxx", "xxxxsssN", "xxxxsSSN", ".xxxxxX.", "..XXXX.."],
+	# MANTEIGA: tablete de manteiga escorregando
+	["........", "..yyyyyy", ".ywwwwyY", "yywwwyYY", "yyyyyYYY", "YYYYYYY.", ".w..w...", "........"],
+	# REVIVER: girassol com coração de luz
+	["y.y.y.y.", ".yyyyyy.", "yyNNNNyy", "yyNkkNyy", "yyNNNNyy", ".yyyyyy.", "...XX...", "..XXXX.."],
+	# COLHEITA: pimenta e morango
+	["...X....", "..XX..X.", ".rrr.XXX", "rrrrrvvv", "rrRR.vvv", ".RR..vvv", "......vV", "........"],
+	# CONSTRUIR: bloco de pedra
+	["GGGGGGGG", "Gssssssg", "GsggggsG", "GsgGGgsg", "GsgGGgsG", "GsggggsG", "GgsssssG", "GGGGGGGG"],
+	# COCHILO: zzz sobre a barriga
+	["..wwww..", "....w...", "...w.ww.", "..wwww..", "bbbbbbbb", "bwwwwwwB", "bwwwwwwB", ".BBBBBB."],
 	# BLOCO: bloco de brinquedo da torre
 	["yyyyyyyY", "yooooooO", "yowwooOO", "yowoooOO", "yooooOOO", "yooooOOO", "yOOOOOOO", "YOOOOOOO"],
 	# PECA: camiseta (caixa de peças)

@@ -241,3 +241,67 @@ static func flor(c: CanvasItem, ce: Vector2, cor: Color, miolo: Color, cont: Col
 	c.draw_rect(Rect2(x - q, y - q * 0.0, q * 3.0, q), cor)
 	c.draw_rect(Rect2(x, y - q, q, q * 3.0), cor)
 	c.draw_rect(Rect2(x, y, q, q), miolo)
+
+# ---------------------------------------------------------------- lote 2 da expansão: estruturas, sono e mudas
+## Letra "z" de sono em quadradinhos (3x3), com contorno.
+static func zzz(c: CanvasItem, ce: Vector2, tam: float, cor: Color, cont: Color = CONT, q: float = Q) -> void:
+	var x: float = sn(ce.x, q)
+	var y: float = sn(ce.y, q)
+	var u: float = q * maxf(1.0, roundf(tam))
+	c.draw_rect(Rect2(x - q, y - q, u * 3.0 + q * 2.0, u * 3.0 + q * 2.0), cont)
+	c.draw_rect(Rect2(x, y, u * 3.0, u), cor)
+	c.draw_rect(Rect2(x + u, y + u, u, u), cor)
+	c.draw_rect(Rect2(x, y + u * 2.0, u * 3.0, u), cor)
+
+## Torre de ervilha: caule, duas folhas, cabeça redonda e o cano que recua no tiro. `base` = pés; `dir` = para onde olha; `golpe` > 0 logo após atirar.
+static func torre_ervilha(c: CanvasItem, base: Vector2, esc: float, dir: float, golpe: float, frac: float, q: float = Q) -> void:
+	var verde := Color(0.42, 0.82, 0.3)
+	var escuro := Color(0.16, 0.45, 0.2)
+	var d: float = 1.0 if dir >= 0.0 else -1.0
+	elipse(c, base + Vector2(0, 2), 17.0 * esc, 5.0 * esc, Color(0.0, 0.0, 0.0, 0.25), q)
+	quadro(c, base.x - 3.0 * esc - q, base.y - 26.0 * esc - q, 6.0 * esc + q * 2.0, 26.0 * esc + q, CONT, q)
+	quadro(c, base.x - 3.0 * esc, base.y - 26.0 * esc, 6.0 * esc, 26.0 * esc, escuro, q)
+	folha(c, base + Vector2(-11.0 * esc, -10.0 * esc), -1.0, verde, CONT, q)
+	folha(c, base + Vector2(11.0 * esc, -14.0 * esc), 1.0, verde, CONT, q)
+	var cab: Vector2 = base + Vector2(0, -38.0 * esc)
+	var recuo: float = minf(golpe, 0.2) * 20.0
+	var x1: float = cab.x + d * (8.0 * esc - recuo)
+	var x2: float = cab.x + d * 24.0 * esc
+	quadro(c, minf(x1, x2) - q, cab.y - 4.0 * esc - q, absf(x2 - x1) + q * 2.0, 8.0 * esc + q * 2.0, CONT, q)
+	quadro(c, minf(x1, x2), cab.y - 4.0 * esc, absf(x2 - x1), 8.0 * esc, escuro, q)
+	disco_c(c, cab, 13.0 * esc, verde, CONT, q)
+	disco(c, cab + Vector2(-4.0 * esc, -5.0 * esc), 4.0 * esc, tom(verde, 1.6), q)
+	quadro(c, cab.x - d * 2.0 * esc, cab.y - 5.0 * esc, q, q * 2.0, CONT, q)
+	quadro(c, cab.x + d * 5.0 * esc, cab.y - 5.0 * esc, q, q * 2.0, CONT, q)
+	if frac < 0.999:
+		quadro(c, base.x - 14.0 * esc, base.y - 62.0 * esc, 28.0 * esc, q, CONT, q)
+		quadro(c, base.x - 14.0 * esc, base.y - 62.0 * esc, 28.0 * esc * clampf(frac, 0.0, 1.0), q, Color(0.4, 0.95, 0.4), q)
+
+## Bloco de pedra do Construir; rachaduras conforme a vida que sobra.
+static func bloco_pedra(c: CanvasItem, base: Vector2, esc: float, frac: float, q: float = Q) -> void:
+	var w: float = 24.0 * esc
+	var h: float = 26.0 * esc
+	elipse(c, base + Vector2(0, 2), 15.0 * esc, 4.0 * esc, Color(0.0, 0.0, 0.0, 0.25), q)
+	quadro(c, base.x - w * 0.5 - q, base.y - h - q, w + q * 2.0, h + q * 2.0, CONT, q)
+	quadro(c, base.x - w * 0.5, base.y - h, w, h, Color(0.56, 0.57, 0.62), q)
+	quadro(c, base.x - w * 0.5, base.y - h, w, h * 0.25, Color(0.78, 0.79, 0.84), q)
+	quadro(c, base.x - w * 0.5, base.y - h * 0.22, w, h * 0.22, Color(0.36, 0.37, 0.42), q)
+	quadro(c, base.x - w * 0.5 + q, base.y - h * 0.6, q * 2.0, q * 2.0, Color(0.4, 0.62, 0.35), q)
+	if frac < 0.66:
+		quadro(c, base.x - q, base.y - h * 0.75, q, h * 0.4, CONT, q)
+		quadro(c, base.x - q * 3.0, base.y - h * 0.4, q * 3.0, q, CONT, q)
+	if frac < 0.33:
+		quadro(c, base.x + w * 0.2, base.y - h * 0.9, q, h * 0.5, CONT, q)
+		quadro(c, base.x - w * 0.35, base.y - h * 0.6, q, h * 0.35, CONT, q)
+
+## Muda da Colheita: broto que cresce com `w` (0..1); perto de amadurecer mostra o botão.
+static func muda(c: CanvasItem, base: Vector2, w: float, q: float = Q) -> void:
+	var h: float = 5.0 + 17.0 * clampf(w, 0.0, 1.0)
+	var verde := Color(0.4, 0.82, 0.3)
+	quadro(c, base.x - q * 3.0, base.y, q * 6.0, q, Color(0.4, 0.26, 0.14), q)
+	quadro(c, base.x - q * 0.5, base.y - h, q * 2.0, h, CONT, q)
+	quadro(c, base.x, base.y - h, q, h, Color(0.18, 0.5, 0.2), q)
+	folha(c, base + Vector2(-5.0, -h * 0.6), -1.0, verde, CONT, q)
+	folha(c, base + Vector2(5.0, -h * 0.8), 1.0, verde, CONT, q)
+	if w > 0.7:
+		disco_c(c, base + Vector2(0, -h - 3.0), 3.0 + 3.0 * (w - 0.7) / 0.3, Color(0.95, 0.35, 0.3), CONT, q)

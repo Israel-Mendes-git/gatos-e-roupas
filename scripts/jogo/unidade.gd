@@ -102,6 +102,18 @@ var disfarce_atordoa: float = 0.0   # segundos de atordoamento em quem rasga o D
 var disfarce_rasgou_t: float = 99.0  # quanto tempo faz que rasgou (só desenho)
 var buff_dano_t: float = 0.0    # Objeção!: dano a mais por alguns segundos
 var buff_dano: float = 0.0
+# lote 2 da expansão
+var estrutura: bool = false     # Torre de ervilha e blocos do Construir: unidade parada com dono e prazo (também é clone)
+var estr_tipo: int = 0          # Simulacao.ESTR_*
+var estr_explode: float = 0.0   # bloco: dano da explosão ao cair ou expirar
+var estr_conj: int = -1         # fantasia que a plantou (telemetria)
+var estr_ataque: float = 0.0    # torre: dano por ervilha
+var tiro_duplo: float = 0.0     # kit do Disparamiau: chance de atirar duas vezes
+var sono_t: float = 0.0         # Cochilo (Miaulax): dorme, não age; acorda ao levar qualquer dano
+var cochilo_t: float = 0.0      # o próprio Miaulax dormindo: não age, não atordoa, recebe menos dano e se cura
+var cochilo_cura: float = 0.0   # fração da vida máxima por segundo enquanto dorme
+var manteiga_t: float = 0.0     # Manteiga escorregadia: lento por mais um instante depois de sair da poça
+var reviver_usado: bool = false # Reviver: uma vez por gato por luta
 # aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
 var aviso_t: float = 0.0        # segundos que faltam para soltar (0 = sem aviso)
 var aviso_dur: float = 0.0

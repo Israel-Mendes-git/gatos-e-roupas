@@ -154,8 +154,15 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.ARQUEIRO_MIAU: [0.15, 0.35],       # chance de crítico
 	Pecas.Conjunto.MOTOQUEIRO_MIAUSMA: [3.0, 6.0],    # queimadura por segundo
 	Pecas.Conjunto.FENIX_MIAUSSIMO: [3.0, 7.0],       # armadura
-	Pecas.Conjunto.MIMIAU: [7.0, 1.2],                # 2 ou 3 peças: segundos entre barreiras; 4 peças: Disfarce (segundos de atordoamento)
+	Pecas.Conjunto.MIMIAU: [7.0, 3.0],                # 2 ou 3 peças: segundos entre barreiras; 4 peças: Disfarce (segundos de atordoamento)
 	Pecas.Conjunto.JIMIAU: [0.05, 0.12],              # recarga do poder mais curta
+	# lote 2
+	Pecas.Conjunto.DISPARAMIAU: [0.15, 0.35],         # chance de atirar duas vezes
+	Pecas.Conjunto.MILHAU: [0.25, 0.5],               # chance de o golpe deixar o alvo lento
+	Pecas.Conjunto.GIRAMIAU: [1.5, 4.0],              # vida/s nos aliados em volta
+	Pecas.Conjunto.STARDEW_MIAULLEY: [0.15, 0.35],    # sementes: fração da vida curada nos aliados ao cair
+	Pecas.Conjunto.MIAUCRAFT: [12.0, 30.0],           # explode ao morrer (Circo)
+	Pecas.Conjunto.MIAULAX: [0.2, 0.5],               # vida a mais (Guardião)
 }
 const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
 
@@ -581,12 +588,73 @@ const PODER_IMITAR_FORCA := 1.0
 const DISFARCE_CHEFE_FATOR := 0.35      # chefe que rasga o Disfarce: atordoa nesta fração
 const DISFARCE_BICHO_FATOR := 0.7       # bicho fantasiado de Mimiau: atordoa nesta fração
 const DISFARCE_HER_ATORDOA := 0.7       # herança: segundos de atordoamento (uma vez por onda)
-const DISFARCE_RASGA_CURA := 0.12       # Imitar sem o que copiar: refaz o Disfarce e cura esta fração da vida máxima
-const DISFARCE_RASGA_CURA_HER := 0.06
+const DISFARCE_RASGA_CURA := 0.25       # Imitar sem o que copiar: refaz o Disfarce e cura esta fração da vida máxima
+const DISFARCE_RASGA_CURA_HER := 0.12
+const DISFARCE_SUSTO_RAIO := 90.0       # ao rasgar, quem está em volta também leva um susto
+const DISFARCE_SUSTO_T := 0.8
+const PODER_IMITAR_RECARGA := 0.35      # o Imitar recarrega mais depressa (fração a menos)
 # Mão de pôquer (Jimiau): dano no maior bando, por categoria da mão (carta alta ... straight flush)
 const PODER_POQUER_RAIO := 110.0
 const PODER_POQUER_CARTAS := 7   # a spec fala em 8, mas o valor esperado dela (~1,35 x base) é o de 7 cartas: com 8 dava 1,68
 const PODER_POQUER_CARTAS_HER := 5
+# ---- Lote 2 da expansão
+# Torre de ervilha (Disparamiau): estrutura parada que atira sozinha (a mesma Unidade-estrutura do Construir)
+const PODER_TORRE_VIDA := 0.9          # fração da vida máxima do dono
+const PODER_TORRE_T := 9.0
+const PODER_TORRE_INTERVALO := 0.45
+const PODER_TORRE_ALCANCE := 360.0
+const PODER_TORRE_DANO := 0.25         # x dano base por ervilha
+const PODER_TORRE_PERFURA := 90.0      # a ervilha também fere o vizinho do alvo neste raio
+const PODER_TORRE_DX := 34.0           # a torre nasce um passo à frente do gato
+const PODER_TORRE_HER_T := 5.0
+const PODER_TORRE_HER_DANO := 0.7
+# Manteiga escorregadia (Milhau): poça que desloca o bando para o fundo
+const PODER_MANTEIGA_RAIO := 110.0
+const PODER_MANTEIGA_T := 5.0
+const PODER_MANTEIGA_VEL := 70.0       # px/s para o fundo
+const PODER_MANTEIGA_LENTO := 0.6
+const PODER_MANTEIGA_POS_T := 1.0      # segundos de lentidão depois de sair da poça
+const PODER_MANTEIGA_DPS := 0.2        # x dano base por segundo
+const PODER_MANTEIGA_HER_RAIO := 80.0
+const PODER_MANTEIGA_HER_T := 3.0
+# Reviver (Giramiau): levanta o aliado caído há pouco e apaga a marca de nocaute que ele levou
+const PODER_REVIVER_JANELA := 12.0     # só quem caiu há menos que isto
+const PODER_REVIVER_VIDA := 0.4
+const PODER_REVIVER_PROTEGE := 2.0
+const PODER_REVIVER_HER_VIDA := 0.2
+# Colheita (Stardew Miaulley): mudas que amadurecem em pimenta, morango ou murcham
+const PODER_COLHEITA_N := 3
+const PODER_COLHEITA_LEQUE := 36.0
+const PODER_COLHEITA_T := 5.0
+const PODER_COLHEITA_VE_INIMIGO := 140.0   # inimigo perto: vira pimenta
+const PODER_COLHEITA_VE_ALIADO := 200.0    # aliado ferido perto: vira morango
+const PODER_COLHEITA_FERIDO := 0.8
+const PODER_COLHEITA_DANO := 1.0
+const PODER_COLHEITA_RAIO := 70.0
+const PODER_COLHEITA_QUEIMA_T := 3.0
+const PODER_COLHEITA_QUEIMA_DPS := 0.3
+const PODER_COLHEITA_CURA := 0.14
+const PODER_COLHEITA_HER_N := 2
+const PODER_COLHEITA_HER_T := 6.0
+# Construir (Miaucraft): blocos de pedra que provocam e explodem ao cair
+const PODER_CONSTRUIR_N := 3
+const PODER_CONSTRUIR_DIST := 36.0
+const PODER_CONSTRUIR_VIDA := 0.6      # fração da vida máxima do dono, em cada bloco
+const PODER_CONSTRUIR_T := 7.0
+const PODER_CONSTRUIR_DANO := 0.8
+const PODER_CONSTRUIR_RAIO := 70.0
+const PODER_CONSTRUIR_HER_N := 2
+const PODER_CONSTRUIR_HER_T := 5.0
+# Cochilo (Miaulax): o gato dorme e se cura; o ronco adormece os inimigos em volta
+const PODER_COCHILO_T := 2.5
+const PODER_COCHILO_DANO := 0.5        # dano recebido durante o sono
+const PODER_COCHILO_CURA := 0.5 
+const PODER_SONO_RAIO := 120.0
+const PODER_SONO_T := 3.0              # acorda antes se levar qualquer dano
+const PODER_SONO_CHEFE := 1.2
+const PODER_COCHILO_HER_CURA := 0.25
+const PODER_COCHILO_HER_RAIO := 90.0
+const PODER_COCHILO_HER_T := 2.0
 const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
 # Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
 const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato

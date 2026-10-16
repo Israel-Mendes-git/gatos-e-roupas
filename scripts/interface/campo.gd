@@ -862,6 +862,22 @@ func _consumir() -> void:
 					Pecas.Poder.POQUER:
 						snd_p = "poder"
 						tom_p = 1.25
+					Pecas.Poder.TORRE:
+						snd_p = "poder"
+						tom_p = 1.6
+					Pecas.Poder.MANTEIGA:
+						snd_p = "poder_gelo"
+						tom_p = 0.8
+					Pecas.Poder.REVIVER: snd_p = "poder_cura"
+					Pecas.Poder.COLHEITA:
+						snd_p = "poder_cura"
+						tom_p = 1.4
+					Pecas.Poder.CONSTRUIR:
+						snd_p = "golpe_forte"
+						tom_p = 0.7
+					Pecas.Poder.COCHILO:
+						snd_p = "poder"
+						tom_p = 0.5
 				_som(snd_p, tom_p, -1.0, true, 0.03)
 				# nome do poder: cor da fantasia clareada até uma luminância mínima + contorno escuro grosso
 				# empilha: se já há um nome de poder aqui perto, este sobe uma linha (sem sobrepor)
@@ -948,6 +964,24 @@ func _consumir() -> void:
 			"disfarce_refaz":
 				var pr2: Vector2 = Vector2(e["x"], e["y"] - 36 * ESC)
 				_faisca(pr2, Color(1.0, 0.92, 0.45), 10, 120.0, 0.6, 3.0)
+			"muda":
+				var pm: Vector2 = Vector2(e["x"], e["y"] - 10 * ESC)
+				match int(e["res"]):
+					0:
+						_som("poder_explosao", 1.4, -6.0, true)
+						var rpm: float = float(e.get("raio", 70.0))
+						_faisca(pm, Color(1.0, 0.45, 0.1), 16, 260.0, 0.6, 4.0)
+						_faisca(pm, Color(1.0, 0.9, 0.4), 8, 180.0, 0.4, 3.0)
+						particulas.append({"p": pm, "v": Vector2.ZERO, "vida": 0.45, "max": 0.45, "cor": Color(1.0, 0.4, 0.15, 0.55), "r": rpm * 0.6, "g": 0.0, "tipo": 1})
+						_numero(pm + Vector2(0, -30), "Pimenta!", Color(1.0, 0.55, 0.3), 20, 1.0, 140.0)
+					1:
+						_som("poder_cura", 1.5, -7.0)
+						_faisca(pm, Color(1.0, 0.45, 0.6), 10, 150.0, 0.6, 3.0)
+						_faisca(Vector2(float(e.get("ax", e["x"])), float(e.get("ay", e["y"])) - 40 * ESC), Color(0.45, 1.0, 0.55), 8, 100.0, 0.6, 3.0)
+						_numero(pm + Vector2(0, -30), "Morango!", Color(1.0, 0.6, 0.7), 20, 1.0, 140.0)
+					_:
+						_faisca(pm, Color(0.55, 0.4, 0.25), 6, 90.0, 0.5, 2.5)
+						_numero(pm + Vector2(0, -24), "murchou", Color(0.7, 0.6, 0.5), 14, 0.8, 100.0)
 			"cantil":
 				var pc2: Vector2 = Vector2(e["x"], e["y"] - 46 * ESC)
 				_faisca(pc2, Color(0.4, 0.95, 0.6), 8, 110.0, 0.6, 3.0)
@@ -1345,6 +1379,17 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 		Pecas.Poder.POQUER:
 			dur = 1.1
 			tremor = maxf(tremor, 3.0)
+		Pecas.Poder.TORRE, Pecas.Poder.COLHEITA:
+			dur = 0.8
+		Pecas.Poder.MANTEIGA:
+			dur = 0.9
+		Pecas.Poder.REVIVER:
+			dur = 1.3
+		Pecas.Poder.CONSTRUIR:
+			dur = 0.8
+			tremor = maxf(tremor, 3.0)
+		Pecas.Poder.COCHILO:
+			dur = 1.2
 	var sem: Array = []
 	for i in 8:
 		sem.append(randf())
@@ -1985,6 +2030,69 @@ func _desenhar_fx(f: Dictionary) -> void:
 					var ang_q: float = k * TAU / 8.0 + 0.3
 					if wp < 0.7:
 						V.cruz(self, pe_q + Vector2(cos(ang_q) * raio_q * wp, sin(ang_q) * raio_q * wp * 0.4 - 12.0), 4.0, Color(1.0, 0.9, 0.3) if k % 2 == 0 else Color(0.95, 0.3, 0.4), V.CONT)
+		Pecas.Poder.TORRE:
+			# a semente estoura no chão onde a torre nasce: anel verde, folhas e ervilhas voando
+			var verde_t := Color(0.45, 0.9, 0.35)
+			var bt: Vector2 = qtd[0] + Vector2(0, 24 * ESC)
+			V.aro(self, bt, 10.0 + 60.0 * u, (10.0 + 60.0 * u) * 0.36, verde_t, a * 1.3, 1.5)
+			for k in 6:
+				var ang_t: float = k * TAU / 6.0 + sem[k % 8]
+				if a > 0.15:
+					V.folha(self, bt + Vector2(cos(ang_t) * (10.0 + 44.0 * u), -6.0 - 30.0 * u + sin(ang_t) * 10.0), 1.0 if k % 2 == 0 else -1.0, verde_t)
+			for k in 3:
+				V.disco_c(self, bt + Vector2((k - 1) * 14.0, -14.0 - 70.0 * u * (0.6 + 0.2 * k)), 3.0 * a + 1.0, Color(0.5, 0.95, 0.35), V.CONT)
+		Pecas.Poder.MANTEIGA:
+			# a poça se espalha: anel dourado e gotas que escorrem
+			var ouro := Color(1.0, 0.88, 0.3)
+			var bm: Vector2 = qtd[0] + Vector2(0, 24 * ESC)
+			var rm: float = float(ex.get("raio", 110.0)) * (1.0 - pow(1.0 - u, 3.0))
+			V.aro(self, bm, rm, rm * 0.36, ouro, a * 1.3, 1.5)
+			for k in 6:
+				var ang_m: float = k * TAU / 6.0 + 0.5
+				if a > 0.2:
+					V.gota(self, bm + Vector2(cos(ang_m) * rm * 0.8, sin(ang_m) * rm * 0.3 - 16.0 * (1.0 - u)), ouro)
+		Pecas.Poder.REVIVER:
+			# coluna de luz dourada sobre o gato que levanta, com cruzes de cura subindo
+			var luz := Color(1.0, 0.92, 0.45)
+			var br: Vector2 = qtd[0]
+			var larg_r: float = 26.0 * (1.0 - u * 0.5)
+			V.quadro(self, br.x - larg_r * 0.5, br.y - 190.0, larg_r, 190.0 + 24.0 * ESC, Color(1.0, 0.95, 0.6, 0.35 * a))
+			V.quadro(self, br.x - larg_r * 0.25, br.y - 190.0, larg_r * 0.5, 190.0 + 24.0 * ESC, Color(1.0, 1.0, 0.9, 0.5 * a))
+			V.aro(self, br + Vector2(0, 24 * ESC), 12.0 + 60.0 * u, (12.0 + 60.0 * u) * 0.36, luz, a * 1.3, 1.5)
+			for k in 4:
+				var wr2: float = fposmod(u * 1.4 + k * 0.25, 1.0)
+				V.cruz(self, br + Vector2((k - 1.5) * 16.0, 10.0 - wr2 * 70.0), 5.0, Color(0.4, 0.95, 0.5), Color(0.05, 0.3, 0.2))
+			if p.distance_to(br) > 30.0:
+				V.linha(self, p, br, Color(1.0, 0.92, 0.45, 0.5 * a), q)
+		Pecas.Poder.COLHEITA:
+			# terra revirada e brotinhos onde cada muda é plantada
+			for b in qtd:
+				var bc: Vector2 = b + Vector2(0, 24 * ESC)
+				V.aro(self, bc, 8.0 + 26.0 * u, (8.0 + 26.0 * u) * 0.36, Color(0.7, 0.5, 0.3), a * 1.2, 1.0)
+				for k in 4:
+					var ang_c: float = k * TAU / 4.0 + 0.7
+					if a > 0.2:
+						V.quadro(self, bc.x + cos(ang_c) * 16.0 * u - q, bc.y - 6.0 - 22.0 * u * absf(sin(ang_c)), q * 2.0, q * 2.0, Color(0.5, 0.33, 0.18))
+				V.cruz(self, bc + Vector2(0, -10.0 - 20.0 * u), 4.0, Color(0.5, 0.95, 0.35), Color(0.1, 0.3, 0.1))
+		Pecas.Poder.CONSTRUIR:
+			# poeira de pedra e lascas onde cada bloco sobe
+			for b in qtd:
+				var bq: Vector2 = b + Vector2(0, 24 * ESC)
+				V.aro(self, bq, 8.0 + 34.0 * u, (8.0 + 34.0 * u) * 0.36, Color(0.75, 0.76, 0.82), a * 1.2, 1.5)
+				for k in 5:
+					var ang_b: float = k * TAU / 5.0 + sem[k % 8]
+					if a > 0.2:
+						V.quadro(self, bq.x + cos(ang_b) * (8.0 + 30.0 * u) - q, bq.y - 4.0 - 24.0 * u * absf(sin(ang_b)) - q, q * 2.0, q * 2.0, Color(0.62, 0.63, 0.68))
+		Pecas.Poder.COCHILO:
+			# ondas de sono saem do gato e os "z" sobem; azul calmo
+			var azul_s := Color(0.55, 0.7, 1.0)
+			var rs: float = float(ex.get("raio", 120.0))
+			V.aro(self, gp, rs * (1.0 - pow(1.0 - u, 2.0)), rs * (1.0 - pow(1.0 - u, 2.0)) * 0.36, azul_s, a * 1.4, 2.0)
+			V.aro(self, gp, rs * 0.6 * (1.0 - pow(1.0 - u, 2.0)), rs * 0.6 * (1.0 - pow(1.0 - u, 2.0)) * 0.36, Color(0.8, 0.88, 1.0), a, 1.0)
+			for b in qtd:
+				for k in 2:
+					var wz: float = fposmod(u * 1.2 + k * 0.5, 1.0)
+					V.zzz(self, b + Vector2(8.0 + k * 10.0, -30.0 - wz * 36.0), 1.0 + k, Color(0.85, 0.92, 1.0))
 		_:
 			V.aro(self, p + Vector2(0, 30), 10.0 + 80.0 * u, (10.0 + 80.0 * u) * 0.4, c, a * 1.3, 1.5)
 
@@ -2047,11 +2155,58 @@ func _desenhar_repelente() -> void:
 		if w < 0.9:
 			draw_rect(Rect2(V.sn(fx_), V.sn(fy_), s_n, q), Color(0.62, 0.95, 0.72, 0.4 if dentro else 0.25))
 
+## Estruturas do lote 2 (torre de ervilha e bloco de pedra).
+func _desenhar_estrutura(uu: Unidade, pos: Vector2, fl: float, dir: float) -> void:
+	var frac: float = uu.vida / maxf(uu.vida_max, 1.0)
+	var esc_e: float = ESC * 1.5
+	if uu.estr_tipo == Simulacao.ESTR_TORRE:
+		V.torre_ervilha(self, pos, esc_e, dir, uu.golpe, frac)
+	else:
+		V.bloco_pedra(self, pos, esc_e, frac)
+	if fl > 0.05:
+		V.disco(self, pos + Vector2(0, -28.0 * esc_e), 16.0 * esc_e, Color(1, 1, 1, 0.45 * fl))
+	if uu.clone_t < 1.0:
+		V.aro(self, pos + Vector2(0, -20.0 * esc_e), 20.0 * esc_e, 14.0 * esc_e, Color(1, 1, 1), 0.5 + 0.5 * sin(rel * 30.0), 1.0)
+
+## Manteiga escorregadia: poça amarela brilhante no chão, com setas de deslizamento.
+func _desenhar_manteigas() -> void:
+	for zz in sim.zonas:
+		var z: Dictionary = zz
+		if z.get("tipo", "") != "manteiga":
+			continue
+		var cx: float = float(z["x"])
+		var cy: float = float(z["y"]) + 24.0 * ESC
+		var raio: float = float(z["raio"])
+		var viva: float = clampf(float(z["t"]) / 0.5, 0.0, 1.0) * clampf((float(z["dur"]) - float(z["t"])) / 0.2, 0.0, 1.0)
+		V.elipse(self, Vector2(cx, cy), raio * viva, raio * 0.36 * viva, Color(1.0, 0.88, 0.3, 0.55))
+		V.elipse(self, Vector2(cx - raio * 0.12, cy - 3.0), raio * 0.62 * viva, raio * 0.2 * viva, Color(1.0, 0.96, 0.62, 0.7))
+		V.aro(self, Vector2(cx, cy), raio * viva, raio * 0.36 * viva, Color(0.95, 0.7, 0.15), viva, 1.0)
+		var sent: float = 1.0 if int(z["eq"]) == 0 else -1.0
+		for k in 4:
+			var w: float = fposmod(rel * 0.9 + k * 0.25, 1.0)
+			var px_: float = cx + sent * (w - 0.5) * raio * 1.3
+			var py_: float = cy + (k - 1.5) * raio * 0.1
+			if viva > 0.3:
+				V.seta(self, Vector2(px_, py_), sent, Color(1.0, 0.95, 0.55), Color(0.55, 0.35, 0.05))
+		if viva > 0.3:
+			for k in 3:
+				var wb: float = fposmod(rel * 1.1 + k * 0.33, 1.0)
+				V.brilho(self, Vector2(cx + (k - 1.0) * raio * 0.45, cy - 2.0 - wb * 18.0), 2.5, Color(1, 1, 0.8), Color(0.5, 0.35, 0.05))
+
+## Mudas da Colheita: brotos que crescem até o momento de amadurecer.
+func _desenhar_mudas() -> void:
+	for zz in sim.zonas:
+		var z: Dictionary = zz
+		if z.get("tipo", "") != "muda":
+			continue
+		var w: float = 1.0 - clampf(float(z["t"]) / maxf(float(z["dur"]), 0.01), 0.0, 1.0)
+		V.muda(self, Vector2(float(z["x"]), float(z["y"]) + 24.0 * ESC), w)
+
 ## Enxame: pontinhos amarelos e pretos girando sobre a área de cada nuvem ativa (sim.zonas).
 func _desenhar_zonas() -> void:
 	for zz in sim.zonas:
 		var z: Dictionary = zz
-		if z.get("tipo", "enxame") == "canteiro":
+		if z.get("tipo", "enxame") in ["canteiro", "manteiga", "muda"]:
 			continue
 		var centro: Vector2 = Vector2(float(z["x"]), float(z["y"]) - 34.0 * ESC)
 		var raio: float = float(z["raio"])
@@ -2076,6 +2231,10 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 	var meio: Vector2 = pos + Vector2(0, -CORPO_MEIO * esc_u)
 	if uu.queima_t > 0.0:
 		_chamas(pos, esc_u)
+	if uu.sono_t > 0.0 or uu.cochilo_t > 0.0:
+		for k in 3:
+			var wz: float = fposmod(rel * 0.7 + k * 0.33, 1.0)
+			V.zzz(self, pos + Vector2(8.0 * esc_u + wz * 16.0, -h - 4.0 - wz * 30.0), 1.0 + (1.0 if k == 2 else 0.0), Color(0.85, 0.92, 1.0))
 	if uu.frio_t > 0.0:
 		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.05 * esc_u, 8.0 * esc_u, Color(0.6, 0.85, 1.0, 0.4))
 		for k in 5:
@@ -2490,6 +2649,8 @@ func _draw() -> void:
 		_desenhar_prep_chao()
 	_desenhar_repelente()
 	_desenhar_canteiros()
+	_desenhar_manteigas()
+	_desenhar_mudas()
 	# unidades ordenadas por profundidade
 	var todos: Array = _ordem_profundidade()
 	# auras e sombras primeiro
@@ -2572,7 +2733,9 @@ func _draw() -> void:
 			sx_u -= br * 0.5
 		var esc_d: float = esc_u * sy_u
 		var dir_d: float = dir * sx_u / sy_u
-		if uu2.cao:
+		if uu2.estrutura:
+			_desenhar_estrutura(uu2, pos, fl_u, dir_d)
+		elif uu2.cao:
 			# cão de guarda da Casinha: sprite próprio, do tamanho de um bicho comum (a escala da unidade é a do desenho antigo do chefe)
 			CaoGuarda.desenhar(self, pos, ESC * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
