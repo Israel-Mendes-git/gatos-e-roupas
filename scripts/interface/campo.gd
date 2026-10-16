@@ -878,6 +878,24 @@ func _consumir() -> void:
 					Pecas.Poder.COCHILO:
 						snd_p = "poder"
 						tom_p = 0.5
+					Pecas.Poder.PLANO:
+						snd_p = "poder_pronto"
+						tom_p = 1.3
+					Pecas.Poder.DOMO:
+						snd_p = "poder_gelo"
+						tom_p = 1.2
+					Pecas.Poder.LOBO:
+						snd_p = "poder"
+						tom_p = 0.55
+					Pecas.Poder.TURBO:
+						snd_p = "golpe_forte"
+						tom_p = 1.4
+					Pecas.Poder.ESFORCO:
+						snd_p = "poder_cura"
+						tom_p = 0.7
+					Pecas.Poder.PARRY:
+						snd_p = "barreira"
+						tom_p = 1.2
 				_som(snd_p, tom_p, -1.0, true, 0.03)
 				# nome do poder: cor da fantasia clareada até uma luminância mínima + contorno escuro grosso
 				# empilha: se já há um nome de poder aqui perto, este sobe uma linha (sem sobrepor)
@@ -906,7 +924,7 @@ func _consumir() -> void:
 						pt_txt = Vector2(clampf(alvos_p[0].x, 140.0, 1140.0), alvos_p[0].y - 70.0)
 					_numero(pt_txt, String(e["texto"]), cp.lightened(0.25), 24, 1.5, 300.0)
 				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp,
-					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0))}})
+					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "x1": float(e.get("x1", e["x"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0))}})
 			"aviso":
 				# um bicho carrega o poder: ping de alerta (o desenho da área sai de _desenhar_avisos)
 				_som("poder_pronto", 0.6 if e.get("chefe", false) else 0.8, -2.0, true)
@@ -964,6 +982,24 @@ func _consumir() -> void:
 			"disfarce_refaz":
 				var pr2: Vector2 = Vector2(e["x"], e["y"] - 36 * ESC)
 				_faisca(pr2, Color(1.0, 0.92, 0.45), 10, 120.0, 0.6, 3.0)
+			"reflete":
+				var prf: Vector2 = Vector2(e["x"], e["y"] - 20 * ESC)
+				_som("barreira", 1.4, -5.0, true)
+				_faisca(prf, Color(0.7, 0.95, 1.0), 8, 200.0, 0.4, 3.0)
+			"parry":
+				var ppy: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
+				_som("barreira", 1.6, -2.0, true)
+				_faisca(ppy, Color(1.0, 1.0, 0.9), 12, 240.0, 0.4, 3.5)
+				_numero(ppy + Vector2(0, -26), "Parry!", Color(0.9, 0.95, 1.0), 20, 1.0, 140.0)
+				tremor = maxf(tremor, 2.5)
+			"chute":
+				var pck: Vector2 = Vector2(e["x"], e["y"] - 20 * ESC)
+				_som("golpe_forte", 0.9, -3.0, true)
+				_faisca(pck, Color(1.0, 0.95, 0.7), 14, 280.0, 0.5, 4.0)
+				particulas.append({"p": pck, "v": Vector2.ZERO, "vida": 0.35, "max": 0.35, "cor": Color(1.0, 1.0, 0.9, 0.5), "r": float(e.get("raio", 85.0)) * 0.5, "g": 0.0, "tipo": 1})
+				tremor = maxf(tremor, 4.0)
+			"fala":
+				_numero(Vector2(e["x"], e["y"] - 110 * ESC), String(e["txt"]), Color(1.0, 0.35, 0.35), 26, 1.4, 220.0)
 			"muda":
 				var pm: Vector2 = Vector2(e["x"], e["y"] - 10 * ESC)
 				match int(e["res"]):
@@ -1390,6 +1426,20 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 			tremor = maxf(tremor, 3.0)
 		Pecas.Poder.COCHILO:
 			dur = 1.2
+		Pecas.Poder.PLANO:
+			dur = 1.0
+		Pecas.Poder.DOMO:
+			dur = 0.9
+		Pecas.Poder.LOBO:
+			dur = 1.0
+			tremor = maxf(tremor, 2.0)
+		Pecas.Poder.TURBO:
+			dur = 0.7
+			tremor = maxf(tremor, 4.0)
+		Pecas.Poder.ESFORCO:
+			dur = 1.0
+		Pecas.Poder.PARRY:
+			dur = 0.7
 	var sem: Array = []
 	for i in 8:
 		sem.append(randf())
@@ -2093,6 +2143,60 @@ func _desenhar_fx(f: Dictionary) -> void:
 				for k in 2:
 					var wz: float = fposmod(u * 1.2 + k * 0.5, 1.0)
 					V.zzz(self, b + Vector2(8.0 + k * 10.0, -30.0 - wz * 36.0), 1.0 + k, Color(0.85, 0.92, 1.0))
+		Pecas.Poder.PLANO:
+			# mira azul fecha sobre o alvo e riscos saem do líder
+			for b in qtd:
+				var rm: float = 46.0 - 28.0 * minf(1.0, u * 3.0)
+				V.aro(self, b + Vector2(0, 20 * ESC), rm, rm * 0.5, Color(1.0, 0.3, 0.3), a * 1.4, 1.5)
+				V.cruz(self, b + Vector2(0, -6.0), 8.0 + 6.0 * a, Color(1.0, 0.95, 0.9), esc_c)
+				if p.distance_to(b) > 30.0 and a > 0.2:
+					V.linha(self, p, b, Color(c.r, c.g, c.b, 0.7 * a), q)
+			V.aro(self, gp, 14.0 + 50.0 * u, (14.0 + 50.0 * u) * 0.4, c, a * 1.2, 1.0)
+		Pecas.Poder.DOMO:
+			# o domo sobe do chão; a cúpula persistente sai de _desenhar_domos
+			V.aro(self, gp, 10.0 + float(ex.get("raio", 130.0)) * minf(1.0, u * 2.0), (10.0 + float(ex.get("raio", 130.0)) * minf(1.0, u * 2.0)) * 0.34, c, a * 1.4, 1.5)
+			for k in 6:
+				V.cruz(self, gp + Vector2((k - 2.5) * 20.0, -10.0 - 50.0 * u * (0.5 + 0.1 * k)), 4.0, V.BRANCO, esc_c)
+		Pecas.Poder.LOBO:
+			# anel vermelho abre até o raio de provocação e as sais cruzam
+			var rl: float = float(ex.get("raio", 150.0)) * (1.0 - pow(1.0 - u, 3.0))
+			V.aro(self, gp, rl, rl * 0.36, c, a * 1.5, 2.0)
+			for k in 8:
+				var ang_l: float = k * TAU / 8.0 + 0.2
+				if a > 0.2:
+					V.seta(self, gp + Vector2(cos(ang_l) * rl * 0.9, sin(ang_l) * rl * 0.32 - 10.0), -cos(ang_l), V.BRANCO, esc_c)
+			V.estrela(self, p + Vector2(0, -10.0), 16.0 * a + 4.0, Color(1.0, 0.85, 0.7), esc_c)
+		Pecas.Poder.TURBO:
+			# risco azul da largada até o destino, com labaredas de pixel e faíscas
+			var o_t := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 30.0 * ESC)
+			var d_t := Vector2(float(ex.get("x1", p.x)), o_t.y)
+			if absf(d_t.x - o_t.x) > 2.0 and a > 0.1:
+				var larg_t: float = V.sn(q + 12.0 * a)
+				var xa_t: float = minf(o_t.x, d_t.x)
+				var comp_t: float = absf(d_t.x - o_t.x)
+				V.quadro(self, xa_t, o_t.y - larg_t - q, comp_t, larg_t * 2.0 + q * 2.0, V.CONT)
+				V.quadro(self, xa_t, o_t.y - larg_t, comp_t, larg_t * 2.0, Color(0.15, 0.55, 1.0))
+				V.quadro(self, xa_t, o_t.y - larg_t * 0.4, comp_t, larg_t * 0.8, Color(0.85, 1.0, 1.0))
+				for k in 6:
+					var xk_t: float = o_t.x + (d_t.x - o_t.x) * fposmod(k / 6.0 + u * 0.5, 1.0)
+					V.chama_azul(self, Vector2(xk_t, o_t.y + 26.0 * ESC), 14.0, 22.0 * a, t + k)
+			for b in alvos:
+				V.estrela(self, b, 16.0 * a + 5.0, Color(0.7, 0.95, 1.0), Color(0.05, 0.15, 0.4))
+		Pecas.Poder.ESFORCO:
+			# aura vermelha sobe do gato, estrelinhas brancas e raios de energia
+			for k in 10:
+				var wk: float = fposmod(u * 1.5 + k * 0.1, 1.0)
+				var xk_e: float = p.x + (k - 4.5) * 8.0
+				V.quadro(self, xk_e - q, gp.y - wk * 80.0 - q, q * 3.0, q * 5.0, V.CONT)
+				V.quadro(self, xk_e, gp.y - wk * 80.0, q, q * 3.0, Color(1.0, 0.25, 0.25) if k % 2 == 0 else Color(1.0, 0.85, 0.8))
+			V.aro(self, gp, 12.0 + 50.0 * u, (12.0 + 50.0 * u) * 0.36, c, a * 1.4, 1.5)
+			V.estrela(self, p + Vector2(0, -30.0), 10.0 * a + 4.0, V.BRANCO, esc_c)
+		Pecas.Poder.PARRY:
+			# lâmina prateada risca o ar e o aro de guarda se fecha
+			var r_p: float = 40.0 - 22.0 * minf(1.0, u * 2.5)
+			V.aro(self, gp + Vector2(0, -20.0), r_p, r_p * 0.7, Color(0.85, 0.9, 1.0), a * 1.4, 1.5)
+			V.linha(self, p + Vector2(-26.0 + 52.0 * minf(1.0, u * 3.0), -44.0), p + Vector2(26.0 - 10.0 * u, -8.0), V.BRANCO, q * 1.5)
+			V.estrela(self, p + Vector2(0, -26.0), 10.0 * a + 3.0, Color(1.0, 0.95, 0.8), esc_c)
 		_:
 			V.aro(self, p + Vector2(0, 30), 10.0 + 80.0 * u, (10.0 + 80.0 * u) * 0.4, c, a * 1.3, 1.5)
 
@@ -2194,6 +2298,25 @@ func _desenhar_manteigas() -> void:
 				V.brilho(self, Vector2(cx + (k - 1.0) * raio * 0.45, cy - 2.0 - wb * 18.0), 2.5, Color(1, 1, 0.8), Color(0.5, 0.35, 0.05))
 
 ## Mudas da Colheita: brotos que crescem até o momento de amadurecer.
+func _desenhar_domos() -> void:
+	for zz in sim.zonas:
+		var z: Dictionary = zz
+		if z.get("tipo", "") != "domo":
+			continue
+		var viva: float = clampf(float(z["t"]) / 0.5, 0.0, 1.0) * clampf((float(z["dur"]) - float(z["t"])) / 0.3, 0.0, 1.0)
+		V.domo(self, Vector2(float(z["x"]), float(z["y"]) + 24.0 * ESC), float(z["raio"]), rel, viva, Color(0.55, 0.75, 1.0))
+
+## Rastro de chamas azuis do Turbo: uma labareda por zona.
+func _desenhar_chamas() -> void:
+	for zz in sim.zonas:
+		var z: Dictionary = zz
+		if z.get("tipo", "") != "chama":
+			continue
+		var viva: float = clampf(float(z["t"]) / 0.6, 0.0, 1.0)
+		var bz := Vector2(float(z["x"]), float(z["y"]) + 24.0 * ESC)
+		V.elipse(self, bz, float(z["raio"]) * viva, float(z["raio"]) * 0.36 * viva, Color(0.15, 0.5, 1.0, 0.3))
+		V.chama_azul(self, bz, float(z["raio"]) * 1.2, 30.0 * viva, rel + float(z["x"]) * 0.05)
+
 func _desenhar_mudas() -> void:
 	for zz in sim.zonas:
 		var z: Dictionary = zz
@@ -2206,7 +2329,7 @@ func _desenhar_mudas() -> void:
 func _desenhar_zonas() -> void:
 	for zz in sim.zonas:
 		var z: Dictionary = zz
-		if z.get("tipo", "enxame") in ["canteiro", "manteiga", "muda"]:
+		if z.get("tipo", "enxame") in ["canteiro", "manteiga", "muda", "domo", "chama"]:
 			continue
 		var centro: Vector2 = Vector2(float(z["x"]), float(z["y"]) - 34.0 * ESC)
 		var raio: float = float(z["raio"])
@@ -2243,6 +2366,23 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 		for k in 3:
 			var fr: float = fposmod(rel * 1.6 + k * 0.33, 1.0)
 			V.ponto(self, pos + Vector2((k - 1) * 22.0, -h + fr * 36.0), Color(0.85, 0.95, 1.0))
+	if uu.foco_t > 0.0:
+		var pf_m: float = 0.5 + 0.5 * sin(rel * 10.0)
+		V.aro(self, meio, (CORPO_LARG + 6.0) * esc_u, (CORPO_MEIO + 8.0) * esc_u, Color(1.0, 0.3, 0.3), 0.6 + 0.4 * pf_m, 1.5)
+		V.cruz(self, pos + Vector2(0, -h - 14.0 - 4.0 * pf_m), 5.0, Color(1.0, 0.4, 0.4), V.CONT)
+	if uu.lobo_t > 0.0:
+		var rl_u: float = Balanco.PODER_LOBO_RAIO * (0.97 + 0.03 * sin(rel * 6.0))
+		V.aro(self, pos + Vector2(0, 2), rl_u, rl_u * 0.36, Color(0.95, 0.25, 0.25), 0.8, 1.0)
+		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.1 * esc_u, 9.0 * esc_u, Color(1.0, 0.2, 0.15, 0.22))
+	if uu.esforco_t > 0.0:
+		for k in 4:
+			var we: float = fposmod(rel * 1.4 + k * 0.25, 1.0)
+			var xe: float = pos.x + (k - 1.5) * 12.0 * esc_u
+			V.quadro(self, xe - V.Q, pos.y - h * we - V.Q, V.Q * 3.0, V.Q * 5.0, V.CONT)
+			V.quadro(self, xe, pos.y - h * we, V.Q, V.Q * 3.0, Color(1.0, 0.25, 0.25))
+	if uu.parry_t > 0.0:
+		V.aro(self, meio, (CORPO_LARG + 3.0) * esc_u, (CORPO_MEIO + 5.0) * esc_u, Color(0.88, 0.93, 1.0), 0.5 + 0.5 * sin(rel * 14.0), 1.0)
+		V.estrela(self, meio + Vector2(dir * CORPO_LARG * esc_u * 0.9, -4.0), 5.0, V.BRANCO)
 	if uu.protegido_t > 0.0:
 		var rx: float = (CORPO_LARG + 2.0) * esc_u
 		var ry: float = (CORPO_MEIO + 4.0) * esc_u
@@ -2650,6 +2790,8 @@ func _draw() -> void:
 	_desenhar_repelente()
 	_desenhar_canteiros()
 	_desenhar_manteigas()
+	_desenhar_domos()
+	_desenhar_chamas()
 	_desenhar_mudas()
 	# unidades ordenadas por profundidade
 	var todos: Array = _ordem_profundidade()

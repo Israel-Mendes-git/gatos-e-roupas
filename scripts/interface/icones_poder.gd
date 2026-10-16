@@ -8,9 +8,9 @@ extends RefCounted
 const TAM := 10           # lado de um ícone no atlas (8 + contorno de 1 px)
 const CONTORNO := Color("140c1c")
 
-## Ícones de apoio, depois dos 42 poderes.
-const BLOCO := 42         # bloco da torre (contador de blocos)
-const PECA := 43          # roupinha (caixa de peças)
+## Ícones de apoio, depois dos 48 poderes.
+const BLOCO := 48         # bloco da torre (contador de blocos)
+const PECA := 49          # roupinha (caixa de peças)
 
 const PALETA := {
 	"w": Color("ffffff"), "W": Color("b8c4dc"),
@@ -115,6 +115,18 @@ const BITS: Array = [
 	["GGGGGGGG", "Gssssssg", "GsggggsG", "GsgGGgsg", "GsgGGgsG", "GsggggsG", "GgsssssG", "GGGGGGGG"],
 	# COCHILO: zzz sobre a barriga
 	["..wwww..", "....w...", "...w.ww.", "..wwww..", "bbbbbbbb", "bwwwwwwB", "bwwwwwwB", ".BBBBBB."],
+	# PLANO (Plano de ataque): mira azul com o alvo vermelho
+	["...bb...", "..b..b..", ".b.bb.b.", "bb.rr.bb", "bb.rr.bb", ".b.bb.b.", "..b..b..", "...bb..."],
+	# DOMO (Domo refletor): cúpula de energia com núcleo roxo
+	["..cccc..", ".cCCCCc.", "cC....Cc", "cC.ll.Cc", "cC.lL.Cc", "cC....Cc", "CCCCCCCC", "........"],
+	# LOBO (Lobo solitário): par de sais
+	["r.....r.", "rr...rr.", ".rr.rr..", "..rrr...", "..rrr...", "...R....", "...R....", "...R...."],
+	# TURBO: carro azul com chamas
+	["........", "...cccc.", "..cCCCCc", "cccccwcc", "cCCCCCCC", "oo.kk.kk", "yo.kk.kk", "........"],
+	# ESFORCO (Esforço máximo): máscara vermelha de olhos brancos
+	["..rrrr..", ".rrrrrr.", "rwwrrwwr", "rwkrrkwr", "rrrrrrrr", ".rrkkrr.", "..rrrr..", "...RR..."],
+	# PARRY (Parry de faca): faca cruzando o golpe
+	["......ss", "....ssS.", "...ssS..", "..ssS...", "nnsS....", ".nN.....", "nN......", "........"],
 	# BLOCO: bloco de brinquedo da torre
 	["yyyyyyyY", "yooooooO", "yowwooOO", "yowoooOO", "yooooOOO", "yooooOOO", "yOOOOOOO", "YOOOOOOO"],
 	# PECA: camiseta (caixa de peças)

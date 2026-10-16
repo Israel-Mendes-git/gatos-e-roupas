@@ -305,3 +305,37 @@ static func muda(c: CanvasItem, base: Vector2, w: float, q: float = Q) -> void:
 	folha(c, base + Vector2(5.0, -h * 0.8), 1.0, verde, CONT, q)
 	if w > 0.7:
 		disco_c(c, base + Vector2(0, -h - 3.0), 3.0 + 3.0 * (w - 0.7) / 0.3, Color(0.95, 0.35, 0.3), CONT, q)
+
+# ---------------------------------------------------------------- lote 3 da expansão: domo, chama azul, parry
+## Labareda azul do Turbo (mesma forma de `chama`, em tons de azul).
+static func chama_azul(c: CanvasItem, base: Vector2, larg: float, alt: float, t: float, q: float = Q) -> void:
+	var n: int = maxi(2, int(larg / q))
+	var x0: float = sn(base.x - larg * 0.5, q)
+	var y: float = sn(base.y, q)
+	for i in n:
+		var f: float = 1.0 - absf((i + 0.5) / n * 2.0 - 1.0)
+		var h: float = sn((alt * (0.3 + 0.7 * f)) * (0.75 + 0.25 * sin(t * 14.0 + i * 1.9)), q)
+		if h < q:
+			continue
+		c.draw_rect(Rect2(x0 + i * q, y - h - q, q, h + q), Color(0.1, 0.2, 0.55))
+		c.draw_rect(Rect2(x0 + i * q, y - h, q, h), Color(0.15, 0.55, 1.0))
+		if h > q * 2.0:
+			c.draw_rect(Rect2(x0 + i * q, y - h * 0.62, q, h * 0.62), Color(0.45, 0.85, 1.0))
+		if h > q * 4.0 and f > 0.6:
+			c.draw_rect(Rect2(x0 + i * q, y - h * 0.3, q, h * 0.3), Color(0.9, 1.0, 1.0))
+
+## Domo de energia: cúpula de quadradinhos com uma grade hexagonal fraca. `ce` = chão sob o dono, `viva` 0..1.
+static func domo(c: CanvasItem, ce: Vector2, rx: float, t: float, viva: float, cor: Color, q: float = Q) -> void:
+	var ry: float = rx * 0.6
+	elipse(c, ce, rx * viva, ry * 0.6 * viva, Color(cor.r, cor.g, cor.b, 0.22), q)
+	aro(c, ce, rx * viva, ry * 0.6 * viva, cor, viva, 1.0, q)
+	var alt: float = rx * 0.9 * viva
+	var n: int = int(alt / (q * 3.0))
+	for j in n:
+		var k: float = (j + 1.0) / (n + 1.0)
+		var w: float = rx * viva * sqrt(maxf(0.0, 1.0 - k * k))
+		var y: float = ce.y - alt * k * 0.8
+		aro(c, Vector2(ce.x, y), w, w * 0.18, Color(cor.r, cor.g, cor.b, 0.7), viva * 0.7, 1.0, q)
+	for i in 5:
+		var fx: float = fposmod(t * 0.6 + i * 0.2, 1.0)
+		ponto(c, Vector2(ce.x + (fx * 2.0 - 1.0) * rx * 0.85 * viva, ce.y - alt * (0.15 + 0.65 * fposmod(i * 0.37 + t * 0.3, 1.0))), BRANCO, q)
