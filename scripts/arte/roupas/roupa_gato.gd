@@ -47,7 +47,9 @@ static func onde(tipo: int) -> int:
 		Pecas.SLOT_CORPO:
 			return Onde.CORPO
 	var o: int = -1
-	if tipo >= RoupaGatoF.PRIMEIRO:
+	if tipo >= RoupaGatoG.PRIMEIRO:
+		o = RoupaGatoG.onde(tipo)
+	elif tipo >= RoupaGatoF.PRIMEIRO:
 		o = RoupaGatoF.onde(tipo)
 	else:
 		o = _onde_arquivo(tipo)
@@ -77,6 +79,9 @@ static func _onde_arquivo(tipo: int) -> int:
 ## Desenha a peça em torno da origem do transform atual (1 unidade = 1 pixel do gato).
 static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 	_tipo_vez = tipo
+	if tipo >= RoupaGatoG.PRIMEIRO:
+		RoupaGatoG.desenhar(c, tipo, f, anim)
+		return
 	if tipo >= RoupaGatoF.PRIMEIRO:
 		RoupaGatoF.desenhar(c, tipo, f, anim)
 		return

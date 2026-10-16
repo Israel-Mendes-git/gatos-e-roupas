@@ -87,6 +87,8 @@ static func forma(c: CanvasItem, tipo: int, f: float, anim: float = 0.0) -> void
 			DesenhoFA.forma(c, tipo, f, anim)
 		elif tipo < 68:
 			DesenhoFB.forma(c, tipo, f, anim)
+		elif tipo >= RoupaGatoG.PRIMEIRO:
+			RoupaGatoG.desenhar(c, tipo, f, anim)
 		elif tipo >= RoupaGatoF.PRIMEIRO:
 			RoupaGatoF.desenhar(c, tipo, f, anim)
 		elif tipo >= 84:
@@ -1516,7 +1518,7 @@ const ICONE_PIXEL := true
 static func icone(c: CanvasItem, tipo: int, centro: Vector2, tam: float, nivel: int = 0, f: float = 0.0, anim: float = 0.0, marcas: Array = [], raridade: int = 0) -> void:
 	if ICONE_PIXEL:
 		# o ícone é a própria roupa em pixel art que o gato veste (RoupaGato), ampliada para caber
-		var cx: Rect2 = IconeDados.CAIXA[tipo] if tipo < IconeDados.CAIXA.size() else (RoupaGatoF.caixa(tipo) if tipo >= RoupaGatoF.PRIMEIRO else RoupaGatoE.caixa(tipo))
+		var cx: Rect2 = IconeDados.CAIXA[tipo] if tipo < IconeDados.CAIXA.size() else (RoupaGatoG.caixa(tipo) if tipo >= RoupaGatoG.PRIMEIRO else (RoupaGatoF.caixa(tipo) if tipo >= RoupaGatoF.PRIMEIRO else RoupaGatoE.caixa(tipo)))
 		var px: float = tam * 0.92 / maxf(9.0, maxf(cx.size.x, cx.size.y))
 		var meio: Vector2 = cx.position + cx.size * 0.5
 		c.draw_set_transform(centro - meio * px, 0.0, Vector2(px, px))
