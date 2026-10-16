@@ -77,7 +77,7 @@ const _PAL_CORPO: Dictionary = {
 	15: _CASCO_BICHO, 37: _CASCO_BICHO, 38: _CASCO_BICHO, 39: _CASCO_BICHO,
 }
 ## Casco do kit Tartaruga nos bichos: verde, plastrão bege na borda e a fivela dourada (e).
-const _CASCO_BICHO: Dictionary = {"a": Color("5e9440"), "A": Color("92c468"), "d": Color("3c6a2e"), "b": Color("e3cf8c"), "B": Color("f5e8b4"), "e": Color("e8bf3c")}
+const _CASCO_BICHO: Dictionary = {"a": Color("5e9440"), "A": Color("92c468"), "d": Color("3c6a2e"), "b": Color("e3cf8c"), "B": Color("f5e8b4"), "e": Color("e8bf3c"), "t": Color("8a5a30")}
 static var corpo_vez: bool = false
 
 static func _cor(conj: int, ch: String) -> Color:
@@ -441,8 +441,8 @@ const _CHAPEU: Array = [
 		"..ooooooo..",
 		".oAAaaaaao.",
 		"oaaaaaaaaao",
-		"oeeoaaaoeeo",
-		"oeBoaaaoeBo",
+		"oGgoaaaoGgo",
+		"ogBoaaaogBo",
 		".oo.....oo."]},
 	# 39 rafamiau: bandana vermelha torta, de sobrancelhas franzidas
 	{"cheio": false, "l": [
@@ -737,7 +737,7 @@ static func _casco(g: Dictionary, med: Array) -> Dictionary:
 		var t: int = g["topo"][x]
 		var b: int = g["base"][x]
 		var borda: int = mini(x - de, ate - x)
-		var sobe: int = 1 if borda >= 2 else 0
+		var sobe: int = 2 if borda >= 3 else (1 if borda >= 1 else 0)
 		var alt: int = maxi(3, roundi((b - t + 1) * float(med[2])))
 		for y in range(t - sobe, t + alt):
 			area[Vector2i(x, y)] = true
@@ -846,9 +846,9 @@ const _EMBLEMA: Array = [
 	[],                                          # stardew miaulley: bolso no enfeite
 	[],                                          # miaucraft
 	[],                                          # miaulax: barriga no enfeite
-	["e", "e"],                                  # leonarmiau: fivela do cinto
-	["e", "e"],                                  # donatemiau: fivela do cinto
-	["e", "e"],                                  # rafamiau: fivela do cinto
+	[],                                          # leonarmiau: o cinto fino vem no enfeite do casco
+	[],                                          # donatemiau: o cinto fino vem no enfeite do casco
+	[],                                          # rafamiau: o cinto fino vem no enfeite do casco
 	["bB", "Bb"],                                # rocket miaugue: chama pintada
 	["bB", "Bb"],                                # deadmiau: remendo
 	[],                                          # meon
@@ -998,8 +998,15 @@ static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary
 				if ly >= 1 and (posmod(lx + (ly / 3) * 2, 4) == 0 or ly % 3 == 0):
 					px[v] = C.call("d")
 			for x in range(x0, x1 + 1):
-				if bs.has(x) and area.has(Vector2i(x, bs[x])):
+				if not bs.has(x):
+					continue
+				# plastrão bege embaixo, cinto fino marrom logo acima e uma fivela dourada de 1 px na frente
+				if area.has(Vector2i(x, bs[x])):
 					px[Vector2i(x, bs[x])] = C.call("b")
+				if bs[x] - 2 > tp[x] and dentro.call(Vector2i(x, bs[x] - 2)):
+					px[Vector2i(x, bs[x] - 2)] = C.call("t")
+			if bs.has(x1 - 2) and dentro.call(Vector2i(x1 - 2, bs[x1 - 2] - 2)):
+				px[Vector2i(x1 - 2, bs[x1 - 2] - 2)] = C.call("e")
 		Pecas.Conjunto.OURICO:
 			# espinhos para trás no dorso
 			for x in range(x0 + 2, x1 - 1, 3):
@@ -1129,6 +1136,31 @@ static func _enfeitar_lote2(conj: int, px: Dictionary, area: Dictionary, cx: Rec
 	var x1: int = cx.end.x - 1
 	var xm: int = x0 + cx.size.x / 2
 	match conj:
+		Pecas.Conjunto.ROCKET_MIAUGUE:
+			# carro: janela escura no alto de trás, rodas de aro claro nos pés da carroceria
+			for x in range(xm - 3, xm + 1):
+				if tp.has(x):
+					for y in range(tp[x] + 1, tp[x] + 3):
+						if dentro.call(Vector2i(x, y)):
+							px[Vector2i(x, y)] = C.call("v") if (x + y) % 5 != 0 else C.call("V")
+			for rx in [x0 + 2, x1 - 3]:
+				if not bs.has(rx):
+					continue
+				var ry: int = bs[rx] - 1
+				for dy in 4:
+					for dx in 4:
+						if (dx == 0 or dx == 3) and (dy == 0 or dy == 3):
+							continue
+						var vr := Vector2i(rx - 1 + dx, ry + dy)
+						px[vr] = _COMUM["W"] if (dx in [1, 2] and dy in [1, 2]) else _COMUM["k"]
+		Pecas.Conjunto.DEADMIAU:
+			# traje bicolor: costas e barriga pretas
+			for p in area.keys():
+				var v: Vector2i = p
+				if not dentro.call(v):
+					continue
+				if v.x < x0 + cx.size.x / 3 or (bs.has(v.x) and v.y >= bs[v.x] - 1):
+					px[v] = C.call("b") if px[v] != C.call("A") else C.call("B")
 		Pecas.Conjunto.DISPARAMIAU:
 			# três ervilhas no flanco
 			var ym: int = cx.position.y + cx.size.y / 2

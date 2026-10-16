@@ -37,7 +37,7 @@ static func tem_atras(tipo: int) -> bool:
 ## Kit Tartaruga (igual nas quatro): o contorno verde-noite; a/b/d casco (médio, luz, sombra); e plastrão; t/u couro do cinto (médio,
 ## sombra); g/G fivela (média, sombra).
 const _KIT := {
-	"o": Color("0c1708"), "a": Color("5e9440"), "b": Color("92c468"), "d": Color("3c6a2e"), "e": Color("e3cf8c"),
+	"o": Color("0c1708"), "a": Color("5e9440"), "b": Color("92c468"), "d": Color("3c6a2e"), "e": Color("e3cf8c"), "E": Color("b09a55"),
 	"t": Color("8a5a30"), "u": Color("5c3a1e"), "g": Color("e8bf3c"), "G": Color("b58a1e"),
 }
 ## Bandanas: o contorno da cor, a/b/d (médio, luz, sombra); w branco do olho; k pupila.
@@ -119,35 +119,54 @@ const _INICIAL := {
 	"L": ["ugg", "ugg", "uuu"], "D": ["uug", "ugu", "uug"], "R": ["uug", "uug", "ugu"], "M": ["uuu", "uuu", "ugu"],
 }
 
-## Casco do kit no tronco: gomos verdes com sulcos claros, cinto marrom com fivela dourada e a inicial, plastrão embaixo.
-## `torto` = o cinto da direita desce 1 px (Rafamiau).
-static func _casco_kit(cv: Dictionary, inicial: String, torto: bool = false) -> void:
-	_txt(cv, -8, -12, [
-		"...aaaaaaaa.....",
-		"..aabaaabaa.....",
-		".aaabaaabaa.....",
-		"aaaabaaabaa.....",
-		"ddddbdddbdd.....",
-	])
-	var gl: Array = _INICIAL[inicial]
-	var dy: int = 1 if torto else 0
-	# cinto de 2 px em volta do tronco; a fivela de 5x5 na frente, com a inicial de 3x3
-	for x in range(-8, 3):
-		var y0: int = -7 + (dy if x >= -1 else 0)
-		cv[Vector2i(x, y0)] = "t"
-		cv[Vector2i(x, y0 + 1)] = "u"
-	for j in 5:
-		for i in 5:
-			var ch: String = "g"
-			if j == 4:
-				ch = "G"
-			elif j >= 1 and j <= 3 and i >= 1 and i <= 3:
-				ch = String(gl[j - 1])[i - 1]
-			cv[Vector2i(3 + i, -9 + j)] = ch
-	if torto:
-		_ret(cv, -1, -7, 3, -6, "e")
-	_ret(cv, -8, -5, 3, -4, "e")
-	_so_tronco(cv)
+## Cúpula do casco sobre o dorso (x -9..2, y -16..-10): placas de contorno escuro (d) com a borda de cima mais clara (b) e um
+## friso escuro embaixo (y -9). As placas são as regiões mais próximas de três centros, então o desenho é regular e sem sorteio.
+static func _cupula(cv: Dictionary) -> void:
+	var larg: Dictionary = {-16: [-7, -3], -15: [-8, -2], -14: [-9, -1], -13: [-9, 1], -12: [-9, 2], -11: [-9, 2], -10: [-9, 2]}
+	var centros: Array = [Vector2(-7.0, -12.0), Vector2(-3.5, -14.0), Vector2(-3.0, -11.0), Vector2(0.0, -12.0)]
+	var dono: Dictionary = {}
+	for y in larg.keys():
+		for x in range(int(larg[y][0]), int(larg[y][1]) + 1):
+			var melhor: int = 0
+			var dm: float = 1e9
+			for k in centros.size():
+				var c: Vector2 = centros[k]
+				var d: float = (x - c.x) * (x - c.x) + (y - c.y) * (y - c.y) * 1.6
+				if d < dm:
+					dm = d
+					melhor = k
+			dono[Vector2i(x, y)] = melhor
+	for v in dono.keys():
+		var vv: Vector2i = v
+		var seam: bool = (dono.has(vv + Vector2i(1, 0)) and dono[vv + Vector2i(1, 0)] != dono[vv]) or (dono.has(vv + Vector2i(0, 1)) and dono[vv + Vector2i(0, 1)] != dono[vv])
+		cv[vv] = "d" if seam else "a"
+	for x in range(-9, 3):
+		cv[Vector2i(x, -9)] = "d"
+	for v2 in dono.keys():
+		var w: Vector2i = v2
+		if cv[w] == "a" and (not cv.has(w + Vector2i(0, -1)) or cv[w + Vector2i(0, -1)] == "d"):
+			cv[w] = "b"
+
+## Casco do kit no tronco: cúpula de placas sobre o dorso, plastrão bege com faixas no peito e na barriga e um cinto fino marrom
+## atravessado com a fivela pequena. `torto` = o cinto da frente desce 1 px (Rafamiau). A inicial não é mais desenhada.
+static func _casco_kit(cv: Dictionary, _inicial: String = "", torto: bool = false) -> void:
+	_cupula(cv)
+	# plastrão: barriga (y -8..-5) e peito (y -9..-5) com faixas escuras
+	for x in range(-8, 8):
+		var topo: int = -8 if x < 3 else -9
+		for y in range(topo, -4):
+			cv[Vector2i(x, y)] = "e"
+		if x >= 3:
+			cv[Vector2i(x, -8)] = "E"
+		cv[Vector2i(x, -6)] = "E" if x % 4 != 0 else "e"
+	# cinto fino de 1 px em volta do tronco e a fivela de 3x3 (miolo escuro)
+	for x in range(-8, 8):
+		var yc: int = -7 + (1 if (torto and x >= 0) else 0)
+		cv[Vector2i(x, yc)] = "t"
+	var yf: int = -7 + (1 if torto else 0)
+	for j in 3:
+		for i in 3:
+			cv[Vector2i(3 + i, yf - 1 + j)] = "u" if (i == 1 and j == 1) else "g"
 
 ## Casco do kit pronto (camada do corpo) com a luz por regra e o contorno.
 static func _casco_pronto(cv: Dictionary, pal: Dictionary) -> Array:
@@ -205,14 +224,16 @@ static func _bandana(cv: Dictionary, fase: int, modo: int) -> void:
 		_txt(cv, -2, -18, ["...aa", "..aaa", ".aaaa", "..aaa"])
 		_txt(cv, -4, -13, [".aaaaa", "aaa..."])
 	if modo == 1:
-		# óculos de soldador empurrados para a testa: duas lentes de aro cinza e vidro verde, com a tira
-		_txt(cv, 4, -19, [
-			"iiiiii",
-			"iviivi",
-			"iiiiii",
+		# óculos de soldador empurrados para a testa: duas lentes redondas de aro cinza e vidro verde, com a alça escura para trás
+		_txt(cv, 3, -20, [
+			".ii..ii.",
+			"ivviivvi",
+			"ivviivvi",
+			".ii..ii.",
 		])
-		_px(cv, 3, -18, "k")
-		_px(cv, 10, -18, "k")
+		_px(cv, 4, -19, "V")
+		_px(cv, 8, -19, "V")
+		_ret(cv, 0, -18, 2, -17, "k")
 
 # ------------------------------------------------------------------ peças
 static var _cache: Dictionary = {}
@@ -241,9 +262,9 @@ static func _montar(tipo: int, fase: int) -> Array:
 			# o casco do kit com o polido: 3 px de brilho claro no canto de cima de uma placa
 			_casco_kit(cv, "L")
 			_luz(cv, "a", "b", "d")
-			_px(cv, -3, -11, "h")
-			_px(cv, -2, -11, "h")
-			_px(cv, -3, -10, "h")
+			_px(cv, -8, -13, "h")
+			_px(cv, -7, -13, "h")
+			_px(cv, -8, -12, "h")
 			_cont(cv, "o", false)
 			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, {"h": Color("d5f0aa")}))]
 		Pecas.Tipo.KATANAS_GEMEAS:
@@ -267,13 +288,11 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _pal(_KIT, {"a": _BAND_LEO["a"], "d": _BAND_LEO["d"], "C": Color("f0f4f8"), "c": Color("c8d0da")}))]
 		Pecas.Tipo.CINTO_L:
-			# cinto de campeão no dorso: tiras de couro e a placa dourada com o L em azul escuro
-			_txt(cv, -9, -19, [
-				".gggggg.",
-				"tgdggggt",
-				"tgdggggt",
-				"tgdddggt",
-				".GGGGGG.",
+			# cinto de campeão: plaquinha dourada no quadril (4x3) presa por uma tira curta de couro, com o L em azul escuro
+			_txt(cv, -9, -9, [
+				"tggg",
+				"tgdg",
+				"tGGG",
 			])
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, {"d": _BAND_LEO["d"]}))]
@@ -281,15 +300,15 @@ static func _montar(tipo: int, fase: int) -> Array:
 		Pecas.Tipo.BANDANA_ROXA:
 			_bandana(cv, fase, 1)
 			_cont(cv, "o")
-			return [_lay(cv, RoupaGato.Onde.CABECA, _pal(_BAND_DONA, _OLHO, _PAL_FERRO))]
+			return [_lay(cv, RoupaGato.Onde.CABECA, _pal(_BAND_DONA, _OLHO, _pal(_PAL_FERRO, {"V": Color("c8f5d2")})))]
 		Pecas.Tipo.CASCO_ENGENHOCAS:
-			# o casco do kit com a mochila de engenhocas: caixa cinza, antena e a lâmpada acesa
+			# o casco do kit com uma mochilinha de engenhocas na cúpula: caixa cinza pequena, antena fina e a lâmpada acesa
 			_casco_kit(cv, "D")
 			_luz(cv, "a", "b", "d")
 			var mo: Dictionary = {}
-			_ret(mo, -6, -12, -1, -9, "i")
-			_ret(mo, -4, -15, -2, -12, "i")
-			_ret(mo, -5, -18, -2, -15, "Y")
+			_ret(mo, -9, -14, -6, -13, "i")
+			_ret(mo, -9, -16, -8, -15, "i")
+			_ret(mo, -10, -19, -7, -17, "Y")
 			_luz(mo, "i", "", "j")
 			cv.merge(mo, true)
 			_cont(cv, "o", false)
@@ -326,20 +345,16 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _pal(_BAND_RAFA, _OLHO))]
 		Pecas.Tipo.CASCO_ARRANHADO:
-			# o casco do kit, mais riscado: 3 arranhões fixos, uma lasca na borda e o adesivo de 4x3
+			# o casco do kit, mais riscado: 3 arranhões fixos na cúpula e uma lasca na borda de trás
 			_casco_kit(cv, "R", true)
 			_luz(cv, "a", "b", "d")
-			_ret(cv, -2, -11, 2, -8, "e")
-			_px(cv, -1, -10, "o")
-			_px(cv, 0, -10, "o")
-			_px(cv, -1, -9, "o")
-			for p in [Vector2i(-7, -10), Vector2i(-6, -9)]:
-				_px(cv, p.x, p.y, "d")
-			for p2 in [Vector2i(-5, -12), Vector2i(-4, -11)]:
+			for p in [Vector2i(-6, -14), Vector2i(-5, -13), Vector2i(-4, -12)]:
+				_px(cv, p.x, p.y, "o")
+			for p2 in [Vector2i(-2, -13), Vector2i(-1, -12), Vector2i(0, -11)]:
 				_px(cv, p2.x, p2.y, "d")
-			for p3 in [Vector2i(-3, -11), Vector2i(-2, -10)]:
-				_px(cv, p3.x, p3.y, "b")
-			cv.erase(Vector2i(2, -12))
+			for p3 in [Vector2i(-8, -11), Vector2i(-7, -10)]:
+				_px(cv, p3.x, p3.y, "o")
+			cv.erase(Vector2i(-9, -13))
 			_cont(cv, "o", false)
 			return [_lay(cv, RoupaGato.Onde.CORPO, _KIT)]
 		Pecas.Tipo.PAR_DE_SAIS:
@@ -364,16 +379,15 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _pal(_KIT, _PAL_FERRO))]
 		Pecas.Tipo.CINTO_R:
-			# cinto vermelho mal-humorado no dorso: tiras e a placa dourada com o R, torta
-			_txt(cv, -9, -19, [
-				".gggggg.",
-				"agugggga",
-				"agugggga",
-				"aguguggG",
-				".GGGGGG.",
+			# cinto mal-humorado: a plaquinha torta no quadril, com um trapo vermelho pendurado
+			_txt(cv, -9, -9, [
+				"tggg",
+				"tgdg",
+				"aGGG",
+				"a...",
 			])
 			_cont(cv, "o")
-			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, {"a": _BAND_RAFA["a"]}))]
+			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, {"a": _BAND_RAFA["a"], "d": _BAND_RAFA["d"]}))]
 	return _montar_b(tipo, fase)
 
 ## Ferro e cinza compartilhados (óculos, mochila, sai, bô, computador, punho da faca): i/I/j médio, luz e sombra.
@@ -384,66 +398,59 @@ static func _montar_b(tipo: int, fase: int) -> Array:
 	match tipo:
 		# ---------------------------------------------------------------- Rocket Miaugue (Octane, Rocket League)
 		Pecas.Tipo.PARABRISA_CAPACETE:
-			# cúpula azul só no alto da cabeça, para-brisa escuro em cunha sobre o olho (focinho à mostra) e antena de rádio para trás
-			_txt(cv, 2, -18, [
-				"..aaaaa...",
-				".aaaaaaaa.",
-				"aaaaVvvvvv",
-				"aaaavvvvvv",
-				"aaaaaavvvv",
+			# capacete pequeno: touca azul no alto da cabeça e a viseira escura em cunha na testa (olho e focinho à mostra), com a antena atrás
+			_txt(cv, 3, -15, [
+				".aaaaa..",
+				"aaaavvvv",
 			])
 			_luz(cv, "a", "b", "d")
-			_px(cv, 7, -16, "V")
-			_px(cv, 8, -15, "V")
-			_txt(cv, -1, -24, [
+			_px(cv, 9, -14, "V")
+			_txt(cv, 0, -20, [
 				"nn..",
 				"nn..",
 				".mm.",
-				".mm.",
-				"..mm",
 				"..mm",
 			])
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_ROCKET)]
 		Pecas.Tipo.CARROCERIA_TURBO:
-			# o tronco vira o perfil do carro: cabine alta atrás, capô baixo, rodas grandes e chamas pintadas na lateral;
-			# atrás do corpo ficam a asa e o para-choque traseiros
-			_txt(cv, -8, -12, [
-				"...bbbbbbbb.....",
-				"..aaaaaaVvvv....",
-				".aaaaaaaavvv....",
-				"aaaaaaaaaaaaaaaa",
-				"aaaaaaaaaaaaaaaa",
-				"aaaaaaaaaaaaaaaa",
-				"aaaaaaaaaaaaaaaa",
-				"dddddddddddddddd",
+			# gato vestido de carro (Octane): carroceria em cunha envolvendo o tronco, janela escura, chama pintada, rodas grandes de aro claro
+			# no lugar das patas; atrás do corpo ficam a asa e a lanterna
+			var topo: Dictionary = {-10: -12, -9: -12, -8: -12}
+			for xx in range(-7, -1):
+				topo[xx] = -14
+			topo.merge({-1: -13, 0: -12, 1: -11, 2: -10, 3: -9, 4: -9, 5: -9, 6: -9, 7: -9, 8: -8, 9: -7}, true)
+			for xc in topo.keys():
+				for yc in range(int(topo[xc]), -3):
+					cv[Vector2i(xc, yc)] = "a"
+			_txt(cv, -6, -13, [
+				"vvvv...",
+				"vvvvv..",
+				"vvvvvv.",
 			])
-			_txt(cv, -3, -8, [
-				"aaaaaa",
-				"fffaaa",
-				"ffnnfa",
-				"afffaa",
+			_px(cv, -5, -12, "V")
+			_px(cv, -4, -13, "V")
+			_txt(cv, -3, -9, [
+				"..ff.",
+				".fffn",
+				"fnnnf",
+				".ffff",
 			])
-			_so_tronco(cv)
-			_roda(cv, -8, -8)
-			_roda(cv, 3, -8)
+			_ret(cv, -9, -5, 8, -5, "d")
+			_ret(cv, -9, -4, 8, -3, "k")
+			_px(cv, 9, -7, "n")
+			_px(cv, -10, -10, "F")
+			_px(cv, -10, -11, "F")
+			_luz(cv, "a", "b", "")
+			_roda(cv, -10, -7)
+			_roda(cv, 2, -7)
 			_cont(cv, "o", false)
 			var at: Dictionary = {}
-			_txt(at, -13, -17, [
-				"aa.....",
-				"aa.....",
-				"aa.....",
-				"aa.....",
-				"bd.....",
-				".kk....",
-				"..kk...",
-			])
-			_txt(at, -11, -9, [
-				"bbb",
-				"kkk",
-				"kkk",
-				"kKk",
-				"kkk",
+			_txt(at, -14, -17, [
+				"bbbbbb",
+				"aaaaaa",
+				"..d...",
+				"..d...",
 			])
 			_cont(at, "o")
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_ROCKET), _lay(at, RoupaGato.Onde.CORPO, _PAL_ROCKET, true)]
@@ -482,63 +489,61 @@ static func _montar_b(tipo: int, fase: int) -> Array:
 		Pecas.Tipo.PROPULSOR_TURBO:
 			# bocal cinza e chama laranja de três degraus (borda, miolo, núcleo claro) que alterna de tamanho
 			var cp: int = 8 if fase == 0 else 6
-			_ret(cv, -11 - cp, -10, -11, -6, "F")
-			_ret(cv, -11 - cp + 2, -9, -11, -7, "f")
-			_ret(cv, -11 - cp + 4, -9, -11, -8, "n")
-			_ret(cv, -11, -10, -8, -6, "m")
+			_ret(cv, -14 - cp, -10, -14, -7, "F")
+			_ret(cv, -14 - cp + 2, -10, -14, -8, "f")
+			_ret(cv, -14 - cp + 4, -9, -14, -8, "n")
+			_ret(cv, -13, -10, -11, -7, "m")
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.TRASEIRA, _PAL_ROCKET, true)]
 		# ---------------------------------------------------------------- Deadmiau (Deadpool)
 		Pecas.Tipo.MASCARA_VERMELHA:
-			# máscara fechada com orelhas de 3 px e a mancha preta inclinada em gota (mais baixa para o nariz) com o olho branco grande
-			_txt(cv, 3, -18, [
-				".aa..aa.",
-				".aaaaaaa",
-				"aaaaaaaa",
-				"aaaaaaaa",
-				"aaaaaaaa",
-				"aaaaaaaa",
-				"aaaaaaaa",
-				"aaaaaaaa",
+			# máscara colada na cabeça do gato (mesmo contorno: orelha de perfil, outra orelha ao fundo, testa, bochecha e queixo), com a
+			# mancha preta em gota inclinada (desce para o focinho) e o olho branco grande dentro
+			_txt(cv, 2, -17, [
+				"..aa.aa...",
+				"..aaaaa...",
+				"..aaaaaaa.",
+				".aaaaaaaa.",
+				".aaaaaaaaa",
+				".aaaaaaaaa",
+				".aaaaaaaa.",
+				"..aaaaa...",
 			])
 			_luz(cv, "a", "b", "d")
-			_txt(cv, 6, -15, [
-				"kkk..",
-				"kwwk.",
-				".kwwk",
-				"..kkk",
-			])
+			var br: Array = [Vector2i(5, -13), Vector2i(6, -13), Vector2i(6, -12), Vector2i(7, -12)]
+			var mancha: Dictionary = {}
+			for v in br:
+				mancha[v] = true
+				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					mancha[v + d] = true
+			mancha[Vector2i(8, -11)] = true
+			for v2 in mancha.keys():
+				if cv.has(v2):
+					cv[v2] = "k"
+			for v3 in br:
+				cv[v3] = "w"
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_DEAD)]
 		Pecas.Tipo.TRAJE_REMENDADO:
-			# traje bicolor: vermelho na frente e preto nas costas, cinto preto com a fivela bege, coldre e dois remendos;
-			# atrás do corpo, os cabos das duas katanas cruzadas nas costas
-			_txt(cv, -8, -12, [
-				"...ppaaaaaa.....",
-				"..pppaaaaaa.....",
-				".ppppaaaaaa.....",
-				"ppppaaaaaaaaaaaa",
-				"ppppaaaaaaaaaaaa",
-				"ppppaaaaaaaaaaaa",
-				"pppppppppppppppp",
-				"pppppppppppppppp",
-			])
+			# traje bicolor: vermelho no peito e preto nas costas e na barriga (divisão limpa), cinto preto fino com a fivela bege e um
+			# remendo; atrás do corpo, os dois cabos das katanas cruzadas nas costas
+			RoupaGatoF._tronco(cv, "a", -12, -5)
 			_luz(cv, "a", "b", "d")
+			for k in cv.keys():
+				var v: Vector2i = k
+				if v.x <= -4 or v.y >= -6:
+					cv[v] = "p"
 			_luz(cv, "p", "P", "")
-			_ret(cv, 0, -9, 2, -7, "m")
-			_ret(cv, 5, -10, 7, -8, "m")
-			_ret(cv, -3, -9, 0, -5, "p")
-			_px(cv, -2, -9, "P")
-			_ret(cv, 3, -7, 6, -5, "C")
-			_so_tronco(cv)
+			_ret(cv, -3, -7, 7, -7, "p")
+			_ret(cv, 3, -8, 4, -7, "C")
+			_ret(cv, 0, -10, 1, -9, "m")
 			_cont(cv, "o", false)
 			var at: Dictionary = {}
-			_txt(at, -7, -19, [
-				"C.....C.",
-				"pC...Cp.",
-				"pp...pp.",
-				".pp.pp..",
-				".pp.pp..",
+			_txt(at, -9, -17, [
+				"C.....C",
+				"pp...pp",
+				".pp.pp.",
+				"..ppp..",
 			])
 			_cont(at, "o")
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_DEAD), _lay(at, RoupaGato.Onde.CORPO, _PAL_DEAD, true)]
@@ -578,14 +583,14 @@ static func _montar_b(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_PAL_DEAD, {"x": Color("9c7c4f"), "r": _PAL_DEAD["a"], "D": Color("a66f26")}))]
 		# ---------------------------------------------------------------- Meon (Leon, Resident Evil 4 Remake)
 		Pecas.Tipo.FRANJA_LOIRA:
-			# cabelo loiro escuro como boné (as orelhas passam) e a franja em duas mechas descendo sobre o olho
+			# cabelo loiro escuro curto por trás e a franja caindo sobre a testa e a metade de cima do olho; o focinho e as orelhas ficam à mostra
 			_txt(cv, 2, -16, [
-				"..hhhhhh.",
-				".hhhhhhhh",
-				"hhhhhhhhh",
-				"hh...hhhh",
-				".....hhh.",
-				"......h..",
+				".hh......",
+				".hh...hh.",
+				"hhhhhhhh.",
+				"hhh.hh...",
+				"hh.......",
+				"hh.......",
 			])
 			_luz(cv, "h", "H", "s")
 			_cont(cv, "o")
@@ -603,20 +608,21 @@ static func _montar_b(tipo: int, fase: int) -> Array:
 			])
 			_lin(cv, Vector2i(6, -9), Vector2i(2, -5), "p")
 			_lin(cv, Vector2i(7, -9), Vector2i(3, -5), "p")
-			_ret(cv, -5, -8, -2, -5, "p")
-			_ret(cv, -4, -10, -2, -8, "i")
+			_ret(cv, -4, -9, -3, -5, "p")
+			_ret(cv, -4, -11, -3, -10, "i")
+			_px(cv, -5, -10, "I")
 			_cont(cv, "o", false)
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MEON)]
 		Pecas.Tipo.FACA_TATICA:
-			# faca de combate: cabo preto, guarda, lâmina cinza de 7 px com serrilha periódica embaixo e ponta afilada
-			_ret(cv, 10, -11, 14, -9, "p")
-			_ret(cv, 14, -12, 15, -8, "S")
-			_ret(cv, 15, -11, 22, -10, "I")
-			_ret(cv, 15, -10, 22, -9, "i")
-			_px(cv, 22, -11, "I")
-			_px(cv, 23, -11, "I")
-			for x in [16, 18, 20]:
-				_px(cv, x, -8, "i")
+			# pistola do agente: ferrolho cinza em cima, corpo preto, guarda do gatilho e o punho descendo, presa na boca
+			_txt(cv, 10, -12, [
+				".IIIIIIII.",
+				"iiiiiiiiiS",
+				"ppppppSSS.",
+				"pppp.S....",
+				"ppp.......",
+				"pp........",
+			])
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_MEON)]
 		Pecas.Tipo.MALETA_MERCADOR:
