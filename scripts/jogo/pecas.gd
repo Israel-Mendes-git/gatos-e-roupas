@@ -34,6 +34,13 @@ enum Tipo {
 	FRANJA_ADVOGADO, TERNO_TRIBUNAL, LUVA_APONTAR, DISTINTIVO,
 	CAPUZ_PELUCIA, DISFARCE_AMARELO, PATA_MISTERIOSA, RABO_PAPELAO,
 	CORINGA_CHAPEU, COLETE_BARALHO, LEQUE_POQUER, FICHAS,
+	# expansão das fantasias, lote 2 (índices 124 a 147): ver RoupaGatoG
+	CABECA_ERVILHA, CAULE_FOLHAS, METRALHA_ERVILHA, VAGEM_MUNICAO,
+	ESPIGA_MILHO, FOLHAS_MILHO, BAZUCA_PIPOCA, TABLETE_MANTEIGA,
+	PETALAS_SOL, CAULE_RAIOS, LANTERNA_SOL, VASO_SORRISO,
+	BONE_FAZENDA, MACACAO_JEANS, ENXADA, GALINHA,
+	CUBO_PIXEL, CAMISETA_BLOCOS, PICARETA, MINI_CREEPER,
+	TOUCA_SONECA, BARRIGA_CREME, TRAVESSEIRO, PRATO_VAZIO,
 }
 const PROPRIAS := 36   # tipos com efeito próprio
 
@@ -73,6 +80,7 @@ const SLOT: Array[int] = [
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
 ]
 const NOME: Array[String] = [
 	"Porrete", "Estilingue", "Escudo", "Colete", "Capa", "Espinhos", "Capacete", "Chapéu de palha", "Máscara", "Lança", "Tocha", "Avental", "Barril", "Coroa", "Chifres",
@@ -102,6 +110,12 @@ const NOME: Array[String] = [
 	"Franja de Advogado", "Terno Azul de Tribunal", "Martelo da Objeção", "Distintivo de Advogado Dourado",
 	"Capuz de Pelúcia Mal Costurado", "Disfarce Amarelo Remendado", "Pata Misteriosa", "Rabo de Raio de Papelão",
 	"Chapéu de Coringa de Três Pontas", "Colete de Baralho", "Mão de Pôquer em Leque", "Fichas de Cassino Empilhadas",
+	"Cabeça de Ervilha com Canhão-Boca", "Caule com Folhas", "Metralhadora de Ervilha", "Vagem de Munição",
+	"Espiga de Milho Careca", "Folhas de Milho Apertadas", "Bazuca de Pipoca", "Tablete de Manteiga",
+	"Pétalas de Girassol", "Caule de Raios de Sol", "Lanterna de Sol", "Vaso de Barro Sorridente",
+	"Boné de Fazenda com Brotinho", "Macacão Jeans de Fazendeiro", "Enxada Enferrujada", "Galinha de Estimação",
+	"Cabeça de Cubo Pixelada", "Camiseta Ciano e Calça Azul", "Picareta de Diamante", "Mini-Creeper (Ssss)",
+	"Touca de Soneca", "Barriga Gigante Creme", "Travesseiro de Combate", "Prato de Comida Vazio",
 ]
 const DICA: Array[String] = [
 	"Pancada forte de perto",
@@ -146,10 +160,10 @@ static func dica(tipo: int) -> String:
 	return DICA[MOLDE[tipo]]
 
 const POR_SLOT: Array = [
-	[6, 7, 8, 13, 14, 19, 20, 21, 22, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120],    # cabeça
-	[3, 4, 5, 11, 12, 23, 24, 25, 26, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97, 101, 105, 109, 113, 117, 121],    # corpo
-	[0, 1, 2, 9, 10, 15, 16, 17, 18, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 102, 106, 110, 114, 118, 122],     # mão
-	[27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75, 79, 83, 87, 91, 95, 99, 103, 107, 111, 115, 119, 123], # acessório
+	[6, 7, 8, 13, 14, 19, 20, 21, 22, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144],    # cabeça
+	[3, 4, 5, 11, 12, 23, 24, 25, 26, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97, 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145],    # corpo
+	[0, 1, 2, 9, 10, 15, 16, 17, 18, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 102, 106, 110, 114, 118, 122, 126, 130, 134, 138, 142, 146],     # mão
+	[27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75, 79, 83, 87, 91, 95, 99, 103, 107, 111, 115, 119, 123, 127, 131, 135, 139, 143, 147], # acessório
 ]
 ## Tipo cujo efeito cada peça usa (as 36 primeiras usam o próprio).
 const MOLDE: Array[int] = [
@@ -171,6 +185,13 @@ const MOLDE: Array[int] = [
 	Tipo.CARTOLA, Tipo.COLETE, Tipo.CETRO, Tipo.AMULETO,
 	Tipo.MASCARA, Tipo.MANTO, Tipo.VARINHA, Tipo.NARIZ,
 	Tipo.CARTOLA, Tipo.COLETE, Tipo.VARINHA, Tipo.AMULETO,
+	# lote 2 (Quintal, Toca): Disparamiau, Milhau, Giramiau, Stardew Miaulley, Miaucraft, Miaulax
+	Tipo.CHAPEU, Tipo.AVENTAL, Tipo.ESTILINGUE, Tipo.SEMENTES,
+	Tipo.CHAPEU, Tipo.AVENTAL, Tipo.REGADOR, Tipo.SEMENTES,
+	Tipo.CHAPEU, Tipo.AVENTAL, Tipo.CETRO, Tipo.BANDEIRA,
+	Tipo.CHAPEU, Tipo.AVENTAL, Tipo.PORRETE, Tipo.SEMENTES,
+	Tipo.CAPACETE, Tipo.COLETE, Tipo.PORRETE, Tipo.AMULETO,
+	Tipo.CHAPEU, Tipo.COLETE, Tipo.ESCUDO, Tipo.SEMENTES,
 ]
 ## Força do efeito em relação ao molde.
 const MOLDE_PODER: Array[float] = [
@@ -191,6 +212,12 @@ const MOLDE_PODER: Array[float] = [
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
+	1.1, 1.1, 1.1, 1.1,
+	1.1, 1.1, 1.1, 1.1,
+	1.1, 1.1, 1.1, 1.1,
+	1.1, 1.1, 1.1, 1.1,
+	1.1, 1.1, 1.1, 1.1,
+	1.1, 1.1, 1.1, 1.1,
 ]
 
 # ---------- Fantasias (conjuntos) ----------
@@ -199,12 +226,14 @@ enum Conjunto {
 	ENCANADOR, MORCEGO, ARANHA, ESTELAR, SOMBRIO, BOSQUE, TARTARUGA, OURICO, FERRO, TROVAO, GELO, PATRULHEIRO,
 	NINJA_FOLHA, ROBO_AZUL, TUBARAO, ABELHA,
 	SUPER_MIAU, ARQUEIRO_MIAU, MOTOQUEIRO_MIAUSMA, FENIX_MIAUSSIMO, MIMIAU, JIMIAU,   # lote 1 da expansão
+	DISPARAMIAU, MILHAU, GIRAMIAU, STARDEW_MIAULLEY, MIAUCRAFT, MIAULAX,   # lote 2 (Quintal e Toca)
 }
 
 const CONJUNTO_NOME: Array[String] = ["Cavaleiro", "Guardamiau", "Sua Miauestade", "Palhamiau", "Vikingato", "Jardimiau", "Caubói", "Piramiau", "Miauerlin",
 	"Miaurio", "Batmiau", "Garoto-Aranhiau", "Jedimiau", "Darth Miauder", "Linkmiau", "Miauchelangelo", "Sonimiau", "Iron Miau", "Thormiau", "Elsamiau", "Buzz Lightmiau",
 	"Narutomiau", "Mega Miau", "Gatubarão", "Gatabelha",
 	"Super Miau", "Arqueiro Miau", "Motoqueiro Miausma", "Fênix Miaussimo", "Mimiau", "Jimiau",
+	"Disparamiau", "Milhau", "Giramiau", "Stardew Miaulley", "Miaucraft", "Miaulax",
 ]
 ## Peças de cada fantasia, na ordem dos espaços: cabeça, corpo, mão, acessório.
 const CONJUNTO_PECAS: Array = [
@@ -239,6 +268,12 @@ const CONJUNTO_PECAS: Array = [
 	[Tipo.FRANJA_ADVOGADO, Tipo.TERNO_TRIBUNAL, Tipo.LUVA_APONTAR, Tipo.DISTINTIVO],
 	[Tipo.CAPUZ_PELUCIA, Tipo.DISFARCE_AMARELO, Tipo.PATA_MISTERIOSA, Tipo.RABO_PAPELAO],
 	[Tipo.CORINGA_CHAPEU, Tipo.COLETE_BARALHO, Tipo.LEQUE_POQUER, Tipo.FICHAS],
+	[Tipo.CABECA_ERVILHA, Tipo.CAULE_FOLHAS, Tipo.METRALHA_ERVILHA, Tipo.VAGEM_MUNICAO],
+	[Tipo.ESPIGA_MILHO, Tipo.FOLHAS_MILHO, Tipo.BAZUCA_PIPOCA, Tipo.TABLETE_MANTEIGA],
+	[Tipo.PETALAS_SOL, Tipo.CAULE_RAIOS, Tipo.LANTERNA_SOL, Tipo.VASO_SORRISO],
+	[Tipo.BONE_FAZENDA, Tipo.MACACAO_JEANS, Tipo.ENXADA, Tipo.GALINHA],
+	[Tipo.CUBO_PIXEL, Tipo.CAMISETA_BLOCOS, Tipo.PICARETA, Tipo.MINI_CREEPER],
+	[Tipo.TOUCA_SONECA, Tipo.BARRIGA_CREME, Tipo.TRAVESSEIRO, Tipo.PRATO_VAZIO],
 ]
 ## Fantasia de cada tipo de peça.
 const CONJUNTO_DE: Array[int] = [
@@ -252,6 +287,7 @@ const CONJUNTO_DE: Array[int] = [
 	17, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20,
 	21, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 24,
 	25, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 27, 28, 28, 28, 28, 29, 29, 29, 29, 30, 30, 30, 30,
+	31, 31, 31, 31, 32, 32, 32, 32, 33, 33, 33, 33, 34, 34, 34, 34, 35, 35, 35, 35, 36, 36, 36, 36,
 ]
 const CONJUNTO_COR: Array[Color] = [
 	Color(0.72, 0.78, 0.86),  # cavaleiro
@@ -285,28 +321,41 @@ const CONJUNTO_COR: Array[Color] = [
 	Color(0.25, 0.35, 0.7),  # fênix miaussimo
 	Color(0.95, 0.85, 0.3),  # mimiau
 	Color(0.6, 0.3, 0.85),  # jimiau
+	Color(0.45, 0.85, 0.35),  # disparamiau
+	Color(0.95, 0.88, 0.35),  # milhau
+	Color(1.0, 0.72, 0.15),  # giramiau
+	Color(0.7, 0.55, 0.35),  # stardew miaulley
+	Color(0.45, 0.7, 0.3),  # miaucraft
+	Color(0.3, 0.55, 0.55),  # miaulax
 ]
 ## Tipo do bônus numérico de cada fantasia (os 9 primeiros valores são os de Conjunto.CAVALEIRO..MAGO; as novas fantasias usam BONUS_*).
 const BONUS_CANTIL := 9      # cura única abaixo de 35% (Super Miau)
 const BONUS_CRITICO := 10    # chance de golpe crítico (Arqueiro Miau)
 const BONUS_BARREIRA := 11   # anula um golpe a cada N segundos (Mimiau)
 const BONUS_CARGA := 12      # recarga do poder mais curta (Jimiau)
+const BONUS_TIRO_DUPLO := 13 # chance de atirar duas vezes (Disparamiau)
+const BONUS_ESCORREGA := 14  # chance do golpe deixar o alvo lento (Milhau)
+const BONUS_AURA_REGEN := 15 # aura de regeneração nos aliados em volta (Giramiau)
+const BONUS_SEMENTES := 16   # sementes: cura os aliados ao cair (Stardew Miaulley)
 const CONJUNTO_MOLDE: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 6, 6, 5, 8, 4, 0, 6, 0, 4, 1, 7, 6, 4, 7, 8,
-	BONUS_CANTIL, BONUS_CRITICO, 8, 0, BONUS_BARREIRA, BONUS_CARGA]
+	BONUS_CANTIL, BONUS_CRITICO, 8, 0, BONUS_BARREIRA, BONUS_CARGA,
+	BONUS_TIRO_DUPLO, BONUS_ESCORREGA, BONUS_AURA_REGEN, BONUS_SEMENTES, 3, 1]   # Miaucraft: Circo (explode ao morrer); Miaulax: Guardião (vida)
 
 # ---------- Poder especial da fantasia completa ----------
 ## Os 16 primeiros são os da primeira leva; os de baixo foram acrescentados na rodada de poderes diversos (valores novos no fim: o save grava a fantasia, não este índice).
 enum Poder { RAIO, EXPLOSAO, ATORDOA, CURA, PROTEGE, FRENESI, ATRAVESSA, RAJADA, GELO, EMPURRA, GIRO, DRENO, INVOCA, TELEPORTE, PUXA, ENXAME,
 	RAIZ, SAQUE, TROVOADA, CANHAO, MISSEIS, CANCAO, INVESTIDA, FUMACA, FURIA, PISAO, CANTEIRO, TRIAGEM, MARCA, BOLA,
-	SALVAMENTO, RICOCHETE, OLHAR, OBJECAO, IMITAR, POQUER }
+	SALVAMENTO, RICOCHETE, OLHAR, OBJECAO, IMITAR, POQUER,
+	TORRE, MANTEIGA, REVIVER, COLHEITA, CONSTRUIR, COCHILO }
 const PODER_TIPO: Array[int] = [Poder.INVESTIDA, Poder.PROTEGE, Poder.FRENESI, Poder.ATORDOA, Poder.FURIA, Poder.CANTEIRO, Poder.SAQUE, Poder.CANHAO, Poder.RAIO,
 	Poder.PISAO, Poder.FUMACA, Poder.RAIZ, Poder.EMPURRA, Poder.DRENO, Poder.CANCAO, Poder.TRIAGEM, Poder.BOLA, Poder.MISSEIS, Poder.TROVOADA, Poder.GELO, Poder.MARCA,
 	Poder.INVOCA, Poder.TELEPORTE, Poder.PUXA, Poder.ENXAME,
-	Poder.SALVAMENTO, Poder.RICOCHETE, Poder.OLHAR, Poder.OBJECAO, Poder.IMITAR, Poder.POQUER]
+	Poder.SALVAMENTO, Poder.RICOCHETE, Poder.OLHAR, Poder.OBJECAO, Poder.IMITAR, Poder.POQUER,
+	Poder.TORRE, Poder.MANTEIGA, Poder.REVIVER, Poder.COLHEITA, Poder.CONSTRUIR, Poder.COCHILO]
 ## Poderes que o bicho fantasiado NÃO usa (o fantasiado só ganha o bônus de kit).
-const PODER_SO_GATO: Array[int] = [Poder.SALVAMENTO, Poder.OBJECAO, Poder.IMITAR]
+const PODER_SO_GATO: Array[int] = [Poder.SALVAMENTO, Poder.OBJECAO, Poder.IMITAR, Poder.MANTEIGA, Poder.REVIVER, Poder.CONSTRUIR, Poder.COCHILO]
 ## Fantasias cujo poder o Imitar não copia (evita laço infinito).
-const IMITAR_EXCLUI: Array[int] = [Conjunto.MIMIAU]
+const IMITAR_EXCLUI: Array[int] = [Conjunto.MIMIAU, Conjunto.GIRAMIAU]
 const PODER_NOME: Array[String] = [
 	"Carga de lança", "Muralha", "Ordem real", "Buzina", "Fúria",
 	"Chuva de pétalas", "Saque rápido", "Bala de canhão", "Relâmpago", "Pisão",
@@ -315,6 +364,7 @@ const PODER_NOME: Array[String] = [
 	"Alvo travado",
 	"Clones", "Teletransporte", "Arrastão", "Enxame",
 	"Salvamento", "Flecha ricochete", "Olhar da Penitência", "Objeção!", "Imitar", "Mão de pôquer",
+	"Torre de ervilha", "Manteiga escorregadia", "Reviver", "Colheita", "Construir", "Cochilo",
 ]
 const PODER_DICA: Array[String] = [
 	"investe pela fileira, fere quem cruza, derruba o primeiro e fica protegido",
@@ -348,6 +398,12 @@ const PODER_DICA: Array[String] = [
 	"corta o poder que um bicho está carregando e anima o time (só com aviso)",
 	"repete o último poder; sem nenhum, refaz o Disfarce e cura",
 	"saca cartas e joga a melhor mão: quanto melhor, mais dano no bando",
+	"planta uma torre de ervilhas que atira sozinha por uns segundos",
+	"uma poça de manteiga faz o bando deslizar para o fundo, lento",
+	"levanta o aliado caído, sem a marca de nocaute (1x por luta)",
+	"planta 3 mudas: viram pimenta que explode, morango que cura, ou murcham",
+	"ergue blocos que provocam os bichos e explodem ao cair",
+	"dorme e se cura; o ronco adormece os inimigos em volta",
 ]
 const CONJUNTO_MIN := 2   # peças para o bônus parcial; com as 4, bônus completo
 
@@ -431,4 +487,12 @@ static func conjunto_bonus(c: int, grau: int) -> String:
 			return "anula um golpe a cada %d s" % int(v)
 		BONUS_CARGA:
 			return "o poder recarrega %d%% mais depressa" % int(round(v * 100.0))
+		BONUS_TIRO_DUPLO:
+			return "%d%% de chance de atirar duas vezes" % int(round(v * 100.0))
+		BONUS_ESCORREGA:
+			return "golpes deixam o alvo lento (%d%% de chance)" % int(round(v * 100.0))
+		BONUS_AURA_REGEN:
+			return "aliados em volta regeneram +%s de vida por segundo" % Simulacao.num(v)
+		BONUS_SEMENTES:
+			return "ao cair, cura os aliados em %d%% da vida" % int(round(v * 100.0))
 	return ""
