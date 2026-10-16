@@ -180,6 +180,7 @@ func calcular(u: Unidade) -> void:
 	u.furia_k = 0.0
 	u.cerco = 0.0
 	u.furo = 0.0
+	u.apara = 0.0
 	u.critico = 0.0
 	u.saque = 0.0
 	u.aura_dano = 0.0
@@ -187,6 +188,7 @@ func calcular(u: Unidade) -> void:
 	u.embalo_k = 0.0
 	u.barreira_int = 0.0
 	u.disfarce_atordoa = 0.0
+	u.disfarce_garra = false
 	u.regen_aura = 0.0
 	u.sementes = 0.0
 	u.cantil = 0.0
@@ -367,6 +369,10 @@ func calcular(u: Unidade) -> void:
 				if g == 1:
 					# Mimiau completo: Disfarce (kv = segundos de atordoamento; o bicho fantasiado atordoa menos)
 					u.disfarce_atordoa = kv * (Balanco.DISFARCE_BICHO_FATOR if u.equipe == 1 else 1.0)
+					u.disfarce_garra = u.equipe == 0
+					if u.equipe == 0:
+						dano_mult += Balanco.DISFARCE_KIT_DANO
+						u.critico = minf(Balanco.CRITICO_MAX, u.critico + Balanco.DISFARCE_KIT_CRIT)
 					kv = Balanco.conj_valor(c, 0)   # o kit completo também mantém a barreira do kit parcial
 				u.barreira_int = kv if u.barreira_int <= 0.0 else minf(u.barreira_int, kv)
 			Pecas.BONUS_CARGA:
@@ -385,8 +391,8 @@ func calcular(u: Unidade) -> void:
 				u.furia_k += kv
 			Pecas.BONUS_VELOCIDADE:
 				vel_kit += kv
-			Pecas.BONUS_FURO:
-				u.furo += kv
+			Pecas.BONUS_APARA:
+				u.apara += kv
 	if u.equipe == 0 and Pecas.Conjunto.MIMIAU in u.herancas:
 		u.disfarce_atordoa = maxf(u.disfarce_atordoa, Balanco.DISFARCE_HER_ATORDOA)   # herança: o Disfarce, mais fraco
 	if u.equipe == 1:
@@ -497,6 +503,7 @@ func _spawnar(item: Dictionary) -> void:
 	u.y = rng.randf_range(Balanco.CHAO_Y0, Balanco.CHAO_Y1)
 	calcular(u)
 	u.disfarcado = u.disfarce_atordoa > 0.0
+	u.furioso_t = 0.0
 	u.vida = u.vida_max
 	u.cd = rng.randf_range(0.0, 0.5)
 	u.poder_cd = Balanco.PODER_CHEFE_PRIMEIRO if chefe else Balanco.PODER_INIMIGO_PRIMEIRO + rng.randf_range(0.0, 4.0)
@@ -950,6 +957,7 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.furor_t = maxf(0.0, u.furor_t - dt)
 	u.bola_t = maxf(0.0, u.bola_t - dt)
 	u.disfarce_rasgou_t += dt
+	u.furioso_t = maxf(0.0, u.furioso_t - dt)
 	if u.disfarce_rearma_t > 0.0:
 		u.disfarce_rearma_t -= dt
 		if u.disfarce_rearma_t <= 0.0 and not u.disfarcado:
@@ -978,10 +986,6 @@ func _agir(u: Unidade, dt: float) -> void:
 		u.vida = minf(u.vida_max, u.vida + u.vida_max * u.esforco_regen * dt)
 		_tele(u.esforco_conj, "cura", u.vida - antes_e)
 		u.bonus_dano *= 1.0 + Balanco.PODER_ESFORCO_DANO
-	if u.parry_t > 0.0:
-		u.parry_t -= dt
-		if u.parry_t <= 0.0 or u.parry_n <= 0:
-			_parry_fim(u)
 	if u.cochilo_t > 0.0:
 		u.cochilo_t -= dt
 		u.atordoado_t = 0.0
@@ -1083,9 +1087,14 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 	if u.equipe == 1 and u.tipo == Unidade.Tipo.BOMBA and not u.chefe:
 		_matar(u, null, Pecas.Marca.POLVORA)   # a bomba não bate: encosta e explode
 		return
-	u.cd = u.intervalo
+	u.cd = u.intervalo / ((1.0 + Balanco.DISFARCE_FURIA_VEL) if u.furioso_t > 0.0 else 1.0)
 	u.golpe = 0.22
 	var dm: float = u.dano * u.bonus_dano * (1.0 + u.furia_k * u.furia) * (1.0 + u.embalo) * (1.0 + (u.buff_dano if u.buff_dano_t > 0.0 else 0.0))
+	if u.disfarce_garra:
+		if u.disfarcado:
+			dm *= 1.0 + Balanco.DISFARCE_GARRA   # Garra Sombria
+		elif u.furioso_t > 0.0:
+			dm *= 1.0 + Balanco.DISFARCE_FURIA_DANO   # Furioso
 	if u.critico > 0.0 and rng.randf() < u.critico:
 		dm *= Balanco.CARTOLA_MULT
 		_ev({"t": "critico", "x": a.x, "y": a.y})
@@ -1210,8 +1219,8 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		alvo.barreira_cd = alvo.barreira_int  # Manto: o golpe some
 		_ev({"t": "barreira", "x": alvo.x, "y": alvo.y})
 		return
-	if alvo.parry_t > 0.0 and alvo.parry_n > 0 and atk != null and atk.vivo and not em_area:
-		_parry(alvo, atk, corpo_a_corpo)   # Parry de faca (Meon): o golpe é aparado
+	if alvo.apara > 0.0 and corpo_a_corpo and not em_area and atk != null and atk.vivo and rng.randf() < alvo.apara:
+		_apara_faca(alvo, atk)   # Aparar com a faca (kit do Meon): o golpe some e volta como facada
 		return
 	if alvo.disfarcado and atk != null:
 		# Disfarce (Mimiau): o 1º golpe some, o pano rasga e quem bateu leva um susto (chefe, menos)
@@ -1221,6 +1230,8 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		if atk.vivo and not atk.bola_t > 0.0:
 			atk.atordoado_t = maxf(atk.atordoado_t, alvo.disfarce_atordoa * (Balanco.DISFARCE_CHEFE_FATOR if atk.chefe else 1.0))
 		alvo.protegido_t = maxf(alvo.protegido_t, Balanco.DISFARCE_PROTEGE)
+		if alvo.disfarce_garra:
+			alvo.furioso_t = Balanco.DISFARCE_FURIA_T
 		if atk.vivo:
 			_dano_poder(alvo, atk, Balanco.PODER_DANO * alvo.esc_dano * Balanco.DISFARCE_REVIDE * (Balanco.DISFARCE_BICHO_FATOR if alvo.equipe == 1 else 1.0))
 		var rivais: Array[Unidade] = inimigos if alvo.equipe == 0 else aliados
@@ -2990,53 +3001,47 @@ func _esforco_levanta(u: Unidade) -> void:
 	_conj_tele = c0
 	_eq_tele = e0
 
-## Parry de faca (Meon): apara os próximos golpes; quem bateu fica atordoado e leva o troco. Ao fim, chute giratório.
-func _poder_parry(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
-	var perto: bool = false
+## Chute giratório (Meon): chute curto em volta; empurra e atordoa. Quem já estava atordoado leva dano bem maior (atordoar -> chutar).
+func _poder_chute(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var raio: float = Balanco.PODER_CHUTE_HER_RAIO if em_heranca else Balanco.PODER_CHUTE_RAIO
+	var perto: Array[Unidade] = []
 	for v in outros:
-		if not v.estrutura and _dentro(v, u.x, u.y, Balanco.PODER_PARRY_VE):
-			perto = true
-			break
-	if not perto or u.parry_t > 0.0:
+		if v.vivo and not v.estrutura and _dentro(v, u.x, u.y, raio):
+			perto.append(v)
+	if perto.is_empty():
 		return false
-	u.parry_t = Balanco.PODER_PARRY_T
-	u.parry_n = 1 if u.equipe == 1 else (Balanco.PODER_PARRY_HER_N if em_heranca else Balanco.PODER_PARRY_N)
-	u.parry_dano = base * Balanco.PODER_PARRY_DANO
-	u.parry_conj = u.poder_conj
-	pontos.append(Vector2(u.x, u.y))
-	extra["dur"] = Balanco.PODER_PARRY_T
+	var sent: float = 1.0 if u.equipe == 0 else -1.0
+	var empurra: float = Balanco.PODER_CHUTE_HER_EMPURRA if em_heranca else Balanco.PODER_CHUTE_EMPURRA
+	var atordoa: float = Balanco.PODER_CHUTE_HER_ATORDOA if em_heranca else Balanco.PODER_CHUTE_ATORDOA
+	var mult_at: float = Balanco.PODER_CHUTE_HER_ATORDOADO if em_heranca else Balanco.PODER_CHUTE_DANO_ATORDOADO
+	var mult: float = Balanco.PODER_CHUTE_HER_DANO if em_heranca else Balanco.PODER_CHUTE_DANO
+	var combos: int = 0
+	for v in perto:
+		pontos.append(Vector2(v.x, v.y))
+		var ja: bool = v.atordoado_t > 0.0
+		if ja:
+			combos += 1
+		if not v.chefe and v.tipo != Unidade.Tipo.GIGANTE:
+			v.x = clampf(v.x + sent * empurra, Balanco.TORRE_X + 20.0, Balanco.INIMIGO_X0)
+		if not v.bola_t > 0.0:
+			v.atordoado_t = maxf(v.atordoado_t, atordoa * _fi * (Balanco.PODER_CHUTE_CHEFE if v.chefe else 1.0))
+		_dano_poder(u, v, base * (mult_at if ja else mult))
+	_tele(u.poder_conj, "combos", float(combos))
+	extra["raio"] = raio
+	extra["combos"] = combos
 	return true
 
-func _parry(alvo: Unidade, atk: Unidade, corpo_a_corpo: bool) -> void:
-	alvo.parry_n = maxi(0, alvo.parry_n - 1) if corpo_a_corpo else 0
-	if not atk.bola_t > 0.0:
-		atk.atordoado_t = maxf(atk.atordoado_t, Balanco.PODER_PARRY_CHEFE if atk.chefe else Balanco.PODER_PARRY_ATORDOA)
+## Aparar com a faca (kit do Meon): o golpe corpo a corpo some e quem bateu leva uma facada.
+func _apara_faca(alvo: Unidade, atk: Unidade) -> void:
 	var c0: int = _conj_tele
 	var e0: int = _eq_tele
-	_conj_tele = alvo.parry_conj
+	_conj_tele = Pecas.Conjunto.MEON
 	_eq_tele = alvo.equipe
-	_tele(alvo.parry_conj, "aparos", 1.0)
-	_dano_poder(alvo, atk, alvo.parry_dano)
+	_tele(Pecas.Conjunto.MEON, "aparos", 1.0)
+	_dano_poder(alvo, atk, alvo.dano * alvo.bonus_dano * Balanco.APARA_DANO)
 	_conj_tele = c0
 	_eq_tele = e0
-	_ev({"t": "parry", "x": alvo.x, "y": alvo.y, "eq": alvo.equipe, "ax": atk.x, "ay": atk.y})
-
-func _parry_fim(u: Unidade) -> void:
-	u.parry_t = 0.0
-	u.parry_n = 0
-	var sent: float = 1.0 if u.equipe == 0 else -1.0
-	_ev({"t": "chute", "x": u.x, "y": u.y, "raio": Balanco.PODER_PARRY_CHUTE_RAIO, "eq": u.equipe})
-	var c0: int = _conj_tele
-	var e0: int = _eq_tele
-	_conj_tele = u.parry_conj
-	_eq_tele = u.equipe
-	for v in (inimigos if u.equipe == 0 else aliados):
-		if v.vivo and not v.estrutura and _dentro(v, u.x, u.y, Balanco.PODER_PARRY_CHUTE_RAIO):
-			_dano_poder(u, v, u.parry_dano * Balanco.PODER_PARRY_CHUTE / Balanco.PODER_PARRY_DANO)
-			if v.vivo and not v.chefe and v.tipo != Unidade.Tipo.GIGANTE:
-				v.x = clampf(v.x + sent * Balanco.PODER_PARRY_EMPURRA, Balanco.TORRE_X + 20.0, Balanco.INIMIGO_X0)
-	_conj_tele = c0
-	_eq_tele = e0
+	_ev({"t": "apara", "x": alvo.x, "y": alvo.y, "eq": alvo.equipe, "ax": atk.x, "ay": atk.y})
 
 func _usar_poder_i(u: Unidade) -> bool:
 	var meus: Array[Unidade] = aliados if u.equipe == 0 else inimigos
@@ -3181,8 +3186,8 @@ func _usar_poder_i(u: Unidade) -> bool:
 		Pecas.Poder.ESFORCO:
 			if not _poder_esforco(u, meus, outros, base, pontos, extra):
 				return false
-		Pecas.Poder.PARRY:
-			if not _poder_parry(u, meus, outros, base, pontos, extra):
+		Pecas.Poder.CHUTE:
+			if not _poder_chute(u, meus, outros, base, pontos, extra):
 				return false
 		Pecas.Poder.ATORDOA, Pecas.Poder.EMPURRA, Pecas.Poder.GIRO:
 			if not _poder_atordoa_empurra_giro(u, meus, outros, base, pontos, extra):

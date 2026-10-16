@@ -100,6 +100,8 @@ var recarga_menos: float = 0.0  # kit do Jimiau: fração a menos no intervalo e
 var disfarcado: bool = false     # Disfarce (Mimiau): o próximo golpe é anulado e quem bateu fica atordoado
 var disfarce_atordoa: float = 0.0   # segundos de atordoamento em quem rasga o Disfarce (0 = sem a passiva)
 var disfarce_rasgou_t: float = 99.0  # quanto tempo faz que rasgou (só desenho)
+var disfarce_garra: bool = false     # kit completo do Mimiau: Garra Sombria e Furioso
+var furioso_t: float = 0.0           # Furioso: segundos que faltam
 var disfarce_rearma_t: float = 0.0   # segundos até o pano se refazer sozinho (0 = parado)
 var buff_dano_t: float = 0.0    # Objeção!: dano a mais por alguns segundos
 var buff_dano: float = 0.0
@@ -133,10 +135,7 @@ var esforco_regen: float = 0.0
 var esforco_usado: bool = true  # já levantou (ou não pode levantar)
 var esforco_base: float = 0.0   # dano base da explosão ao levantar
 var esforco_conj: int = -1
-var parry_t: float = 0.0        # Parry de faca (Meon): aparos que restam e tempo
-var parry_n: int = 0
-var parry_dano: float = 0.0
-var parry_conj: int = -1
+var apara: float = 0.0          # kit do Meon: chance de aparar um golpe corpo a corpo com a faca
 # aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
 var aviso_t: float = 0.0        # segundos que faltam para soltar (0 = sem aviso)
 var aviso_dur: float = 0.0

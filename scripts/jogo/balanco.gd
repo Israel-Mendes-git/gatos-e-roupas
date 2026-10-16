@@ -169,7 +169,7 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.RAFAMIAU: [0.5, 1.4],              # chifres: dano a mais com a vida perto de zero
 	Pecas.Conjunto.ROCKET_MIAUGUE: [0.2, 0.45],       # velocidade de movimento
 	Pecas.Conjunto.DEADMIAU: [3.0, 6.0],              # regeneração por segundo
-	Pecas.Conjunto.MEON: [0.35, 0.7],                 # tiros ferem menos
+	Pecas.Conjunto.MEON: [0.15, 0.3],                 # chance de aparar um golpe corpo a corpo com a faca
 }
 const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
 
@@ -603,6 +603,12 @@ const DISFARCE_REARMA_T := 7.0          # o pano rasgado se refaz sozinho depois
 const DISFARCE_REVIDE := 3.5            # quem rasga o Disfarce leva este tanto x dano de referência de volta
 const DISFARCE_PROTEGE := 2.0           # segundos de proteção do Mimiau depois que o pano rasga
 const PODER_IMITAR_RECARGA := 0.35      # o Imitar recarrega mais depressa (fração a menos)
+const DISFARCE_KIT_DANO := 0.7        # kit completo do Mimiau: dano a mais
+const DISFARCE_KIT_CRIT := 0.3        # kit completo do Mimiau: chance de crítico
+const DISFARCE_GARRA := 0.8            # Garra Sombria: com o pano inteiro, os golpes causam este tanto a mais (kit completo)
+const DISFARCE_FURIA_T := 6.0          # Furioso: segundos depois de rasgar o pano (kit completo)
+const DISFARCE_FURIA_DANO := 1.0       # Furioso: dano a mais
+const DISFARCE_FURIA_VEL := 0.5        # Furioso: golpes mais rápidos (fração)
 const DISFARCE_REFAZ_PROTEGE := 3.0    # segundos de proteção ao refazer o Disfarce (só o poder do gato)
 # Mão de pôquer (Jimiau): dano no maior bando, por categoria da mão (carta alta ... straight flush)
 const PODER_POQUER_RAIO := 110.0
@@ -715,17 +721,20 @@ const PODER_ESFORCO_EXPLODE := 0.8     # x dano base
 const PODER_ESFORCO_RAIO := 100.0
 const PODER_ESFORCO_HER_T := 4.0
 const PODER_ESFORCO_HER_REGEN := 0.03
-# Parry de faca (Meon): apara golpes, atordoa o agressor e termina num chute giratório
-const PODER_PARRY_T := 5.0
-const PODER_PARRY_N := 3               # golpes corpo a corpo (um projétil gasta tudo)
-const PODER_PARRY_ATORDOA := 1.0
-const PODER_PARRY_CHEFE := 0.4
-const PODER_PARRY_DANO := 1.0          # x dano base no agressor
-const PODER_PARRY_CHUTE := 1.2
-const PODER_PARRY_CHUTE_RAIO := 85.0
-const PODER_PARRY_EMPURRA := 60.0
-const PODER_PARRY_HER_N := 2
-const PODER_PARRY_VE := 170.0          # só usa se houver inimigo a esta distância
+# Chute giratório (Meon): chute curto em volta, empurra e atordoa; quem já estava atordoado apanha muito mais
+const PODER_CHUTE_RAIO := 125.0
+const PODER_CHUTE_DANO := 2.0          # x dano base
+const PODER_CHUTE_DANO_ATORDOADO := 4.5   # x dano base em quem já estava atordoado
+const PODER_CHUTE_ATORDOA := 1.2
+const PODER_CHUTE_CHEFE := 0.4         # fração do atordoamento que vale para chefe
+const PODER_CHUTE_EMPURRA := 70.0
+const PODER_CHUTE_HER_RAIO := 90.0
+const PODER_CHUTE_HER_DANO := 1.2      # x dano base (já menor na herança)
+const PODER_CHUTE_HER_ATORDOADO := 2.4
+const PODER_CHUTE_HER_ATORDOA := 0.6
+const PODER_CHUTE_HER_EMPURRA := 40.0
+# Aparar com a faca (kit do Meon): o golpe corpo a corpo some (dano 0) e volta como facada
+const APARA_DANO := 2.5                # x dano de ataque de quem aparou
 const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
 # Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
 const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato

@@ -129,7 +129,7 @@ const NOME: Array[String] = [
 	"Bandana Vermelha Torta", "Casco Cheio de Arranhões", "Par de Sais Prontas", "Cinto Vermelho Mal-Humorado",
 	"Para-brisa de Capacete", "Carroceria Azul Turbo", "Bola Gigante de Futebol Cósmico", "Propulsor Turbo",
 	"Máscara Vermelha de Olhos Brancos", "Traje Vermelho Cheio de Remendos", "Duas Katanas de Papelão", "Chimichanga Fatal",
-	"Franja Rebelde Loira", "Jaqueta de Couro Marrom", "Faca de Combate Tática", "Maleta do Mercador",
+	"Franja Rebelde Loira", "Jaqueta de Couro Marrom", "Pistola do Agente", "Maleta do Mercador",
 ]
 const DICA: Array[String] = [
 	"Pancada forte de perto",
@@ -212,7 +212,7 @@ const MOLDE: Array[int] = [
 	Tipo.CAPACETE, Tipo.COLETE, Tipo.LANCA, Tipo.BOTAS,
 	Tipo.CAPACETE, Tipo.COLETE, Tipo.PORRETE, Tipo.BOTAS,
 	Tipo.MASCARA, Tipo.CASACO, Tipo.SABRE, Tipo.GANCHO,
-	Tipo.CAPACETE, Tipo.PONCHO, Tipo.SABRE, Tipo.JOELHEIRAS,
+	Tipo.CAPACETE, Tipo.PONCHO, Tipo.ESTILINGUE, Tipo.JOELHEIRAS,   # Meon: a mão é a Pistola do Agente (tiro de longe)
 ]
 ## Força do efeito em relação ao molde.
 const MOLDE_PODER: Array[float] = [
@@ -414,11 +414,11 @@ const BONUS_SEMENTES := 16   # sementes: cura os aliados ao cair (Stardew Miaull
 const BONUS_ATORDOA := 17    # chance do golpe atordoar o alvo (Donatemiau)
 const BONUS_CHIFRES := 18    # mais dano com menos vida (Rafamiau)
 const BONUS_VELOCIDADE := 19 # velocidade de movimento (Rocket Miaugue)
-const BONUS_FURO := 20       # projéteis ferem menos (Meon)
+const BONUS_APARA := 20      # chance de aparar golpe corpo a corpo com a faca e devolver uma facada (Meon)
 const CONJUNTO_MOLDE: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 6, 6, 5, 8, 4, 0, 6, 0, 4, 1, 7, 6, 4, 7, 8,
 	BONUS_CANTIL, BONUS_CRITICO, 8, 0, BONUS_BARREIRA, BONUS_CARGA,
 	BONUS_TIRO_DUPLO, BONUS_ESCORREGA, BONUS_AURA_REGEN, BONUS_SEMENTES, 3, 1,   # Miaucraft: Circo (explode ao morrer); Miaulax: Guardião (vida)
-	2, BONUS_ATORDOA, BONUS_CHIFRES, BONUS_VELOCIDADE, 5, BONUS_FURO]   # Leonarmiau: Rei (aura de dano); Deadmiau: Jardineiro (regeneração)
+	2, BONUS_ATORDOA, BONUS_CHIFRES, BONUS_VELOCIDADE, 5, BONUS_APARA]   # Leonarmiau: Rei (aura de dano); Deadmiau: Jardineiro (regeneração)
 
 # ---------- Poder especial da fantasia completa ----------
 ## Os 16 primeiros são os da primeira leva; os de baixo foram acrescentados na rodada de poderes diversos (valores novos no fim: o save grava a fantasia, não este índice).
@@ -426,13 +426,13 @@ enum Poder { RAIO, EXPLOSAO, ATORDOA, CURA, PROTEGE, FRENESI, ATRAVESSA, RAJADA,
 	RAIZ, SAQUE, TROVOADA, CANHAO, MISSEIS, CANCAO, INVESTIDA, FUMACA, FURIA, PISAO, CANTEIRO, TRIAGEM, MARCA, BOLA,
 	SALVAMENTO, RICOCHETE, OLHAR, OBJECAO, IMITAR, POQUER,
 	TORRE, MANTEIGA, REVIVER, COLHEITA, CONSTRUIR, COCHILO,
-	PLANO, DOMO, LOBO, TURBO, ESFORCO, PARRY }
+	PLANO, DOMO, LOBO, TURBO, ESFORCO, CHUTE }
 const PODER_TIPO: Array[int] = [Poder.INVESTIDA, Poder.PROTEGE, Poder.FRENESI, Poder.ATORDOA, Poder.FURIA, Poder.CANTEIRO, Poder.SAQUE, Poder.CANHAO, Poder.RAIO,
 	Poder.PISAO, Poder.FUMACA, Poder.RAIZ, Poder.EMPURRA, Poder.DRENO, Poder.CANCAO, Poder.TRIAGEM, Poder.BOLA, Poder.MISSEIS, Poder.TROVOADA, Poder.GELO, Poder.MARCA,
 	Poder.INVOCA, Poder.TELEPORTE, Poder.PUXA, Poder.ENXAME,
 	Poder.SALVAMENTO, Poder.RICOCHETE, Poder.OLHAR, Poder.OBJECAO, Poder.IMITAR, Poder.POQUER,
 	Poder.TORRE, Poder.MANTEIGA, Poder.REVIVER, Poder.COLHEITA, Poder.CONSTRUIR, Poder.COCHILO,
-	Poder.PLANO, Poder.DOMO, Poder.LOBO, Poder.TURBO, Poder.ESFORCO, Poder.PARRY]
+	Poder.PLANO, Poder.DOMO, Poder.LOBO, Poder.TURBO, Poder.ESFORCO, Poder.CHUTE]
 ## Poderes que o bicho fantasiado NÃO usa (o fantasiado só ganha o bônus de kit).
 const PODER_SO_GATO: Array[int] = [Poder.SALVAMENTO, Poder.OBJECAO, Poder.IMITAR, Poder.MANTEIGA, Poder.REVIVER, Poder.CONSTRUIR, Poder.COCHILO, Poder.PLANO, Poder.DOMO, Poder.LOBO]
 ## Fantasias cujo poder o Imitar não copia (evita laço infinito).
@@ -446,7 +446,7 @@ const PODER_NOME: Array[String] = [
 	"Clones", "Teletransporte", "Arrastão", "Enxame",
 	"Salvamento", "Flecha ricochete", "Olhar da Penitência", "Objeção!", "Imitar", "Mão de pôquer",
 	"Torre de ervilha", "Manteiga escorregadia", "Reviver", "Colheita", "Construir", "Cochilo",
-	"Plano de ataque", "Domo refletor", "Lobo solitário", "Turbo", "Esforço máximo", "Parry de faca",
+	"Plano de ataque", "Domo refletor", "Lobo solitário", "Turbo", "Esforço máximo", "Chute giratório",
 ]
 const PODER_DICA: Array[String] = [
 	"investe pela fileira, fere quem cruza, derruba o primeiro e fica protegido",
@@ -491,7 +491,7 @@ const PODER_DICA: Array[String] = [
 	"os bichos em volta só batem nele, que apanha menos e bate mais forte",
 	"atropela em linha, protegido, e deixa um rastro de chamas azuis",
 	"regenera e bate mais forte por uns segundos; se cair, levanta e explode",
-	"apara golpes sem dano, atordoa quem bateu e termina num chute giratório",
+	"chuta em volta: empurra e atordoa; quem já estava atordoado apanha muito",
 ]
 const CONJUNTO_MIN := 2   # peças para o bônus parcial; com as 4, bônus completo
 
@@ -571,7 +571,7 @@ static func conjunto_bonus(c: int, grau: int) -> String:
 			return "+%d%% de chance de golpe crítico" % int(round(v * 100.0))
 		BONUS_BARREIRA:
 			if g == 1 and c == Conjunto.MIMIAU:
-				return "Disfarce: começa a luta disfarçado; anula o 1º golpe e atordoa %s s quem bateu" % Simulacao.num(v)
+				return "Disfarce anula o 1º golpe, atordoa %s s; +%d%% dano; Furioso" % [Simulacao.num(v), int(round(Balanco.DISFARCE_KIT_DANO * 100.0))]
 			return "anula um golpe a cada %d s" % int(v)
 		BONUS_CARGA:
 			return "o poder recarrega %d%% mais depressa" % int(round(v * 100.0))
@@ -589,6 +589,6 @@ static func conjunto_bonus(c: int, grau: int) -> String:
 			return "mais dano com menos vida (até +%d%%)" % int(round(v * 100.0))
 		BONUS_VELOCIDADE:
 			return "anda %d%% mais rápido" % int(round(v * 100.0))
-		BONUS_FURO:
-			return "tiros inimigos ferem %d%% menos" % int(round(v * 100.0))
+		BONUS_APARA:
+			return "Aparar com a faca: %d%% dos golpes de perto são aparados e devolvidos" % int(round(v * 100.0))
 	return ""
