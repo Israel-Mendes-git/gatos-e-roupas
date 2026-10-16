@@ -45,12 +45,12 @@ const _PAL: Array = [
 	{"a": Color("fadb57"), "A": Color("fff59e"), "d": Color("cca32e"), "b": Color("eb3333"), "B": Color("ff8066"), "e": Color("734d24")},   # mimiau
 	{"a": Color("8c40d9"), "A": Color("bf80f2"), "d": Color("592194"), "b": Color("4dc24d"), "B": Color("99e68c"), "e": Color("ffd638")},   # jimiau
 	# lote 2 da expansão (31 a 36)
-	{"a": Color("5cc84a"), "A": Color("9af07a"), "d": Color("2f8030"), "b": Color("2f7a34"), "B": Color("7ad060"), "e": Color("2a2630")},   # disparamiau
+	{"a": Color("6fc845"), "A": Color("a9e27b"), "d": Color("43923a"), "b": Color("2f9440"), "B": Color("58b64c"), "e": Color("0e1a12")},   # disparamiau
 	{"a": Color("f2de59"), "A": Color("fff59e"), "d": Color("c8b030"), "b": Color("4aa83a"), "B": Color("8ad860"), "e": Color("f2c230")},   # milhau
-	{"a": Color("ffb826"), "A": Color("ffe070"), "d": Color("c88010"), "b": Color("5aa83a"), "B": Color("8ad860"), "e": Color("6a4220")},   # giramiau
-	{"a": Color("b28c59"), "A": Color("d9b886"), "d": Color("7c5c34"), "b": Color("4a74c0"), "B": Color("80a8e8"), "e": Color("5aa83a")},   # stardew miaulley
-	{"a": Color("6b4423"), "A": Color("8f5e30"), "d": Color("3e2511"), "b": Color("33b3b3"), "B": Color("80e0e0"), "e": Color("2e58c8")},   # miaucraft
-	{"a": Color("4d8c8c"), "A": Color("80c0c0"), "d": Color("2e5c5c"), "b": Color("f2e6c0"), "B": Color("fff8e0"), "e": Color("2a2630")},   # miaulax
+	{"a": Color("f4c430"), "A": Color("ffe98a"), "d": Color("d99a12"), "b": Color("7a4a1e"), "B": Color("9a6a32"), "e": Color("1a0f08")},   # giramiau
+	{"a": Color("e3bf6a"), "A": Color("f5de9a"), "d": Color("b88e40"), "b": Color("3f66b0"), "B": Color("6b90d0"), "e": Color("6a4220")},   # stardew miaulley
+	{"a": Color("4a2f1b"), "A": Color("5e3f25"), "d": Color("33200f"), "b": Color("3b3fa0"), "B": Color("5a5fc8"), "e": Color("35e6c4")},   # miaucraft
+	{"a": Color("3b7f86"), "A": Color("62a8a8"), "d": Color("285a66"), "b": Color("f6e7bd"), "B": Color("fff6d8"), "e": Color("1b2a30")},   # miaulax
 	# lote 3 da expansão (37 a 42)
 	{"a": Color("3a6ee8"), "A": Color("7aa0ff"), "d": Color("1f3fa0"), "b": Color("4a9a3a"), "B": Color("8ad060"), "e": Color("ffd138")},   # leonarmiau
 	{"a": Color("9955cc"), "A": Color("c490f0"), "d": Color("5e2f8c"), "b": Color("4a9a3a"), "B": Color("8ad060"), "e": Color("5ad4ff")},   # donatemiau
@@ -69,10 +69,11 @@ const _PAL_CORPO: Dictionary = {
 	10: {"a": Color("2c2e3c"), "A": Color("50546a"), "d": Color("16161e")},
 	23: {"a": Color("5a7894"), "A": Color("98b4cc"), "d": Color("34485e")},
 	30: {"a": Color("f6f2ea"), "A": Color("ffffff"), "d": Color("bfb9c6")},
+	31: {"a": Color("2f9440"), "A": Color("58b64c"), "d": Color("1d5e2c"), "b": Color("8edb5a"), "B": Color("d6f5a8")},
 	32: {"a": Color("4aa83a"), "A": Color("8ad860"), "d": Color("2f7a34"), "b": Color("f2de59")},
-	33: {"a": Color("4aa83a"), "A": Color("8ad860"), "d": Color("2f7a34")},
-	34: {"a": Color("3e62a8"), "A": Color("6a90d8"), "d": Color("24407a"), "b": Color("d8323a"), "B": Color("f4f0e8")},
-	35: {"a": Color("33b3c0"), "A": Color("7ae0e8"), "d": Color("1f7a88"), "b": Color("3a3ca8"), "B": Color("6a6ae0")},
+	33: {"a": Color("3c9a3c"), "A": Color("6cc15a"), "d": Color("256e2e"), "b": Color("f4c430"), "B": Color("ffe98a")},
+	34: {"a": Color("3f66b0"), "A": Color("6b90d0"), "d": Color("284585"), "b": Color("c8453c"), "B": Color("e8776a")},
+	35: {"a": Color("2eb8b8"), "A": Color("5ed6d0"), "d": Color("1b8a8c"), "b": Color("3b3fa0"), "B": Color("5a5fc8")},
 }
 static var corpo_vez: bool = false
 
@@ -393,37 +394,37 @@ const _CHAPEU: Array = [
 		".ooooooooo."]},
 	# 33 giramiau: pétalas de girassol em volta do rosto, miolo marrom
 	{"cheio": false, "l": [
-		"y..y.y.y..y",
-		".yYyYyYyYy.",
-		"yYyyeeeyyYy",
-		"yyyeedeeyyy",
-		".yoeeeeeoy.",
+		"d..a.A.a..d",
+		".dAaAaAaAd.",
+		"aAabBBBbaAa",
+		"aaabebebaaa",
+		".aabeeebaa.",
 		"..ooooooo.."]},
 	# 34 stardew miaulley: chapéu de palha de aba larga com fita verde e um broto
 	{"cheio": false, "l": [
-		".....l.l.....",
-		"......e......",
 		"....ooooo....",
-		"...oAaaaao...",
-		"..oAaAaaaao..",
-		"..oeeeeeeeo..",
-		".oAaAdAaAdAo.",
-		"ooooooooooooo"]},
+		"...oAAAaao...",
+		"...oaaaaao...",
+		"...oeeeeeo...",
+		".oAAAAaaaaao.",
+		"oaaaaaaaaaaao",
+		".odddddddddo.",
+		"..ooooooooo.."]},
 	# 35 miaucraft: cabelo de bloco do Steve, com a franja quadrada
 	{"cheio": true, "l": [
 		"ooooooooooo",
-		"oaAaaaAaaAo",
-		"oaaaAaaaaao",
-		"oddaaaaaddo",
-		"od.......do"]},
+		"oAAAAAAAAAo",
+		"oaaaaaaaaao",
+		"oaaaaaaaaao",
+		"oaa.....aao"]},
 	# 36 miaulax: capuz de Snorlax, de orelhas pontudas e a mancha creme na testa
 	{"cheio": false, "l": [
-		"..o.....o..",
-		".oao...oao.",
-		"oaaaooooaao",
+		".oo.....oo.",
+		"oaaoooooaao",
 		"oAAaaaaaaao",
-		"oAaaabbbbao",
-		".ooooooooo."]},
+		"oaaaaaaaaao",
+		".obbbbbbbo.",
+		"..ooooooo.."]},
 	# 37 leonarmiau: bandana azul com as duas pontas ao vento
 	{"cheio": false, "l": [
 		"..ooooooo..",
@@ -1126,10 +1127,14 @@ static func _enfeitar_lote2(conj: int, px: Dictionary, area: Dictionary, cx: Rec
 	var xm: int = x0 + cx.size.x / 2
 	match conj:
 		Pecas.Conjunto.DISPARAMIAU:
-			for p in area.keys():
-				var v: Vector2i = p
-				if dentro.call(v) and px[v] == C.call("a") and posmod(v.x * 2 + v.y, 5) == 0:
-					px[v] = C.call("A")
+			# três ervilhas no flanco
+			var ym: int = cx.position.y + cx.size.y / 2
+			for ex in [x0 + 2, x0 + 6, x0 + 10]:
+				for dy in 2:
+					for dx in 2:
+						var ve := Vector2i(ex + dx, ym + dy)
+						if dentro.call(ve):
+							px[ve] = C.call("B") if (dx == 0 and dy == 0) else C.call("b")
 			_gola(px, tp, x1, C.call("B"), C.call("o"))
 		Pecas.Conjunto.MILHAU:
 			for p in area.keys():
@@ -1145,17 +1150,14 @@ static func _enfeitar_lote2(conj: int, px: Dictionary, area: Dictionary, cx: Rec
 		Pecas.Conjunto.GIRAMIAU:
 			for x in range(x0 + 1, x1, 2):
 				if bs.has(x) and dentro.call(Vector2i(x, bs[x] - 1)):
-					px[Vector2i(x, bs[x] - 1)] = _COMUM["y"]
-			for x in [x0 + 3, x1 - 3]:
-				if tp.has(x) and dentro.call(Vector2i(x, tp[x] + 2)):
-					px[Vector2i(x, tp[x] + 2)] = _COMUM["y"]
+					px[Vector2i(x, bs[x] - 1)] = C.call("A")
 		Pecas.Conjunto.STARDEW_MIAULLEY:
 			for x in range(x0, x1 + 1):
 				if not tp.has(x):
 					continue
 				for y in range(tp[x] + 1, tp[x] + 3):
 					if dentro.call(Vector2i(x, y)):
-						px[Vector2i(x, y)] = C.call("b") if (x + y) % 2 == 0 else C.call("B")
+						px[Vector2i(x, y)] = C.call("B") if y == tp[x] + 1 else C.call("b")
 			for x in [x1 - 3, x0 + 3]:
 				if not tp.has(x):
 					continue
@@ -1174,14 +1176,8 @@ static func _enfeitar_lote2(conj: int, px: Dictionary, area: Dictionary, cx: Rec
 				var v: Vector2i = p
 				if not dentro.call(v) or not tp.has(v.x):
 					continue
-				var h: int = bs[v.x] - tp[v.x]
-				if v.y >= tp[v.x] + roundi(h * 0.55) and px[v] != C.call("d"):
-					px[v] = C.call("b")
-				if posmod(v.x * 7 + v.y * 13, 5) == 0:
-					if px[v] == C.call("a"):
-						px[v] = C.call("A")
-					elif px[v] == C.call("b"):
-						px[v] = C.call("B")
+				if v.x < xm and px[v] != C.call("d"):
+					px[v] = C.call("B") if px[v] == C.call("A") else C.call("b")
 		Pecas.Conjunto.MIAULAX:
 			var cyy: float = cx.position.y + cx.size.y * 0.55
 			for p in area.keys():
