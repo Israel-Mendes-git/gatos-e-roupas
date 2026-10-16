@@ -19,7 +19,7 @@ const TROFEU_CHEFE_ATO: Array[int] = [5, 6, 8]   # por chefe derrotado, por ato
 const TROFEU_CHEFE := 5              # (o do primeiro ato; para textos)
 
 ## Módulos: o índice é o do chefe que o libera (Fases.Chefe): vencer o chefe da fase N libera o módulo N-1.
-## Os 5 primeiros vêm dos chefes da casa; os 5 últimos, dos chefes de fora (Toupeira, Gambá, Coruja, Vira-Lata, Texugo).
+## Os 5 primeiros vêm dos chefes da casa; os 5 últimos, dos chefes de fora (Toupeira, Gambá, Esquilo, Vira-Lata, Texugo).
 enum Modulo { RATOEIRA, CATAPULTA, SIRENE, BALISTA, CALDEIRAO, FOSSO, REPELENTE, LUNETA, CASINHA, REFORCO }
 const MODULOS_POR_ABA := 5
 const MODULO_NOME: Array[String] = ["Ratoeira", "Catapulta de ração", "Sirene", "Balista de penas", "Caldeirão", "Fosso", "Repelente", "Luneta", "Casinha", "Reforço"]

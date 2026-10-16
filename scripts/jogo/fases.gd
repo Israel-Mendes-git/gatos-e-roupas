@@ -3,7 +3,7 @@ extends RefCounted
 ## Dados da campanha: os cômodos da casa, a família de bichos invasores e o chefe de cada um.
 ## (Os nomes internos dos enums vêm de quando os inimigos eram brinquedos: LATA = ratos, PELUCIA = guaxinins,
 ## CORDA = raposas, PORCELANA = corvos, MASSINHA = sapos; GENERAL = Rei dos Ratos, URSO = Guaxinim Glutão,
-## ROBO = Raposa Ligeira, BONECA = Corvo Velho, REI_MASSINHA = Sapo-Rei.)
+## ROBO = Raposa Ligeira, BONECA = Corvo Velho, REI_MASSINHA = Sapo-Rei; e CORUJA = Esquilo Acrobata, que entrou no lugar da coruja.)
 
 enum Familia { LATA, PELUCIA, CORDA, PORCELANA, MASSINHA }
 enum Chefe { GENERAL, URSO, ROBO, BONECA, REI_MASSINHA, TOUPEIRA, GAMBA, CORUJA, VIRALATA, TEXUGO }
@@ -50,7 +50,7 @@ const CHEFE_NOME: Array[String] = [
 	"Sapo-Rei",
 	"Toupeira Escavadora",
 	"Gambá Fedido",
-	"Coruja da Meia-Noite",
+	"Esquilo Acrobata",
 	"Vira-Lata Chefão",
 	"Texugo-Rei",
 ]
@@ -62,7 +62,7 @@ const CHEFE_ATAQUE: Array[String] = [
 	"Regenera e se desfaz em sapinhos ao cair. Poder: Teia (prende os gatos mais perto)",
 	"Cava e some; reaparece em cima do gato mais atrás. Poder: Arrastão (puxa os gatos para o buraco)",
 	"O fedor deixa os gatos lentos e, de tempos em tempos, tontos. Poder: Enxame",
-	"Atira de longe e dá rasantes que ferem a fileira inteira. Poder: Relâmpago",
+	"Arremessa bolotas de longe e dá saltos acrobáticos que ferem a fileira inteira. Poder: Relâmpago",
 	"Late e joga os gatos para trás; chama a matilha. Poder: Fúria",
 	"Couro grosso: golpe fraco não fere. Ferido, ataca em dobro. Poder: Bola de espinhos",
 ]
@@ -74,7 +74,7 @@ const CHEFE_FRAQUEZA: Array[String] = [
 	"Explosões ferem em dobro",
 	"Sai tonta do buraco: um instante parada e frágil",
 	"Gás inflamável: fogo fere em dobro",
-	"Explosões a derrubam do ar: ferem em dobro",
+	"Explosões o derrubam no meio do salto: ferem em dobro",
 	"Depois de latir fica sem fôlego e recebe dano em dobro",
 	"Varinha, poderes e fogo passam pelo couro",
 ]

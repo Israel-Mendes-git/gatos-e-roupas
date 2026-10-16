@@ -267,7 +267,7 @@ const CHEFE_TORRE_DANO := 2         # tijolos por golpe do chefe na torre
 const CHEFE_NIVEL_BONUS := 1        # níveis das peças do chefe acima dos inimigos da onda
 const CHEFE_LACAIOS := 0.6          # fração dos inimigos comuns numa onda de chefe
 const CHEFE_ATRASO := 2.5           # segundos depois do último lacaio
-const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 0.88, 1.0, 1.0, 0.8, 0.64, 0.8, 0.9]   # acerto por chefe: nenhum passa de ~2,1x a altura de um gato (a coruja é alta: em pé ocupa muito)
+const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 0.88, 1.0, 1.0, 0.8, 0.8, 0.8, 0.9]   # acerto por chefe: nenhum passa de ~2,1x a altura de um gato
 const CHEFE_ESCALA := 1.7           # tamanho na tela
 
 # ---------- Chefes de cada fase (ver Fases.Chefe) ----------
@@ -298,6 +298,7 @@ const GAMBA_LENTIDAO := 0.6
 const GAMBA_GAS_T := 9.0            # segundos entre nuvens que atordoam
 const GAMBA_GAS_ATORDOA := 1.0
 const GAMBA_FOGO := 2.0
+# CORUJA = Esquilo Acrobata (chefe do Telhado): arremessa bolotas de longe e o "rasante" é o salto acrobático pela faixa
 const CORUJA_ALCANCE := 320.0
 const CORUJA_VIDA := 0.8
 const CORUJA_RASANTE_T := 10.0
@@ -782,7 +783,7 @@ const CHEFE_PODER_CONJ: Array[int] = [
 	Pecas.Conjunto.ARANHA,       # Sapo-Rei: Teia (prende os gatos mais perto)
 	Pecas.Conjunto.TUBARAO,      # Toupeira: Arrastão (puxa os gatos para o buraco)
 	Pecas.Conjunto.ABELHA,       # Gambá: Enxame (nuvem fedida)
-	Pecas.Conjunto.MAGO,         # Coruja: Relâmpago
+	Pecas.Conjunto.MAGO,         # Esquilo Acrobata: Relâmpago
 	Pecas.Conjunto.VIKING,       # Vira-Lata: Fúria
 	Pecas.Conjunto.OURICO,       # Texugo-Rei: Bola de espinhos
 ]

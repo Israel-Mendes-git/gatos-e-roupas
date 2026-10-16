@@ -2928,7 +2928,7 @@ func _draw() -> void:
 		if uu2.equipe == 1 and sim.prioritario(uu2):
 			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * esc_u - (22.0 if n_ico > 0 else 0.0)), 9.0, 1.0)
 	_desenhar_avisos()
-	# projéteis: torre (estrela dourada grande), gatos (cometa azulado), bichos (losango vermelho)
+	# projéteis: torre (estrela dourada grande), gatos (cometa azulado), bichos (losango vermelho), Esquilo Acrobata (bolota)
 	for pr in sim.projeteis:
 		var d: Dictionary = pr
 		var alvo: Unidade = d["alvo"]
@@ -2949,6 +2949,12 @@ func _draw() -> void:
 				V.quadro(self, pp.x - sx * (8.0 + tr * 7.0), pp.y - 1.5, 6.0 - tr * 1.5, 3.0, Color(0.7, 0.88, 1.0))
 			V.disco_c(self, pp, 4.0, Color(0.78, 0.92, 1.0), Color(0.1, 0.2, 0.45))
 			V.disco(self, pp + Vector2(-1, -1), 2.0, Color(1, 1, 1))
+		elif dono.chefe and dono.chefe_tipo == Fases.Chefe.CORUJA:
+			# bolota do Esquilo Acrobata: noz com chapeuzinho, girando no ar
+			var gira: bool = int(float(d["x"]) / 24.0) % 2 == 0
+			V.disco_c(self, pp, 4.5, Color(0.79, 0.54, 0.24), Color(0.3, 0.17, 0.07))
+			V.quadro(self, pp.x - 5.0, pp.y - (6.0 if gira else 1.0), 10.0 if gira else 4.0, 4.0 if gira else 10.0, Color(0.48, 0.32, 0.19))
+			V.disco(self, pp + Vector2(-1.5, 1.0), 1.5, Color(0.95, 0.75, 0.45))
 		else:
 			for tr in 3:
 				V.quadro(self, pp.x - sx * (8.0 + tr * 7.0), pp.y - 1.5, 6.0 - tr * 1.5, 3.0, Color(1.0, 0.45, 0.25))
