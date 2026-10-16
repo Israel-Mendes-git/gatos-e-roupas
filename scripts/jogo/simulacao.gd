@@ -1476,9 +1476,10 @@ func _herancas_agem(u: Unidade, dt: float) -> bool:
 			return false
 	return true
 
-## Intervalo até o próximo poder: o padrão, menos o kit do Jimiau e (se `com_menos`) os segundos tirados por Alvo travado.
+## Intervalo até o próximo poder: o padrão (acertado por fantasia), menos o kit do Jimiau e (se `com_menos`) os segundos tirados por Alvo travado.
 func _intervalo_poder(u: Unidade, com_menos: bool = true) -> float:
-	return maxf(1.0, Balanco.PODER_INTERVALO * (1.0 - u.recarga_menos) - (u.poder_cd_menos if com_menos else 0.0))
+	var base: float = Balanco.PODER_INTERVALO * float(Balanco.PODER_KIT_INTERVALO.get(u.poder_conj, 1.0))
+	return maxf(1.0, base * (1.0 - u.recarga_menos) - (u.poder_cd_menos if com_menos else 0.0))
 
 ## Fração da carga do poder do gato (1 = pronto).
 func carga_poder(u: Unidade) -> float:
@@ -1512,7 +1513,7 @@ func _tele_marca(v: Unidade, d: float) -> void:
 func _usar_poder(u: Unidade) -> bool:
 	_conj_tele = u.poder_conj
 	_eq_tele = u.equipe
-	_fi = _fator_inimigo(u) if u.equipe == 1 else 1.0
+	_fi = _fator_inimigo(u) if u.equipe == 1 else (1.0 if em_heranca else float(Balanco.PODER_KIT_FORCA.get(u.poder_conj, 1.0)))
 	var ok: bool = _usar_poder_i(u)
 	if ok:
 		if not (u.poder_conj in Pecas.IMITAR_EXCLUI):
@@ -2221,16 +2222,16 @@ func _poder_pisao(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base
 
 ## Poder CANTEIRO: corpo separado de _usar_poder_i.
 func _poder_canteiro(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
-	var ferido_c: bool = false
+	var ferido_c: Unidade = null   # o canteiro brota embaixo do aliado mais ferido (no fundo, em volta do dono, não pegava ninguém)
 	for v in meus:
-		if v.vivo and v.vida < v.vida_max * 0.9:
-			ferido_c = true
-	if not ferido_c:
+		if v.vivo and v.vida < v.vida_max * 0.9 and (ferido_c == null or v.vida / v.vida_max < ferido_c.vida / ferido_c.vida_max):
+			ferido_c = v
+	if ferido_c == null:
 		return false
 	var fr_c: float = _frac_apoio()
-	zonas.append({"tipo": "canteiro", "x": u.x, "y": u.y, "t": Balanco.PODER_CANTEIRO_T * fr_c, "dur": Balanco.PODER_CANTEIRO_T * fr_c,
+	zonas.append({"tipo": "canteiro", "x": ferido_c.x, "y": ferido_c.y, "t": Balanco.PODER_CANTEIRO_T * fr_c, "dur": Balanco.PODER_CANTEIRO_T * fr_c,
 		"raio": Balanco.PODER_CANTEIRO_RAIO, "cura": Balanco.PODER_CANTEIRO_CURA * fr_c, "dono": u, "eq": u.equipe, "so": u if em_heranca else null, "conj": u.poder_conj})
-	pontos.append(Vector2(u.x, u.y))
+	pontos.append(Vector2(ferido_c.x, ferido_c.y))
 	extra["raio"] = Balanco.PODER_CANTEIRO_RAIO
 	extra["dur"] = Balanco.PODER_CANTEIRO_T * fr_c
 	return true
@@ -2300,6 +2301,8 @@ func _poder_atordoa_empurra_giro(u: Unidade, meus: Array[Unidade], outros: Array
 		raio = Balanco.PODER_ATORDOA_RAIO
 	elif u.poder == Pecas.Poder.EMPURRA:
 		raio = Balanco.PODER_EMPURRA_RAIO
+	if u.equipe == 0 and _fi > 1.0:
+		raio *= sqrt(_fi)   # fantasia reforçada (PODER_KIT_FORCA) alcança mais longe
 	var perto2: Array[Unidade] = []
 	for v in outros:
 		if _dentro(v, u.x, u.y, raio):
@@ -2780,7 +2783,7 @@ func _poder_cochilo(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 			perto.append(v)
 	if perto.is_empty() and u.vida >= u.vida_max * 0.9:
 		return false
-	var t: float = Balanco.PODER_COCHILO_HER_T if em_heranca else Balanco.PODER_SONO_T
+	var t: float = Balanco.PODER_COCHILO_HER_T if em_heranca else Balanco.PODER_SONO_T * _fi
 	for v in perto:
 		v.sono_t = maxf(v.sono_t, minf(t, Balanco.PODER_SONO_CHEFE) if v.chefe else t)
 		pontos.append(Vector2(v.x, v.y))
@@ -2790,10 +2793,10 @@ func _poder_cochilo(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 		_tele(u.poder_conj, "cura", u.vida - antes)
 	else:
 		u.cochilo_t = Balanco.PODER_COCHILO_T
-		u.cochilo_cura = Balanco.PODER_COCHILO_CURA / Balanco.PODER_COCHILO_T
+		u.cochilo_cura = Balanco.PODER_COCHILO_CURA * _fi / Balanco.PODER_COCHILO_T
 		u.atordoado_t = 0.0
 		u.alvo = null
-		_tele(u.poder_conj, "cura", u.vida_max * Balanco.PODER_COCHILO_CURA)
+		_tele(u.poder_conj, "cura", u.vida_max * Balanco.PODER_COCHILO_CURA * _fi)
 	_tele(u.poder_conj, "dormiram", float(perto.size()))
 	pontos.append(Vector2(u.x, u.y))
 	extra["raio"] = raio

@@ -162,7 +162,7 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.GIRAMIAU: [1.5, 4.0],              # vida/s nos aliados em volta
 	Pecas.Conjunto.STARDEW_MIAULLEY: [0.15, 0.35],    # sementes: fração da vida curada nos aliados ao cair
 	Pecas.Conjunto.MIAUCRAFT: [12.0, 30.0],           # explode ao morrer (Circo)
-	Pecas.Conjunto.MIAULAX: [0.2, 0.5],               # vida a mais (Guardião)
+	Pecas.Conjunto.MIAULAX: [0.1, 0.15],              # vida a mais (Guardião)
 	# lote 3
 	Pecas.Conjunto.LEONARMIAU: [0.1, 0.25],           # aliados por perto: dano a mais (aura do Rei)
 	Pecas.Conjunto.DONATEMIAU: [0.08, 0.18],          # chance de o golpe atordoar
@@ -438,6 +438,26 @@ const NOMES_BONECOS: Array[String] = ["Fiapo", "Botão", "Retalho", "Feltro", "N
 
 # ---------- Poder especial da fantasia completa ----------
 const PODER_INTERVALO := 9.0        # segundos entre usos
+# Acerto da força do poder por fantasia (dano, duração e cura do poder da fantasia completa no gato; não vale para herança nem bicho).
+const PODER_KIT_FORCA: Dictionary = {
+	Pecas.Conjunto.JARDINEIRO: 1.5, Pecas.Conjunto.ESTELAR: 2.0, Pecas.Conjunto.MORCEGO: 2.2,
+	Pecas.Conjunto.NINJA_FOLHA: 2.5, Pecas.Conjunto.CAVALEIRO: 1.3, Pecas.Conjunto.OURICO: 2.5,
+	Pecas.Conjunto.VIKING: 1.7, Pecas.Conjunto.CIRCO: 3.0, Pecas.Conjunto.FENIX_MIAUSSIMO: 2.3,
+	Pecas.Conjunto.ARANHA: 1.15, Pecas.Conjunto.ROCKET_MIAUGUE: 1.4, Pecas.Conjunto.SOMBRIO: 1.7, Pecas.Conjunto.TUBARAO: 1.2,
+	Pecas.Conjunto.STARDEW_MIAULLEY: 1.8, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
+	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7,
+}
+# Acerto da recarga por fantasia (x PODER_INTERVALO), medido com o simulador (kits=todos): >1 recarrega mais devagar.
+const PODER_KIT_INTERVALO: Dictionary = {
+	Pecas.Conjunto.FERRO: 1.6, Pecas.Conjunto.CAUBOI: 1.55, Pecas.Conjunto.MIAULAX: 1.7,
+	Pecas.Conjunto.JIMIAU: 1.55, Pecas.Conjunto.TROVAO: 1.6, Pecas.Conjunto.GUARDIAO: 1.55,
+	Pecas.Conjunto.JARDINEIRO: 0.6, Pecas.Conjunto.ARANHA: 0.7, Pecas.Conjunto.ESTELAR: 0.6,
+	Pecas.Conjunto.MORCEGO: 0.65, Pecas.Conjunto.NINJA_FOLHA: 0.7, Pecas.Conjunto.CAVALEIRO: 0.75,
+	Pecas.Conjunto.OURICO: 0.75, Pecas.Conjunto.VIKING: 0.75, Pecas.Conjunto.CIRCO: 0.6,
+	Pecas.Conjunto.ROCKET_MIAUGUE: 0.75, Pecas.Conjunto.STARDEW_MIAULLEY: 0.8, Pecas.Conjunto.SOMBRIO: 0.8,
+	Pecas.Conjunto.GELO: 0.8, Pecas.Conjunto.FENIX_MIAUSSIMO: 0.8, Pecas.Conjunto.MEON: 0.85,
+	Pecas.Conjunto.MAGO: 0.9,
+}
 const PODER_PRIMEIRO := 3.5         # segundos até o primeiro uso
 const PODER_DANO := 14.0            # dano de referência (x força média das peças)
 const PODER_RAIO_DANO := 2.5        # multiplicadores do dano de referência
@@ -665,7 +685,7 @@ const PODER_CONSTRUIR_HER_T := 5.0
 # Cochilo (Miaulax): o gato dorme e se cura; o ronco adormece os inimigos em volta
 const PODER_COCHILO_T := 2.5
 const PODER_COCHILO_DANO := 0.5        # dano recebido durante o sono
-const PODER_COCHILO_CURA := 0.5 
+const PODER_COCHILO_CURA := 0.35 
 const PODER_SONO_RAIO := 120.0
 const PODER_SONO_T := 3.0              # acorda antes se levar qualquer dano
 const PODER_SONO_CHEFE := 1.2
