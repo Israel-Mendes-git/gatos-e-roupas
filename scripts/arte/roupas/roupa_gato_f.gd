@@ -480,19 +480,37 @@ static func _montar(tipo: int, fase: int, chama: int, maxima: bool, anim: float)
 			]), _PAL_ARQ, true]]
 		# ---------------------------------------------------------------- Motoqueiro Miausma
 		Pecas.Tipo.CAVEIRA_CHAMAS:
-			# caveira em chamas no lugar da cabeça (x 2..11, y -18..-10, o crânio todo): as orelhas somem sob o osso e as chamas saem do topo;
-			# as órbitas guardam um brilho de brasa
-			var f0: Array = ["..f..y..f.", ".fFf.fF.fF", "fFyFfFyFfF", "FfyFFfyFfF"] if chama == 0 else [".f..y..f..", "fF.fFf.fFf", "FfFyFfFyFf", "FyfFFfyFfF"]
-			return [_linhas(RoupaGato.Onde.CABECA, 2, -22, f0 + [
-				"..oooooo..",
-				".owwwwwwo.",
-				"owwwWwwWwo",
-				"owkkwwkkwo",
-				"owkfwwkfwo",
-				"owwwkkwwwo",
-				".owwwwwwo.",
-				".owkwwkwo.",
-				"..oooooo..",
+			# caveira em chamas no lugar da cabeça (crânio x 2..11, y -18..-10): o fogo envolve o osso, sobe do topo e escorre da nuca para trás
+			# (esquerda) em línguas de alturas diferentes; y miolo claro perto do osso, f laranja, F vermelho nas pontas; as órbitas guardam brasa
+			var fogo: Array = [
+				"....F.........",
+				"...FF....F....",
+				"..FfF.F..Ff...",
+				".FFfyFfF.fyF..",
+				"FfFyyyfyfFfyf.",
+				"FfyfyooooooyF.",
+				"FfyFowwwwwwo..",
+				"FfyowwwWwwWwo.",
+				".Fyowkkwwkkwo.",
+				"..Fowkfwwkfwo.",
+				"...owwwkkwwwo.",
+			] if chama == 0 else [
+				".....F........",
+				"..F.FF...F....",
+				".FF.FfF.FfF...",
+				"FfFfyfFFfyfF..",
+				".FfyyyfyFfyf..",
+				"FfFyyooooooyfF",
+				"FfyyowwwwwwoF.",
+				"FFyowwwWwwWwo.",
+				"..yowkkwwkkwo.",
+				".F.owkfwwkfwo.",
+				"...owwwkkwwwo.",
+			]
+			return [_linhas(RoupaGato.Onde.CABECA, -1, -23, fogo + [
+				"....owwwwwwo..",
+				"....owkwwkwo..",
+				".....oooooo...",
 			], _PAL_MOTO)]
 		Pecas.Tipo.JAQUETA_ESPETOS:
 			# jaqueta de couro preta: ombreira com espetos, zíper torto, gola, tachas de prata na barra

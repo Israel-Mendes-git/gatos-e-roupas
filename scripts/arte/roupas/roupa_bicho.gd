@@ -40,7 +40,7 @@ const _PAL: Array = [
 	# lote 1 da expansão (25 a 30)
 	{"a": Color("3366f2"), "A": Color("73a6ff"), "d": Color("1a38a8"), "b": Color("db1f29"), "B": Color("ff6157"), "e": Color("ffdb33")},   # super miau
 	{"a": Color("339947"), "A": Color("73d980"), "d": Color("1a5c29"), "b": Color("80511f"), "B": Color("c78f4a"), "e": Color("e62e2e")},   # arqueiro miau
-	{"a": Color("33333f"), "A": Color("666680"), "d": Color("14141c"), "b": Color("ff8519"), "B": Color("ffdb40"), "e": Color("949bb8")},   # motoqueiro miausma
+	{"a": Color("33333f"), "A": Color("666680"), "d": Color("14141c"), "b": Color("ff8519"), "B": Color("ffdb40"), "e": Color("949bb8"), "r": Color("e63814")},   # motoqueiro miausma
 	{"a": Color("385cc7"), "A": Color("7aa3f7"), "d": Color("1f3380"), "b": Color("db1f29"), "B": Color("fafaff"), "e": Color("ffd138")},   # fênix miaussimo
 	{"a": Color("fadb57"), "A": Color("fff59e"), "d": Color("cca32e"), "b": Color("eb3333"), "B": Color("ff8066"), "e": Color("734d24")},   # mimiau
 	{"a": Color("8c40d9"), "A": Color("bf80f2"), "d": Color("592194"), "b": Color("4dc24d"), "B": Color("99e68c"), "e": Color("ffd638")},   # jimiau
@@ -321,17 +321,18 @@ const _CHAPEU: Array = [
 		".oobAaaaaao",
 		"oaaaaaaaaao",
 		"oddddddddo."]},
-	# 27 motoqueiro miausma: caveira em chamas
+	# 27 motoqueiro miausma: caveira em chamas (b laranja, B amarelo no miolo, r vermelho nas pontas; o fogo escorre pela nuca)
 	{"cheio": true, "l": [
-		"..b..B.b...",
-		".bBb.....bBb",
-		".bBBb.bBbBb.",
-		"..ooooooo..",
-		".owwwwwwwo.",
-		"owkkwwwkkwo",
-		"owkbwwwkbwo",
-		".owwwkwwwo.",
-		"..owowowo.."]},
+		"..r.........",
+		".rbr....r...",
+		"rbBr.rbr.rb.",
+		"rbBbrbBbrbBr",
+		"rbBbooooooBr",
+		"rbowwwwwwwo.",
+		"rowkkwwwkkwo",
+		"rowkbwwwkbwo",
+		"..owwwkwwwo.",
+		"...owowowo.."]},
 	# 28 fênix miaussimo: espetos de cabelo varridos para trás
 	{"cheio": false, "l": [
 		"ok.........",
