@@ -1110,6 +1110,21 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null and not sem_chapeu
 	BichoPx.corpo_coberto = pecas.size() > 1 and pecas[1] != null
 	BichoPx.ultimo_quadro = {}
+	if not (parte or filhote):
+		# camadas atrás do corpo do bicho (capa, aljava, roda)
+		for s in [1, 3, 0, 2]:
+			var pa: Peca = pecas[s]
+			if pa == null or not RoupaGatoF.tem_atras(pa.tipo):
+				continue
+			var oa: int = RoupaGato.onde(pa.tipo)
+			var dpa: Vector2 = BichoPx.desloc(oa, fam, tipo, anim, andando, golpe, ct, parado)
+			if dpa.y > 1000.0:
+				continue
+			_tr(c, pos, esc, dir, (RoupaGato.ORIGEM[oa] + dpa) * GATO_K, 0.0, GATO_K)
+			RoupaGato.passo = 1
+			RoupaGato.desenhar(c, pa.tipo, f, anim)
+			RoupaGato.passo = 0
+		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
 	BichoPx.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando and tipo == Unidade.Tipo.LADRAO, filhote, ct, parte, parado)
 	BichoPx.cabeca_coberta = false
 	BichoPx.corpo_coberto = false
@@ -1171,7 +1186,9 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 			# peça de cabeça: cresce junto com o crânio do bicho (mesmo pixel, centro e aba no lugar)
 			RoupaGato.desenhar_esticada(c, p.tipo, f, anim, BichoPx.esticar_cabeca(q))
 		else:
+			RoupaGato.passo = 2
 			RoupaGato.desenhar(c, p.tipo, f, anim)
+			RoupaGato.passo = 0
 		RoupaGato.mascara = {}
 		RoupaGato.molde_quadro = {}
 	if not chefe:
@@ -1228,6 +1245,17 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 	_tr(c, pos, esc, dir)
 	var pel: Array = PELAGENS[posmod(variante, PELAGENS.size())]
 	var tp: Color = pel[1]
+	if not nocaute:
+		# camadas que ficam ATRÁS do corpo (capa, aljava, roda): desenhadas antes do gato, só aparece o que sai da silhueta
+		for s in [1, 3, 0, 2]:
+			var pa: Peca = pecas[s]
+			if pa == null or not RoupaGatoF.tem_atras(pa.tipo):
+				continue
+			_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.onde(pa.tipo), q) * GATO_K, 0.0, GATO_K)
+			RoupaGato.passo = 1
+			RoupaGato.desenhar(c, pa.tipo, f, anim)
+			RoupaGato.passo = 0
+		_tr(c, pos, esc, dir)
 	c.draw_texture_rect_region(GATO_TEX[int(pel[0])], dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
 	if fantasma_slots:
 		# espaços vazios na grade de pixels do sprite
@@ -1255,7 +1283,9 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 			continue
 		var rot: float = -sin(golpe / 0.22 * PI) * 0.5 if (onde == RoupaGato.Onde.BOCA and golpe > 0.0) else 0.0
 		_tr(c, pos, esc, dir, RoupaGato.origem(onde, q) * GATO_K, rot, GATO_K)
+		RoupaGato.passo = 2
 		RoupaGato.desenhar(c, p.tipo, f, anim)
+		RoupaGato.passo = 0
 		if p.raridade > 0 and s == 0:
 			# raridade: cintilação discreta acima da cabeça
 			var tw: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * 5.0 + s)

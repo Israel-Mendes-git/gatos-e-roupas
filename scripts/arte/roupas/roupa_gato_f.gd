@@ -3,10 +3,17 @@ extends RefCounted
 ## Roupas do gato em pixel art, tipos 100 em diante (ver RoupaGato para as convenções): expansão das fantasias, lote 1
 ## (Super Miau 100-103, Arqueiro Miau 104-107, Motoqueiro Miausma 108-111, Fênix Miaussimo 112-115, Mimiau 116-119, Jimiau 120-123).
 ##
+## COMO ENCAIXA NO GATO: as peças daqui são desenhadas em COORDENADAS DO GATO (pixel do gato, x para a frente, y para cima, pé em 0):
+## o gato parado tem a cabeça em x 3..10 / y -17..-10 (orelha em x 6-7), o dorso em y -12, o tronco em x -8..8 / y -12..-6, o rabo
+## em x -11..-6, as patas de trás em x -5..-1 e as da frente em x 5..8. `_lay` converte para o referencial do lugar onde a peça
+## fica presa (RoupaGato.ORIGEM), então o desenho acompanha o gato na animação. Cada peça cobre a parte do gato que ela veste
+## (nada flutua): capuz e franja abraçam o crânio, roupa de corpo cobre o tronco, capa/aljava/roda ficam ATRÁS do corpo.
+##
+## CAMADAS ATRÁS: uma camada [x, y, linhas, paleta, true] é desenhada ANTES do gato (RoupaGato.passo = 1; ver Desenho._gato), então só
+## aparece o que sai da silhueta (a capa que esvoaça, o topo da aljava, a roda atrás da anca). As demais camadas vão por cima.
+##
 ## FALLBACK: enquanto uma peça não tem arte própria em `_camadas`, desenha a silhueta de uma peça do mesmo espaço (cabeça, corpo,
 ## mão ou acessório do lado de fora, em RoupaGatoE.PECAS) tingida com a cor da fantasia.
-## COMO O ARTISTA ENTRA: devolva em `_camadas` as camadas [x, y, linhas, paleta] da peça (mesmo formato de RoupaGatoE._camadas);
-## `caixa` e `desenhar` já usam o que vier de lá. Descrição visual de cada peça: para_arte.md.
 
 const PRIMEIRO := 100
 const _MOLDE_FALLBACK: Array[int] = [Pecas.Tipo.CAPACETE_AZUL, Pecas.Tipo.COLETE_LISTRADO, Pecas.Tipo.KUNAI, Pecas.Tipo.TANQUE]   # por espaço
@@ -16,9 +23,15 @@ static func onde(tipo: int) -> int:
 	match tipo:
 		Pecas.Tipo.CAPA_VERMELHA:
 			return RoupaGato.Onde.PESCOCO
-		Pecas.Tipo.DISTINTIVO:
+		Pecas.Tipo.DISTINTIVO, Pecas.Tipo.FICHAS:
 			return RoupaGato.Onde.CORPO
+		Pecas.Tipo.PUNHO_ACO:
+			return RoupaGato.Onde.PATAS
 	return -1
+
+## Peças com camada atrás do corpo do gato (ver o cabeçalho).
+static func tem_atras(tipo: int) -> bool:
+	return tipo == Pecas.Tipo.CAPA_VERMELHA or tipo == Pecas.Tipo.ALJAVA or tipo == Pecas.Tipo.RODA_FOGO
 
 # ------------------------------------------------------------------ paletas
 ## Super Miau: o contorno azul-noite, a/b/d azul (médio, claro, sombra), y amarelo, r/R/D vermelho (médio, claro, sombra),
@@ -26,31 +39,34 @@ static func onde(tipo: int) -> int:
 const _PAL_SUPER := {
 	"o": Color(0.05, 0.08, 0.25), "a": Color(0.2, 0.42, 0.95), "b": Color(0.5, 0.7, 1.0), "d": Color(0.1, 0.22, 0.68),
 	"y": Color(1.0, 0.86, 0.2), "r": Color(0.86, 0.12, 0.16), "R": Color(1.0, 0.38, 0.34), "D": Color(0.6, 0.06, 0.1),
-	"k": Color(0.27, 0.28, 0.42), "K": Color(0.68, 0.74, 0.98), "s": Color(0.9, 0.92, 0.98), "S": Color(0.55, 0.6, 0.74),
-	"C": Color(0.36, 0.02, 0.07),
+	"k": Color(0.1, 0.1, 0.16), "K": Color(0.42, 0.46, 0.66), "s": Color(0.9, 0.92, 0.98), "S": Color(0.55, 0.6, 0.74),
+	"C": Color(0.36, 0.02, 0.07), "O": Color(0.04, 0.03, 0.08),
 }
-## Arqueiro: o verde-floresta, a/b/d verde (médio, claro, sombra), k máscara, r/R pluma, m/M madeira (médio, claro),
-## t barbante, g fivela, c/n ponta de bomba e de rede, e luva de boxe, w pena.
+## Arqueiro: o verde-floresta, a/b/d verde (médio, claro, sombra), k preto, r/R pluma, m/M couro e madeira (médio, claro),
+## t barbante, g fivela, c/n ponta de bomba e de rede, e luva de boxe, w branco, h verde da máscara.
 const _PAL_ARQ := {
-	"o": Color(0.05, 0.16, 0.08), "a": Color(0.2, 0.6, 0.28), "b": Color(0.5, 0.85, 0.5), "d": Color(0.1, 0.36, 0.16),
-	"k": Color(0.08, 0.08, 0.1), "r": Color(0.9, 0.18, 0.18), "R": Color(1.0, 0.55, 0.45),
-	"m": Color(0.55, 0.32, 0.12), "M": Color(0.82, 0.58, 0.3), "t": Color(0.97, 0.94, 0.82), "g": Color(1.0, 0.82, 0.2),
+	"o": Color(0.04, 0.14, 0.07), "a": Color(0.2, 0.62, 0.28), "b": Color(0.52, 0.86, 0.5), "d": Color(0.1, 0.38, 0.17),
+	"k": Color(0.06, 0.06, 0.08), "r": Color(0.9, 0.18, 0.18), "R": Color(1.0, 0.55, 0.45),
+	"m": Color(0.55, 0.32, 0.12), "M": Color(0.84, 0.6, 0.32), "t": Color(0.97, 0.94, 0.82), "g": Color(1.0, 0.82, 0.2),
 	"c": Color(0.18, 0.18, 0.22), "n": Color(0.75, 0.8, 0.85), "e": Color(0.9, 0.2, 0.2), "y": Color(1.0, 0.9, 0.3),
-	"w": Color(1, 1, 1),
+	"w": Color(1, 1, 1), "h": Color(0.07, 0.3, 0.14), "N": Color(0.36, 0.2, 0.08),
 }
 ## Motoqueiro: o preto, k/K jaqueta (médio, brilho), w/W osso (claro, sombra), f/F/y fogo (laranja, vermelho, amarelo),
 ## s/S tachas de prata, c/C corrente (escuro, claro), a pneu, e raio.
 const _PAL_MOTO := {
-	"o": Color(0.03, 0.02, 0.05), "k": Color(0.2, 0.2, 0.27), "K": Color(0.42, 0.42, 0.55),
+	"o": Color(0.03, 0.02, 0.05), "k": Color(0.13, 0.12, 0.17), "K": Color(0.38, 0.38, 0.5),
 	"w": Color(0.96, 0.94, 0.86), "W": Color(0.7, 0.68, 0.6), "f": Color(1.0, 0.52, 0.1), "F": Color(0.9, 0.22, 0.05),
 	"y": Color(1.0, 0.88, 0.25), "s": Color(0.92, 0.94, 1.0), "S": Color(0.58, 0.6, 0.72),
-	"c": Color(0.45, 0.47, 0.55), "C": Color(0.8, 0.82, 0.9), "a": Color(0.14, 0.13, 0.17), "e": Color(0.02, 0.02, 0.03),
+	"c": Color(0.5, 0.52, 0.62), "C": Color(0.86, 0.88, 0.96), "a": Color(0.14, 0.13, 0.17), "e": Color(0.02, 0.02, 0.03),
+	"m": Color(0.4, 0.25, 0.12),
 }
-## Fênix: o azul-noite, a/b/d terno (médio, claro, sombra), k/K cabelo, w/W branco (claro, sombra), r/R gravata, g/G ouro.
+## Fênix: o azul-noite, a/b/d terno (médio, claro, sombra), k/K cabelo, w/W branco (claro, sombra), r/R gravata, g/G ouro,
+## h/H pele da mão.
 const _PAL_FENIX := {
 	"o": Color(0.04, 0.06, 0.2), "a": Color(0.22, 0.36, 0.78), "b": Color(0.48, 0.64, 0.97), "d": Color(0.12, 0.2, 0.5),
-	"k": Color(0.32, 0.27, 0.45), "K": Color(0.72, 0.67, 0.92), "w": Color(0.98, 0.98, 1.0), "W": Color(0.74, 0.78, 0.9),
+	"k": Color(0.1, 0.09, 0.15), "K": Color(0.44, 0.42, 0.62), "w": Color(0.98, 0.98, 1.0), "W": Color(0.74, 0.78, 0.9),
 	"r": Color(0.86, 0.12, 0.16), "R": Color(1.0, 0.4, 0.36), "g": Color(1.0, 0.82, 0.22), "G": Color(0.78, 0.5, 0.1),
+	"h": Color(0.99, 0.8, 0.66), "H": Color(0.85, 0.56, 0.44),
 }
 ## Mimiau: o contorno preto, a/b/d pano amarelo (médio, claro, sombra), k lápis, r bochecha vermelha, s costura,
 ## t fita, p mão de sombra (roxo-escuro), c/C papelão (marrom, claro).
@@ -59,45 +75,199 @@ const _PAL_MIMI := {
 	"k": Color(0.1, 0.08, 0.1), "r": Color(0.92, 0.2, 0.2), "s": Color(0.45, 0.3, 0.14), "t": Color(0.85, 0.82, 0.72),
 	"p": Color(0.5, 0.38, 0.62), "c": Color(0.62, 0.42, 0.18), "C": Color(0.82, 0.6, 0.3),
 }
-## Jimiau: o roxo-noite, p/P/d roxo (médio, claro, sombra), g/G verde (médio, claro), y guizo, w/W carta, r/k naipes,
-## b/B ficha azul, R ficha vermelha, a ficha preta.
+## Jimiau: o roxo-noite, p/P/d roxo (médio, claro, sombra), g/G verde (médio, claro), y/Y guizo (ouro, brilho), w/W carta, r/k naipes,
+## b/B ficha azul, R ficha vermelha, a ficha preta, n/N couro da bolsa.
 const _PAL_JIMI := {
 	"o": Color(0.13, 0.05, 0.22), "p": Color(0.58, 0.28, 0.85), "P": Color(0.78, 0.55, 0.97), "d": Color(0.36, 0.13, 0.58),
-	"g": Color(0.3, 0.76, 0.3), "G": Color(0.6, 0.92, 0.55), "y": Color(1.0, 0.84, 0.22),
+	"g": Color(0.22, 0.7, 0.34), "G": Color(0.6, 0.92, 0.55), "y": Color(1.0, 0.84, 0.22), "Y": Color(1.0, 0.97, 0.7),
 	"w": Color(0.98, 0.96, 0.92), "W": Color(0.62, 0.58, 0.74), "r": Color(0.86, 0.14, 0.2), "k": Color(0.12, 0.11, 0.16),
 	"b": Color(0.22, 0.42, 0.92), "B": Color(0.55, 0.72, 1.0), "R": Color(0.92, 0.28, 0.3), "a": Color(0.22, 0.2, 0.28),
+	"n": Color(0.5, 0.3, 0.14), "N": Color(0.76, 0.52, 0.28),
 }
 
-## Iguala a largura das linhas (ponto à direita).
-static func _l(linhas: Array) -> Array:
-	var w: int = 0
-	for l in linhas:
-		w = maxi(w, String(l).length())
-	var r: Array = []
-	for l in linhas:
-		r.append(String(l).rpad(w, "."))
+# ------------------------------------------------------------------ ferramentas de desenho (tela de pixels em coordenadas do gato)
+## Uma "tela" é {Vector2i: letra}. Os polígonos vêm em pares x,y de CANTO de pixel (o pixel x,y ocupa [x, x+1] × [y, y+1]) e pintam
+## os pixels cujo centro cai dentro.
+static func _poli(cv: Dictionary, p: Array, ch: String) -> void:
+	var pts := PackedVector2Array()
+	var mn := Vector2(1e9, 1e9)
+	var mx := Vector2(-1e9, -1e9)
+	for i in range(0, p.size(), 2):
+		var v := Vector2(float(p[i]), float(p[i + 1]))
+		pts.append(v)
+		mn = mn.min(v)
+		mx = mx.max(v)
+	for y in range(floori(mn.y), ceili(mx.y)):
+		for x in range(floori(mn.x), ceili(mx.x)):
+			if Geometry2D.is_point_in_polygon(Vector2(x + 0.5, y + 0.5), pts):
+				cv[Vector2i(x, y)] = ch
+
+## Retângulo de pixels [x0, x1) × [y0, y1).
+static func _ret(cv: Dictionary, x0: int, y0: int, x1: int, y1: int, ch: String) -> void:
+	for y in range(y0, y1):
+		for x in range(x0, x1):
+			cv[Vector2i(x, y)] = ch
+
+static func _px(cv: Dictionary, x: int, y: int, ch: String) -> void:
+	cv[Vector2i(x, y)] = ch
+
+## Linha de pixels de a até b (Bresenham).
+static func _lin(cv: Dictionary, a: Vector2i, b: Vector2i, ch: String) -> void:
+	var d := Vector2i(absi(b.x - a.x), absi(b.y - a.y))
+	var s := Vector2i(1 if a.x < b.x else -1, 1 if a.y < b.y else -1)
+	var e: int = d.x - d.y
+	var p: Vector2i = a
+	for _i in 200:
+		cv[p] = ch
+		if p == b:
+			break
+		var e2: int = 2 * e
+		if e2 > -d.y:
+			e -= d.y
+			p.x += s.x
+		if e2 < d.x:
+			e += d.x
+			p.y += s.y
+
+## Disco de pixels de centro (cx, cy) em canto de pixel e raio r.
+static func _disco(cv: Dictionary, cx: float, cy: float, r: float, ch: String) -> void:
+	for y in range(floori(cy - r), ceili(cy + r)):
+		for x in range(floori(cx - r), ceili(cx + r)):
+			if Vector2(x + 0.5 - cx, y + 0.5 - cy).length() <= r:
+				cv[Vector2i(x, y)] = ch
+
+## Ponta triangular de pixels: da base (segmento de a até b) afinando até a ponta `p`.
+static func _pico(cv: Dictionary, a: Vector2i, b: Vector2i, p: Vector2i, ch: String) -> void:
+	var n: int = maxi(absi(b.x - a.x), absi(b.y - a.y))
+	for i in n + 1:
+		var q := Vector2i(roundi(lerpf(a.x, b.x, i / float(maxi(n, 1)))), roundi(lerpf(a.y, b.y, i / float(maxi(n, 1)))))
+		_lin(cv, q, p, ch)
+
+## Contorno de 1 pixel por fora da forma (nos 4 vizinhos vazios); `baixo` = false deixa a borda de baixo sem contorno.
+static func _cont(cv: Dictionary, ch: String, baixo: bool = true) -> void:
+	var novos: Array = []
+	for k in cv.keys():
+		var v: Vector2i = k
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+			if d.y == 1 and not baixo:
+				continue
+			var n: Vector2i = v + d
+			if not cv.has(n):
+				novos.append(n)
+	for n2 in novos:
+		cv[n2] = ch
+
+## Luz: o pixel `base` com vazio em cima vira `luz`; com vazio embaixo, `sombra` ("" = não mexe).
+static func _luz(cv: Dictionary, base: String, luz: String, sombra: String = "") -> void:
+	var mud: Dictionary = {}
+	for k in cv.keys():
+		var v: Vector2i = k
+		if cv[v] != base:
+			continue
+		if luz != "" and not cv.has(v + Vector2i(0, -1)):
+			mud[v] = luz
+		elif sombra != "" and not cv.has(v + Vector2i(0, 1)):
+			mud[v] = sombra
+	for k2 in mud.keys():
+		cv[k2] = mud[k2]
+
+## Troca `de` por `para` onde a regra vale.
+static func _regra(cv: Dictionary, de: String, para: String, regra: Callable) -> void:
+	for k in cv.keys():
+		var v: Vector2i = k
+		if cv[v] == de and regra.call(v):
+			cv[v] = para
+
+## Camada [x, y, linhas, paleta(, true)] da tela, em coordenadas do gato convertidas para o lugar `lugar` (RoupaGato.Onde; -1 = o ponto
+## de chão da pata, sem conversão). `atras` = camada atrás do corpo.
+static func _lay(cv: Dictionary, lugar: int, pal: Dictionary, atras: bool = false) -> Array:
+	var x0: int = 1000000
+	var y0: int = 1000000
+	var x1: int = -1000000
+	var y1: int = -1000000
+	for k in cv.keys():
+		var v: Vector2i = k
+		x0 = mini(x0, v.x)
+		y0 = mini(y0, v.y)
+		x1 = maxi(x1, v.x)
+		y1 = maxi(y1, v.y)
+	var linhas: Array = []
+	for y in range(y0, y1 + 1):
+		var s: String = ""
+		for x in range(x0, x1 + 1):
+			s += String(cv.get(Vector2i(x, y), "."))
+		linhas.append(s)
+	var o := Vector2.ZERO if lugar < 0 else RoupaGato.ORIGEM[lugar]
+	var r: Array = [x0 - o.x, y0 - o.y, linhas, pal]
+	if atras:
+		r.append(true)
 	return r
 
-## Roda de fogo: círculo de 11 com o aro em chamas (alterna por ângulo e por quadro) e o miolo escuro com raios.
-static func _roda(anim: float) -> Array:
+## Camada escrita à mão em coordenadas do gato: `x`, `y` = canto de cima à esquerda da primeira linha.
+static func _linhas(lugar: int, x: int, y: int, linhas: Array, pal: Dictionary, atras: bool = false) -> Array:
+	var cv: Dictionary = {}
+	for j in linhas.size():
+		var s: String = linhas[j]
+		for i in s.length():
+			if s[i] != ".":
+				cv[Vector2i(x + i, y + j)] = s[i]
+	return _lay(cv, lugar, pal, atras)
+
+## Tronco do gato parado (x -8..7, y -12..-6): dorso em y -12 até x 2, peito a partir de y -9, e a barriga que fecha em y -6.
+static func _tronco(cv: Dictionary, ch: String, de: int = -12, ate: int = -6) -> void:
+	for y in range(de, ate + 1):
+		for x in range(-8, 8):
+			var topo: int = -12 if x < 3 else -9
+			if x < -6:
+				topo = -9 if x == -8 else -10
+			if x == -6 and y == -12:
+				continue
+			if y >= topo:
+				cv[Vector2i(x, y)] = ch
+
+# ------------------------------------------------------------------ peças feitas por tela
+static var _cache: Dictionary = {}
+
+## Capa que esvoaça para trás do pescoço, em onda (`fase` 0 ou 1): sai do ombro, sobe um pouco e vai afinando até a ponta.
+static func _capa(fase: int) -> Dictionary:
+	var cv: Dictionary = {}
+	var n: int = 20
+	for k in n:
+		var u: float = k / float(n - 1)
+		var x: int = 2 - k
+		var onda: float = sin(u * 6.5 - fase * PI) * 2.0 * u
+		var espinha: float = -12.5 - 3.4 * sin(u * PI * 0.75) + 1.5 * u * u + onda
+		var meia: float = (2.4 + 4.8 * sin(u * PI * 0.65)) * (1.0 - 0.8 * u * u * u)
+		var topo: int = floori(espinha - meia * 0.55)
+		var base: int = ceili(espinha + meia * 0.45)
+		for y in range(topo, base):
+			cv[Vector2i(x, y)] = "R"
+	_regra(cv, "R", "D", func(v: Vector2i) -> bool: return posmod(v.x + 20, 4) == 0 and cv.has(v + Vector2i(0, -1)) and cv.has(v + Vector2i(0, 1)))
+	_luz(cv, "R", "r", "D")
+	_cont(cv, "C")
+	return cv
+
+## Roda de moto em chamas de raio 5,5 centrada em (cx, cy) (canto de pixel): aro de fogo alternando por ângulo e por quadro, pneu preto,
+## miolo escuro com raios e cubo de prata.
+static func _roda(cv: Dictionary, cx: float, cy: float, anim: float) -> void:
 	var fase: int = int(anim * 6.0) % 2
-	var r: Array = []
-	for j in 11:
-		var l: String = ""
-		for i in 11:
-			var dx: float = i + 0.5 - 5.5
-			var dy: float = j + 0.5 - 5.5
+	for j in 12:
+		for i in 12:
+			var x: int = floori(cx - 6.0) + i
+			var y: int = floori(cy - 6.0) + j
+			var dx: float = x + 0.5 - cx
+			var dy: float = y + 0.5 - cy
 			var d: float = sqrt(dx * dx + dy * dy)
-			var ch: String = "."
-			if d <= 5.5:
-				if d > 4.7:
+			var ch: String = ""
+			if d <= 5.8:
+				if d > 5.0:
 					ch = "o"
-				elif d > 3.3:
+				elif d > 3.4:
 					var ang: int = int(floor((atan2(dy, dx) + PI) / (PI / 5.0)))
 					ch = "f" if (ang + fase) % 2 == 0 else "F"
 					if (ang + fase) % 5 == 0:
 						ch = "y"
-				elif d > 2.6:
+				elif d > 2.7:
 					ch = "o"
 				elif absf(dx) < 0.6 and absf(dy) < 0.6:
 					ch = "S"
@@ -105,177 +275,220 @@ static func _roda(anim: float) -> Array:
 					ch = "c"
 				else:
 					ch = "a"
-			l += ch
-		r.append(l)
-	return r
+			if ch != "":
+				cv[Vector2i(x, y)] = ch
 
-## Leque de cinco cartas abrindo para cima e para a frente; a da frente é o Coringa. Contorno só na borda do leque; onde uma
-## carta passa por baixo de outra a divisa é cinza.
-static func _leque() -> Array:
-	var W: int = 15
-	var H: int = 13
-	var idx: Array = []
-	var uu: Array = []
-	var vv: Array = []
-	for j in H:
-		var a: Array = []
-		a.resize(W)
-		a.fill(-1)
-		idx.append(a)
-		uu.append(a.duplicate())
-		vv.append(a.duplicate())
+## Corrente de elos de aço que sai do punho preso na boca, faz um arco para a frente e para baixo e acaba numa bola de chamas.
+static func _corrente(chama: int) -> Dictionary:
+	var cv: Dictionary = {}
+	var pts: Array = []
 	for k in 5:
-		var th: float = deg_to_rad(6.0 + k * 19.0)
-		var d := Vector2(sin(th), -cos(th))
-		var n := Vector2(cos(th), sin(th))
-		for j in H:
-			for i in W:
-				var p := Vector2(i + 0.5 - 1.5, j + 0.5 - (H - 1.5))
-				var u: float = p.dot(d)
-				var v: float = p.dot(n)
-				if u >= 0.0 and u <= 10.5 and absf(v) <= 2.2:
-					idx[j][i] = k
-					uu[j][i] = u
-					vv[j][i] = v
-	var r: Array = []
-	for j in H:
-		var s: String = ""
-		for i in W:
-			var k: int = idx[j][i]
-			if k < 0:
-				s += "."
-				continue
-			var borda: bool = false
-			var divisa: bool = false
-			for dd in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				var x: int = i + dd.x
-				var y: int = j + dd.y
-				var kn: int = idx[y][x] if (x >= 0 and x < W and y >= 0 and y < H) else -1
-				if kn < 0:
-					borda = true
-				elif kn > k:
-					divisa = true
-			var ch: String = "w"
-			if borda:
-				ch = "o"
-			elif divisa:
-				ch = "W"
-			elif k == 4:
-				var u2: float = uu[j][i]
-				var v2: float = vv[j][i]
-				ch = "g" if (u2 > 2.5 and u2 < 8.5) else "w"
-				if ch == "g" and u2 > 4.8 and u2 < 6.4 and absf(v2) < 0.9:
-					ch = "r"
-			s += ch
-		r.append(s)
-	return r
+		var t: float = k / 4.0
+		pts.append(Vector2(15.5 + 6.5 * t, -11.0 + 9.0 * t * t))
+	for k in pts.size():
+		var c: Vector2 = pts[k]
+		var cx: int = roundi(c.x)
+		var cy: int = roundi(c.y)
+		var cor: String = "C" if k % 2 == 0 else "c"
+		var forma: Array = [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-2, 0), Vector2i(2, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)] if k % 2 == 0 else [Vector2i(0, -2), Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(1, 1), Vector2i(0, 2)]
+		for d in forma:
+			cv[Vector2i(cx, cy) + d] = cor
+	# punho (couro preto com protetor de prata)
+	_ret(cv, 11, -13, 14, -10, "k")
+	_px(cv, 14, -13, "S")
+	_px(cv, 14, -12, "S")
+	_px(cv, 14, -11, "S")
+	_px(cv, 11, -13, "K")
+	# bola de chamas na ponta
+	var e: Vector2i = Vector2i(roundi(pts[4].x), roundi(pts[4].y) + 4)
+	_disco(cv, e.x + 0.5, e.y + 0.5, 2.6, "f")
+	_disco(cv, e.x + 0.5, e.y + 0.7, 1.4, "y")
+	for d2 in ([Vector2i(-1, -3), Vector2i(1, -4), Vector2i(2, -3)] if chama == 0 else [Vector2i(-2, -3), Vector2i(0, -4), Vector2i(2, -2)]):
+		cv[e + d2] = "F"
+	_px(cv, e.x - 1, e.y - 2, "f")
+	_px(cv, e.x + 1, e.y - 3 + chama, "y")
+	return cv
+
+## Leque de duas cartas grandes (espadas atrás, copas na frente) abrindo da mão (na boca) para cima e para a frente, uma inclinada
+## para cada lado; as cartas são tortas de leve (cada linha anda um pouco) para parecerem giradas.
+static func _leque() -> Dictionary:
+	var cv: Dictionary = {}
+	var idx: Dictionary = {}
+	var cartas: Array = [[11, -17, -0.28], [15, -16, 0.28]]
+	for k in 2:
+		var c: Array = cartas[k]
+		for j in 8:
+			var sh: int = roundi((3.5 - j) * float(c[2]))
+			for i in 6:
+				idx[Vector2i(int(c[0]) + i + sh, int(c[1]) + j)] = k
+	for kv in idx.keys():
+		var q: Vector2i = kv
+		var k2: int = idx[q]
+		var borda: bool = false
+		for dd in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n2: Vector2i = q + dd
+			if not idx.has(n2) or int(idx[n2]) > k2:
+				borda = true
+		cv[q] = "o" if borda else "w"
+	# naipes 3 × 3 no alto de cada carta
+	var nai: Array = [[".k.", "kkk", ".k."], ["r.r", "rrr", ".r."]]
+	for k3 in 2:
+		var c3: Array = cartas[k3]
+		var sh3: int = roundi((3.5 - 2.0) * float(c3[2]))
+		var g: Array = nai[k3]
+		for j in 3:
+			var st: String = g[j]
+			for i in 3:
+				if st[i] != ".":
+					cv[Vector2i(int(c3[0]) + 1 + i + sh3, int(c3[1]) + 1 + j)] = st[i]
+	# canto de cada carta (índice) para o naipe pequeno embaixo
+	_px(cv, 12, -11, "k")
+	_px(cv, 19, -10, "r")
+	return cv
 
 ## Camadas da peça com arte própria; vazio = usa o fallback. `maxima` pede a pose mais larga (caixa do ícone).
 static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 	var fase: int = 0 if maxima else int(anim * 4.0) % 2
 	var chama: int = 0 if maxima else int(anim * 6.0) % 2
+	var ch: int = hash([tipo, fase, chama, 0 if maxima else int(anim * 6.0) % 2])
+	if _cache.has(ch):
+		return _cache[ch]
+	var r: Array = _montar(tipo, fase, chama, maxima, anim)
+	if _cache.size() > 200:
+		_cache.clear()
+	_cache[ch] = r
+	return r
+
+static func _montar(tipo: int, fase: int, chama: int, maxima: bool, anim: float) -> Array:
+	var cv: Dictionary = {}
 	match tipo:
 		# ---------------------------------------------------------------- Super Miau
 		Pecas.Tipo.FRANJA_HEROICA:
-			# topete preto com o cacho caído em S na testa
-			return [[-5.5, -4.0, _l([
-				"...ooooo...",
-				"..okKkkkoo.",
-				".okKkkkkkko",
-				"okkkkkkkkko",
-				"ookk..okkko",
-				".o....okko.",
-				"......ooko.",
-			]), _PAL_SUPER]]
+			# cabelo preto em capacete sobre o crânio (a orelha some embaixo) e o cacho caído na testa
+			_poli(cv, [3, -14.6, 3.4, -16.4, 5, -17.6, 7, -17.8, 9, -17, 10, -15.8, 10.3, -14.6, 9.4, -14.6, 8.2, -15.4, 6.4, -15.4, 5, -15, 4.2, -14.2], "k")
+			_poli(cv, [8.6, -15.4, 10.3, -15, 10.8, -13.6, 10, -12.4, 9.2, -12.9, 9.7, -13.8, 8.8, -14.2], "k")
+			_px(cv, 5, -17, "K")
+			_px(cv, 6, -17, "K")
+			_px(cv, 4, -16, "K")
+			_cont(cv, "O")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_SUPER)]
 		Pecas.Tipo.COLLANT_S:
-			# collant azul justo e o escudo amarelo com o S vermelho no peito
-			return [[-5.5, -4.0, _l([
-				".ooooooooo.",
-				"obayrrryaao",
-				"obayryyyaao",
-				"obayrrryaao",
-				"obayyyryado",
-				"obayrrryado",
-				".ooooooooo.",
-			]), _PAL_SUPER]]
+			# collant azul justo no tronco, cinto amarelo, e o escudo do S (amarelo, S vermelho) no peito
+			_tronco(cv, "a")
+			_luz(cv, "a", "b", "d")
+			_regra(cv, "a", "d", func(v: Vector2i) -> bool: return v.y == -6)
+			_cont(cv, "o", false)
+			var es: Array = _linhas(RoupaGato.Onde.CORPO, 1, -11, [
+				".ooooo.",
+				"oyyyyyo",
+				"oyrrryo",
+				"oyryyyo",
+				"oyrrryo",
+				"oyyyryo",
+				"oyrrryo",
+				".oyyyo.",
+				"..ooo..",
+			], _PAL_SUPER)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_SUPER), es]
 		Pecas.Tipo.PUNHO_ACO:
-			# luva vermelha de punho fechado com a pulseira prata
-			return [[-2.0, -5.0, _l([
-				"..oooooo.",
-				"oSSorRRro",
-				"osSorRrro",
-				"osSorDrDo",
-				"oSSorrrDo",
-				".ooooooo.",
-			]), _PAL_SUPER]]
+			# bota-luva vermelha com punho amarelo: uma em cada pata (coordenadas do pé)
+			_ret(cv, -1, -4, 2, -1, "r")
+			_ret(cv, -1, -2, 3, 0, "r")
+			_ret(cv, -1, -4, 2, -3, "y")
+			_luz(cv, "r", "R", "D")
+			_cont(cv, "o", false)
+			return [_lay(cv, -1, _PAL_SUPER)]
 		Pecas.Tipo.CAPA_VERMELHA:
-			# capa vermelha presa por um fecho amarelo no pescoço, a ponta balança para trás
-			var b6: String = "oRRdRRRo....." if fase == 0 else ".oRRdRRRo...."
-			var b7: String = ".ooooooo...." if fase == 0 else "..ooooooo..."
-			return [[-12.0, -4.0, _l([
-				"......oooooyo",
-				"....ooRRRRyyo",
-				"...oRrRRRRdRo",
-				"..oRRRRRdRRRo",
-				".oRRRRdRRRRo.",
-				"oRRdRRRRRRo..",
-				"oRRRRRRRRo...",
-				b6, b7,
-			]), {"o": _PAL_SUPER["C"], "R": _PAL_SUPER["r"], "r": _PAL_SUPER["R"], "d": _PAL_SUPER["D"], "y": _PAL_SUPER["y"]}]]
+			# capa vermelha ATRÁS do corpo, esvoaçando; por cima só a gola e o fecho no ombro
+			var gola: Array = _linhas(RoupaGato.Onde.PESCOCO, -5, -12, [
+				".oooooo.",
+				"oRRRRRyo",
+				".oDDDDyo",
+				"..oooo..",
+			], {"o": _PAL_SUPER["C"], "R": _PAL_SUPER["r"], "r": _PAL_SUPER["R"], "D": _PAL_SUPER["D"], "y": _PAL_SUPER["y"]})
+			var pc: Dictionary = {"o": _PAL_SUPER["C"], "C": _PAL_SUPER["C"], "R": _PAL_SUPER["r"], "r": _PAL_SUPER["R"], "D": _PAL_SUPER["D"]}
+			return [_lay(_capa(fase), RoupaGato.Onde.PESCOCO, pc, true), gola]
 		# ---------------------------------------------------------------- Arqueiro Miau
 		Pecas.Tipo.CAPUZ_ARQUEIRO:
-			# capuz verde de pluma vermelha atrás e a máscara preta acima dos olhos
-			return [[-5.5, -5.0, _l([
-				"rR...ooo...",
-				".rRoobbaoo.",
-				"..oobaaaaoo",
-				".oobaaaaaao",
-				"oaaaaaaaaao",
-				"oddddddddo.",
-				"..okkkkkkko",
-				"...ookkkkoo",
-			]), _PAL_ARQ]]
+			# capuz verde pontudo (a ponta cai para trás) que abraça a cabeça; máscara verde-escura nos olhos, deixa o focinho livre
+			_poli(cv, [2.5, -10.5, 1.5, -14, 2, -17, -0.5, -20, -3.5, -21.5, 0.5, -22.5, 4, -20.5, 7.5, -18.8, 10, -17, 10.6, -14.5, 10, -12.5, 8, -11.5, 5, -10.5], "a")
+			_luz(cv, "a", "b", "d")
+			_ret(cv, 5, -14, 11, -12, "h")
+			_px(cv, 6, -13, "w")
+			_px(cv, 7, -13, "k")
+			_px(cv, 9, -13, "w")
+			_px(cv, 10, -13, "k")
+			_regra(cv, "d", "d", func(_v: Vector2i) -> bool: return true)
+			_cont(cv, "o")
+			# pluma vermelha presa na lateral
+			_lin(cv, Vector2i(5, -16), Vector2i(2, -20), "r")
+			_lin(cv, Vector2i(6, -16), Vector2i(3, -20), "R")
+			_px(cv, 2, -21, "R")
+			_px(cv, 1, -21, "o")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_ARQ)]
 		Pecas.Tipo.COLETE_FOLHAS:
-			# colete verde-escuro de folhas costuradas e cinto marrom com fivela
-			return [[-5.5, -3.0, _l([
-				".ooooooooo.",
-				"obbaaaaaado",
-				"oabaaabaado",
-				"ommmmmgmmmo",
-				"odaaabaaddo",
-				".ooooooooo.",
-			]), _PAL_ARQ]]
+			# túnica verde de barra picotada, cinto de couro com fivela e a tira da aljava cruzando o peito
+			_tronco(cv, "a", -12, -5)
+			_luz(cv, "a", "b", "")
+			# barra em pontas
+			for x in range(-8, 8):
+				if (x < -1 or x > 3) and posmod(x, 2) == 0:
+					cv.erase(Vector2i(x, -5))
+			_regra(cv, "a", "d", func(v: Vector2i) -> bool: return v.y >= -6 and cv.has(v + Vector2i(0, 1)) == false or v.y == -6)
+			_ret(cv, -8, -8, 8, -7, "m")
+			_px(cv, 4, -8, "g")
+			_px(cv, 5, -8, "g")
+			_lin(cv, Vector2i(2, -10), Vector2i(-4, -5), "N")
+			_lin(cv, Vector2i(3, -10), Vector2i(-3, -5), "m")
+			_cont(cv, "o", false)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_ARQ)]
 		Pecas.Tipo.ARCO_RECURVO:
-			# arco de madeira com as pontas viradas para a frente e a corda de barbante
-			return [[0.0, -8.0, _l([
-				"tmm...",
-				"t.mm..",
-				"t..mm.",
-				"t...mm",
-				"t...Mm",
-				"t...gm",
-				"t...gm",
-				"t...Mm",
-				"t...mm",
-				"t..mm.",
-				"t.mm..",
-				"tmm...",
-			]), _PAL_ARQ]]
+			# arco de madeira curvo com as pontas viradas para fora, corda esticada, empunhadura de couro e uma flecha encaixada
+			var lim: Array = [Vector2i(11, -20), Vector2i(12, -19), Vector2i(13, -18), Vector2i(13, -17), Vector2i(14, -16), Vector2i(14, -15), Vector2i(14, -14), Vector2i(15, -13)]
+			for k in 8:
+				var q2: Vector2i = lim[k]
+				cv[q2] = "m"
+				cv[Vector2i(q2.x, -23 - q2.y)] = "m"   # espelhado em torno de y = -11,5
+			# empunhadura
+			for yy in range(-13, -9):
+				cv[Vector2i(15, yy)] = "N"
+				cv[Vector2i(14, yy)] = "m"
+			cv[Vector2i(10, -20)] = "m"
+			cv[Vector2i(10, -3)] = "m"
+			_lin(cv, Vector2i(11, -20), Vector2i(11, -3), "t")
+			# flecha encaixada na corda, apontando para a frente
+			_lin(cv, Vector2i(12, -11), Vector2i(19, -11), "M")
+			_px(cv, 20, -11, "n")
+			_px(cv, 19, -12, "n")
+			_px(cv, 19, -10, "n")
+			_px(cv, 13, -12, "r")
+			_px(cv, 12, -12, "r")
+			_px(cv, 13, -10, "r")
+			_px(cv, 12, -10, "r")
+			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_ARQ)]
 		Pecas.Tipo.ALJAVA:
-			# aljava inclinada com três flechas: ponta de luva de boxe, bomba e rede
-			return [[-4.5, -10.0, _l([
-				"ee..y.nn.",
-				"eee.c.nnn",
-				".e.cc.nn.",
-				"..w.w.w..",
-				"..m.m.m..",
-				"..ommmmo.",
-				"..oMmmmo.",
-				"..ogggmo.",
-				"..oMmmmo.",
-				"...ommo..",
-				"....oo...",
-			]), _PAL_ARQ]]
+			# aljava de couro inclinada nas costas (por trás do corpo): do quadril até acima do ombro, com as plumas das flechas à mostra
+			_poli(cv, [-9, -8, -7, -9.5, -1, -16.5, -3, -18, -10, -10], "m")
+			_lin(cv, Vector2i(-8, -8), Vector2i(-3, -16), "M")
+			_luz(cv, "m", "m", "N")
+			_cont(cv, "o")
+			# três flechas: ponta de luva de boxe, bomba e rede, com as plumas na boca da aljava
+			_lin(cv, Vector2i(-5, -17), Vector2i(-7, -21), "M")
+			_lin(cv, Vector2i(-3, -17), Vector2i(-3, -22), "M")
+			_lin(cv, Vector2i(-2, -16), Vector2i(0, -20), "M")
+			_ret(cv, -8, -23, -5, -21, "e")
+			_px(cv, -3, -23, "c")
+			_px(cv, -3, -24, "y")
+			_ret(cv, 0, -22, 2, -20, "n")
+			_px(cv, -5, -18, "r")
+			_px(cv, -3, -18, "w")
+			_px(cv, -2, -17, "r")
+			var fr: Array = _linhas(RoupaGato.Onde.TRASEIRA, -6, -13, [
+				".mmm.",
+				"mgNmm",
+				".mmm.",
+			], _PAL_ARQ)
+			return [_lay(cv, RoupaGato.Onde.TRASEIRA, _PAL_ARQ, true), fr]
 		# ---------------------------------------------------------------- Motoqueiro Miausma
 		Pecas.Tipo.CAVEIRA_CHAMAS:
 			# capacete de caveira com chamas no topo (animadas)
@@ -290,75 +503,82 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 				"..owowowo..",
 			]), _PAL_MOTO]]
 		Pecas.Tipo.JAQUETA_ESPETOS:
-			# jaqueta de couro preta com tachas prateadas nos ombros, zíper e barra em brasa
-			return [[-5.5, -3.0, _l([
-				".ooooooooo.",
-				"osSkkkkkSso",
-				"okkkkKskkko",
-				"okKkkKskkko",
-				"offFfkskfFo",
-				".ooooooooo.",
-			]), _PAL_MOTO]]
+			# jaqueta de couro preta: ombreira com espetos, zíper torto, gola, tachas de prata na barra
+			_tronco(cv, "k", -12, -5)
+			_luz(cv, "k", "K", "")
+			for x in range(-8, 8):
+				if (x < -1 or x > 3) and posmod(x, 2) == 1:
+					cv.erase(Vector2i(x, -5))
+			_lin(cv, Vector2i(3, -9), Vector2i(-3, -6), "c")
+			# ombreira redonda com tachas e dois espetos
+			for x2 in [-5, -2, 1]:
+				_px(cv, x2, -13, "S")
+				_px(cv, x2, -14, "s")
+			_px(cv, 2, -11, "S")
+			_px(cv, 0, -11, "S")
+			_px(cv, -2, -11, "S")
+			for x3 in range(-6, 8, 3):
+				_px(cv, x3, -6, "S")
+			_cont(cv, "o", false)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MOTO)]
 		Pecas.Tipo.CORRENTE_FOGO:
-			# corrente de elos de fogo que sai da boca e acaba numa bola em chamas
-			var ch1: String = "........fyf." if chama == 0 else ".......fyfy."
-			return [[-2.0, -9.0, _l([
-				ch1,
-				".......fFyFf",
-				".......fFfFo",
-				"......ofFfo.",
-				".....ofCco..",
-				"....occfo...",
-				"...ofCco....",
-				"..occfo.....",
-				".ofCco......",
-				"occo........",
-			]), _PAL_MOTO]]
+			return [_lay(_corrente(chama), RoupaGato.Onde.BOCA, _PAL_MOTO)]
 		Pecas.Tipo.RODA_FOGO:
-			# roda de moto pequena, aro em chamas, presa na cintura
-			return [[-5.5, -5.5, _roda(0.0 if maxima else anim), _PAL_MOTO]]
+			# roda de moto em chamas presa atrás da anca (camada de trás), com a cinta de couro e o suporte por cima do quadril
+			_roda(cv, -11.0, -8.0, 0.0 if maxima else anim)
+			var sup: Array = _linhas(RoupaGato.Onde.CORPO, -8, -10, [
+				"ooooooooo",
+				"oSkkkkkSo",
+				"ooooooooo",
+			], _PAL_MOTO)
+			return [_lay(cv, RoupaGato.Onde.TRASEIRA, _PAL_MOTO, true), sup]
 		# ---------------------------------------------------------------- Fênix Miaussimo
 		Pecas.Tipo.FRANJA_ADVOGADO:
-			# cabelo preto com três espetos para cima
-			return [[-5.5, -6.0, _l([
-				".o...o...o.",
-				"oKo.oKo.oKo",
-				"okkookkookk",
-				"okKkkkkKkko",
-				"okkkkkkkkko",
-				".ookkkkkkoo",
-				"..ooooooo..",
-			]), _PAL_FENIX]]
+			# cabelo preto com os espetos grandes apontando PARA TRÁS
+			_poli(cv, [2.8, -14.4, 3.4, -16.6, 5, -18, 7, -18.4, 9, -17.6, 10.3, -16, 10.5, -14.4, 9, -15, 7.5, -15.6, 6, -15.4, 4.5, -14.6], "k")
+			_pico(cv, Vector2i(4, -18), Vector2i(8, -18), Vector2i(-1, -25), "k")
+			_pico(cv, Vector2i(3, -17), Vector2i(3, -15), Vector2i(-8, -21), "k")
+			_pico(cv, Vector2i(3, -14), Vector2i(3, -12), Vector2i(-8, -14), "k")
+			_luz(cv, "k", "K")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_FENIX)]
 		Pecas.Tipo.TERNO_TRIBUNAL:
-			# terno azul, camisa branca em V e gravata vermelha
-			return [[-5.5, -3.0, _l([
-				".ooooooooo.",
-				"obaawwwaado",
-				"obaawrwaado",
-				"obaaarraado",
-				"odaaaraaddo",
-				".ooooooooo.",
-			]), _PAL_FENIX]]
+			# terno azul no tronco, lapelas, camisa branca em V e gravata vermelha caindo no peito
+			_tronco(cv, "a", -12, -6)
+			_luz(cv, "a", "b", "d")
+			_ret(cv, 3, -9, 9, -8, "w")
+			_ret(cv, 4, -8, 8, -7, "w")
+			_ret(cv, 5, -7, 7, -6, "w")
+			_lin(cv, Vector2i(3, -9), Vector2i(5, -6), "d")
+			_lin(cv, Vector2i(8, -9), Vector2i(7, -7), "d")
+			_ret(cv, 5, -9, 7, -8, "r")
+			_ret(cv, 5, -8, 7, -5, "r")
+			_px(cv, 6, -7, "R")
+			_px(cv, 6, -5, "r")
+			_cont(cv, "o", false)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_FENIX)]
 		Pecas.Tipo.LUVA_APONTAR:
-			# luva branca de punho azul com o indicador esticado: "Objeção!"
-			return [[-2.0, -3.0, _l([
-				".oooo.........",
-				"obowwoooooooo.",
-				"obowwwwwwwwwWo",
-				"obowwoooooooo.",
-				"obowwo........",
-				".oooo.........",
-			]), _PAL_FENIX]]
+			# braço do terno saindo da boca: manga azul, punho branco e a mão com o indicador apontando: "Objeção!"
+			_ret(cv, 11, -13, 14, -9, "a")
+			_ret(cv, 11, -13, 14, -12, "b")
+			_ret(cv, 14, -13, 15, -9, "w")
+			_ret(cv, 15, -13, 19, -9, "h")
+			_ret(cv, 15, -10, 19, -9, "H")
+			_poli(cv, [18.5, -13, 20.5, -14.5, 23.5, -16.5, 24, -15.5, 21.5, -13, 19.5, -11.5], "h")
+			_px(cv, 16, -14, "h")
+			_px(cv, 17, -14, "h")
+			_px(cv, 18, -11, "H")
+			_px(cv, 18, -12, "H")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_FENIX)]
 		Pecas.Tipo.DISTINTIVO:
-			# broche dourado com a asa de fênix, preso no peito
-			return [[1.0, -3.0, _l([
-				".oooo.",
-				"oGgGgo",
-				"ogGgGo",
-				"oggGgo",
-				".oggo.",
-				"..oo..",
-			]), _PAL_FENIX]]
+			# distintivo dourado redondo preso na lapela, no peito
+			_disco(cv, 2.5, -7.5, 1.9, "g")
+			_px(cv, 2, -8, "G")
+			_px(cv, 3, -7, "G")
+			_px(cv, 1, -9, "w")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_FENIX)]
 		# ---------------------------------------------------------------- Mimiau
 		Pecas.Tipo.CAPUZ_PELUCIA:
 			# capuz amarelo de pano com orelhas pontudas de ponta preta e olhos riscados a lápis
@@ -418,44 +638,69 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 			]), _PAL_MIMI]]
 		# ---------------------------------------------------------------- Jimiau
 		Pecas.Tipo.CORINGA_CHAPEU:
-			# chapéu de bobo de três pontas, roxo e verde, com guizos dourados
-			return [[-5.5, -6.0, _l([
-				"y....y....y",
-				"po..ogo..op",
-				".po.ogo.op.",
-				"..oopgpoo..",
-				"..oPpppdo..",
-				".oPppppddo.",
-				"ogGgGgGgGgo",
-				".ooooooooo.",
-			]), _PAL_JIMI]]
+			# chapéu de bobo de três pontas (trás, cima, frente), roxo e verde, cada ponta com um guizo dourado
+			_poli(cv, [2.6, -18, 5.4, -18, -2.5, -14, -5, -15.5], "p")
+			_poli(cv, [4.6, -18, 8.4, -18, 7.2, -24, 6, -24], "g")
+			_poli(cv, [7.5, -18, 10.6, -16.4, 14.5, -19.2, 13, -21.5], "p")
+			_poli(cv, [2.6, -17.2, 10.6, -17.2, 10.6, -14.6, 2.6, -14.6], "d")
+			_luz(cv, "d", "P", "")
+			_luz(cv, "p", "P", "")
+			_luz(cv, "g", "G", "")
+			_cont(cv, "o")
+			for k in 6:
+				_px(cv, 3 + k * 3 / 2 + (k / 2), -15, "y")
+			_disco(cv, -4.0, -14.2, 1.1, "y")
+			_disco(cv, 7.0, -24.8, 1.1, "y")
+			_disco(cv, 14.5, -20.0, 1.1, "y")
+			_px(cv, -4, -15, "Y")
+			_px(cv, 6, -25, "Y")
+			_px(cv, 14, -21, "Y")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_JIMI)]
 		Pecas.Tipo.COLETE_BARALHO:
-			# colete branco estampado de naipes: copas, espadas
-			return [[-5.5, -3.0, _l([
-				".ooooooooo.",
-				"owwwwwwwwWo",
-				"owrwrwwkwWo",
-				"owrrrwkkkWo",
-				"owwrwwkwkWo",
-				".ooooooooo.",
-			]), _PAL_JIMI]]
+			# colete de arlequim (roxo e verde em losangos) no tronco, gola de bobo em pontas brancas e um naipe no peito
+			_tronco(cv, "p", -12, -6)
+			_regra(cv, "p", "g", func(v: Vector2i) -> bool: return (floori((v.x + v.y + 100) / 3.0) + floori((v.x - v.y + 100) / 3.0)) % 2 == 0)
+			_cont(cv, "o", false)
+			# gola de pontas no pescoço
+			for k in 6:
+				var gx: int = -1 + k
+				_px(cv, gx, -11, "w" if k % 2 == 0 else "W")
+				_px(cv, gx, -10, "w" if k % 2 == 0 else "W")
+			_px(cv, 6, -9, "r")
+			_px(cv, 4, -9, "r")
+			for p in [Vector2i(4, -8), Vector2i(5, -8), Vector2i(6, -8), Vector2i(5, -7)]:
+				_px(cv, p.x, p.y, "r")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_JIMI)]
 		Pecas.Tipo.LEQUE_POQUER:
-			# leque de cinco cartas; a da frente é o Coringa
-			return [[-1.0, -11.0, _leque(), _PAL_JIMI]]
+			return [_lay(_leque(), RoupaGato.Onde.BOCA, _PAL_JIMI)]
 		Pecas.Tipo.FICHAS:
-			# três pilhas de fichas: vermelhas, azuis e pretas
-			return [[-5.5, -8.0, _l([
-				"......ooooo",
-				"......oawao",
-				".ooo..ooooo",
-				"oRwRo.obwbo",
-				"ooooo.ooooo",
-				"oRwRo.obwbo",
-				"ooooo.ooooo",
-				"oRwRo.obwbo",
-				".ooo...ooo.",
-			]), _PAL_JIMI]]
+			# bolsa de couro presa ao quadril por um cinto, com duas pilhas de fichas saindo pela boca
+			_ret(cv, -8, -7, -2, -4, "n")
+			_ret(cv, -8, -7, -2, -6, "N")
+			_ret(cv, -9, -8, 3, -7, "k")
+			_px(cv, -5, -8, "y")
+			_px(cv, -4, -8, "y")
+			for j in 3:
+				cv[Vector2i(-8, -10 + j)] = "R" if j % 2 == 0 else "w"
+				cv[Vector2i(-7, -10 + j)] = "R" if j % 2 == 0 else "w"
+				cv[Vector2i(-6, -10 + j)] = "R" if j % 2 == 0 else "w"
+				cv[Vector2i(-4, -11 + j)] = "b" if j % 2 == 0 else "w"
+				cv[Vector2i(-3, -11 + j)] = "b" if j % 2 == 0 else "w"
+				cv[Vector2i(-2, -11 + j)] = "b" if j % 2 == 0 else "w"
+			cv[Vector2i(-6, -9)] = "a"
+			_cont(cv, "o", false)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_JIMI)]
 	return []
+
+## Iguala a largura das linhas (ponto à direita).
+static func _l(linhas: Array) -> Array:
+	var w: int = 0
+	for l in linhas:
+		w = maxi(w, String(l).length())
+	var r: Array = []
+	for l in linhas:
+		r.append(String(l).rpad(w, "."))
+	return r
 
 static func _fallback(tipo: int) -> Array:
 	return RoupaGatoE.PECAS[_MOLDE_FALLBACK[Pecas.SLOT[tipo]]]
@@ -480,6 +725,9 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 	var cs: Array = _camadas(tipo, anim)
 	if not cs.is_empty():
 		for cm in cs:
+			var atras: bool = (cm as Array).size() > 4
+			if (RoupaGato.passo == 1 and not atras) or (RoupaGato.passo == 2 and atras):
+				continue
 			RoupaGato.sprite(c, cm[0], cm[1], cm[2], cm[3], f)
 		return
 	var d: Array = _fallback(tipo)

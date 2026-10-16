@@ -105,6 +105,8 @@ static func desenhar_esticada(c: CanvasItem, tipo: int, f: float, anim: float, e
 	esticar_cab = Vector2i.ZERO
 	_corte_ok = false
 
+## 0 = todas as camadas da peça (ícone); 1 = só as que ficam ATRÁS do corpo; 2 = só as da frente (ver RoupaGatoF.tem_atras).
+static var passo: int = 0
 static var esticar_cab: Vector2i = Vector2i.ZERO
 static var _corte_ok: bool = false
 static var _corte: Vector4 = Vector4.ZERO      # coluna do trecho, largura, linha do trecho, altura (coordenadas da peça)
