@@ -77,11 +77,11 @@ const NOME: Array[String] = [
 	"Máscara de teia", "Colante de aranha", "Lança-teia", "Aranha de estimação",
 	"Capuz estelar", "Túnica estelar", "Espada de luz", "Cristal estelar",
 	"Elmo sombrio", "Armadura sombria", "Espada rubra", "Respirador",
-	"Gorro verde", "Túnica verde", "Espada lendária", "Ocarina",
+	"Gorro verde", "Túnica verde", "Espadiau Mestre", "Ocarina",
 	"Bandana ninja", "Casco de tartaruga", "Nunchaku", "Fatia de pizza",
 	"Topete de ouriço", "Pelo azul", "Luvas brancas", "Tênis vermelhos",
 	"Capacete de ferro", "Armadura de ferro", "Luva repulsora", "Reator",
-	"Elmo alado", "Capa rubra", "Martelo", "Cinturão de força",
+	"Elmo alado", "Capa rubra", "Miaulnir", "Cinturão de força",
 	"Tiara de gelo", "Vestido de gelo", "Cetro de gelo", "Floco de neve",
 	"Capacete de bolha", "Traje espacial", "Laser de pulso", "Mochila a jato",
 	"Bandana com placa", "Macacão laranja", "Kunai", "Pergaminho",
@@ -173,9 +173,9 @@ enum Conjunto {
 	NINJA_FOLHA, ROBO_AZUL, TUBARAO, ABELHA,
 }
 
-const CONJUNTO_NOME: Array[String] = ["Cavaleiro", "Guardião", "Rei", "Circo", "Viking", "Jardineiro", "Caubói", "Pirata", "Mago",
-	"Encanador", "Homem-Morcego", "Garoto-Aranha", "Cavaleiro Estelar", "Lorde Sombrio", "Herói do Bosque", "Tartaruga Ninja", "Ouriço Veloz", "Armadura de Ferro", "Deus do Trovão", "Princesa do Gelo", "Patrulheiro Espacial",
-	"Ninja da Folha", "Robô Azul", "Tubarão", "Abelha",
+const CONJUNTO_NOME: Array[String] = ["Cavaleiro", "Guardamiau", "Sua Miauestade", "Palhamiau", "Vikingato", "Jardimiau", "Caubói", "Piramiau", "Miauerlin",
+	"Miaurio", "Batmiau", "Garoto-Aranhiau", "Jedimiau", "Darth Miauder", "Linkmiau", "Miauchelangelo", "Sonimiau", "Iron Miau", "Thormiau", "Elsamiau", "Buzz Lightmiau",
+	"Narutomiau", "Mega Miau", "Gatubarão", "Gatabelha",
 ]
 ## Peças de cada fantasia, na ordem dos espaços: cabeça, corpo, mão, acessório.
 const CONJUNTO_PECAS: Array = [
