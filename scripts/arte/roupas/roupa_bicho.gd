@@ -467,13 +467,14 @@ const _CHAPEU: Array = [
 		".oakkaakkao",
 		"oakeekkeeko",
 		".oddddddo.."]},
-	# 42 meon: franja loira cobrindo um olho
+	# 42 meon: cabelo repartido, curto atrás e a franja varrida para a frente, caindo na frente
 	{"cheio": false, "l": [
-		"..ooooooo..",
-		".oBBBBBBBo.",
-		"oBBbBBBBBBo",
-		"oBbb.BBBo.o",
-		"oBb.....o.."]},
+		"...oooooo..",
+		"..oBBBBBBo.",
+		".oBBbBBBBBo",
+		"obbbobBBBbo",
+		"obo..obBbbo",
+		".o....oobo."]},
 ]
 ## Quantos pixels a última linha do chapéu fica abaixo do topo do crânio.
 const _DESCE := 1
@@ -1156,6 +1157,23 @@ static func _enfeitar_lote2(conj: int, px: Dictionary, area: Dictionary, cx: Rec
 					continue
 				if v.x < x0 + cx.size.x / 3 or (bs.has(v.x) and v.y >= bs[v.x] - 1):
 					px[v] = C.call("b") if px[v] != C.call("A") else C.call("B")
+		Pecas.Conjunto.MEON:
+			# jaqueta de couro: gola de pelo creme no pescoço, costura escura descendo na frente e a tira do coldre no peito
+			for x in range(x1 - 3, x1 + 1):
+				if not tp.has(x):
+					continue
+				px[Vector2i(x, tp[x] - 1)] = C.call("e")
+				px[Vector2i(x, tp[x])] = C.call("e") if x % 2 == 0 else C.call("b")
+				px[Vector2i(x, tp[x] - 2)] = _COMUM["o"]
+			for p in area.keys():
+				var v: Vector2i = p
+				if dentro.call(v) and v.x == x1 - 5 and tp.has(v.x) and v.y > tp[v.x] + 1:
+					px[v] = C.call("d")
+			for x in range(x0 + cx.size.x / 3, x0 + cx.size.x / 3 + 2):
+				if tp.has(x) and bs.has(x):
+					for y in range(tp[x] + 1, bs[x]):
+						if dentro.call(Vector2i(x, y)):
+							px[Vector2i(x, y)] = _COMUM["k"]
 		Pecas.Conjunto.DISPARAMIAU:
 			# três ervilhas no flanco
 			var ym: int = cx.position.y + cx.size.y / 2

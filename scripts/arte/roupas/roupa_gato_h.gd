@@ -521,32 +521,35 @@ static func _montar_b(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_PAL_DEAD, {"x": Color("9c7c4f"), "r": _PAL_DEAD["a"], "D": Color("a66f26")}))]
 		# ---------------------------------------------------------------- Meon (Leon, Resident Evil 4 Remake)
 		Pecas.Tipo.FRANJA_LOIRA:
-			# cabelo loiro escuro curto por trás e a franja caindo sobre a testa e a metade de cima do olho; o focinho e as orelhas ficam à mostra
-			_txt(cv, 2, -16, [
-				".hh......",
-				".hh...hh.",
-				"hhhhhhhh.",
-				"hhh.hh...",
-				"hh.......",
-				"hh.......",
+			# cabelo do Leon: repartido no alto, curto na nuca e a franja varrida para a frente, caindo na frente do olho; as pontas
+			# das orelhas ficam de fora (orelha da frente em x 6..8 / y -18..-16, olho em x 7 / y -13)
+			_txt(cv, 3, -17, [
+				"hhh......",
+				"hhh...hhh",
+				"hhh..hhhh",
+				"hh.....hh",
+				"h.......h",
 			])
 			_luz(cv, "h", "H", "s")
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_MEON)]
 		Pecas.Tipo.JAQUETA_COURO:
-			# jaqueta de couro: ombreira clara, gola de pelo creme em dentes regulares, tira preta no peito e o coldre com o cabo da pistola
-			RoupaGatoF._tronco(cv, "j", -12, -5)
+			# jaqueta de couro: gola de pelo creme com dentes, tira preta no peito e o coldre com o cabo da pistola
+			# (tudo dentro do molde do tronco; a gola desce em diagonal pela costura do pescoço, do dorso até o peito)
+			# a barra fica em y -6, na linha da barriga, com os cantos de baixo arredondados: o alto das patas fica à mostra
+			RoupaGatoF._tronco(cv, "j", -12, -6)
+			cv.erase(Vector2i(-8, -6))
+			cv.erase(Vector2i(7, -6))
 			_luz(cv, "j", "J", "d")
-			_ret(cv, 0, -12, 3, -10, "J")
-			_txt(cv, 1, -12, [
-				"CCCCCC",
-				"CCCCCC",
-				"CcCcCc",
-				"c.c.c.",
+			_txt(cv, 0, -12, [
+				"CCC..",
+				"CCCC.",
+				".cCCC",
+				"...cC",
 			])
-			_lin(cv, Vector2i(6, -9), Vector2i(2, -5), "p")
-			_lin(cv, Vector2i(7, -9), Vector2i(3, -5), "p")
-			_ret(cv, -4, -9, -3, -5, "p")
+			_lin(cv, Vector2i(6, -9), Vector2i(3, -6), "p")
+			_lin(cv, Vector2i(7, -9), Vector2i(4, -6), "p")
+			_ret(cv, -4, -9, -3, -6, "p")
 			_ret(cv, -4, -11, -3, -10, "i")
 			_px(cv, -5, -10, "I")
 			_cont(cv, "o", false)
@@ -566,18 +569,18 @@ static func _montar_b(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_MEON)]
 		Pecas.Tipo.MALETA_MERCADOR:
-			# maleta do Mercador no dorso: alça, tampa com a fresta escura onde brilham dois olhos, trinco dourado
-			_txt(cv, -11, -21, [
-				"..pppp..",
+			# a maleta do Mercador pendurada no flanco: couro marrom com a tampa clara, alça curta em cima, costura no meio e dois
+			# trincos dourados
+			_txt(cv, -7, -10, [
 				"..pppp..",
 				"MMMMMMMM",
-				"mkkkkkkm",
-				"mkeekeem",
-				"mmmyymmm",
+				"mymmmmym",
 				"nnnnnnnn",
+				"mmmmmmmm",
+				"mmmmmmmm",
 			])
 			_cont(cv, "o")
-			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_PAL_MEON, {"k": _PAL_MEON["o"]}))]
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MEON)]
 	return []
 
 ## Roda de trás do carro (6x6, maior): pneu preto com brilho, aro cinza e miolo claro.
