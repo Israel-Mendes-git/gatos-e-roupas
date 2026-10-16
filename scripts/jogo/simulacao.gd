@@ -950,6 +950,11 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.furor_t = maxf(0.0, u.furor_t - dt)
 	u.bola_t = maxf(0.0, u.bola_t - dt)
 	u.disfarce_rasgou_t += dt
+	if u.disfarce_rearma_t > 0.0:
+		u.disfarce_rearma_t -= dt
+		if u.disfarce_rearma_t <= 0.0 and not u.disfarcado:
+			u.disfarcado = true
+			_ev({"t": "disfarce_refaz", "x": u.x, "y": u.y})
 	u.buff_dano_t = maxf(0.0, u.buff_dano_t - dt)
 	u.foco_t = maxf(0.0, u.foco_t - dt)
 	u.domo_t = maxf(0.0, u.domo_t - dt)
@@ -1212,8 +1217,12 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		# Disfarce (Mimiau): o 1º golpe some, o pano rasga e quem bateu leva um susto (chefe, menos)
 		alvo.disfarcado = false
 		alvo.disfarce_rasgou_t = 0.0
+		alvo.disfarce_rearma_t = Balanco.DISFARCE_REARMA_T
 		if atk.vivo and not atk.bola_t > 0.0:
 			atk.atordoado_t = maxf(atk.atordoado_t, alvo.disfarce_atordoa * (Balanco.DISFARCE_CHEFE_FATOR if atk.chefe else 1.0))
+		alvo.protegido_t = maxf(alvo.protegido_t, Balanco.DISFARCE_PROTEGE)
+		if atk.vivo:
+			_dano_poder(alvo, atk, Balanco.PODER_DANO * alvo.esc_dano * Balanco.DISFARCE_REVIDE * (Balanco.DISFARCE_BICHO_FATOR if alvo.equipe == 1 else 1.0))
 		var rivais: Array[Unidade] = inimigos if alvo.equipe == 0 else aliados
 		for v in rivais:
 			if v.vivo and v != atk and not v.chefe and _dentro(v, alvo.x, alvo.y, Balanco.DISFARCE_SUSTO_RAIO):
@@ -2442,6 +2451,9 @@ func _poder_imitar(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], bas
 	if u.disfarcado or u.disfarce_atordoa <= 0.0:
 		return false   # nada para copiar e o Disfarce está inteiro: espera um dos dois
 	u.disfarcado = true
+	u.disfarce_rearma_t = 0.0
+	if not em_heranca:
+		u.protegido_t = maxf(u.protegido_t, Balanco.DISFARCE_REFAZ_PROTEGE)
 	u.vida = minf(u.vida_max, u.vida + u.vida_max * (Balanco.DISFARCE_RASGA_CURA_HER if em_heranca else Balanco.DISFARCE_RASGA_CURA))
 	pontos.append(Vector2(u.x, u.y))
 	extra["texto"] = "Disfarce refeito!"

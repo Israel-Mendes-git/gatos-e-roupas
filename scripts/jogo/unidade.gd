@@ -100,6 +100,7 @@ var recarga_menos: float = 0.0  # kit do Jimiau: fração a menos no intervalo e
 var disfarcado: bool = false     # Disfarce (Mimiau): o próximo golpe é anulado e quem bateu fica atordoado
 var disfarce_atordoa: float = 0.0   # segundos de atordoamento em quem rasga o Disfarce (0 = sem a passiva)
 var disfarce_rasgou_t: float = 99.0  # quanto tempo faz que rasgou (só desenho)
+var disfarce_rearma_t: float = 0.0   # segundos até o pano se refazer sozinho (0 = parado)
 var buff_dano_t: float = 0.0    # Objeção!: dano a mais por alguns segundos
 var buff_dano: float = 0.0
 # lote 2 da expansão

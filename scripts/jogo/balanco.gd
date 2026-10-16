@@ -599,7 +599,11 @@ const DISFARCE_RASGA_CURA := 0.25       # Imitar sem o que copiar: refaz o Disfa
 const DISFARCE_RASGA_CURA_HER := 0.12
 const DISFARCE_SUSTO_RAIO := 90.0       # ao rasgar, quem está em volta também leva um susto
 const DISFARCE_SUSTO_T := 0.8
+const DISFARCE_REARMA_T := 7.0          # o pano rasgado se refaz sozinho depois disto (o Imitar refaz na hora)
+const DISFARCE_REVIDE := 3.5            # quem rasga o Disfarce leva este tanto x dano de referência de volta
+const DISFARCE_PROTEGE := 2.0           # segundos de proteção do Mimiau depois que o pano rasga
 const PODER_IMITAR_RECARGA := 0.35      # o Imitar recarrega mais depressa (fração a menos)
+const DISFARCE_REFAZ_PROTEGE := 3.0    # segundos de proteção ao refazer o Disfarce (só o poder do gato)
 # Mão de pôquer (Jimiau): dano no maior bando, por categoria da mão (carta alta ... straight flush)
 const PODER_POQUER_RAIO := 110.0
 const PODER_POQUER_CARTAS := 7   # a spec fala em 8, mas o valor esperado dela (~1,35 x base) é o de 7 cartas: com 8 dava 1,68
