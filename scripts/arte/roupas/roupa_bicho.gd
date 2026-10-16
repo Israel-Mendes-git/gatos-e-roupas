@@ -27,7 +27,7 @@ const _PAL: Array = [
 	{"a": Color("dcc89a"), "A": Color("f6ead0"), "d": Color("a08c64"), "b": Color("6a4a2c"), "B": Color("8e6a44"), "e": Color("66c8ff")},   # cavaleiro estelar
 	{"a": Color("2a2a34"), "A": Color("5a5c70"), "d": Color("121218"), "b": Color("8a8e9c"), "B": Color("c8ccd8"), "e": Color("e83a3a")},   # lorde sombrio
 	{"a": Color("3a9a3a"), "A": Color("70d060"), "d": Color("1e5e24"), "b": Color("8a5a30"), "B": Color("b07a44"), "e": Color("f2c230")},   # herói do bosque
-	{"a": Color("5a8a2a"), "A": Color("8ab84a"), "d": Color("344e18"), "b": Color("e8c860"), "B": Color("fff0a0"), "e": Color("2e58c8")},   # tartaruga ninja
+	{"a": Color("5e9440"), "A": Color("92c468"), "d": Color("3c6a2e"), "b": Color("e3cf8c"), "B": Color("f5e8b4"), "e": Color("e8873a")},   # tartaruga ninja (Miauchelangelo)
 	{"a": Color("2a5ae0"), "A": Color("6a92ff"), "d": Color("16308c"), "b": Color("f0d0a0"), "B": Color("fff0d8"), "e": Color("d8302e")},   # ouriço veloz
 	{"a": Color("c8282a"), "A": Color("f2605a"), "d": Color("7a1418"), "b": Color("e8b030"), "B": Color("fff09a"), "e": Color("8ae8ff")},   # armadura de ferro
 	{"a": Color("b82430"), "A": Color("e85a5a"), "d": Color("6c1018"), "b": Color("8a8e9c"), "B": Color("dce0ea"), "e": Color("f2c230")},   # deus do trovão
@@ -52,12 +52,12 @@ const _PAL: Array = [
 	{"a": Color("4a2f1b"), "A": Color("5e3f25"), "d": Color("33200f"), "b": Color("3b3fa0"), "B": Color("5a5fc8"), "e": Color("35e6c4")},   # miaucraft
 	{"a": Color("3b7f86"), "A": Color("62a8a8"), "d": Color("285a66"), "b": Color("f6e7bd"), "B": Color("fff6d8"), "e": Color("1b2a30")},   # miaulax
 	# lote 3 da expansão (37 a 42)
-	{"a": Color("3a6ee8"), "A": Color("7aa0ff"), "d": Color("1f3fa0"), "b": Color("4a9a3a"), "B": Color("8ad060"), "e": Color("ffd138")},   # leonarmiau
-	{"a": Color("9955cc"), "A": Color("c490f0"), "d": Color("5e2f8c"), "b": Color("4a9a3a"), "B": Color("8ad060"), "e": Color("5ad4ff")},   # donatemiau
-	{"a": Color("e03030"), "A": Color("ff7a6a"), "d": Color("8c1a1a"), "b": Color("4a9a3a"), "B": Color("8ad060"), "e": Color("2a2630")},   # rafamiau
-	{"a": Color("26a0ff"), "A": Color("7fd0ff"), "d": Color("1060b0"), "b": Color("ff8a1c"), "B": Color("ffc060"), "e": Color("ffffff")},   # rocket miaugue
+	{"a": Color("3470d0"), "A": Color("7ba5ec"), "d": Color("22489c"), "b": Color("e3cf8c"), "B": Color("f5e8b4"), "e": Color("e8bf3c")},   # leonarmiau
+	{"a": Color("8a4fc0"), "A": Color("b98ae0"), "d": Color("5c3492"), "b": Color("e3cf8c"), "B": Color("5fd08a"), "e": Color("e8bf3c")},   # donatemiau
+	{"a": Color("d03a34"), "A": Color("f0786a"), "d": Color("8c2024"), "b": Color("e3cf8c"), "B": Color("f5e8b4"), "e": Color("e8bf3c")},   # rafamiau
+	{"a": Color("26a0ff"), "A": Color("7fd0ff"), "d": Color("1060b0"), "b": Color("ff8a1c"), "B": Color("ffc060"), "e": Color("ffffff"), "v": Color("1a2a3e"), "V": Color("4a6a88")},   # rocket miaugue
 	{"a": Color("cc1a26"), "A": Color("ff5a60"), "d": Color("80101a"), "b": Color("2a2630"), "B": Color("5a5666"), "e": Color("ffffff")},   # deadmiau
-	{"a": Color("8c7355"), "A": Color("b89a73"), "d": Color("5a4630"), "b": Color("e8c860"), "B": Color("fff0a0"), "e": Color("2a2630")},   # meon
+	{"a": Color("94603a"), "A": Color("bc8a5e"), "d": Color("5e3a22"), "b": Color("cda85a"), "B": Color("f0d58c"), "e": Color("d8c8a0")},   # meon
 ]
 
 ## Cores da roupa de corpo que diferem das do chapéu (o barril do circo é de madeira, o avental do jardineiro é verde).
@@ -74,7 +74,10 @@ const _PAL_CORPO: Dictionary = {
 	33: {"a": Color("3c9a3c"), "A": Color("6cc15a"), "d": Color("256e2e"), "b": Color("f4c430"), "B": Color("ffe98a")},
 	34: {"a": Color("3f66b0"), "A": Color("6b90d0"), "d": Color("284585"), "b": Color("c8453c"), "B": Color("e8776a")},
 	35: {"a": Color("2eb8b8"), "A": Color("5ed6d0"), "d": Color("1b8a8c"), "b": Color("3b3fa0"), "B": Color("5a5fc8")},
+	15: _CASCO_BICHO, 37: _CASCO_BICHO, 38: _CASCO_BICHO, 39: _CASCO_BICHO,
 }
+## Casco do kit Tartaruga nos bichos: verde, plastrão bege na borda e a fivela dourada (e).
+const _CASCO_BICHO: Dictionary = {"a": Color("5e9440"), "A": Color("92c468"), "d": Color("3c6a2e"), "b": Color("e3cf8c"), "B": Color("f5e8b4"), "e": Color("e8bf3c")}
 static var corpo_vez: bool = false
 
 static func _cor(conj: int, ch: String) -> Color:
@@ -430,7 +433,7 @@ const _CHAPEU: Array = [
 		"..ooooooo..",
 		".oAAaaaaao.",
 		"oAaaaaaaaao",
-		"obbbbbbbbbo",
+		"oaaaaaawwko",
 		"...oo...oo.",
 		"..oao.oao.."]},
 	# 38 donatemiau: bandana roxa com os óculos de soldador na testa
@@ -447,7 +450,7 @@ const _CHAPEU: Array = [
 		".oAAaaaaaoo",
 		"oAaaaaaaaao",
 		"oeeoaaaoeeo",
-		"obbbbbbbbbo",
+		"oddddwwkddo",
 		"..........o"]},
 	# 40 rocket miaugue: capacete com a antena de rádio
 	{"cheio": true, "l": [
@@ -455,15 +458,15 @@ const _CHAPEU: Array = [
 		"..ooooooo.o",
 		".oAAaaaaaoo",
 		"oAaaaaaaaao",
-		"oaBBBBBBbao",
+		"oaVvvvvvVao",
 		"odddddddddo"]},
 	# 41 deadmiau: máscara vermelha de olhos brancos
 	{"cheio": true, "l": [
 		"...ooooo...",
 		"..oAaaaao..",
 		".oaaaaaaao.",
-		"oaeeaaaeeao",
-		"oaeeaaaeeao",
+		"okeeaaakeko",
+		"okeeaaakeko",
 		".oddddddo.."]},
 	# 42 meon: franja loira cobrindo um olho
 	{"cheio": false, "l": [
@@ -821,7 +824,7 @@ const _EMBLEMA: Array = [
 	[],                                          # cavaleiro estelar
 	["rGe", "GGG"],                              # lorde sombrio: painel
 	[".y.", "y.y"],                              # herói do bosque: três triângulos
-	[],                                          # tartaruga
+	["e", "e"],                                  # tartaruga: fivela do cinto
 	[],                                          # ouriço
 	[".e.", "eWe", ".e."],                       # armadura de ferro: reator
 	[],                                          # deus do trovão
@@ -843,9 +846,9 @@ const _EMBLEMA: Array = [
 	[],                                          # stardew miaulley: bolso no enfeite
 	[],                                          # miaucraft
 	[],                                          # miaulax: barriga no enfeite
-	["b", "b"],                                  # leonarmiau: fivela do cinto
-	["e", "e"],                                  # donatemiau: tela do computador
-	["b", "b"],                                  # rafamiau: fivela do cinto
+	["e", "e"],                                  # leonarmiau: fivela do cinto
+	["e", "e"],                                  # donatemiau: fivela do cinto
+	["e", "e"],                                  # rafamiau: fivela do cinto
 	["bB", "Bb"],                                # rocket miaugue: chama pintada
 	["bB", "Bb"],                                # deadmiau: remendo
 	[],                                          # meon
@@ -984,7 +987,7 @@ static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary
 			for y in range(tp.get(x1, 0), bs.get(x1, 0)):
 				if dentro.call(Vector2i(x1, y)):
 					px[Vector2i(x1, y)] = _COMUM["w"]
-		Pecas.Conjunto.TARTARUGA:
+		Pecas.Conjunto.TARTARUGA, Pecas.Conjunto.LEONARMIAU, Pecas.Conjunto.DONATEMIAU, Pecas.Conjunto.RAFAMIAU:
 			# placas do casco e borda amarela
 			for p in area.keys():
 				var v: Vector2i = p
