@@ -3,10 +3,15 @@ extends RefCounted
 ## Roupas do gato em pixel art, tipos 148 em diante (ver RoupaGato para as convenções): expansão das fantasias, lote 3
 ## (Leonarmiau 148-151, Donatemiau 152-155, Rafamiau 156-159, Rocket Miaugue 160-163, Deadmiau 164-167, Meon 168-171).
 ##
-## FALLBACK: enquanto uma peça não tem arte própria em `_camadas`, desenha a silhueta de uma peça do mesmo espaço (cabeça, corpo,
-## mão ou acessório do lado de fora, em RoupaGatoE.PECAS) tingida com a cor da fantasia.
-## COMO O ARTISTA ENTRA: devolva em `_camadas` as camadas [x, y, linhas, paleta] da peça (mesmo formato de RoupaGatoE._camadas);
-## `caixa` e `desenhar` já usam o que vier de lá. Descrição visual de cada peça: lote3/para_arte.md.
+## COMO ENCAIXA NO GATO: igual ao RoupaGatoG, cada peça é escrita em letras (`_txt`) em COORDENADAS DO GATO (x para a frente, y para
+## cima, pé em 0; cabeça em x 3..10 / y -17..-10, tronco em x -8..7 / y -12..-5) e convertida para o lugar onde fica presa. O contorno
+## de 1 px (nos 4 vizinhos, sem a borda de baixo do corpo) e a luz/sombra vêm por regra (`_cont`, `_luz`); sem ruído nem alfa.
+## Camada [x, y, linhas, paleta, true] = ATRÁS do corpo (asa do Rocket, cabos das katanas do Deadmiau, propulsor).
+##
+## KIT TARTARUGA: o casco, o cinto e a fivela são os mesmos nas quatro (Leonarmiau, Donatemiau, Rafamiau e a Miauchelangelo, que o
+## pega daqui por `casco_miau`): só mudam a bandana, a arma e o detalhe do casco. Ficha: notas/lote3_ficha_visual.md.
+##
+## FALLBACK: peça sem arte própria em `_montar` desenha a silhueta de uma peça do lado de fora, tingida.
 
 const PRIMEIRO := 148
 ## Silhuetas de reserva por espaço (cabeça, corpo, mão, acessório); cada fantasia usa uma das 4 colunas, para não ficarem todas iguais.
@@ -18,16 +23,626 @@ const _MOLDE_FALLBACK: Array = [
 ]
 
 ## Lugar do acessório no gato (RoupaGato.Onde); -1 = padrão (cabeça, corpo, boca e traseira).
-static func onde(_tipo: int) -> int:
+static func onde(tipo: int) -> int:
+	match tipo:
+		Pecas.Tipo.CINTO_L, Pecas.Tipo.COMPUTADOR_PULSO, Pecas.Tipo.CINTO_R, Pecas.Tipo.CHIMICHANGA, Pecas.Tipo.MALETA_MERCADOR:
+			return RoupaGato.Onde.CORPO
 	return -1
 
-## Peças com camada atrás do corpo do gato (nenhuma ainda).
-static func tem_atras(_tipo: int) -> bool:
-	return false
+## Peças com camada atrás do corpo do gato.
+static func tem_atras(tipo: int) -> bool:
+	return tipo == Pecas.Tipo.CARROCERIA_TURBO or tipo == Pecas.Tipo.TRAJE_REMENDADO or tipo == Pecas.Tipo.PROPULSOR_TURBO
 
-## Camadas da peça com arte própria; vazio = usa o fallback.
-static func _camadas(_tipo: int, _anim: float, _maxima: bool = false) -> Array:
+# ------------------------------------------------------------------ paletas
+## Kit Tartaruga (igual nas quatro): o contorno verde-noite; a/b/d casco (médio, luz, sombra); e plastrão; t/u couro do cinto (médio,
+## sombra); g/G fivela (média, sombra).
+const _KIT := {
+	"o": Color("0c1708"), "a": Color("5e9440"), "b": Color("92c468"), "d": Color("3c6a2e"), "e": Color("e3cf8c"),
+	"t": Color("8a5a30"), "u": Color("5c3a1e"), "g": Color("e8bf3c"), "G": Color("b58a1e"),
+}
+## Bandanas: o contorno da cor, a/b/d (médio, luz, sombra); w branco do olho; k pupila.
+const _BAND_LEO := {"o": Color("0a1233"), "a": Color("3470d0"), "b": Color("7ba5ec"), "d": Color("22489c")}
+const _BAND_DONA := {"o": Color("1a0b2e"), "a": Color("8a4fc0"), "b": Color("b98ae0"), "d": Color("5c3492")}
+const _BAND_RAFA := {"o": Color("2b0808"), "a": Color("d03a34"), "b": Color("f0786a"), "d": Color("8c2024")}
+const _OLHO := {"w": Color("f4f6f0"), "k": Color("0c1708")}
+## Rocket Miaugue: o azul-noite; a/b/d carroceria (média, luz, sombra); v/V vidro (escuro, brilho); k/K pneu (preto, brilho);
+## m aro; M branco da bola (e miolo do aro); q sombra da bola; x/y brilho dos hexágonos (claro, escuro); f/n/F chama laranja
+## (média, luz, sombra).
+const _PAL_ROCKET := {
+	"o": Color("0a1022"), "a": Color("2f72d8"), "b": Color("78a8f0"), "d": Color("1f4aa0"),
+	"v": Color("1a2a3e"), "V": Color("4a6a88"), "k": Color("26242c"), "K": Color("46424e"),
+	"m": Color("b4bcc6"), "M": Color("eef2f4"), "q": Color("9aa6b0"), "x": Color("6ee0e8"), "y": Color("2a9aa8"),
+	"f": Color("f0922a"), "n": Color("ffd36a"), "F": Color("c25a14"),
+}
+## Deadmiau: o preto-vinho; a/b/d vermelho (médio, luz, sombra); p/P preto do traje (médio, luz); k mancha dos olhos; w branco do olho;
+## C fivela e guarda; c/D papelão (médio, sombra) e papelão claro L; g fita cinza; m remendo; Y/y/z chimichanga (luz, média, sombra).
+const _PAL_DEAD := {
+	"o": Color("0a0608"), "a": Color("b8222c"), "b": Color("e0565a"), "d": Color("7c161f"),
+	"p": Color("2b2630"), "P": Color("4a4350"), "k": Color("2b2630"), "w": Color("f4f2ee"),
+	"C": Color("c9b98c"), "c": Color("c9a878"), "L": Color("e3cfa3"), "D": Color("9c7c4f"), "g": Color("8a8e98"), "m": Color("7a6a8c"),
+	"Y": Color("f2cd7a"), "y": Color("d9a441"), "z": Color("a66f26"),
+}
+## Meon: o marrom-noite; h/H/s cabelo (médio, luz, sombra); j/J/d jaqueta (média, luz, sombra); C/c gola de pelo (média, sombra);
+## p preto do couro; i/I/S metal (médio, luz, sombra); y trinco; e olhos; m/M/n maleta (média, luz, sombra).
+const _PAL_MEON := {
+	"o": Color("150c08"), "h": Color("cda85a"), "H": Color("f0d58c"), "s": Color("9a7430"),
+	"j": Color("94603a"), "J": Color("bc8a5e"), "d": Color("5e3a22"), "C": Color("d8c8a0"), "c": Color("a8946a"),
+	"p": Color("2e2a2c"), "i": Color("8c9aa6"), "I": Color("c5d0d8"), "S": Color("58626e"), "y": Color("c9a040"), "e": Color("fff0a0"),
+	"m": Color("7a4a2a"), "M": Color("a87040"), "n": Color("4c2c18"),
+}
+
+# ------------------------------------------------------------------ ferramentas (usam as telas de RoupaGatoF e RoupaGatoG)
+static func _ret(cv: Dictionary, x0: int, y0: int, x1: int, y1: int, ch: String) -> void:
+	RoupaGatoF._ret(cv, x0, y0, x1, y1, ch)
+
+static func _px(cv: Dictionary, x: int, y: int, ch: String) -> void:
+	cv[Vector2i(x, y)] = ch
+
+static func _lin(cv: Dictionary, a: Vector2i, b: Vector2i, ch: String) -> void:
+	RoupaGatoF._lin(cv, a, b, ch)
+
+static func _poli(cv: Dictionary, p: Array, ch: String) -> void:
+	RoupaGatoF._poli(cv, p, ch)
+
+static func _cont(cv: Dictionary, ch: String, baixo: bool = true) -> void:
+	RoupaGatoF._cont(cv, ch, baixo)
+
+static func _luz(cv: Dictionary, base: String, luz: String, sombra: String = "") -> void:
+	RoupaGatoF._luz(cv, base, luz, sombra)
+
+static func _lay(cv: Dictionary, lugar: int, pal: Dictionary, atras: bool = false) -> Array:
+	return RoupaGatoF._lay(cv, lugar, pal, atras)
+
+static func _txt(cv: Dictionary, x: int, y: int, linhas: Array) -> void:
+	RoupaGatoG._txt(cv, x, y, linhas)
+
+static func _anel(cv: Dictionary, de: String, para: String, tambem: String = "") -> void:
+	RoupaGatoG._anel(cv, de, para, tambem)
+
+static func _pal(base: Dictionary, a: Dictionary, b: Dictionary = {}) -> Dictionary:
+	var p: Dictionary = base.duplicate()
+	p.merge(a, true)
+	p.merge(b, true)
+	return p
+
+## Tira da tela o que não é tronco do gato (x -8..7 / y -12..-5): o casco e o traje não passam do corpo.
+static func _so_tronco(cv: Dictionary) -> void:
+	var m: Dictionary = {}
+	RoupaGatoF._tronco(m, "x", -12, -5)
+	for k in cv.keys():
+		if not m.has(k):
+			cv.erase(k)
+
+# ------------------------------------------------------------------ kit Tartaruga
+## Letra da inicial (3x3) na fivela: "u" = traço escuro, "g" = ouro.
+const _INICIAL := {
+	"L": ["ugg", "ugg", "uuu"], "D": ["uug", "ugu", "uug"], "R": ["uug", "uug", "ugu"], "M": ["uuu", "uuu", "ugu"],
+}
+
+## Casco do kit no tronco: gomos verdes com sulcos claros, cinto marrom com fivela dourada e a inicial, plastrão embaixo.
+## `torto` = o cinto da direita desce 1 px (Rafamiau).
+static func _casco_kit(cv: Dictionary, inicial: String, torto: bool = false) -> void:
+	_txt(cv, -8, -12, [
+		"...aaaaaaaa.....",
+		"..aabaaabaa.....",
+		".aaabaaabaa.....",
+		"aaaabaaabaa.....",
+		"ddddbdddbdd.....",
+	])
+	var gl: Array = _INICIAL[inicial]
+	var dy: int = 1 if torto else 0
+	# cinto de 2 px em volta do tronco; a fivela de 5x5 na frente, com a inicial de 3x3
+	for x in range(-8, 3):
+		var y0: int = -7 + (dy if x >= -1 else 0)
+		cv[Vector2i(x, y0)] = "t"
+		cv[Vector2i(x, y0 + 1)] = "u"
+	for j in 5:
+		for i in 5:
+			var ch: String = "g"
+			if j == 4:
+				ch = "G"
+			elif j >= 1 and j <= 3 and i >= 1 and i <= 3:
+				ch = String(gl[j - 1])[i - 1]
+			cv[Vector2i(3 + i, -9 + j)] = ch
+	if torto:
+		_ret(cv, -1, -7, 3, -6, "e")
+	_ret(cv, -8, -5, 3, -4, "e")
+	_so_tronco(cv)
+
+## Casco do kit pronto (camada do corpo) com a luz por regra e o contorno.
+static func _casco_pronto(cv: Dictionary, pal: Dictionary) -> Array:
+	_luz(cv, "a", "b", "d")
+	_cont(cv, "o", false)
+	return _lay(cv, RoupaGato.Onde.CORPO, pal)
+
+## Casco do kit com o M da Miauchelangelo, em camadas [x, y, linhas, paleta] para RoupaGatoC (corpo; o mesmo desenho das outras).
+static var _cache_miau: Array = []
+static func casco_miau() -> Array:
+	if _cache_miau.is_empty():
+		var cv: Dictionary = {}
+		_casco_kit(cv, "M")
+		_cache_miau = [_casco_pronto(cv, _KIT)]
+	return _cache_miau
+
+# ------------------------------------------------------------------ bandanas
+## Bandana-chapéu com a máscara do olho (branco com pupila) e as duas pontas atrás, que balançam em dois quadros (`fase` 0 ou 1).
+## `modo`: 0 reto (Leonarmiau, sobrancelha reta), 1 de óculos (Donatemiau), 2 torta e brava (Rafamiau).
+static func _bandana(cv: Dictionary, fase: int, modo: int) -> void:
+	if modo == 2:
+		_txt(cv, 2, -16, [
+			"aaaa.....",
+			"aaaaaaaaa",
+			"aaaaawwwa",
+			"....awwka",
+			"....aaaaa",
+		])
+	else:
+		_txt(cv, 2, -15, [
+			"aaaaaaaaa",
+			"aaaaawwwa",
+			"aaaaawwka",
+			"....aaaaa",
+		])
+	_luz(cv, "a", "b", "d")
+	if modo == 0:
+		_ret(cv, 7, -15, 10, -14, "o")
+	if modo == 2:
+		# sobrancelha grossa que desce para o focinho
+		_ret(cv, 7, -15, 10, -14, "o")
+		_px(cv, 9, -14, "o")
+	# as pontas soltas: uma sobe, outra cai; no outro quadro trocam
+	if modo == 2:
+		if fase == 0:
+			_txt(cv, -3, -18, ["...aa.", "..aaa.", ".aaaaa"])
+			_txt(cv, -1, -13, ["aaa", "aa."])
+		else:
+			_txt(cv, -3, -19, ["..aa.", ".aaa.", "aaaaa", "..aaa"])
+			_txt(cv, -2, -14, ["aaaa", "..aa"])
+	elif fase == 0:
+		_txt(cv, -2, -17, ["aa..", "aaa.", ".aaa"])
+		_txt(cv, -3, -13, [".aaaa", "aaa.."])
+	else:
+		_txt(cv, -2, -18, ["...aa", "..aaa", ".aaaa", "..aaa"])
+		_txt(cv, -4, -13, [".aaaaa", "aaa..."])
+	if modo == 1:
+		# óculos de soldador empurrados para a testa: duas lentes de aro cinza e vidro verde, com a tira
+		_txt(cv, 4, -19, [
+			"iiiiii",
+			"iviivi",
+			"iiiiii",
+		])
+		_px(cv, 3, -18, "k")
+		_px(cv, 10, -18, "k")
+
+# ------------------------------------------------------------------ peças
+static var _cache: Dictionary = {}
+
+## Camadas da peça com arte própria; vazio = usa o fallback. As bandanas e o propulsor têm dois quadros (balançam).
+static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
+	var fase: int = 0
+	if not maxima and (Pecas.SLOT[tipo] == Pecas.SLOT_CABECA or tipo == Pecas.Tipo.PROPULSOR_TURBO):
+		fase = 1 if sin(anim * 4.0) > 0.0 else 0
+	var chave: int = tipo * 2 + fase
+	if _cache.has(chave):
+		return _cache[chave]
+	var r: Array = _montar(tipo, fase)
+	_cache[chave] = r
+	return r
+
+static func _montar(tipo: int, fase: int) -> Array:
+	var cv: Dictionary = {}
+	match tipo:
+		# ---------------------------------------------------------------- Leonarmiau (Leonardo)
+		Pecas.Tipo.BANDANA_AZUL:
+			_bandana(cv, fase, 0)
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _pal(_BAND_LEO, _OLHO))]
+		Pecas.Tipo.CASCO_POLIDO:
+			# o casco do kit com o polido: 3 px de brilho claro no canto de cima de uma placa
+			_casco_kit(cv, "L")
+			_luz(cv, "a", "b", "d")
+			_px(cv, -3, -11, "h")
+			_px(cv, -2, -11, "h")
+			_px(cv, -3, -10, "h")
+			_cont(cv, "o", false)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, {"h": Color("d5f0aa")}))]
+		Pecas.Tipo.KATANAS_GEMEAS:
+			# katana reta na boca (cabo azul, guarda dourada, lâmina longa e fina) e outra, mais curta, cruzando em diagonal
+			_ret(cv, 10, -11, 13, -9, "a")
+			_ret(cv, 10, -10, 13, -9, "d")
+			_ret(cv, 14, -12, 15, -8, "g")
+			_ret(cv, 15, -11, 25, -10, "C")
+			_ret(cv, 15, -10, 25, -9, "c")
+			_px(cv, 25, -11, "C")
+			_px(cv, 25, -10, "c")
+			for i in 11:
+				_px(cv, 14 + i, -6 - i, "c")
+				_px(cv, 13 + i, -6 - i, "C")
+			for i in 3:
+				_px(cv, 14 + i, -6 - i, "d")
+				_px(cv, 13 + i, -6 - i, "a")
+			_px(cv, 16, -10, "g")
+			_px(cv, 17, -9, "g")
+			_px(cv, 15, -11, "g")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.BOCA, _pal(_KIT, {"a": _BAND_LEO["a"], "d": _BAND_LEO["d"], "C": Color("f0f4f8"), "c": Color("c8d0da")}))]
+		Pecas.Tipo.CINTO_L:
+			# cinto de campeão no dorso: tiras de couro e a placa dourada com o L em azul escuro
+			_txt(cv, -9, -19, [
+				".gggggg.",
+				"tgdggggt",
+				"tgdggggt",
+				"tgdddggt",
+				".GGGGGG.",
+			])
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, {"d": _BAND_LEO["d"]}))]
+		# ---------------------------------------------------------------- Donatemiau (Donatello)
+		Pecas.Tipo.BANDANA_ROXA:
+			_bandana(cv, fase, 1)
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _pal(_BAND_DONA, _OLHO, _PAL_FERRO))]
+		Pecas.Tipo.CASCO_ENGENHOCAS:
+			# o casco do kit com a mochila de engenhocas: caixa cinza, antena e a lâmpada acesa
+			_casco_kit(cv, "D")
+			_luz(cv, "a", "b", "d")
+			var mo: Dictionary = {}
+			_ret(mo, -6, -12, -1, -9, "i")
+			_ret(mo, -4, -15, -2, -12, "i")
+			_ret(mo, -5, -18, -2, -15, "Y")
+			_luz(mo, "i", "", "j")
+			cv.merge(mo, true)
+			_cont(cv, "o", false)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, _PAL_FERRO, {"Y": Color("ffe97a"), "k": _KIT["o"]}))]
+		Pecas.Tipo.BASTAO_BO:
+			# bô de madeira com ponteiras de ferro e uma faixa roxa na pegada, saindo da boca em diagonal suave
+			_lin(cv, Vector2i(10, -9), Vector2i(26, -15), "u")
+			_lin(cv, Vector2i(10, -10), Vector2i(26, -16), "t")
+			_lin(cv, Vector2i(10, -9), Vector2i(12, -9), "i")
+			_lin(cv, Vector2i(10, -10), Vector2i(12, -10), "i")
+			_lin(cv, Vector2i(25, -15), Vector2i(26, -15), "i")
+			_lin(cv, Vector2i(25, -16), Vector2i(26, -16), "i")
+			for k in cv.keys():
+				var v: Vector2i = k
+				if v.x >= 17 and v.x <= 18 and cv[v] != "i":
+					cv[v] = "a"
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.BOCA, _pal(_KIT, _PAL_FERRO, {"a": _BAND_DONA["a"]}))]
+		Pecas.Tipo.COMPUTADOR_PULSO:
+			# computador de pulso no dorso: caixa cinza, tela verde com a linha do gráfico e dois botões
+			_txt(cv, -9, -19, [
+				".iiiiii.",
+				"ikkvkkki",
+				"ikvkvkvi",
+				"iiiiiiii",
+				"iYiiiwii",
+				".jjjjjj.",
+			])
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, _PAL_FERRO, {"Y": Color("ffe97a"), "k": _KIT["o"], "w": _OLHO["w"]}))]
+		# ---------------------------------------------------------------- Rafamiau (Raphael)
+		Pecas.Tipo.BANDANA_VERMELHA:
+			_bandana(cv, fase, 2)
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _pal(_BAND_RAFA, _OLHO))]
+		Pecas.Tipo.CASCO_ARRANHADO:
+			# o casco do kit, mais riscado: 3 arranhões fixos, uma lasca na borda e o adesivo de 4x3
+			_casco_kit(cv, "R", true)
+			_luz(cv, "a", "b", "d")
+			_ret(cv, -2, -11, 2, -8, "e")
+			_px(cv, -1, -10, "o")
+			_px(cv, 0, -10, "o")
+			_px(cv, -1, -9, "o")
+			for p in [Vector2i(-7, -10), Vector2i(-6, -9)]:
+				_px(cv, p.x, p.y, "d")
+			for p2 in [Vector2i(-5, -12), Vector2i(-4, -11)]:
+				_px(cv, p2.x, p2.y, "d")
+			for p3 in [Vector2i(-3, -11), Vector2i(-2, -10)]:
+				_px(cv, p3.x, p3.y, "b")
+			cv.erase(Vector2i(2, -12))
+			_cont(cv, "o", false)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _KIT)]
+		Pecas.Tipo.PAR_DE_SAIS:
+			# sai de 3 pontas (espeto central e dois dentes laterais em degraus) na boca, e outra cruzando em diagonal por trás
+			for k in 9:
+				_px(cv, 11 + k, -12 - k, "i")
+				_px(cv, 12 + k, -12 - k, "I")
+			for k2 in 3:
+				_px(cv, 11 + k2, -12 - k2, "u")
+				_px(cv, 12 + k2, -12 - k2, "u")
+			_px(cv, 13, -16, "i")
+			_px(cv, 14, -15, "i")
+			_px(cv, 15, -14, "i")
+			_ret(cv, 10, -11, 14, -9, "u")
+			_ret(cv, 14, -15, 15, -6, "i")
+			_ret(cv, 15, -11, 24, -9, "i")
+			_ret(cv, 15, -15, 19, -14, "i")
+			_ret(cv, 18, -16, 20, -15, "i")
+			_ret(cv, 15, -7, 19, -6, "i")
+			_ret(cv, 18, -6, 20, -5, "i")
+			_ret(cv, 15, -11, 24, -10, "I")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.BOCA, _pal(_KIT, _PAL_FERRO))]
+		Pecas.Tipo.CINTO_R:
+			# cinto vermelho mal-humorado no dorso: tiras e a placa dourada com o R, torta
+			_txt(cv, -9, -19, [
+				".gggggg.",
+				"agugggga",
+				"agugggga",
+				"aguguggG",
+				".GGGGGG.",
+			])
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_KIT, {"a": _BAND_RAFA["a"]}))]
+	return _montar_b(tipo, fase)
+
+## Ferro e cinza compartilhados (óculos, mochila, sai, bô, computador, punho da faca): i/I/j médio, luz e sombra.
+const _PAL_FERRO := {"i": Color("8c9aa6"), "I": Color("c5d0d8"), "j": Color("58626e"), "v": Color("5fd08a")}
+
+static func _montar_b(tipo: int, fase: int) -> Array:
+	var cv: Dictionary = {}
+	match tipo:
+		# ---------------------------------------------------------------- Rocket Miaugue (Octane, Rocket League)
+		Pecas.Tipo.PARABRISA_CAPACETE:
+			# cúpula azul só no alto da cabeça, para-brisa escuro em cunha sobre o olho (focinho à mostra) e antena de rádio para trás
+			_txt(cv, 2, -18, [
+				"..aaaaa...",
+				".aaaaaaaa.",
+				"aaaaVvvvvv",
+				"aaaavvvvvv",
+				"aaaaaavvvv",
+			])
+			_luz(cv, "a", "b", "d")
+			_px(cv, 7, -16, "V")
+			_px(cv, 8, -15, "V")
+			_txt(cv, -1, -24, [
+				"nn..",
+				"nn..",
+				".mm.",
+				".mm.",
+				"..mm",
+				"..mm",
+			])
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_ROCKET)]
+		Pecas.Tipo.CARROCERIA_TURBO:
+			# o tronco vira o perfil do carro: cabine alta atrás, capô baixo, rodas grandes e chamas pintadas na lateral;
+			# atrás do corpo ficam a asa e o para-choque traseiros
+			_txt(cv, -8, -12, [
+				"...bbbbbbbb.....",
+				"..aaaaaaVvvv....",
+				".aaaaaaaavvv....",
+				"aaaaaaaaaaaaaaaa",
+				"aaaaaaaaaaaaaaaa",
+				"aaaaaaaaaaaaaaaa",
+				"aaaaaaaaaaaaaaaa",
+				"dddddddddddddddd",
+			])
+			_txt(cv, -3, -8, [
+				"aaaaaa",
+				"fffaaa",
+				"ffnnfa",
+				"afffaa",
+			])
+			_so_tronco(cv)
+			_roda(cv, -8, -8)
+			_roda(cv, 3, -8)
+			_cont(cv, "o", false)
+			var at: Dictionary = {}
+			_txt(at, -13, -17, [
+				"aa.....",
+				"aa.....",
+				"aa.....",
+				"aa.....",
+				"bd.....",
+				".kk....",
+				"..kk...",
+			])
+			_txt(at, -11, -9, [
+				"bbb",
+				"kkk",
+				"kkk",
+				"kKk",
+				"kkk",
+			])
+			_cont(at, "o")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_ROCKET), _lay(at, RoupaGato.Onde.CORPO, _PAL_ROCKET, true)]
+		Pecas.Tipo.BOLA_COSMICA:
+			# bola de Rocket League: branca, sombreada embaixo, com um hexágono central de linhas ciano e meios hexágonos nas bordas
+			_txt(cv, 12, -19, [
+				"..MMMMMM..",
+				".MMMMMMMM.",
+				"MMMMMMMMMM",
+				"MMMMMMMMMM",
+				"MMMMMMMMMM",
+				"MMMMMMMMMM",
+				"MMMMMMMMMM",
+				"MMMMMMMMMM",
+				".MMMMMMMM.",
+				"..MMMMMM..",
+			])
+			var hx: Dictionary = {}
+			_poli(hx, [17.0, -17.0, 19.6, -15.5, 19.6, -12.5, 17.0, -11.0, 14.4, -12.5, 14.4, -15.5], "H")
+			_anel(hx, "H", "x")
+			for k in hx.keys():
+				if hx[k] == "x":
+					cv[k] = "x"
+			_px(cv, 12, -15, "x")
+			_px(cv, 12, -14, "x")
+			_px(cv, 21, -16, "x")
+			_px(cv, 20, -17, "x")
+			_px(cv, 20, -11, "x")
+			_px(cv, 21, -12, "x")
+			for k2 in cv.keys():
+				var v: Vector2i = k2
+				if cv[v] == "M" and (v.x - 16) + (v.y + 14) > 3:
+					cv[v] = "q"
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_ROCKET)]
+		Pecas.Tipo.PROPULSOR_TURBO:
+			# bocal cinza e chama laranja de três degraus (borda, miolo, núcleo claro) que alterna de tamanho
+			var cp: int = 8 if fase == 0 else 6
+			_ret(cv, -11 - cp, -10, -11, -6, "F")
+			_ret(cv, -11 - cp + 2, -9, -11, -7, "f")
+			_ret(cv, -11 - cp + 4, -9, -11, -8, "n")
+			_ret(cv, -11, -10, -8, -6, "m")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.TRASEIRA, _PAL_ROCKET, true)]
+		# ---------------------------------------------------------------- Deadmiau (Deadpool)
+		Pecas.Tipo.MASCARA_VERMELHA:
+			# máscara fechada com orelhas de 3 px e a mancha preta inclinada em gota (mais baixa para o nariz) com o olho branco grande
+			_txt(cv, 3, -18, [
+				".aa..aa.",
+				".aaaaaaa",
+				"aaaaaaaa",
+				"aaaaaaaa",
+				"aaaaaaaa",
+				"aaaaaaaa",
+				"aaaaaaaa",
+				"aaaaaaaa",
+			])
+			_luz(cv, "a", "b", "d")
+			_txt(cv, 6, -15, [
+				"kkk..",
+				"kwwk.",
+				".kwwk",
+				"..kkk",
+			])
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_DEAD)]
+		Pecas.Tipo.TRAJE_REMENDADO:
+			# traje bicolor: vermelho na frente e preto nas costas, cinto preto com a fivela bege, coldre e dois remendos;
+			# atrás do corpo, os cabos das duas katanas cruzadas nas costas
+			_txt(cv, -8, -12, [
+				"...ppaaaaaa.....",
+				"..pppaaaaaa.....",
+				".ppppaaaaaa.....",
+				"ppppaaaaaaaaaaaa",
+				"ppppaaaaaaaaaaaa",
+				"ppppaaaaaaaaaaaa",
+				"pppppppppppppppp",
+				"pppppppppppppppp",
+			])
+			_luz(cv, "a", "b", "d")
+			_luz(cv, "p", "P", "")
+			_ret(cv, 0, -9, 2, -7, "m")
+			_ret(cv, 5, -10, 7, -8, "m")
+			_ret(cv, -3, -9, 0, -5, "p")
+			_px(cv, -2, -9, "P")
+			_ret(cv, 3, -7, 6, -5, "C")
+			_so_tronco(cv)
+			_cont(cv, "o", false)
+			var at: Dictionary = {}
+			_txt(at, -7, -19, [
+				"C.....C.",
+				"pC...Cp.",
+				"pp...pp.",
+				".pp.pp..",
+				".pp.pp..",
+			])
+			_cont(at, "o")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_DEAD), _lay(at, RoupaGato.Onde.CORPO, _PAL_DEAD, true)]
+		Pecas.Tipo.KATANAS_PAPELAO:
+			# duas katanas de papelão (bege, fita cinza no cabo): uma reta na boca e outra cruzando, dobrada com um degrau e a ponta caída
+			_ret(cv, 10, -11, 13, -9, "g")
+			_ret(cv, 14, -12, 15, -8, "D")
+			_ret(cv, 15, -11, 24, -10, "L")
+			_ret(cv, 15, -10, 24, -9, "c")
+			for i in 5:
+				_px(cv, 13 + i, -6 - i, "c")
+				_px(cv, 14 + i, -6 - i, "L")
+			for i2 in 3:
+				_px(cv, 13 + i2, -6 - i2, "g")
+				_px(cv, 14 + i2, -6 - i2, "g")
+			_px(cv, 19, -11, "L")
+			_px(cv, 20, -11, "L")
+			_px(cv, 21, -11, "L")
+			_px(cv, 22, -10, "L")
+			_px(cv, 22, -9, "c")
+			_px(cv, 23, -9, "c")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_DEAD)]
+		Pecas.Tipo.CHIMICHANGA:
+			# chimichanga dourada no dorso, com duas dobras, o recheio saindo e a bandeirinha de palito
+			_txt(cv, -15, -21, [
+				"..xx....",
+				"..xx.rrr",
+				"..xx.rr.",
+				"..xx....",
+				"YYYYYYYY",
+				"yyDyyDyr",
+				"yyDyyDrr",
+				"zzzzzzzz",
+			])
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_PAL_DEAD, {"x": Color("9c7c4f"), "r": _PAL_DEAD["a"], "D": Color("a66f26")}))]
+		# ---------------------------------------------------------------- Meon (Leon, Resident Evil 4 Remake)
+		Pecas.Tipo.FRANJA_LOIRA:
+			# cabelo loiro escuro como boné (as orelhas passam) e a franja em duas mechas descendo sobre o olho
+			_txt(cv, 2, -16, [
+				"..hhhhhh.",
+				".hhhhhhhh",
+				"hhhhhhhhh",
+				"hh...hhhh",
+				".....hhh.",
+				"......h..",
+			])
+			_luz(cv, "h", "H", "s")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_MEON)]
+		Pecas.Tipo.JAQUETA_COURO:
+			# jaqueta de couro: ombreira clara, gola de pelo creme em dentes regulares, tira preta no peito e o coldre com o cabo da pistola
+			RoupaGatoF._tronco(cv, "j", -12, -5)
+			_luz(cv, "j", "J", "d")
+			_ret(cv, 0, -12, 3, -10, "J")
+			_txt(cv, 1, -12, [
+				"CCCCCC",
+				"CCCCCC",
+				"CcCcCc",
+				"c.c.c.",
+			])
+			_lin(cv, Vector2i(6, -9), Vector2i(2, -5), "p")
+			_lin(cv, Vector2i(7, -9), Vector2i(3, -5), "p")
+			_ret(cv, -5, -8, -2, -5, "p")
+			_ret(cv, -4, -10, -2, -8, "i")
+			_cont(cv, "o", false)
+			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MEON)]
+		Pecas.Tipo.FACA_TATICA:
+			# faca de combate: cabo preto, guarda, lâmina cinza de 7 px com serrilha periódica embaixo e ponta afilada
+			_ret(cv, 10, -11, 14, -9, "p")
+			_ret(cv, 14, -12, 15, -8, "S")
+			_ret(cv, 15, -11, 22, -10, "I")
+			_ret(cv, 15, -10, 22, -9, "i")
+			_px(cv, 22, -11, "I")
+			_px(cv, 23, -11, "I")
+			for x in [16, 18, 20]:
+				_px(cv, x, -8, "i")
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_MEON)]
+		Pecas.Tipo.MALETA_MERCADOR:
+			# maleta do Mercador no dorso: alça, tampa com a fresta escura onde brilham dois olhos, trinco dourado
+			_txt(cv, -11, -21, [
+				"..pppp..",
+				"..pppp..",
+				"MMMMMMMM",
+				"mkkkkkkm",
+				"mkeekeem",
+				"mmmyymmm",
+				"nnnnnnnn",
+			])
+			_cont(cv, "o")
+			return [_lay(cv, RoupaGato.Onde.CORPO, _pal(_PAL_MEON, {"k": _PAL_MEON["o"]}))]
 	return []
+
+## Roda do carro (5x5): pneu preto com brilho, aro cinza e miolo claro; (x, y) = canto de cima à esquerda.
+static func _roda(cv: Dictionary, x: int, y: int) -> void:
+	_txt(cv, x, y, [
+		".kkk.",
+		"kKmkk",
+		"kmMmk",
+		"kkmkk",
+		".kkk.",
+	])
 
 static func _fallback(tipo: int) -> Array:
 	var col: int = ((tipo - PRIMEIRO) / Pecas.SLOTS) % 4
@@ -53,6 +668,9 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 	var cs: Array = _camadas(tipo, anim)
 	if not cs.is_empty():
 		for cm in cs:
+			var atras: bool = (cm as Array).size() > 4
+			if (RoupaGato.passo == 1 and not atras) or (RoupaGato.passo == 2 and atras):
+				continue
 			RoupaGato.sprite(c, cm[0], cm[1], cm[2], cm[3], f)
 		return
 	var d: Array = _fallback(tipo)

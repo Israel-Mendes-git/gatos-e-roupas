@@ -243,30 +243,22 @@ static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
 				"oaaaAaaao",
 				"oaaaawwka",
 				"ooooooooo",
-			], {"o": Color(0.5, 0.2, 0.04), "a": Color(0.97, 0.52, 0.12), "A": Color(1.0, 0.75, 0.4), "w": Color(1, 1, 1), "k": Color(0.08, 0.06, 0.06)}, f)
+			], {"o": Color("2e1206"), "a": Color("e8873a"), "A": Color("f8be80"), "w": Color(1, 1, 1), "k": Color(0.08, 0.06, 0.06)}, f)
 			RoupaGato.sprite(c, -6.5, 3.0 + sw, [
 				"oaao",
 				"ooao",
-			], {"o": Color(0.5, 0.2, 0.04), "a": Color(0.97, 0.52, 0.12)}, f)
+			], {"o": Color("2e1206"), "a": Color("e8873a")}, f)
 			RoupaGato.sprite(c, -7.5, 4.0 - sw, [
 				"oaao",
 				".oo.",
-			], {"o": Color(0.5, 0.2, 0.04), "a": Color(0.85, 0.42, 0.08)}, f)
+			], {"o": Color("2e1206"), "a": Color("a9531e")}, f)
 		Pecas.Tipo.CASCO:
-			# casco verde-oliva com placas e borda amarelada; cabe no tronco
-			RoupaGato.sprite(c, -7.5, -4.0, [
-				"...oooooo...",
-				"..oqqPPqqo..",
-				".oqPpqqpPqo.",
-				"oqqpPqqPpqqo",
-				"oqPpqqqqpPqo",
-				"oqqPppppPqqo",
-				"oYYYYYYYYYYo",
-				".oooooooooo.",
-			], {"o": Color(0.14, 0.17, 0.05), "q": Color(0.34, 0.4, 0.15), "P": Color(0.58, 0.64, 0.28), "p": Color(0.46, 0.52, 0.2), "Y": Color(0.85, 0.78, 0.42)}, f)
+			# casco do kit Tartaruga (o mesmo das outras três, com o M na fivela): ver RoupaGatoH
+			for cm in RoupaGatoH.casco_miau():
+				RoupaGato.sprite(c, cm[0], cm[1], cm[2], cm[3], f)
 		Pecas.Tipo.NUNCHAKU:
 			var sw: int = int(round(sin(anim * 4.0)))
-			var cb := {"o": Color(0.3, 0.17, 0.06), "m": Color(0.62, 0.38, 0.16), "M": Color(0.85, 0.6, 0.35), "c": Color(0.75, 0.77, 0.82)}
+			var cb := {"o": Color("1e1008"), "m": Color(0.62, 0.38, 0.16), "M": Color(0.85, 0.6, 0.35), "c": Color(0.75, 0.77, 0.82)}
 			# um bastão reto preso na boca, apontando para a frente (o cabo passa pela ponta do focinho)
 			RoupaGato.sprite(c, -1.0, -4.0, [
 				"ooooooo",
