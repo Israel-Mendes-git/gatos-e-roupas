@@ -306,7 +306,7 @@ static func muda(c: CanvasItem, base: Vector2, w: float, q: float = Q) -> void:
 	if w > 0.7:
 		disco_c(c, base + Vector2(0, -h - 3.0), 3.0 + 3.0 * (w - 0.7) / 0.3, Color(0.95, 0.35, 0.3), CONT, q)
 
-# ---------------------------------------------------------------- lote 3 da expansão: domo, chama azul, parry
+# ---------------------------------------------------------------- lote 3 da expansão: domo, chama azul, chute e faca
 ## Labareda azul do Turbo (mesma forma de `chama`, em tons de azul).
 static func chama_azul(c: CanvasItem, base: Vector2, larg: float, alt: float, t: float, q: float = Q) -> void:
 	var n: int = maxi(2, int(larg / q))
@@ -339,3 +339,30 @@ static func domo(c: CanvasItem, ce: Vector2, rx: float, t: float, viva: float, c
 	for i in 5:
 		var fx: float = fposmod(t * 0.6 + i * 0.2, 1.0)
 		ponto(c, Vector2(ce.x + (fx * 2.0 - 1.0) * rx * 0.85 * viva, ce.y - alt * (0.15 + 0.65 * fposmod(i * 0.37 + t * 0.3, 1.0))), BRANCO, q)
+
+## Chute giratório (Meon): meia-lua de pixels que varre em volta do gato (`u` 0..1 do efeito) com a bota na ponta.
+static func chute_arco(c: CanvasItem, ce: Vector2, raio: float, u: float, cont: Color, q: float = Q) -> void:
+	var fim: float = lerpf(-PI * 0.9, PI * 0.9, minf(1.0, u * 1.6))
+	var n: int = 14
+	for i in n:
+		var k: float = float(i) / (n - 1)
+		var ang: float = lerpf(-PI * 0.9, fim, k)
+		var fade: float = 0.25 + 0.75 * k
+		var pt := Vector2(ce.x + cos(ang) * raio, ce.y + sin(ang) * raio * 0.4)
+		c.draw_rect(Rect2(sn(pt.x, q) - q, sn(pt.y, q) - q, q * 3.0, q * 3.0), Color(cont.r, cont.g, cont.b, fade))
+		c.draw_rect(Rect2(sn(pt.x, q), sn(pt.y, q), q, q), Color(1.0, 1.0, 0.95, fade))
+	# bota marrom na ponta do arco
+	var bp := Vector2(ce.x + cos(fim) * raio, ce.y + sin(fim) * raio * 0.4)
+	c.draw_rect(Rect2(sn(bp.x, q) - q * 2.0, sn(bp.y, q) - q * 2.0, q * 5.0, q * 4.0), CONT)
+	c.draw_rect(Rect2(sn(bp.x, q) - q, sn(bp.y, q) - q, q * 3.0, q * 2.0), Color(0.45, 0.28, 0.14))
+	c.draw_rect(Rect2(sn(bp.x, q) - q, sn(bp.y, q) - q, q * 3.0, q), Color(0.7, 0.45, 0.25))
+
+## Faca brilhando no aparo (Meon): lâmina cruzada com um brilho que se abre e some.
+static func faca_brilho(c: CanvasItem, ce: Vector2, u: float, cont: Color, q: float = Q) -> void:
+	var a: float = 1.0 - u
+	var l: float = 22.0 + 10.0 * u
+	linha(c, ce + Vector2(-l, l * 0.7), ce + Vector2(l, -l * 0.7), CONT, q * 2.5, q)
+	linha(c, ce + Vector2(-l, l * 0.7), ce + Vector2(l, -l * 0.7), Color(0.9, 0.93, 1.0), q * 1.5, q)
+	linha(c, ce + Vector2(-l * 0.8, l * 0.5), ce + Vector2(l * 0.2, -l * 0.35), BRANCO, q, q)
+	linha(c, ce + Vector2(-l * 0.6, -l * 0.7), ce + Vector2(l * 0.6, l * 0.7), Color(0.8, 0.82, 0.9, a), q, q)
+	estrela(c, ce, 8.0 + 12.0 * a, Color(1.0, 1.0, 0.9), cont, q)

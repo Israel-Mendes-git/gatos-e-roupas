@@ -125,8 +125,8 @@ const BITS: Array = [
 	["........", "...cccc.", "..cCCCCc", "cccccwcc", "cCCCCCCC", "oo.kk.kk", "yo.kk.kk", "........"],
 	# ESFORCO (Esforço máximo): máscara vermelha de olhos brancos
 	["..rrrr..", ".rrrrrr.", "rwwrrwwr", "rwkrrkwr", "rrrrrrrr", ".rrkkrr.", "..rrrr..", "...RR..."],
-	# PARRY (Parry de faca): faca cruzando o golpe
-	["......ss", "....ssS.", "...ssS..", "..ssS...", "nnsS....", ".nN.....", "nN......", "........"],
+	# CHUTE (Chute giratório): bota marrom com o arco do golpe
+	["....ww..", "..w...w.", ".w.....w", "w..nnn..", "w.nnnnN.", "...nnnNN", "....NNNN", "....kkkk"],
 	# BLOCO: bloco de brinquedo da torre
 	["yyyyyyyY", "yooooooO", "yowwooOO", "yowoooOO", "yooooOOO", "yooooOOO", "yOOOOOOO", "YOOOOOOO"],
 	# PECA: camiseta (caixa de peças)

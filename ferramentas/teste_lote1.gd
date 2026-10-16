@@ -473,20 +473,37 @@ func _efeitos_lote3() -> void:
 		eg.vida = -1.0
 		sim._matar(eg, null)
 		_ok(not eg.vivo, "o Deadmiau levantou duas vezes")
-	# Parry de faca: apara o golpe, atordoa quem bateu e leva o troco
+	# Chute giratório: empurra e atordoa; quem já estava atordoado apanha mais. Aparar com a faca (kit): golpe some e volta facada
 	sim = _cena(Pecas.Conjunto.MEON, 26)
 	var mg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.MEON)
 	_ok(mg != null, "Meon sem poder")
+	_ok(mg.poder == Pecas.Poder.CHUTE and mg.distancia, "Meon sem Chute giratório ou sem pistola")
 	mg.poder_cd = 0.0
-	mg.parry_t = 0.0
 	var agressor: Unidade = _inimigo_perto(sim, mg, 50.0)
 	if agressor != null:
-		_ok(sim.disparar_poder(mg), "Parry não disparou")
-		var vm: float = mg.vida
+		var x_a: float = agressor.x
+		agressor.atordoado_t = 0.0
+		agressor.vida_max = 9999.0
+		agressor.vida = 9999.0
 		var va: float = agressor.vida
+		_ok(sim.disparar_poder(mg), "Chute não disparou")
+		var d_normal: float = va - agressor.vida
+		_ok(agressor.atordoado_t > 0.5 or agressor.chefe, "o chute não atordoou")
+		_ok(agressor.x != x_a or agressor.chefe, "o chute não empurrou")
+		mg.poder_cd = 0.0
+		var v2: float = agressor.vida
+		agressor.x = mg.x + 20.0
+		agressor.y = mg.y
+		agressor.atordoado_t = 2.0
+		_ok(sim.disparar_poder(mg), "Chute (combo) não disparou")
+		var d_combo: float = v2 - agressor.vida
+		_ok(d_combo > d_normal * 2.0, "o combo não doeu mais (%.1f x %.1f)" % [d_combo, d_normal])
+		mg.apara = 1.0
+		var vm: float = mg.vida
+		var vb: float = agressor.vida
 		sim._dano(agressor, mg, 30.0, true)
 		_ok(mg.vida == vm, "o golpe não foi aparado")
-		_ok(agressor.atordoado_t > 0.5 or not agressor.vivo, "o agressor não ficou atordoado")
-		_ok(agressor.vida < va or not agressor.vivo, "o agressor não levou o troco")
-		_ok(mg.parry_n == Balanco.PODER_PARRY_N - 1, "o aparo não foi contado")
+		_ok(agressor.vida < vb, "o agressor não levou a facada")
+		sim._dano(agressor, mg, 30.0, false)
+		_ok(mg.vida < vm, "o tiro foi aparado (só golpe de perto)")
 

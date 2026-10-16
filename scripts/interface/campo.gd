@@ -893,9 +893,9 @@ func _consumir() -> void:
 					Pecas.Poder.ESFORCO:
 						snd_p = "poder_cura"
 						tom_p = 0.7
-					Pecas.Poder.PARRY:
-						snd_p = "barreira"
-						tom_p = 1.2
+					Pecas.Poder.CHUTE:
+						snd_p = "golpe_forte"
+						tom_p = 1.1
 				_som(snd_p, tom_p, -1.0, true, 0.03)
 				# nome do poder: cor da fantasia clareada até uma luminância mínima + contorno escuro grosso
 				# empilha: se já há um nome de poder aqui perto, este sobe uma linha (sem sobrepor)
@@ -924,7 +924,7 @@ func _consumir() -> void:
 						pt_txt = Vector2(clampf(alvos_p[0].x, 140.0, 1140.0), alvos_p[0].y - 70.0)
 					_numero(pt_txt, String(e["texto"]), cp.lightened(0.25), 24, 1.5, 300.0)
 				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp,
-					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "x1": float(e.get("x1", e["x"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0))}})
+					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "x1": float(e.get("x1", e["x"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0)), "combos": int(e.get("combos", 0))}})
 			"aviso":
 				# um bicho carrega o poder: ping de alerta (o desenho da área sai de _desenhar_avisos)
 				_som("poder_pronto", 0.6 if e.get("chefe", false) else 0.8, -2.0, true)
@@ -986,18 +986,14 @@ func _consumir() -> void:
 				var prf: Vector2 = Vector2(e["x"], e["y"] - 20 * ESC)
 				_som("barreira", 1.4, -5.0, true)
 				_faisca(prf, Color(0.7, 0.95, 1.0), 8, 200.0, 0.4, 3.0)
-			"parry":
+			"apara":
+				# faca brilhando no aparo: clarão, faíscas e o texto
 				var ppy: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("barreira", 1.6, -2.0, true)
 				_faisca(ppy, Color(1.0, 1.0, 0.9), 12, 240.0, 0.4, 3.5)
-				_numero(ppy + Vector2(0, -26), "Parry!", Color(0.9, 0.95, 1.0), 20, 1.0, 140.0)
+				_numero(ppy + Vector2(0, -26), "Aparou!", Color(0.9, 0.95, 1.0), 20, 1.0, 140.0)
 				tremor = maxf(tremor, 2.5)
-			"chute":
-				var pck: Vector2 = Vector2(e["x"], e["y"] - 20 * ESC)
-				_som("golpe_forte", 0.9, -3.0, true)
-				_faisca(pck, Color(1.0, 0.95, 0.7), 14, 280.0, 0.5, 4.0)
-				particulas.append({"p": pck, "v": Vector2.ZERO, "vida": 0.35, "max": 0.35, "cor": Color(1.0, 1.0, 0.9, 0.5), "r": float(e.get("raio", 85.0)) * 0.5, "g": 0.0, "tipo": 1})
-				tremor = maxf(tremor, 4.0)
+				fx.append({"poder": -2, "p": ppy, "c": ppy, "alvos": [Vector2(float(e["ax"]), float(e["ay"]) - 30 * ESC)], "cor": Color(0.9, 0.95, 1.0), "t": 0.0, "dur": 0.45, "sem": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "ex": {}})
 			"fala":
 				_numero(Vector2(e["x"], e["y"] - 110 * ESC), String(e["txt"]), Color(1.0, 0.35, 0.35), 26, 1.4, 220.0)
 			"muda":
@@ -1438,8 +1434,12 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 			tremor = maxf(tremor, 4.0)
 		Pecas.Poder.ESFORCO:
 			dur = 1.0
-		Pecas.Poder.PARRY:
-			dur = 0.7
+		Pecas.Poder.CHUTE:
+			dur = 0.6
+			tremor = maxf(tremor, 4.0)
+			_faisca(centro, Color(1.0, 0.95, 0.7), 10, 260.0, 0.5, 4.0)
+			if int(ex.get("combos", 0)) > 0:
+				_numero(centro + Vector2(0, -50), "Combo!", Color(1.0, 0.85, 0.3), 24, 1.2, 160.0)
 	var sem: Array = []
 	for i in 8:
 		sem.append(randf())
@@ -2191,12 +2191,17 @@ func _desenhar_fx(f: Dictionary) -> void:
 				V.quadro(self, xk_e, gp.y - wk * 80.0, q, q * 3.0, Color(1.0, 0.25, 0.25) if k % 2 == 0 else Color(1.0, 0.85, 0.8))
 			V.aro(self, gp, 12.0 + 50.0 * u, (12.0 + 50.0 * u) * 0.36, c, a * 1.4, 1.5)
 			V.estrela(self, p + Vector2(0, -30.0), 10.0 * a + 4.0, V.BRANCO, esc_c)
-		Pecas.Poder.PARRY:
-			# lâmina prateada risca o ar e o aro de guarda se fecha
-			var r_p: float = 40.0 - 22.0 * minf(1.0, u * 2.5)
-			V.aro(self, gp + Vector2(0, -20.0), r_p, r_p * 0.7, Color(0.85, 0.9, 1.0), a * 1.4, 1.5)
-			V.linha(self, p + Vector2(-26.0 + 52.0 * minf(1.0, u * 3.0), -44.0), p + Vector2(26.0 - 10.0 * u, -8.0), V.BRANCO, q * 1.5)
-			V.estrela(self, p + Vector2(0, -26.0), 10.0 * a + 3.0, Color(1.0, 0.95, 0.8), esc_c)
+		Pecas.Poder.CHUTE:
+			# chute em arco: a perna varre meia-lua em volta do gato e a onda abre até o raio
+			var rc: float = float(ex.get("raio", 95.0)) * (1.0 - pow(1.0 - u, 2.0))
+			V.aro(self, gp, rc, rc * 0.36, c, a * 1.4, 2.0)
+			V.aro(self, gp, rc * 0.7, rc * 0.7 * 0.36, V.BRANCO, a, 1.0)
+			V.chute_arco(self, p + Vector2(0, -10.0), 46.0, u, esc_c)
+			for b in alvos:
+				V.estrela(self, b + Vector2(0, -20.0), 12.0 * a + 4.0, Color(1.0, 0.95, 0.7), esc_c)
+		-2:
+			# Aparar com a faca: lâmina cruza o golpe e brilha
+			V.faca_brilho(self, p, u, esc_c)
 		_:
 			V.aro(self, p + Vector2(0, 30), 10.0 + 80.0 * u, (10.0 + 80.0 * u) * 0.4, c, a * 1.3, 1.5)
 
@@ -2380,9 +2385,6 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 			var xe: float = pos.x + (k - 1.5) * 12.0 * esc_u
 			V.quadro(self, xe - V.Q, pos.y - h * we - V.Q, V.Q * 3.0, V.Q * 5.0, V.CONT)
 			V.quadro(self, xe, pos.y - h * we, V.Q, V.Q * 3.0, Color(1.0, 0.25, 0.25))
-	if uu.parry_t > 0.0:
-		V.aro(self, meio, (CORPO_LARG + 3.0) * esc_u, (CORPO_MEIO + 5.0) * esc_u, Color(0.88, 0.93, 1.0), 0.5 + 0.5 * sin(rel * 14.0), 1.0)
-		V.estrela(self, meio + Vector2(dir * CORPO_LARG * esc_u * 0.9, -4.0), 5.0, V.BRANCO)
 	if uu.protegido_t > 0.0:
 		var rx: float = (CORPO_LARG + 2.0) * esc_u
 		var ry: float = (CORPO_MEIO + 4.0) * esc_u
