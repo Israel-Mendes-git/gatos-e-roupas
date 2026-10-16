@@ -163,6 +163,13 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.STARDEW_MIAULLEY: [0.15, 0.35],    # sementes: fração da vida curada nos aliados ao cair
 	Pecas.Conjunto.MIAUCRAFT: [12.0, 30.0],           # explode ao morrer (Circo)
 	Pecas.Conjunto.MIAULAX: [0.2, 0.5],               # vida a mais (Guardião)
+	# lote 3
+	Pecas.Conjunto.LEONARMIAU: [0.1, 0.25],           # aliados por perto: dano a mais (aura do Rei)
+	Pecas.Conjunto.DONATEMIAU: [0.08, 0.18],          # chance de o golpe atordoar
+	Pecas.Conjunto.RAFAMIAU: [0.5, 1.4],              # chifres: dano a mais com a vida perto de zero
+	Pecas.Conjunto.ROCKET_MIAUGUE: [0.2, 0.45],       # velocidade de movimento
+	Pecas.Conjunto.DEADMIAU: [3.0, 6.0],              # regeneração por segundo
+	Pecas.Conjunto.MEON: [0.35, 0.7],                 # tiros ferem menos
 }
 const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
 
@@ -658,6 +665,66 @@ const PODER_COCHILO_HER_T := 2.0
 const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
 # Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
 const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato
+# ---- Lote 3 da expansão
+const ATORDOA_KIT_T := 0.8             # golpe que atordoa pelo kit do Donatemiau
+# Plano de ataque (Leonarmiau): o time foca o inimigo de maior vida; o líder dá dois cortes
+const PODER_PLANO_T := 5.0
+const PODER_PLANO_BONUS := 0.3         # dano a mais no alvo focado
+const PODER_PLANO_CORTE := 0.9         # x dano base, cada um dos dois cortes
+const PODER_PLANO_RECARGA := 3.0       # segundos a menos na recarga se o alvo cair
+const PODER_PLANO_HER_T := 3.0
+const PODER_PLANO_HER_BONUS := 0.15
+# Domo refletor (Donatemiau): destrói os tiros inimigos que entram e devolve ao atirador
+const PODER_DOMO_RAIO := 130.0
+const PODER_DOMO_T := 5.0
+const PODER_DOMO_ARMADURA := 4.0       # aliados dentro
+const PODER_DOMO_DANO := 1.0           # x o dano do tiro devolvido
+const PODER_DOMO_HER_RAIO := 90.0
+const PODER_DOMO_HER_T := 3.0
+# Lobo solitário (Rafamiau): os bichos em volta só atacam ele
+const PODER_LOBO_T := 5.0
+const PODER_LOBO_CHEFE_T := 3.0        # o chefe só é provocado neste tempo
+const PODER_LOBO_RAIO := 150.0
+const PODER_LOBO_REDUCAO := 0.45       # dano recebido a menos
+const PODER_LOBO_DANO := 0.5           # dano a mais
+const PODER_LOBO_DANO_INIMIGO := 0.1   # mais por inimigo no raio ...
+const PODER_LOBO_DANO_INIMIGO_MAX := 0.6
+const PODER_LOBO_SOZINHO := 0.2        # ... e se não houver aliado perto
+const PODER_LOBO_SOZINHO_RAIO := 120.0
+const PODER_LOBO_HER_T := 3.0
+const PODER_LOBO_HER_DANO := 0.3
+# Turbo (Rocket Miaugue): corrida em linha com atropelo e rastro de chamas azuis
+const PODER_TURBO_ALCANCE := 420.0
+const PODER_TURBO_DANO := 0.8
+const PODER_TURBO_DERRUBA := 0.4
+const PODER_TURBO_PROTEGE := 1.5
+const PODER_TURBO_RASTRO_N := 9
+const PODER_TURBO_RASTRO_RAIO := 28.0
+const PODER_TURBO_RASTRO_T := 4.0
+const PODER_TURBO_RASTRO_DPS := 0.5
+const PODER_TURBO_RASTRO_LENTO := 0.8
+const PODER_TURBO_HER_N := 5
+const PODER_TURBO_HER_T := 2.0
+# Esforço máximo (Deadmiau): regenera, bate mais forte e levanta uma vez se cair
+const PODER_ESFORCO_T := 8.0
+const PODER_ESFORCO_REGEN := 0.05      # fração da vida máxima por segundo
+const PODER_ESFORCO_DANO := 0.2
+const PODER_ESFORCO_VIDA := 0.35       # vida com que levanta
+const PODER_ESFORCO_EXPLODE := 0.8     # x dano base
+const PODER_ESFORCO_RAIO := 100.0
+const PODER_ESFORCO_HER_T := 4.0
+const PODER_ESFORCO_HER_REGEN := 0.03
+# Parry de faca (Meon): apara golpes, atordoa o agressor e termina num chute giratório
+const PODER_PARRY_T := 5.0
+const PODER_PARRY_N := 3               # golpes corpo a corpo (um projétil gasta tudo)
+const PODER_PARRY_ATORDOA := 1.0
+const PODER_PARRY_CHEFE := 0.4
+const PODER_PARRY_DANO := 1.0          # x dano base no agressor
+const PODER_PARRY_CHUTE := 1.2
+const PODER_PARRY_CHUTE_RAIO := 85.0
+const PODER_PARRY_EMPURRA := 60.0
+const PODER_PARRY_HER_N := 2
+const PODER_PARRY_VE := 170.0          # só usa se houver inimigo a esta distância
 const PODER_INIMIGO_FATOR_ATO := 0.08   # soma por ato depois do primeiro
 const PODER_INIMIGO_FATOR_CHEFE := 0.1  # o chefe usa o poder um pouco mais forte
 const PODER_INIMIGO_PISAO := 0.7        # o Pisão do bicho fere menos (era o que mais derrubava gatos)

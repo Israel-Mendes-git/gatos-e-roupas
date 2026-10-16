@@ -95,14 +95,14 @@ func _init() -> void:
 ## Varre as constantes de todas as classes do projeto: lista de 25 itens (tamanho antigo de Conjunto) ou 100 (antigo de Tipo)
 ## é tabela paralela que não ganhou as fantasias do lote 1 (foi assim que RoupaBicho estourou no índice 26).
 func _tabelas_paralelas(nc: int, nt: int) -> void:
-	var antigos: Array[int] = [nc - 12, nt - 48, nc - 6, nt - 24]   # tamanhos antes do lote 1 e antes do lote 2
+	var antigos: Array[int] = [nc - 18, nt - 72, nc - 12, nt - 48, nc - 6, nt - 24]   # tamanhos antes do lote 1, do 2 e do 3
 	for gc in ProjectSettings.get_global_class_list():
 		var sc: Script = load(gc["path"])
 		var m: Dictionary = sc.get_script_constant_map()
 		for k in m:
 			var v: Variant = m[k]
 			if v is Array and (v as Array).size() in antigos:
-				_ok(false, "%s.%s tem %d itens (tamanho antigo): falta o lote 1 ou 2" % [gc["class"], k, (v as Array).size()])
+				_ok(false, "%s.%s tem %d itens (tamanho antigo): falta o lote 1, 2 ou 3" % [gc["class"], k, (v as Array).size()])
 	_ok(IconesPoder.BITS.size() >= Pecas.Poder.size(), "IconesPoder.BITS menor que Poder")
 	for c in nc:
 		_ok(Balanco.conj_valor(c, 0) != 0.0 and Balanco.conj_valor(c, 1) != 0.0, "conjunto %d sem valor de bônus" % c)
@@ -234,6 +234,7 @@ func _efeitos_diretos() -> void:
 	_ok(sim.disparar_poder(mm), "Imitar não disparou")
 	print("Imitar com último poder = pôquer: ok")
 	_efeitos_lote2()
+	_efeitos_lote3()
 	# kits de 4 peças: números dos bônus
 	for c in range(Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.size()):
 		print("%-20s 2 peças: %s | 4 peças: %s" % [Pecas.CONJUNTO_NOME[c], Pecas.conjunto_bonus(c, 1), Pecas.conjunto_bonus(c, 2)])
@@ -376,3 +377,116 @@ func _efeitos_lote2() -> void:
 		for _i in int(3.0 / Balanco.DT):
 			sim.passo(Balanco.DT)
 		_ok(ml.vida > ml.vida_max * 0.8, "o Cochilo não curou o bastante (%.2f)" % (ml.vida / ml.vida_max))
+
+## Primeiro inimigo comum vivo, posto a `dx` do gato (na mesma altura).
+func _inimigo_perto(sim: Simulacao, g: Unidade, dx: float) -> Unidade:
+	for b in sim.inimigos:
+		if b.vivo and not b.chefe and not b.estrutura:
+			b.x = g.x + dx
+			b.y = g.y
+			b.atordoado_t = 0.0
+			return b
+	return null
+
+func _efeitos_lote3() -> void:
+	# Plano de ataque: o alvo de maior vida fica marcado e o time o foca
+	var sim := _cena(Pecas.Conjunto.LEONARMIAU, 21)
+	var lg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.LEONARMIAU)
+	_ok(lg != null, "Leonarmiau sem poder")
+	lg.poder_cd = 0.0
+	var forte: Unidade = _inimigo_perto(sim, lg, 60.0)
+	if forte != null:
+		forte.vida_max = 9999.0
+		forte.vida = 9999.0
+		_ok(sim.disparar_poder(lg), "Plano de ataque não disparou")
+		var focado: Unidade = null
+		for b in sim.inimigos:
+			if b.vivo and b.foco_t > 0.0:
+				focado = b
+		_ok(focado != null, "nenhum alvo marcado pelo Plano")
+		if focado != null:
+			_ok(sim._escolher(lg) == focado, "o time não focou o alvo do Plano")
+			_ok(sim._vul(focado) > 1.2, "o alvo não leva dano a mais")
+	# Domo refletor: sem atirador não dispara; com atirador, o tiro que entra volta
+	sim = _cena(Pecas.Conjunto.DONATEMIAU, 22)
+	var dg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.DONATEMIAU)
+	_ok(dg != null, "Donatemiau sem poder")
+	dg.poder_cd = 0.0
+	for b in sim.inimigos:
+		b.distancia = false
+	var atirador: Unidade = _inimigo_perto(sim, dg, 220.0)
+	if atirador != null:
+		_ok(not sim.disparar_poder(dg), "o Domo disparou sem ninguém atirando")
+		atirador.distancia = true
+		_ok(sim.disparar_poder(dg), "Domo não disparou com atirador")
+		sim.projeteis.clear()
+		sim.projeteis.append({"x": dg.x + 30.0, "y": dg.y, "alvo": dg, "dono": atirador, "dano": 5.0})
+		sim._mover_projeteis(Balanco.DT)
+		var refl: bool = false
+		for p in sim.projeteis:
+			if p.has("refletido") and p["dono"] == dg and p["alvo"] == atirador:
+				refl = true
+		_ok(refl, "o tiro não foi devolvido ao atirador")
+	# Lobo solitário: os bichos em volta passam a mirar só nele
+	sim = _cena(Pecas.Conjunto.RAFAMIAU, 23)
+	var rg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.RAFAMIAU)
+	_ok(rg != null, "Rafamiau sem poder")
+	rg.poder_cd = 0.0
+	var vizinho: Unidade = _inimigo_perto(sim, rg, 80.0)
+	if vizinho != null:
+		_ok(sim.disparar_poder(rg), "Lobo solitário não disparou")
+		sim.passo(Balanco.DT)
+		_ok(vizinho.forcado_alvo == rg or not vizinho.vivo, "o bicho não foi provocado")
+		var v0: float = rg.vida
+		_ok(rg.lobo_t > 4.0, "Lobo sem duração")
+	# Turbo: corre em linha, atropela e deixa 9 zonas de chama
+	sim = _cena(Pecas.Conjunto.ROCKET_MIAUGUE, 24)
+	var tg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.ROCKET_MIAUGUE)
+	_ok(tg != null, "Rocket sem poder")
+	tg.poder_cd = 0.0
+	tg.x = 300.0
+	tg.y = 300.0
+	var alvo_t: Unidade = _inimigo_perto(sim, tg, 150.0)
+	if alvo_t != null:
+		sim.zonas.clear()
+		var x0: float = tg.x
+		var vida_t: float = alvo_t.vida
+		_ok(sim.disparar_poder(tg), "Turbo não disparou")
+		var chamas: int = 0
+		for z in sim.zonas:
+			if z.get("tipo", "") == "chama":
+				chamas += 1
+		_ok(chamas == Balanco.PODER_TURBO_RASTRO_N, "Turbo: %d zonas de chama" % chamas)
+		_ok(tg.x > x0 + 300.0 and tg.protegido_t > 0.0, "o gato não correu protegido")
+		_ok(alvo_t.vida < vida_t or not alvo_t.vivo, "o Turbo não atropelou")
+	# Esforço máximo: se cair no período, levanta uma vez com 35% da vida
+	sim = _cena(Pecas.Conjunto.DEADMIAU, 25)
+	var eg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.DEADMIAU)
+	_ok(eg != null, "Deadmiau sem poder")
+	eg.poder_cd = 0.0
+	eg.esforco_t = 0.0
+	if _inimigo_perto(sim, eg, 90.0) != null:
+		_ok(sim.disparar_poder(eg) and eg.esforco_t > 7.0 and not eg.esforco_usado, "Esforço máximo não armou")
+		eg.vida = -1.0
+		sim._matar(eg, null)
+		_ok(eg.vivo and absf(eg.vida / eg.vida_max - Balanco.PODER_ESFORCO_VIDA) < 0.01, "o Deadmiau não levantou com 35%")
+		eg.vida = -1.0
+		sim._matar(eg, null)
+		_ok(not eg.vivo, "o Deadmiau levantou duas vezes")
+	# Parry de faca: apara o golpe, atordoa quem bateu e leva o troco
+	sim = _cena(Pecas.Conjunto.MEON, 26)
+	var mg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.MEON)
+	_ok(mg != null, "Meon sem poder")
+	mg.poder_cd = 0.0
+	mg.parry_t = 0.0
+	var agressor: Unidade = _inimigo_perto(sim, mg, 50.0)
+	if agressor != null:
+		_ok(sim.disparar_poder(mg), "Parry não disparou")
+		var vm: float = mg.vida
+		var va: float = agressor.vida
+		sim._dano(agressor, mg, 30.0, true)
+		_ok(mg.vida == vm, "o golpe não foi aparado")
+		_ok(agressor.atordoado_t > 0.5 or not agressor.vivo, "o agressor não ficou atordoado")
+		_ok(agressor.vida < va or not agressor.vivo, "o agressor não levou o troco")
+		_ok(mg.parry_n == Balanco.PODER_PARRY_N - 1, "o aparo não foi contado")
+

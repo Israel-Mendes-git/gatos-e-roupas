@@ -114,6 +114,28 @@ var cochilo_t: float = 0.0      # o próprio Miaulax dormindo: não age, não at
 var cochilo_cura: float = 0.0   # fração da vida máxima por segundo enquanto dorme
 var manteiga_t: float = 0.0     # Manteiga escorregadia: lento por mais um instante depois de sair da poça
 var reviver_usado: bool = false # Reviver: uma vez por gato por luta
+# lote 3 da expansão
+var foco_t: float = 0.0         # Plano de ataque: este inimigo é o alvo forçado do time e leva dano a mais
+var foco_bonus: float = 0.0
+var foco_dono: Unidade = null   # quem fez o plano (ganha recarga se o alvo cair)
+var foco_recarga: float = 0.0
+var domo_t: float = 0.0         # dentro do Domo refletor: +armadura (renovado a cada passo)
+var domo_arm: float = 0.0
+var lobo_t: float = 0.0         # Lobo solitário (o próprio Rafamiau): provoca em volta, apanha menos e bate mais
+var lobo_dur: float = 0.0
+var lobo_prov: bool = false     # provoca de verdade (a herança só dá dano)
+var lobo_dano: float = 0.0      # dano a mais fixo (herança)
+var forcado_t: float = 0.0      # provocado pelo Lobo solitário: só ataca forcado_alvo
+var forcado_alvo: Unidade = null
+var esforco_t: float = 0.0      # Esforço máximo (Deadmiau): regenera e bate mais forte
+var esforco_regen: float = 0.0
+var esforco_usado: bool = true  # já levantou (ou não pode levantar)
+var esforco_base: float = 0.0   # dano base da explosão ao levantar
+var esforco_conj: int = -1
+var parry_t: float = 0.0        # Parry de faca (Meon): aparos que restam e tempo
+var parry_n: int = 0
+var parry_dano: float = 0.0
+var parry_conj: int = -1
 # aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
 var aviso_t: float = 0.0        # segundos que faltam para soltar (0 = sem aviso)
 var aviso_dur: float = 0.0

@@ -193,6 +193,8 @@ func calcular(u: Unidade) -> void:
 	u.roubo = 0.0
 	u.recarga_menos = 0.0
 	u.tiro_duplo = 0.0
+	u.atordoa_chance = 0.0
+	var vel_kit: float = 0.0
 	var gelo_kit: float = 0.0
 	u.molha = false
 	u.perfura = false
@@ -377,6 +379,14 @@ func calcular(u: Unidade) -> void:
 				u.regen_aura += kv
 			Pecas.BONUS_SEMENTES:
 				u.sementes += kv
+			Pecas.BONUS_ATORDOA:
+				u.atordoa_chance += kv
+			Pecas.BONUS_CHIFRES:
+				u.furia_k += kv
+			Pecas.BONUS_VELOCIDADE:
+				vel_kit += kv
+			Pecas.BONUS_FURO:
+				u.furo += kv
 	if u.equipe == 0 and Pecas.Conjunto.MIMIAU in u.herancas:
 		u.disfarce_atordoa = maxf(u.disfarce_atordoa, Balanco.DISFARCE_HER_ATORDOA)   # herança: o Disfarce, mais fraco
 	if u.equipe == 1:
@@ -390,7 +400,6 @@ func calcular(u: Unidade) -> void:
 			u.poder_conj = -1
 	if u.equipe == 0 and u.poder == Pecas.Poder.IMITAR:
 		u.recarga_menos += Balanco.PODER_IMITAR_RECARGA
-	u.atordoa_chance = 0.0
 	u.gelo_chance = gelo_kit
 	u.furo = minf(u.furo, Balanco.MARCA_FURO_MAX)
 	u.esquiva = minf(u.esquiva, Balanco.ESQUIVA_MAX)
@@ -398,6 +407,7 @@ func calcular(u: Unidade) -> void:
 	vida *= vida_mult
 	dano *= dano_mult
 	inter /= 1.0 + rapidez
+	vel *= 1.0 + vel_kit
 	# treino do boneco, tipo e família de inimigo
 	vida *= 1.0 + Balanco.ATR_VIDA * u.atr[Boneco.Atr.VIDA]
 	dano *= 1.0 + Balanco.ATR_FORCA * u.atr[Boneco.Atr.FORCA]
@@ -864,12 +874,18 @@ func _enxerga_oculto(u: Unidade, v: Unidade) -> bool:
 
 ## Multiplicador de dano recebido: fraqueza do chefe x marca do Alvo travado.
 func _vul(v: Unidade) -> float:
-	return v.vulneravel * ((1.0 + v.marcado_bonus) if v.marcado_t > 0.0 else 1.0)
+	return v.vulneravel * ((1.0 + v.marcado_bonus) if v.marcado_t > 0.0 else 1.0) * ((1.0 + v.foco_bonus) if v.foco_t > 0.0 else 1.0)
 
 func _escolher(u: Unidade) -> Unidade:
 	# saltador e ladrão ignoram os bonecos e vão direto à torre
 	if u.equipe == 1 and (u.tipo == Unidade.Tipo.SALTADOR or u.tipo == Unidade.Tipo.LADRAO):
 		return null
+	if u.equipe == 1 and u.forcado_t > 0.0 and u.forcado_alvo != null and u.forcado_alvo.vivo:
+		return u.forcado_alvo   # Lobo solitário: só enxerga o Rafamiau
+	if u.equipe == 0:
+		for v in inimigos:
+			if v.vivo and v.foco_t > 0.0 and v.x <= Balanco.VISIVEL_X:
+				return v   # Plano de ataque: o time inteiro foca o alvo marcado
 	if u.chefe and u.chefe_tipo == Fases.Chefe.ROBO:
 		return null  # com corda, o robô só enxerga a torre
 	if u.chefe and u.chefe_tipo == Fases.Chefe.BONECA:
@@ -935,6 +951,9 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.bola_t = maxf(0.0, u.bola_t - dt)
 	u.disfarce_rasgou_t += dt
 	u.buff_dano_t = maxf(0.0, u.buff_dano_t - dt)
+	u.foco_t = maxf(0.0, u.foco_t - dt)
+	u.domo_t = maxf(0.0, u.domo_t - dt)
+	u.forcado_t = maxf(0.0, u.forcado_t - dt)
 	if u.bola_t > 0.0:
 		u.atordoado_t = 0.0   # Bola de espinhos: ninguém atordoa
 	u.barreira_cd = maxf(0.0, u.barreira_cd - dt)
@@ -946,6 +965,18 @@ func _agir(u: Unidade, dt: float) -> void:
 			var fonte: Unidade = u.queima_fonte
 			_matar(u, fonte if fonte != null and fonte.vivo else null, Pecas.Marca.BRASA)
 			return
+	if u.lobo_t > 0.0:
+		_lobo_tick(u, dt)
+	if u.esforco_t > 0.0:
+		u.esforco_t -= dt
+		var antes_e: float = u.vida
+		u.vida = minf(u.vida_max, u.vida + u.vida_max * u.esforco_regen * dt)
+		_tele(u.esforco_conj, "cura", u.vida - antes_e)
+		u.bonus_dano *= 1.0 + Balanco.PODER_ESFORCO_DANO
+	if u.parry_t > 0.0:
+		u.parry_t -= dt
+		if u.parry_t <= 0.0 or u.parry_n <= 0:
+			_parry_fim(u)
 	if u.cochilo_t > 0.0:
 		u.cochilo_t -= dt
 		u.atordoado_t = 0.0
@@ -1060,6 +1091,8 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 		_ev({"t": "tiro", "x": u.x, "y": u.y, "eq": u.equipe})
 	else:
 		_dano(u, a, dm, true)
+		if u.atordoa_chance > 0.0 and a.vivo and not a.chefe and rng.randf() < u.atordoa_chance:
+			a.atordoado_t = maxf(a.atordoado_t, Balanco.ATORDOA_KIT_T)
 		var cerco: float = u.cerco + (u.furor_cerco if u.furor_t > 0.0 else 0.0)
 		if cerco > 0.0 and u.vivo:
 			_golpe_em_area(u, a, dm * cerco)
@@ -1118,6 +1151,8 @@ func _bater_torre(u: Unidade) -> void:
 func _mover_projeteis(dt: float) -> void:
 	for i in range(projeteis.size() - 1, -1, -1):
 		var p: Dictionary = projeteis[i]
+		if not p.has("refletido") and not p.has("poder") and not p.has("torre"):
+			_domo_reflete(p)
 		var a: Unidade = p["alvo"]
 		var tx: float
 		var ty: float
@@ -1170,6 +1205,9 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		alvo.barreira_cd = alvo.barreira_int  # Manto: o golpe some
 		_ev({"t": "barreira", "x": alvo.x, "y": alvo.y})
 		return
+	if alvo.parry_t > 0.0 and alvo.parry_n > 0 and atk != null and atk.vivo and not em_area:
+		_parry(alvo, atk, corpo_a_corpo)   # Parry de faca (Meon): o golpe é aparado
+		return
 	if alvo.disfarcado and atk != null:
 		# Disfarce (Mimiau): o 1º golpe some, o pano rasga e quem bateu leva um susto (chefe, menos)
 		alvo.disfarcado = false
@@ -1186,7 +1224,7 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 	if atk != null and atk.perfura:
 		d = maxf(Balanco.DANO_MINIMO, dano)  # Varinha: ignora armadura e redução
 	else:
-		d = maxf(Balanco.DANO_MINIMO, dano - alvo.armadura) * (1.0 - alvo.reducao)
+		d = maxf(Balanco.DANO_MINIMO, dano - alvo.armadura - (alvo.domo_arm if alvo.domo_t > 0.0 else 0.0)) * (1.0 - alvo.reducao)
 	if corpo_a_corpo:
 		d *= alvo.fraq_corpo
 	else:
@@ -1196,6 +1234,8 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		d *= Balanco.PODER_PROTEGE_DANO
 	if alvo.cochilo_t > 0.0:
 		d *= Balanco.PODER_COCHILO_DANO
+	if alvo.lobo_t > 0.0 and alvo.lobo_prov:
+		d *= 1.0 - Balanco.PODER_LOBO_REDUCAO
 	_tele_marca(alvo, d)
 	alvo.vida -= d
 	alvo.sono_t = 0.0
@@ -1256,7 +1296,12 @@ func _matar(u: Unidade, killer: Unidade, base: int = Pecas.Marca.CICATRIZ) -> vo
 			_estrutura_cai(u)
 		_ev({"t": "clone_fim", "x": u.x, "y": u.y, "eq": u.equipe, "tempo": false})
 		return
+	if u.esforco_t > 0.0 and not u.esforco_usado:
+		_esforco_levanta(u)   # Esforço máximo (Deadmiau): "ainda não!"
+		return
 	u.vivo = false
+	if u.foco_t > 0.0 and u.foco_dono != null and u.foco_dono.vivo and u.foco_recarga > 0.0:
+		u.foco_dono.poder_cd -= u.foco_recarga   # Plano de ataque: o alvo caiu, o poder volta mais cedo
 	var causa: int = _causa_da_morte(u, base)
 	_ev({"t": "morte", "x": u.x, "y": u.y, "eq": u.equipe, "pecas": u.pecas, "boneco": u.boneco})
 	if u.barril_dano > 0.0:
@@ -1592,10 +1637,12 @@ func _forma_aviso(u: Unidade) -> Dictionary:
 					sy += v.y
 					n += 1
 			circ.append(Vector3(sx / n, sy / n, Balanco.PODER_ENXAME_RAIO))
-		Pecas.Poder.INVESTIDA, Pecas.Poder.MARCA:
+		Pecas.Poder.INVESTIDA, Pecas.Poder.MARCA, Pecas.Poder.TURBO:
 			var alc: float = Balanco.PODER_ATRAVESSA_ALCANCE
 			if u.poder == Pecas.Poder.INVESTIDA:
 				alc = Balanco.PODER_INVESTIDA_ALCANCE + 30.0
+			elif u.poder == Pecas.Poder.TURBO:
+				alc = Balanco.PODER_TURBO_ALCANCE + 30.0
 			for v in gatos:
 				if ux - v.x >= -20.0 and ux - v.x <= alc and absf(v.y - uy) <= Balanco.PODER_ATRAVESSA_LARGURA:
 					alvos.append(Vector2(v.x, v.y))
@@ -2722,6 +2769,263 @@ func _poder_cochilo(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 	extra["raio"] = raio
 	return true
 
+## Plano de ataque (Leonarmiau): o time inteiro foca o inimigo de maior vida e causa mais dano nele; o líder dá dois cortes.
+func _poder_plano(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var alvo: Unidade = null
+	for v in outros:
+		if not v.estrutura and (alvo == null or v.vida > alvo.vida):
+			alvo = v
+	if alvo == null:
+		return false
+	alvo.foco_t = Balanco.PODER_PLANO_HER_T if em_heranca else Balanco.PODER_PLANO_T
+	alvo.foco_bonus = Balanco.PODER_PLANO_HER_BONUS if em_heranca else Balanco.PODER_PLANO_BONUS
+	alvo.foco_dono = u
+	alvo.foco_recarga = 0.0 if em_heranca else Balanco.PODER_PLANO_RECARGA
+	for m in meus:
+		if m.vivo:
+			m.alvo = alvo
+			m.retarget = 0.5
+	pontos.append(Vector2(alvo.x, alvo.y))
+	extra["foco_t"] = alvo.foco_t
+	_tele(u.poder_conj, "focos", 1.0)
+	if not em_heranca:
+		for k in 2:
+			_dano_poder(u, alvo, base * Balanco.PODER_PLANO_CORTE)
+		if not alvo.vivo:
+			u.poder_cd_menos += Balanco.PODER_PLANO_RECARGA
+	return true
+
+## Domo refletor (Donatemiau): domo parado; os tiros inimigos que entram voltam ao atirador. Só rende contra bicho de tiro.
+func _poder_domo(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var tem_tiro: bool = false
+	for v in outros:
+		if v.distancia and not v.estrutura:
+			tem_tiro = true
+			break
+	if not tem_tiro:
+		return false
+	for z in zonas:
+		if z.get("tipo", "") == "domo" and z["dono"] == u:
+			z["t"] = 0.0
+	var raio: float = Balanco.PODER_DOMO_HER_RAIO if em_heranca else Balanco.PODER_DOMO_RAIO
+	var dur: float = Balanco.PODER_DOMO_HER_T if em_heranca else Balanco.PODER_DOMO_T
+	zonas.append({"tipo": "domo", "x": u.x, "y": u.y, "t": dur, "dur": dur, "raio": raio, "dono": u, "eq": u.equipe, "conj": u.poder_conj})
+	pontos.append(Vector2(u.x, u.y))
+	extra["raio"] = raio
+	extra["dur"] = dur
+	return true
+
+## Dentro do domo: aliados ganham armadura (renovada a cada passo).
+func _zona_domo(z: Dictionary) -> void:
+	for v in (aliados if int(z["eq"]) == 0 else inimigos):
+		if v.vivo and _dentro(v, float(z["x"]), float(z["y"]), float(z["raio"])):
+			v.domo_t = 0.1
+			v.domo_arm = Balanco.PODER_DOMO_ARMADURA
+
+## O tiro inimigo que entra num domo é destruído e volta ao atirador com o mesmo dano.
+func _domo_reflete(p: Dictionary) -> void:
+	var dono: Variant = p["dono"]
+	if dono == null:
+		return
+	var d: Unidade = dono
+	for z in zonas:
+		if z.get("tipo", "") != "domo" or d.equipe == int(z["eq"]):
+			continue
+		var dx: float = p["x"] - float(z["x"])
+		var dy: float = (p["y"] - float(z["y"])) / 0.6
+		if dx * dx + dy * dy > float(z["raio"]) * float(z["raio"]):
+			continue
+		var dom: Unidade = z["dono"]
+		p["dono"] = dom
+		p["poder"] = true
+		p["conj"] = int(z["conj"])
+		p["refletido"] = true
+		if d.vivo:
+			p["alvo"] = d
+			p["dano"] = float(p["dano"]) * Balanco.PODER_DOMO_DANO
+			_tele(int(z["conj"]), "refletidos", 1.0)
+			_ev({"t": "reflete", "x": p["x"], "y": p["y"], "eq": dom.equipe})
+		else:
+			p["alvo"] = dom   # o atirador já caiu: o tiro se desfaz no domo
+			p["dano"] = 0.0
+		return
+
+## Lobo solitário (Rafamiau): os bichos em volta só atacam ele; ele apanha menos e bate mais forte.
+func _poder_lobo(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var perto: int = 0
+	for v in outros:
+		if not v.estrutura and _dentro(v, u.x, u.y, Balanco.PODER_LOBO_RAIO):
+			perto += 1
+	if perto == 0:
+		return false
+	u.lobo_dur = Balanco.PODER_LOBO_HER_T if em_heranca else Balanco.PODER_LOBO_T
+	u.lobo_t = u.lobo_dur
+	u.lobo_prov = not em_heranca
+	u.lobo_dano = Balanco.PODER_LOBO_HER_DANO if em_heranca else 0.0
+	pontos.append(Vector2(u.x, u.y))
+	extra["raio"] = Balanco.PODER_LOBO_RAIO
+	extra["dur"] = u.lobo_dur
+	_tele(u.poder_conj, "provocados", float(perto))
+	return true
+
+func _lobo_tick(u: Unidade, dt: float) -> void:
+	u.lobo_t -= dt
+	if u.lobo_t <= 0.0:
+		u.lobo_prov = false
+		return
+	if not u.lobo_prov:
+		u.bonus_dano *= 1.0 + u.lobo_dano
+		return
+	var n: int = 0
+	for v in inimigos:
+		if not v.vivo or v.estrutura or not _dentro(v, u.x, u.y, Balanco.PODER_LOBO_RAIO):
+			continue
+		n += 1
+		if v.chefe and u.lobo_dur - u.lobo_t > Balanco.PODER_LOBO_CHEFE_T:
+			continue
+		v.forcado_alvo = u
+		v.forcado_t = 0.3
+	var sozinho: bool = true
+	for a in aliados:
+		if a != u and a.vivo and not a.clone and _dentro(a, u.x, u.y, Balanco.PODER_LOBO_SOZINHO_RAIO):
+			sozinho = false
+			break
+	u.bonus_dano *= 1.0 + Balanco.PODER_LOBO_DANO + minf(Balanco.PODER_LOBO_DANO_INIMIGO_MAX, Balanco.PODER_LOBO_DANO_INIMIGO * n) + (Balanco.PODER_LOBO_SOZINHO if sozinho else 0.0)
+
+## Turbo (Rocket Miaugue): corre em linha atropelando e deixa um rastro de chamas azuis.
+func _poder_turbo(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var si: float = 1.0 if u.equipe == 0 else -1.0
+	var linha_t: Array = []
+	for v in outros:
+		var dxt: float = (v.x - u.x) * si
+		if dxt >= -20.0 and dxt <= Balanco.PODER_TURBO_ALCANCE + 30.0 and absf(v.y - u.y) <= Balanco.PODER_ATRAVESSA_LARGURA:
+			linha_t.append(v)
+	if linha_t.is_empty():
+		return false
+	var n: int = Balanco.PODER_TURBO_HER_N if em_heranca else Balanco.PODER_TURBO_RASTRO_N
+	var dur: float = (Balanco.PODER_TURBO_HER_T if em_heranca else Balanco.PODER_TURBO_RASTRO_T) * _fi
+	var x2: float = clampf(u.x + si * Balanco.PODER_TURBO_ALCANCE, Balanco.TORRE_X + 20.0, Balanco.VISIVEL_X)
+	extra["x0"] = u.x
+	extra["y0"] = u.y
+	extra["x1"] = x2
+	for k in n:
+		var zx: float = lerpf(u.x, x2, (k + 0.5) / n)
+		zonas.append({"tipo": "chama", "x": zx, "y": u.y, "t": dur, "dur": dur, "raio": Balanco.PODER_TURBO_RASTRO_RAIO,
+			"dps": base * Balanco.PODER_TURBO_RASTRO_DPS, "dono": u, "eq": u.equipe, "conj": u.poder_conj})
+	if em_heranca:
+		pontos.append(Vector2(u.x, u.y))
+		return true
+	for v in linha_t:
+		pontos.append(Vector2(v.x, v.y))
+		_dano_poder(u, v, base * Balanco.PODER_TURBO_DANO)
+		if v.vivo:
+			v.atordoado_t = maxf(v.atordoado_t, Balanco.PODER_TURBO_DERRUBA * (Balanco.PODER_RAIZ_CHEFE if v.chefe else 1.0))
+	u.x = x2
+	u.protegido_t = maxf(u.protegido_t, Balanco.PODER_TURBO_PROTEGE)
+	u.alvo = null
+	u.retarget = 0.0
+	return true
+
+## Rastro de chamas azuis: fere e atrasa quem pisa.
+func _zona_chama(z: Dictionary, dt: float) -> void:
+	var eq: int = int(z["eq"])
+	var dono: Unidade = z["dono"]
+	for v in (inimigos if eq == 0 else aliados):
+		if not v.vivo or v.x > Balanco.VISIVEL_X or v.estrutura or not _dentro(v, float(z["x"]), float(z["y"]), float(z["raio"])):
+			continue
+		v.lento = minf(v.lento, Balanco.PODER_TURBO_RASTRO_LENTO)
+		var d: float = float(z["dps"]) * dt * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0)
+		_tele(int(z["conj"]), "dano", d)
+		v.vida -= d
+		v.sono_t = 0.0
+		v.flash = maxf(v.flash, 0.3)
+		if v.vida <= 0.0:
+			_tele(int(z["conj"]), "abates", 1.0)
+			_matar(v, dono if dono != null and dono.vivo else null, Pecas.Marca.BRASA)
+
+## Esforço máximo (Deadmiau): regenera e bate mais forte; se cair no período, levanta uma vez e explode.
+const _PIADAS_ESFORCO: Array[String] = ["Esforço máximo!", "Isso vai pro trailer!", "Quebrando a quarta parede!", "Cadê meu spin-off?", "Sem spoilers, por favor!"]
+
+func _poder_esforco(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	if outros.is_empty() or u.esforco_t > 0.0:
+		return false
+	u.esforco_t = Balanco.PODER_ESFORCO_HER_T if em_heranca else Balanco.PODER_ESFORCO_T
+	u.esforco_regen = Balanco.PODER_ESFORCO_HER_REGEN if em_heranca else Balanco.PODER_ESFORCO_REGEN
+	u.esforco_usado = em_heranca or u.equipe == 1 or u.clone
+	u.esforco_base = base * Balanco.PODER_ESFORCO_EXPLODE
+	u.esforco_conj = u.poder_conj
+	pontos.append(Vector2(u.x, u.y))
+	extra["texto"] = _PIADAS_ESFORCO[rng.randi_range(0, _PIADAS_ESFORCO.size() - 1)]
+	extra["dur"] = u.esforco_t
+	return true
+
+func _esforco_levanta(u: Unidade) -> void:
+	u.esforco_usado = true
+	u.vida = u.vida_max * Balanco.PODER_ESFORCO_VIDA
+	u.protegido_t = maxf(u.protegido_t, 0.6)
+	u.atordoado_t = 0.0
+	u.queima_t = 0.0
+	_ev({"t": "explosao", "x": u.x, "y": u.y, "raio": Balanco.PODER_ESFORCO_RAIO, "eq": u.equipe})
+	_ev({"t": "fala", "x": u.x, "y": u.y, "txt": "Ainda não!", "eq": u.equipe})
+	var c0: int = _conj_tele
+	var e0: int = _eq_tele
+	_conj_tele = u.esforco_conj
+	_eq_tele = u.equipe
+	_tele(u.esforco_conj, "levantou", 1.0)
+	for v in (inimigos if u.equipe == 0 else aliados):
+		if v.vivo and not v.estrutura and _dentro(v, u.x, u.y, Balanco.PODER_ESFORCO_RAIO):
+			_dano_poder(u, v, u.esforco_base)
+	_conj_tele = c0
+	_eq_tele = e0
+
+## Parry de faca (Meon): apara os próximos golpes; quem bateu fica atordoado e leva o troco. Ao fim, chute giratório.
+func _poder_parry(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var perto: bool = false
+	for v in outros:
+		if not v.estrutura and _dentro(v, u.x, u.y, Balanco.PODER_PARRY_VE):
+			perto = true
+			break
+	if not perto or u.parry_t > 0.0:
+		return false
+	u.parry_t = Balanco.PODER_PARRY_T
+	u.parry_n = 1 if u.equipe == 1 else (Balanco.PODER_PARRY_HER_N if em_heranca else Balanco.PODER_PARRY_N)
+	u.parry_dano = base * Balanco.PODER_PARRY_DANO
+	u.parry_conj = u.poder_conj
+	pontos.append(Vector2(u.x, u.y))
+	extra["dur"] = Balanco.PODER_PARRY_T
+	return true
+
+func _parry(alvo: Unidade, atk: Unidade, corpo_a_corpo: bool) -> void:
+	alvo.parry_n = maxi(0, alvo.parry_n - 1) if corpo_a_corpo else 0
+	if not atk.bola_t > 0.0:
+		atk.atordoado_t = maxf(atk.atordoado_t, Balanco.PODER_PARRY_CHEFE if atk.chefe else Balanco.PODER_PARRY_ATORDOA)
+	var c0: int = _conj_tele
+	var e0: int = _eq_tele
+	_conj_tele = alvo.parry_conj
+	_eq_tele = alvo.equipe
+	_tele(alvo.parry_conj, "aparos", 1.0)
+	_dano_poder(alvo, atk, alvo.parry_dano)
+	_conj_tele = c0
+	_eq_tele = e0
+	_ev({"t": "parry", "x": alvo.x, "y": alvo.y, "eq": alvo.equipe, "ax": atk.x, "ay": atk.y})
+
+func _parry_fim(u: Unidade) -> void:
+	u.parry_t = 0.0
+	u.parry_n = 0
+	var sent: float = 1.0 if u.equipe == 0 else -1.0
+	_ev({"t": "chute", "x": u.x, "y": u.y, "raio": Balanco.PODER_PARRY_CHUTE_RAIO, "eq": u.equipe})
+	var c0: int = _conj_tele
+	var e0: int = _eq_tele
+	_conj_tele = u.parry_conj
+	_eq_tele = u.equipe
+	for v in (inimigos if u.equipe == 0 else aliados):
+		if v.vivo and not v.estrutura and _dentro(v, u.x, u.y, Balanco.PODER_PARRY_CHUTE_RAIO):
+			_dano_poder(u, v, u.parry_dano * Balanco.PODER_PARRY_CHUTE / Balanco.PODER_PARRY_DANO)
+			if v.vivo and not v.chefe and v.tipo != Unidade.Tipo.GIGANTE:
+				v.x = clampf(v.x + sent * Balanco.PODER_PARRY_EMPURRA, Balanco.TORRE_X + 20.0, Balanco.INIMIGO_X0)
+	_conj_tele = c0
+	_eq_tele = e0
+
 func _usar_poder_i(u: Unidade) -> bool:
 	var meus: Array[Unidade] = aliados if u.equipe == 0 else inimigos
 	var outros: Array[Unidade] = []
@@ -2850,6 +3154,24 @@ func _usar_poder_i(u: Unidade) -> bool:
 		Pecas.Poder.COCHILO:
 			if not _poder_cochilo(u, meus, outros, base, pontos, extra):
 				return false
+		Pecas.Poder.PLANO:
+			if not _poder_plano(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.DOMO:
+			if not _poder_domo(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.LOBO:
+			if not _poder_lobo(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.TURBO:
+			if not _poder_turbo(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.ESFORCO:
+			if not _poder_esforco(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.PARRY:
+			if not _poder_parry(u, meus, outros, base, pontos, extra):
+				return false
 		Pecas.Poder.ATORDOA, Pecas.Poder.EMPURRA, Pecas.Poder.GIRO:
 			if not _poder_atordoa_empurra_giro(u, meus, outros, base, pontos, extra):
 				return false
@@ -2872,6 +3194,12 @@ func _zonas(dt: float) -> void:
 			continue
 		if z.get("tipo", "") == "manteiga":
 			_zona_manteiga(z, dt)
+			continue
+		if z.get("tipo", "") == "domo":
+			_zona_domo(z)
+			continue
+		if z.get("tipo", "") == "chama":
+			_zona_chama(z, dt)
 			continue
 		if z.get("tipo", "enxame") == "canteiro":
 			_zona_canteiro(z, dt)
@@ -2906,7 +3234,7 @@ func _zonas(dt: float) -> void:
 func _dano_poder(u: Unidade, v: Unidade, dano: float) -> float:
 	if not v.vivo:
 		return 0.0
-	var d: float = dano * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0) * (Balanco.PODER_COCHILO_DANO if v.cochilo_t > 0.0 else 1.0)
+	var d: float = dano * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0) * (Balanco.PODER_COCHILO_DANO if v.cochilo_t > 0.0 else 1.0) * ((1.0 - Balanco.PODER_LOBO_REDUCAO) if v.lobo_t > 0.0 and v.lobo_prov else 1.0)
 	_tele_marca(v, d)
 	_tele(_conj_tele, "dano", d)
 	v.vida -= d

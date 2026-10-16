@@ -91,12 +91,12 @@ const CONJUNTOS: Array = [
 	[Pecas.Conjunto.CAVALEIRO, Pecas.Conjunto.JARDINEIRO, Pecas.Conjunto.BOSQUE, Pecas.Conjunto.OURICO, Pecas.Conjunto.ABELHA,
 		Pecas.Conjunto.MIAULAX, Pecas.Conjunto.DISPARAMIAU, Pecas.Conjunto.GIRAMIAU, Pecas.Conjunto.STARDEW_MIAULLEY],
 	[Pecas.Conjunto.ENCANADOR, Pecas.Conjunto.FERRO, Pecas.Conjunto.CIRCO, Pecas.Conjunto.TARTARUGA, Pecas.Conjunto.ROBO_AZUL,
-		Pecas.Conjunto.MOTOQUEIRO_MIAUSMA, Pecas.Conjunto.JIMIAU],
+		Pecas.Conjunto.MOTOQUEIRO_MIAUSMA, Pecas.Conjunto.JIMIAU, Pecas.Conjunto.ROCKET_MIAUGUE, Pecas.Conjunto.DONATEMIAU],
 	[Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.MAGO, Pecas.Conjunto.TROVAO, Pecas.Conjunto.NINJA_FOLHA,
-		Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.ARQUEIRO_MIAU],
+		Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.ARQUEIRO_MIAU, Pecas.Conjunto.DEADMIAU],
 	[Pecas.Conjunto.CAUBOI, Pecas.Conjunto.PIRATA, Pecas.Conjunto.PATRULHEIRO, Pecas.Conjunto.ESTELAR, Pecas.Conjunto.GUARDIAO, Pecas.Conjunto.TUBARAO,
-		Pecas.Conjunto.FENIX_MIAUSSIMO],
-	[Pecas.Conjunto.REI, Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.VIKING, Pecas.Conjunto.GELO, Pecas.Conjunto.MIMIAU, Pecas.Conjunto.MIAUCRAFT],
+		Pecas.Conjunto.FENIX_MIAUSSIMO, Pecas.Conjunto.LEONARMIAU, Pecas.Conjunto.RAFAMIAU],
+	[Pecas.Conjunto.REI, Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.VIKING, Pecas.Conjunto.GELO, Pecas.Conjunto.MIMIAU, Pecas.Conjunto.MIAUCRAFT, Pecas.Conjunto.MEON],
 ]
 
 ## Tipos de peça que os inimigos comuns da fase podem vestir, por espaço:
