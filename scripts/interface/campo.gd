@@ -848,6 +848,20 @@ func _consumir() -> void:
 					Pecas.Poder.BOLA:
 						snd_p = "poder"
 						tom_p = 1.4
+					Pecas.Poder.SALVAMENTO:
+						snd_p = "golpe_forte"
+						tom_p = 1.2
+					Pecas.Poder.RICOCHETE: snd_p = "tiro"
+					Pecas.Poder.OLHAR:
+						snd_p = "poder_explosao"
+						tom_p = 0.8
+					Pecas.Poder.OBJECAO:
+						snd_p = "poder_pronto"
+						tom_p = 1.5
+					Pecas.Poder.IMITAR: snd_p = "poder_pronto"
+					Pecas.Poder.POQUER:
+						snd_p = "poder"
+						tom_p = 1.25
 				_som(snd_p, tom_p, -1.0, true, 0.03)
 				# nome do poder: cor da fantasia clareada até uma luminância mínima + contorno escuro grosso
 				# empilha: se já há um nome de poder aqui perto, este sobe uma linha (sem sobrepor)
@@ -870,6 +884,11 @@ func _consumir() -> void:
 					alvos_p.append(Vector2(pt.x, pt.y - 24 * ESC))
 				if int(e.get("poder", 0)) == Pecas.Poder.TELEPORTE:
 					alvos_p = [Vector2(float(e.get("x0", e["x"])), float(e.get("y0", e["y"])) - 24 * ESC)]   # no teleporte, o risco vai da origem ao destino
+				if e.has("texto"):
+					var pt_txt: Vector2 = Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 150 * ESC - nivel_nome * 46.0)
+					if not alvos_p.is_empty() and int(e.get("poder", 0)) == Pecas.Poder.POQUER:
+						pt_txt = Vector2(clampf(alvos_p[0].x, 140.0, 1140.0), alvos_p[0].y - 70.0)
+					_numero(pt_txt, String(e["texto"]), cp.lightened(0.25), 24, 1.5, 300.0)
 				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp,
 					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0))}})
 			"aviso":
@@ -1300,6 +1319,21 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 			dur = 1.0
 		Pecas.Poder.BOLA:
 			dur = 0.7
+		Pecas.Poder.SALVAMENTO:
+			dur = 1.1
+			tremor = maxf(tremor, 4.0)
+		Pecas.Poder.RICOCHETE:
+			dur = 0.12 * alvos.size() + 0.5
+		Pecas.Poder.OLHAR:
+			dur = 1.1
+			tremor = maxf(tremor, 3.0)
+		Pecas.Poder.OBJECAO:
+			dur = 0.9
+		Pecas.Poder.IMITAR:
+			dur = 0.9
+		Pecas.Poder.POQUER:
+			dur = 1.1
+			tremor = maxf(tremor, 3.0)
 	var sem: Array = []
 	for i in 8:
 		sem.append(randf())
@@ -1840,6 +1874,106 @@ func _desenhar_fx(f: Dictionary) -> void:
 					V.linha(self, p + dvb2 * r1, p + dvb2 * (r1 + 14.0 * a + 4.0), c, q * 2.0)
 					V.linha(self, p + dvb2 * (r1 + 4.0), p + dvb2 * (r1 + 14.0 * a + 4.0), brc, q)
 			V.aro(self, gp, 20.0 + 70.0 * u, (20.0 + 70.0 * u) * 0.4, c, a * 1.3, 1.0)
+		Pecas.Poder.SALVAMENTO:
+			# o herói voa do ponto de origem até o ferido, o traz ao posto e soca o chão onde ele estava
+			var azul := Color(0.3, 0.5, 1.0)
+			var verm_s := Color(1.0, 0.3, 0.3)
+			var a0: Vector2 = alvos[0] if not alvos.is_empty() else p
+			var o0 := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 24.0 * ESC)
+			if u < 0.35:
+				var w_s: float = u / 0.35
+				for k in 7:
+					var pos_s: Vector2 = o0.lerp(a0, clampf(w_s - k * 0.07, 0.0, 1.0))
+					V.disco_c(self, pos_s, 7.0 - k * 0.8, azul if k % 2 == 0 else verm_s, V.CONT)
+			if u > 0.25:
+				var w2: float = clampf((u - 0.25) / 0.75, 0.0, 1.0)
+				var pe_s: Vector2 = a0 + Vector2(0, 24 * ESC)
+				var rr_s: float = float(ex.get("raio", 90.0)) * (1.0 - pow(1.0 - w2, 3.0))
+				V.elipse(self, pe_s, rr_s, rr_s * 0.34, Color(0.3, 0.5, 1.0, 0.22 * (1.0 - w2)))
+				V.aro(self, pe_s, rr_s, rr_s * 0.34, azul, 1.0 - w2, 1.5)
+				V.aro(self, pe_s, rr_s * 0.6, rr_s * 0.2, Color(1, 1, 1), 1.0 - w2, 1.0)
+				for k in 6:
+					var ang_s: float = k * TAU / 6.0 + 0.4
+					if w2 < 0.7:
+						V.estrela(self, pe_s + Vector2(cos(ang_s) * rr_s * 0.8, sin(ang_s) * rr_s * 0.3 - 10.0 * w2), 5.0, Color(1.0, 0.9, 0.3), Color(0.4, 0.25, 0.05))
+			var verde_s := Color(0.35, 0.9, 0.4)
+			for k in 3:
+				var wh_s: float = fposmod(u * 1.2 + k * 0.3, 1.0)
+				if u > 0.3 and sin(wh_s * PI) * minf(1.0, a * 2.5) > 0.25:
+					V.cruz(self, p + Vector2((k - 1) * 16.0, -10.0 - wh_s * 56.0), 5.0, verde_s, Color(0.1, 0.4, 0.2))
+		Pecas.Poder.RICOCHETE:
+			# a flecha segue a linha quebrada de alvo em alvo
+			var verde_r := Color(0.45, 0.95, 0.35)
+			var pts_r: Array = [p + Vector2(22, 0)]
+			for b in alvos:
+				pts_r.append(b)
+			var wr: float = t / 0.12
+			for k in range(1, pts_r.size()):
+				var seg: float = wr - (k - 1)
+				if seg <= 0.0:
+					break
+				var fim_r: Vector2 = (pts_r[k - 1] as Vector2).lerp(pts_r[k], minf(1.0, seg))
+				V.linha(self, pts_r[k - 1], fim_r, V.CONT, q * 2.0)
+				V.linha(self, pts_r[k - 1], fim_r, verde_r, q)
+				if seg >= 1.0 and seg < 2.0:
+					V.brilho(self, pts_r[k], 11.0 * (2.0 - seg) + 3.0, Color(1.0, 0.95, 0.5), Color(0.2, 0.4, 0.1))
+			if not alvos.is_empty():
+				var ult: Vector2 = alvos[alvos.size() - 1]
+				V.aro(self, ult + Vector2(0, 24 * ESC), 10.0 + 26.0 * u, (10.0 + 26.0 * u) * 0.4, verde_r, a, 1.0)
+		Pecas.Poder.OLHAR:
+			# olhar em brasa: raios laranja do gato aos alvos e chamas em cima de cada um
+			var laranja := Color(1.0, 0.5, 0.1)
+			for k in qtd.size():
+				var b: Vector2 = qtd[k]
+				if u < 0.3:
+					var wo: float = u / 0.3
+					V.linha(self, p + Vector2(18, -8), p.lerp(b, wo) + Vector2(0, -8 * (1.0 - wo)), V.CONT, q * 3.0)
+					V.linha(self, p + Vector2(18, -8), p.lerp(b, wo) + Vector2(0, -8 * (1.0 - wo)), laranja, q * 2.0)
+				if u > 0.15:
+					var ch: float = clampf((u - 0.15) / 0.85, 0.0, 1.0)
+					V.chama(self, b + Vector2(0, 26 * ESC), 38.0 * minf(1.0, ch * 5.0), 70.0 * (1.0 - 0.4 * ch), t * 1.5 + k)
+					V.aro(self, b + Vector2(0, 24 * ESC), 14.0 + 40.0 * ch, (14.0 + 40.0 * ch) * 0.35, laranja, 1.0 - ch, 1.0)
+		Pecas.Poder.OBJECAO:
+			# balão "!" sobre o bicho cortado e uma onda de choque
+			var rosa := Color(1.0, 0.35, 0.4)
+			for b in qtd:
+				var bal: Vector2 = b + Vector2(0, -52.0 - 10.0 * minf(1.0, u * 6.0))
+				var esc_b: float = minf(1.0, u * 8.0) * (1.0 if u < 0.7 else (1.0 - (u - 0.7) / 0.3))
+				if esc_b > 0.05:
+					V.quadro(self, bal.x - 18.0 * esc_b - q, bal.y - 24.0 * esc_b - q, 36.0 * esc_b + q * 2.0, 48.0 * esc_b + q * 2.0, V.CONT)
+					V.quadro(self, bal.x - 18.0 * esc_b, bal.y - 24.0 * esc_b, 36.0 * esc_b, 48.0 * esc_b, Color(1, 1, 1))
+					V.quadro(self, bal.x - q, bal.y - 15.0 * esc_b, q * 2.0, 20.0 * esc_b, rosa)
+					V.quadro(self, bal.x - q, bal.y + 10.0 * esc_b, q * 2.0, q * 2.0, rosa)
+				V.aro(self, b + Vector2(0, 24 * ESC), 10.0 + 60.0 * u, (10.0 + 60.0 * u) * 0.4, rosa, a * 1.2, 1.5)
+			V.aro(self, gp, 14.0 + 50.0 * u, (14.0 + 50.0 * u) * 0.4, c, a, 1.0)
+		Pecas.Poder.IMITAR:
+			# pano amarelo: bolhas de fumaça sobem e um aro marca o gato
+			_fumaca_px(gp, 34.0, 8, u, Color(c.r, c.g, c.b, 0.8 * a), sem[0])
+			V.aro(self, gp, 16.0 + 40.0 * u, (16.0 + 40.0 * u) * 0.4, c, a * 1.3, 1.0)
+			for k in 4:
+				var ang_i: float = k * TAU / 4.0 + u * 4.0
+				if a > 0.2:
+					V.estrela(self, p + Vector2(cos(ang_i) * 28.0, sin(ang_i) * 16.0 - 6.0), 4.0, clr_c, esc_c)
+		Pecas.Poder.POQUER:
+			# cartas caem sobre o bando e estouram
+			var pk: Vector2 = (qtd[0] as Vector2)
+			var raio_q: float = float(ex.get("raio", 110.0))
+			for k in 5:
+				var wq: float = clampf(u * 2.2 - k * 0.1, 0.0, 1.0)
+				if wq > 0.0 and wq < 1.0:
+					var cx_q: float = pk.x + (k - 2) * 22.0
+					var cy_q: float = lerpf(-30.0, pk.y, wq)
+					V.quadro(self, cx_q - 9.0 - q, cy_q - 13.0 - q, 18.0 + q * 2.0, 26.0 + q * 2.0, V.CONT)
+					V.quadro(self, cx_q - 9.0, cy_q - 13.0, 18.0, 26.0, Color(1, 1, 1))
+					V.quadro(self, cx_q - q, cy_q - q * 1.5, q * 2.0, q * 3.0, Color(0.9, 0.2, 0.3) if k % 2 == 0 else V.CONT)
+			if u > 0.45:
+				var wp: float = clampf((u - 0.45) / 0.55, 0.0, 1.0)
+				var pe_q: Vector2 = pk + Vector2(0, 24 * ESC)
+				V.aro(self, pe_q, raio_q * (1.0 - pow(1.0 - wp, 3.0)), raio_q * (1.0 - pow(1.0 - wp, 3.0)) * 0.34, c, 1.0 - wp, 1.5)
+				for k in 8:
+					var ang_q: float = k * TAU / 8.0 + 0.3
+					if wp < 0.7:
+						V.cruz(self, pe_q + Vector2(cos(ang_q) * raio_q * wp, sin(ang_q) * raio_q * wp * 0.4 - 12.0), 4.0, Color(1.0, 0.9, 0.3) if k % 2 == 0 else Color(0.95, 0.3, 0.4), V.CONT)
 		_:
 			V.aro(self, p + Vector2(0, 30), 10.0 + 80.0 * u, (10.0 + 80.0 * u) * 0.4, c, a * 1.3, 1.5)
 

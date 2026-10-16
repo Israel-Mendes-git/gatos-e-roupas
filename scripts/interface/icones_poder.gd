@@ -8,9 +8,9 @@ extends RefCounted
 const TAM := 10           # lado de um ícone no atlas (8 + contorno de 1 px)
 const CONTORNO := Color("140c1c")
 
-## Ícones de apoio, depois dos 30 poderes.
-const BLOCO := 30         # bloco da torre (contador de blocos)
-const PECA := 31          # roupinha (caixa de peças)
+## Ícones de apoio, depois dos 36 poderes.
+const BLOCO := 36         # bloco da torre (contador de blocos)
+const PECA := 37          # roupinha (caixa de peças)
 
 const PALETA := {
 	"w": Color("ffffff"), "W": Color("b8c4dc"),
@@ -91,6 +91,18 @@ const BITS: Array = [
 	["rr....rr", "r..rr..r", "...rr...", ".rrwwrr.", ".rrwwrR.", "...rR...", "R..RR..R", "RR....RR"],
 	# BOLA (Bola de espinhos): bola azul espinhenta
 	["b..bb..b", ".bbbbbb.", ".bcbbbb.", "bbbbbbbb", "bbbbbbBb", ".bbbbBB.", ".bbBBBB.", "B..BB..B"],
+	# SALVAMENTO (Super Miau): escudo azul com peito amarelo e capa vermelha
+	["r.bbbb.r", "rrbyybrr", "rbbybbbr", ".bbyybb.", ".bbbybb.", "..byyb..", "...bb...", "........"],
+	# RICOCHETE (Flecha ricochete): flecha em zigue-zague
+	["........", "x......s", "xx....ss", ".xX..s.s", "..xx.s..", "...xxs..", "....xX..", "........"],
+	# OLHAR (Olhar da Penitência): caveira em chamas
+	["..o.o.o.", "..ooyoo.", ".oowwwoo", ".wkwwkw.", ".wwwwww.", "..wkkw..", "..wwww..", "...ww..."],
+	# OBJECAO (Objeção!): balão com exclamação
+	["wwwwwwww", "wwwrrwww", "wwwrrwww", "wwwrrwww", "wwwwwwww", "wwwrrwww", "WwwwwwwW", ".WW....."],
+	# IMITAR (Mimiau): pano amarelo com carinha riscada
+	["..yyyy..", ".yyyyyy.", "yykyykyy", "yyyyyyyy", "yrryyrry", "yyykkyyy", "yYyyyyYy", "Y.Y.Y.Y."],
+	# POQUER (Mão de pôquer): carta com copas
+	["..sssss.", ".swwwwwS", "swrwrwwS", "swrrrwwS", "swwrwwwS", "swwwwwwS", ".SSSSSS.", "........"],
 	# BLOCO: bloco de brinquedo da torre
 	["yyyyyyyY", "yooooooO", "yowwooOO", "yowoooOO", "yooooOOO", "yooooOOO", "yOOOOOOO", "YOOOOOOO"],
 	# PECA: camiseta (caixa de peças)
