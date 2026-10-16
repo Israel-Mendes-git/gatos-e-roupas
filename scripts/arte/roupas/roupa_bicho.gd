@@ -306,15 +306,14 @@ const _CHAPEU: Array = [
 		"ookk.ookkko",
 		".o...ookko.",
 		"......ooko."]},
-	# 26 arqueiro miau: chapéu verde com pluma
+	# 26 arqueiro miau: capuz verde com pluma vermelha atrás (como o do gato)
 	{"cheio": false, "l": [
-		"......rR...",
-		"...ooooo.rR",
-		"..oAAaaaoo.",
-		".oAaaaaaado",
-		"ooaaaaaaaoo",
-		"obbbbbbbbbo",
-		".ooooooooo."]},
+		"rR...ooo...",
+		".rRoobAaoo.",
+		"..oobAaaaoo",
+		".oobAaaaaao",
+		"oaaaaaaaaao",
+		"oddddddddo."]},
 	# 27 motoqueiro miausma: caveira em chamas
 	{"cheio": true, "l": [
 		"..b..B.b...",
@@ -326,22 +325,24 @@ const _CHAPEU: Array = [
 		"owkkwwwkkwo",
 		".owwwwwwwo.",
 		"..owowowo.."]},
-	# 28 fênix miaussimo: três espetos de cabelo
+	# 28 fênix miaussimo: espetos de cabelo varridos para trás
 	{"cheio": false, "l": [
-		"..o..o..o..",
-		".okoookoook.",
-		"okkgkkkgkko",
+		"ok.........",
+		".kko.ok....",
+		"..kkokko...",
+		".okkkkkkoo.",
+		"okkkkkkkkko",
 		"okkkkkkkkko",
 		".ooooooooo."]},
-	# 29 mimiau: capuz de pano com orelhas de ponta preta
+	# 29 mimiau: cabeça de pano com orelhas caídas e tortas de ponta preta, olhos riscados, bochechas e boca em zigue-zague
 	{"cheio": false, "l": [
-		"k.........k",
-		"ok.......ko",
-		"oao.....oao",
+		"kk.......kk",
+		".oao...oao.",
 		"oaaooooooao",
 		"oaAaaaaaado",
 		"oaakaaakaao",
-		"oaaaaaaaaao",
+		"oraaaaaaaro",
+		"oaakakakaao",
 		"ooooooooooo"]},
 	# 30 jimiau: chapéu de bobo de três pontas
 	{"cheio": false, "l": [
@@ -708,7 +709,7 @@ const _EMBLEMA: Array = [
 	[".B.", "BeB", ".B."],                       # robô azul: luz
 	[],                                          # tubarão
 	[],                                          # abelha
-	["yrr", "yry", "rry"],                       # super miau: escudo do peito
+	["yrr", "ryy", "yry", "yyr", "rry"],            # super miau: o S do peito
 	[],                                          # arqueiro miau
 	[],                                          # motoqueiro miausma
 	[],                                          # fênix miaussimo
@@ -925,7 +926,7 @@ static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary
 				if dentro.call(Vector2i(x1 - 2, yf)):
 					px[Vector2i(x1 - 2, yf)] = C.call("e") if false else _COMUM["y"]
 		Pecas.Conjunto.MOTOQUEIRO_MIAUSMA:
-			# tachas de prata nos ombros
+			# jaqueta preta com tachas de prata nos ombros e na barra
 			for x in range(x0 + 1, x1, 3):
 				if tp.has(x) and dentro.call(Vector2i(x, tp[x] + 1)):
 					px[Vector2i(x, tp[x] + 1)] = C.call("e")
@@ -943,12 +944,7 @@ static func _enfeitar(conj: int, px: Dictionary, area: Dictionary, g: Dictionary
 					if dentro.call(Vector2i(x1 - 3, y)):
 						px[Vector2i(x1 - 3, y)] = C.call("b")
 		Pecas.Conjunto.MIMIAU:
-			# bochecha vermelha a caneta e costura torta
-			var yb: int = cx.position.y + cx.size.y / 2
-			for y in range(yb, yb + 2):
-				for x in range(x1 - 4, x1 - 2):
-					if dentro.call(Vector2i(x, y)):
-						px[Vector2i(x, y)] = C.call("b")
+			# costura torta e a barra irregular escura embaixo (a sombra do pano)
 			for x in range(x0 + 2, x1 - 5, 2):
 				if tp.has(x) and dentro.call(Vector2i(x, tp[x] + 2)):
 					px[Vector2i(x, tp[x] + 2)] = C.call("e")
@@ -992,6 +988,8 @@ static func _gola_arminho(px: Dictionary, tp: Dictionary, x1: int, C: Callable) 
 static func _ombreira(px: Dictionary, area: Dictionary, tp: Dictionary, x: int, luz: Color, meio: Color) -> void:
 	if not tp.has(x):
 		return
+				if bs.has(x) and dentro.call(Vector2i(x, bs[x] - 1)) and bs[x] - 1 > tp[x] + 2:
+					px[Vector2i(x, bs[x] - 1)] = C.call("e")
 	var t: int = tp[x]
 	for i in range(-1, 3):
 		_p(px, area, Vector2i(x + i, t + 1), meio)
@@ -1015,6 +1013,21 @@ static func _asas(px: Dictionary, tp: Dictionary, xm: int) -> void:
 	for d in [Vector2i(-1, -2), Vector2i(0, -2), Vector2i(-2, -3), Vector2i(-1, -3), Vector2i(-1, -4), Vector2i(1, -2), Vector2i(1, -3), Vector2i(2, -3), Vector2i(2, -4)]:
 		px[Vector2i(xm, t) + d] = asa
 	for d in [Vector2i(-2, -4), Vector2i(-1, -5), Vector2i(-3, -3), Vector2i(1, -4), Vector2i(2, -5), Vector2i(3, -4), Vector2i(3, -3), Vector2i(0, -1)]:
+			for x in range(x0, x1 + 1):
+				if not bs.has(x):
+					continue
+				if posmod(x * 5, 3) != 1 and area.has(Vector2i(x, bs[x])):
+					px[Vector2i(x, bs[x])] = _COMUM["k"]
+				if posmod(x, 3) == 0:
+					px[Vector2i(x, bs[x] + 1)] = _COMUM["k"]
+				if posmod(x, 2) == 0 and dentro.call(Vector2i(x, bs[x] - 1)):
+					px[Vector2i(x, bs[x] - 1)] = C.call("d")
+		Pecas.Conjunto.JIMIAU:
+			# colete de arlequim em losangos roxo e verde
+			for p in area.keys():
+				var v: Vector2i = p
+				if dentro.call(v) and (floori((v.x + v.y + 100) / 3.0) + floori((v.x - v.y + 100) / 3.0)) % 2 == 0:
+					px[v] = C.call("b") if px[v] != C.call("d") else C.call("B")
 		px[Vector2i(xm, t) + d] = borda
 
 # ------------------------------------------------------------------ desenho

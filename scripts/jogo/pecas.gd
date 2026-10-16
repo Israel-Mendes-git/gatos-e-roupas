@@ -99,7 +99,7 @@ const NOME: Array[String] = [
 	"Franja Heroica", "Collant Azul com Peito em S", "Punho de Aço", "Capa Vermelha Esvoaçante",
 	"Capuz Verde com Pluma", "Colete de Folhas Costuradas", "Arco Recurvo de Brinquedo", "Aljava de Flechas-Truque",
 	"Caveira em Chamas", "Jaqueta de Couro com Espetos", "Corrente Flamejante", "Roda de Fogo Portátil",
-	"Franja de Advogado", "Terno Azul de Tribunal", "Luva de Apontar Dedo", "Distintivo de Advogado Dourado",
+	"Franja de Advogado", "Terno Azul de Tribunal", "Martelo da Objeção", "Distintivo de Advogado Dourado",
 	"Capuz de Pelúcia Mal Costurado", "Disfarce Amarelo Remendado", "Pata Misteriosa", "Rabo de Raio de Papelão",
 	"Chapéu de Coringa de Três Pontas", "Colete de Baralho", "Mão de Pôquer em Leque", "Fichas de Cassino Empilhadas",
 ]
