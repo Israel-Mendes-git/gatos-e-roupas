@@ -14,15 +14,33 @@ const TENTATIVAS_MAX := 6   # por fase; depois disso a campanha conta como trava
 const A_DISTANCIA: Array[int] = [Pecas.Tipo.ESTILINGUE, Pecas.Tipo.VARINHA, Pecas.Tipo.REGADOR]
 
 var verboso: bool = false
+var opcoes: Dictionary = {}   # argumentos "chave=valor" (ate=4, kits=todos, ...)
+var ate: int = 9999           # para cada campanha depois desta fase (1..10 na ordem jogada); o resto do relatório sai igual
+
+## Separa os argumentos posicionais dos "chave=valor".
+func _argumentos() -> PackedStringArray:
+	var pos := PackedStringArray()
+	for a in OS.get_cmdline_user_args():
+		if "=" in a:
+			opcoes[a.get_slice("=", 0)] = a.get_slice("=", 1)
+		else:
+			pos.append(a)
+	if opcoes.has("ate"):
+		ate = int(opcoes["ate"])
+	return pos
 
 func _init() -> void:
-	var args: PackedStringArray = OS.get_cmdline_user_args()
+	var args: PackedStringArray = _argumentos()
 	var n_jogos: int = 30
 	if args.size() > 0:
 		n_jogos = int(args[0])
 	var politicas: Array[String] = ["veste", "misto", "sacrifica", "fantasia"]
 	if args.size() > 1 and args[1] != "todas":
 		politicas = [args[1]]
+	if opcoes.has("kits"):
+		_modo_kits(n_jogos, args[1] if args.size() > 1 and args[1] != "todas" else "veste")
+		quit()
+		return
 	var so_q: bool = args.size() > 2 and args[2] == "q"   # só o primeiro cômodo (medição rápida)
 	verboso = args.size() > 2 and not so_q
 	Simulacao.medir = true
@@ -75,7 +93,7 @@ func _init() -> void:
 				if not venceu:
 					travou = true
 					break
-				if so_q:
+				if so_q or fa >= ate:
 					break
 				if fa % Fases.TOTAL == 0:
 					var soma_nv: float = 0.0
@@ -88,7 +106,7 @@ func _init() -> void:
 						if e.modulo_liberado(mm):
 							nm += 1
 					mods_fim[(fa - 1) / Fases.TOTAL] += nm
-			if not travou and not so_q:
+			if not travou and not so_q and ate >= Fases.TOTAL * Balanco.ATOS:
 				completas += 1
 				# invasão sem fim com o time do fim do jogo: um cômodo e um lugar de fora, um por campanha
 				inv_casa.append(_jogar_invasao(pol, e, g % Fases.TOTAL + 1, false, 5000 + g))
@@ -355,3 +373,95 @@ func _melhor_livre(livres: Array[Peca], s: int, c: int) -> Peca:
 		if melhor == null or _valor(p, 0) > _valor(melhor, 0):
 			melhor = p
 	return melhor
+
+## Modo kits (kits=todos | novos | antigos | lista de índices de Pecas.Conjunto separados por vírgula; campanhas = 1º argumento).
+## Cada campanha joga o 1º ato normalmente; depois, com o time do fim do 1º ato, o último gato veste cada fantasia completa
+## (nível e raridade médios do time) e luta as MESMAS lutas fixas (invasão lá fora, ondas 2, 4 e 6 em dois lugares,
+## mesmas sementes). Sem gravar nada no estado. A linha "sem kit" é a referência (o último gato com as próprias peças).
+func _modo_kits(n_jogos: int, pol: String) -> void:
+	Simulacao.medir = true
+	var primeiro_novo: int = Pecas.Conjunto.SUPER_MIAU
+	var lista: Array[int] = []
+	var k: String = str(opcoes["kits"])
+	if k == "todos" or k == "novos" or k == "antigos":
+		for c in Pecas.CONJUNTO_NOME.size():
+			if k == "todos" or (k == "novos") == (c >= primeiro_novo):
+				lista.append(c)
+	else:
+		for t in k.split(","):
+			lista.append(int(t))
+	var ondas: Array[int] = [2, 4, 6]
+	# acumuladores por kit (-1 = sem kit)
+	var acc: Dictionary = {}
+	for c in lista + [-1]:
+		acc[c] = {"lutas": 0, "vitorias": 0, "vivos": 0.0, "tempo": 0.0, "tele": {}}
+	for g in n_jogos:
+		var e := Estado.new(1000 + g * 7)
+		e.novo_jogo()
+		var travou: bool = false
+		for f in range(1, Fases.TOTAL + 1):
+			var venceu: bool = false
+			for t in TENTATIVAS_MAX:
+				e.iniciar_fase(f)
+				if _jogar_fase(pol, e, 1000 + g * 7 + f * 101 + t * 977)["vitoria"]:
+					venceu = true
+					break
+			if not venceu:
+				travou = true
+				break
+		if travou:
+			continue
+		e.vencido = [2, 2, 2, 2, 2]   # os lugares de fora ficam abertos para a invasão lá fora
+		_preparar(pol, e, false)
+		var b0: Boneco = e.bonecos[e.bonecos.size() - 1]   # o kit vai no último gato; nível e raridade são a média do time
+		var originais: Array = b0.pecas.duplicate()
+		var soma_n: float = 0.0
+		var soma_r: float = 0.0
+		var npc: int = 0
+		for bb in e.bonecos:
+			for p in bb.pecas:
+				if p != null:
+					soma_n += p.nivel
+					soma_r += p.raridade
+					npc += 1
+		var nivel: int = int(round(soma_n / maxi(1, npc)))
+		var rar: int = int(round(soma_r / maxi(1, npc)))
+		for c in lista + [-1]:
+			for s in Pecas.SLOTS:
+				b0.pecas[s] = originais[s] if c < 0 else Peca.new(Pecas.CONJUNTO_PECAS[c][s], nivel, rar)
+			_linhas(e, false)
+			Simulacao.tele.clear()
+			for li in 2:
+				for oi in ondas.size():
+					e.iniciar_invasao((g + li * 2) % Fases.TOTAL + 1, true)
+					e.onda_invasao = ondas[oi]
+					e.onda = (ondas[oi] - 1) % Balanco.ONDAS_TOTAIS + 1
+					e.rng.seed = 50000 + g * 31 + li * 7 + oi   # as mesmas ondas para todos os kits
+					e.preparar_onda()
+					var sim := Simulacao.new()
+					sim.gerar_eventos = false
+					sim.iniciar(e, 40000 + g * 31 + li * 7 + oi)
+					while not sim.terminada:
+						sim.passo(Balanco.DT)
+					var a: Dictionary = acc[c]
+					a["lutas"] += 1
+					a["vitorias"] += 1 if sim.vitoria else 0
+					a["vivos"] += sim.aliados.size()
+					a["tempo"] += sim.tempo
+			var tel: Dictionary = acc[c]["tele"]
+			var d: Dictionary = Simulacao.tele.get(c, {}) if c >= 0 else {}
+			for kk in d:
+				tel[kk] = float(tel.get(kk, 0.0)) + float(d[kk])
+		for s in Pecas.SLOTS:
+			b0.pecas[s] = originais[s]
+	print("kits (%s), %d campanhas, 6 lutas fixas por campanha e kit; último gato veste o kit" % [pol, n_jogos])
+	print("  %-20s %-22s vitoria%% | vivos | tempo |  usos  |  dano  | abates | extras (por luta)" % ["fantasia", "poder"])
+	for c in lista + [-1]:
+		var a: Dictionary = acc[c]
+		var nl: float = maxf(1.0, a["lutas"])
+		var tel: Dictionary = a["tele"]
+		var ex: String = ""
+		for kk in tel:
+			if not (kk in ["usos", "usos_h", "dano", "abates"]):
+				ex += " %s %.2f" % [kk, float(tel[kk]) / nl]
+		print("  %-20s %-22s %6.1f%% | %5.2f | %5.1f | %6.2f | %7.0f | %6.2f |%s" % [Pecas.CONJUNTO_NOME[c] if c >= 0 else "(sem kit)", Pecas.PODER_NOME[c] if c >= 0 else "-", 100.0 * a["vitorias"] / nl, a["vivos"] / nl, a["tempo"] / nl, float(tel.get("usos", 0.0)) / nl, float(tel.get("dano", 0.0)) / nl, float(tel.get("abates", 0.0)) / nl, ex])
