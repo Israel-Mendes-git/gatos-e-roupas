@@ -70,11 +70,12 @@ const _PAL_FENIX := {
 	"m": Color(0.6, 0.36, 0.16), "M": Color(0.86, 0.62, 0.34), "N": Color(0.36, 0.2, 0.08),
 }
 ## Mimiau: o contorno preto, a/b/d pano amarelo (médio, claro, sombra), k lápis, r bochecha vermelha, s costura,
-## t fita, p mão de sombra (roxo-escuro), c/C papelão (marrom, claro).
+## t fita, z/p/P mão de sombra (preto-roxo, brilho, contorno de brilho), e/E olhos e garras de luz, c/C papelão (marrom, claro).
 const _PAL_MIMI := {
 	"o": Color(0.12, 0.09, 0.11), "a": Color(0.98, 0.86, 0.34), "b": Color(1.0, 0.96, 0.62), "d": Color(0.8, 0.64, 0.18),
-	"k": Color(0.1, 0.08, 0.1), "r": Color(0.92, 0.2, 0.2), "s": Color(0.45, 0.3, 0.14), "t": Color(0.85, 0.82, 0.72),
-	"p": Color(0.5, 0.38, 0.62), "c": Color(0.62, 0.42, 0.18), "C": Color(0.82, 0.6, 0.3),
+	"k": Color(0.06, 0.04, 0.08), "r": Color(0.92, 0.2, 0.2), "s": Color(0.45, 0.3, 0.14), "t": Color(0.85, 0.82, 0.72),
+	"p": Color(0.55, 0.4, 0.8), "P": Color(0.74, 0.58, 0.98), "z": Color(0.13, 0.06, 0.22), "e": Color(1.0, 0.96, 0.78), "E": Color(1.0, 0.45, 0.4),
+	"c": Color(0.62, 0.42, 0.18), "C": Color(0.82, 0.6, 0.3),
 }
 ## Jimiau: o roxo-noite, p/P/d roxo (médio, claro, sombra), g/G verde (médio, claro), y/Y guizo (ouro, brilho), w/W carta, r/k naipes,
 ## b/B ficha azul, R ficha vermelha, a ficha preta, n/N couro da bolsa.
@@ -248,39 +249,33 @@ static func _capa(fase: int) -> Dictionary:
 	_cont(cv, "C")
 	return cv
 
-## Roda da moto em chamas, de raio 5,6 (11 × 11 pixels) centrada em (cx, cy) em canto de pixel: pneu grosso de preto com cravos de borracha,
-## aro de prata, coroa de corrente (elos claros e escuros), cubo com raios e as chamas lambendo o pneu por cima e por trás (animadas).
+## Pneu pequeno em chamas (raio 3,6; 7 × 7 pixels) centrado em (cx, cy) em canto de pixel: contorno, pneu com cravos, aro de prata e cubo em brasa
+## que pisca (`anim`), com as chamas lambendo o aro por cima e por trás (animadas).
 static func _roda(cv: Dictionary, cx: float, cy: float, anim: float) -> void:
 	var fase: int = int(anim * 6.0) % 2
-	for j in 22:
-		for i in 22:
-			var x: int = floori(cx - 11.0) + i
-			var y: int = floori(cy - 11.0) + j
+	for j in 16:
+		for i in 16:
+			var x: int = floori(cx - 8.0) + i
+			var y: int = floori(cy - 8.0) + j
 			var dx: float = x + 0.5 - cx
 			var dy: float = y + 0.5 - cy
 			var d: float = sqrt(dx * dx + dy * dy)
 			var a: float = atan2(dy, dx)
 			var ch: String = ""
-			if d <= 5.6:
-				var setor: int = int(floor((a + PI) / (PI / 6.0)))
-				if d > 5.0:
-					ch = "o"   # contorno do pneu
-				elif d > 3.7:
-					ch = "K" if (setor % 3 == 0 and d < 4.7) else "a"   # pneu grosso com cravos de borracha
-				elif d > 3.0:
-					ch = "S" if dy > 0.0 else "C"   # aro de prata
+			if d <= 3.7:
+				if d > 3.0:
+					ch = "o"
+				elif d > 1.9:
+					ch = "K" if int(floor((a + PI) / (PI / 4.0))) % 2 == 0 else "a"
+				elif d > 0.9:
+					ch = "S" if dy > 0.0 else "C"
 				else:
-					ch = "o"   # miolo escuro com a corrente e os raios
-					if d > 1.6 and int(floor((a + PI) / (PI / 4.0))) % 2 == 0:
-						ch = "c"   # elos da coroa
-					if d < 1.6:
-						ch = "y" if fase == 0 else "f"   # cubo em brasa
-			elif dy < 1.0 and dx < 2.0:
-				# chamas por fora do pneu, em línguas que crescem do aro para cima e para trás
-				var lingua: int = int(floor((a + PI) / (PI / 7.0)))
-				var alt: float = 2.0 + 2.6 * (0.5 + 0.5 * sin(lingua * 2.3 + fase * 2.6))
-				if d <= 5.6 + alt:
-					ch = "y" if d < 5.6 + alt * 0.35 else ("f" if d < 5.6 + alt * 0.7 else "F")
+					ch = "y" if fase == 0 else "f"
+			elif dy < 1.0 and dx < 1.5:
+				var lingua: int = int(floor((a + PI) / (PI / 5.0)))
+				var alt: float = 1.4 + 2.0 * (0.5 + 0.5 * sin(lingua * 2.3 + fase * 2.6))
+				if d <= 3.7 + alt:
+					ch = "y" if d < 3.7 + alt * 0.35 else ("f" if d < 3.7 + alt * 0.7 else "F")
 			if ch != "":
 				cv[Vector2i(x, y)] = ch
 
@@ -300,11 +295,11 @@ static func _corrente(chama: int) -> Dictionary:
 		for d in forma:
 			cv[Vector2i(cx, cy) + d] = cor
 	# punho (couro preto com protetor de prata)
-	_ret(cv, 11, -13, 14, -10, "k")
+	_ret(cv, 12, -13, 14, -10, "k")
 	_px(cv, 14, -13, "S")
 	_px(cv, 14, -12, "S")
 	_px(cv, 14, -11, "S")
-	_px(cv, 11, -13, "K")
+	_px(cv, 12, -13, "K")
 	# bola de chamas na ponta
 	var e: Vector2i = Vector2i(roundi(pts[4].x), roundi(pts[4].y) + 4)
 	_disco(cv, e.x + 0.5, e.y + 0.5, 2.6, "f")
@@ -485,17 +480,20 @@ static func _montar(tipo: int, fase: int, chama: int, maxima: bool, anim: float)
 			]), _PAL_ARQ, true]]
 		# ---------------------------------------------------------------- Motoqueiro Miausma
 		Pecas.Tipo.CAVEIRA_CHAMAS:
-			# capacete de caveira com chamas no topo (animadas)
-			var f0: Array = ["..f..y..f..", ".fFf.fF.fFf", ".fFyfFyfFyf"] if chama == 0 else ["..f.f..y.f.", ".fFfFf.fFf.", "fFyFfFfyFfF"]
-			return [[-5.5, -7.0, _l(f0 + [
-				"..ooooooo..",
-				".owwwwwwwo.",
-				"owwwWwwwWwo",
-				"owkkowwkkwo",
-				"owkkowwkkwo",
-				".owwwwwwwo.",
-				"..owowowo..",
-			]), _PAL_MOTO]]
+			# caveira em chamas no lugar da cabeça (x 2..11, y -18..-10, o crânio todo): as orelhas somem sob o osso e as chamas saem do topo;
+			# as órbitas guardam um brilho de brasa
+			var f0: Array = ["..f..y..f.", ".fFf.fF.fF", "fFyFfFyFfF", "FfyFFfyFfF"] if chama == 0 else [".f..y..f..", "fF.fFf.fFf", "FfFyFfFyFf", "FyfFFfyFfF"]
+			return [_linhas(RoupaGato.Onde.CABECA, 2, -22, f0 + [
+				"..oooooo..",
+				".owwwwwwo.",
+				"owwwWwwWwo",
+				"owkkwwkkwo",
+				"owkfwwkfwo",
+				"owwwkkwwwo",
+				".owwwwwwo.",
+				".owkwwkwo.",
+				"..oooooo..",
+			], _PAL_MOTO)]
 		Pecas.Tipo.JAQUETA_ESPETOS:
 			# jaqueta de couro preta: ombreira com espetos, zíper torto, gola, tachas de prata na barra
 			_tronco(cv, "k", -12, -5)
@@ -518,12 +516,10 @@ static func _montar(tipo: int, fase: int, chama: int, maxima: bool, anim: float)
 		Pecas.Tipo.CORRENTE_FOGO:
 			return [_lay(_corrente(chama), RoupaGato.Onde.BOCA, _PAL_MOTO)]
 		Pecas.Tipo.RODA_FOGO:
-			# a roda da moto em chamas no chão, atrás da anca (camada de trás), presa ao quadril por um braço de aço; por cima do quadril só o
-			# banco de couro com a tacha
-			_roda(cv, -13.5, -5.5, 0.0 if maxima else anim)
-			_lin(cv, Vector2i(-13, -7), Vector2i(-8, -10), "C")
-			_lin(cv, Vector2i(-13, -6), Vector2i(-8, -9), "c")
-			_lin(cv, Vector2i(-13, -8), Vector2i(-9, -11), "o")
+			# pneu pequeno em chamas preso na anca por um suporte de aço, atrás do corpo (camada de trás); por cima do quadril só o banco de couro
+			_roda(cv, -12.5, -5.5, 0.0 if maxima else anim)
+			_lin(cv, Vector2i(-11, -6), Vector2i(-7, -9), "C")
+			_lin(cv, Vector2i(-11, -7), Vector2i(-7, -10), "c")
 			var sup: Array = _linhas(RoupaGato.Onde.CORPO, -8, -11, [
 				"..ooooooo..",
 				".okkkkkkko.",
@@ -582,25 +578,30 @@ static func _montar(tipo: int, fase: int, chama: int, maxima: bool, anim: float)
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_FENIX)]
 		# ---------------------------------------------------------------- Mimiau
 		Pecas.Tipo.CAPUZ_PELUCIA:
-			# cabeça de pano amarelo (cobre o gato todo) com as orelhas de Pikachu caídas e tortas de ponta preta e o rosto riscado à mão
+			# cabeça de pano amarelo (cobre o gato todo) com as orelhas de Pikachu (uma em pé, outra caída e dobrada, pontas pretas) e o rosto
+			# riscado à mão e torto: olhos pretos ovais de tamanhos diferentes, bochechas vermelhas e a boca em zigue-zague
 			_poli(cv, [2, -14, 3, -17.5, 5.5, -18.5, 8.5, -18.5, 10.5, -17.5, 11.5, -14, 11.5, -11, 10, -9.5, 4, -9.5, 2.5, -11], "a")
-			_poli(cv, [3.5, -17, 6, -17.5, 4.5, -21, 1, -22.5, -1.5, -21.5, -1, -20.5, 1.5, -20], "a")
-			_poli(cv, [8, -17.5, 10.5, -17, 11.5, -20.5, 14, -22, 15.5, -20.5, 14.5, -20, 12.5, -19], "a")
+			_poli(cv, [3.4, -17, 6.6, -17.6, 6.2, -21, 5.4, -25.5, 4.2, -25.5, 3.6, -21.5, 3.0, -19], "a")
+			_poli(cv, [8, -17.5, 10.6, -17.2, 12.2, -19.4, 14.4, -19.8, 15.6, -18, 15.2, -14.6, 13.8, -14.4, 13.7, -17.2, 12.2, -16.6], "a")
 			_luz(cv, "a", "b", "d")
-			_poli(cv, [-1.6, -21.6, -1, -20.5, 1, -20.2, 0.5, -22.6], "k")
-			_poli(cv, [13.2, -21.8, 14.2, -22, 15.5, -20.5, 14.4, -20.1], "k")
+			_regra(cv, "a", "k", func(v: Vector2i) -> bool: return (v.y < -22 and v.x < 8) or (v.x >= 14 and v.y > -19 and v.x > 12))
+			_regra(cv, "b", "k", func(v: Vector2i) -> bool: return (v.y < -22 and v.x < 8) or (v.x >= 14 and v.y > -19))
+			_regra(cv, "d", "k", func(v: Vector2i) -> bool: return v.x >= 14 and v.y > -19)
 			_cont(cv, "o")
-			# rosto desenhado: olhos pretos, bochechas vermelhas e a boca em zigue-zague
-			_ret(cv, 5, -15, 6, -13, "k")
-			_ret(cv, 9, -15, 10, -13, "k")
-			_px(cv, 3, -13, "r")
-			_px(cv, 4, -13, "r")
-			_px(cv, 3, -12, "r")
-			_px(cv, 4, -12, "r")
-			_px(cv, 11, -13, "r")
-			_px(cv, 11, -12, "r")
-			for k in 5:
-				_px(cv, 5 + k, -11 if k % 2 == 0 else -10, "k")
+			# olhos: o de trás mais alto e comprido, o da frente mais baixo e mais gordo
+			_ret(cv, 4, -15, 6, -12, "k")
+			_ret(cv, 8, -14, 10, -11, "k")
+			_px(cv, 4, -15, "a")
+			_px(cv, 5, -15, "k")
+			_px(cv, 9, -11, "k")
+			# bochechas redondas
+			_ret(cv, 3, -11, 5, -9, "r")
+			_ret(cv, 10, -11, 12, -9, "r")
+			_px(cv, 3, -11, "a")
+			_px(cv, 10, -10, "a")
+			# boca rabiscada
+			for k in 4:
+				_px(cv, 6 + k, -10 if k % 2 == 0 else -9, "k")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_MIMI)]
 		Pecas.Tipo.DISFARCE_AMARELO:
 			# pano amarelo largo cobrindo o tronco e caindo em volta das patas; a barra é irregular e embaixo dela fica a sombra preta
@@ -618,6 +619,17 @@ static func _montar(tipo: int, fase: int, chama: int, maxima: bool, anim: float)
 				for j in range(-3, -3 + prof):
 					cv[Vector2i(x, j)] = "k" if j < -3 + prof - 1 or prof == 1 else "o"
 				cv[Vector2i(x, -4)] = "k" if prof >= 2 else "d"
+			# a sombra que espia por baixo do pano: um vão preto entre as patas, com dois olhinhos de luz e um brilho roxo na borda
+			_ret(cv, -1, -5, 6, -1, "k")
+			cv.erase(Vector2i(-1, -2))
+			cv.erase(Vector2i(5, -2))
+			for x in range(-1, 6):
+				if x % 2 == 0:
+					_px(cv, x, -1, "p")
+			_px(cv, 1, -4, "e")
+			_px(cv, 1, -3, "E")
+			_px(cv, 3, -4, "e")
+			_px(cv, 3, -3, "E")
 			# costura torta e um remendo
 			for x in range(-6, 2):
 				_px(cv, x, -10 + (x % 2), "s")
@@ -627,24 +639,48 @@ static func _montar(tipo: int, fase: int, chama: int, maxima: bool, anim: float)
 			_px(cv, 2, -6, "s")
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIMI)]
 		Pecas.Tipo.PATA_MISTERIOSA:
-			# mão de sombra preta que sai do pano: braço fino e tremido, mão com quatro dedos retorcidos e brilho roxo
-			_poli(cv, [8, -11, 12, -12, 15, -11.5, 17.5, -13, 18, -12, 16, -10, 12, -8.5, 8, -8], "k")
-			_lin(cv, Vector2i(16, -12), Vector2i(20, -15), "k")
-			_lin(cv, Vector2i(17, -11), Vector2i(21, -11), "k")
-			_lin(cv, Vector2i(16, -10), Vector2i(20, -8), "k")
-			_lin(cv, Vector2i(10, -11), Vector2i(15, -11), "p")
-			_lin(cv, Vector2i(17, -12), Vector2i(19, -13), "p")
-			_cont(cv, "o")
+			# mão de sombra que sai do pano: braço grosso e tremido de preto-roxo, palma redonda e quatro garras curvas de luz, tudo com contorno
+			# lilás de brilho
+			_poli(cv, [7, -6.5, 11, -8.8, 15, -9.2, 17, -8.6, 17.5, -6, 15, -4.8, 11, -5, 7, -4], "z")
+			_disco(cv, 17.5, -7.0, 2.8, "z")
+			_luz(cv, "z", "p", "")
+			_cont(cv, "P")
+			# garras curvas de luz (por cima do contorno, para ler como dedos)
+			for g in [[Vector2i(19, -9), Vector2i(21, -11), Vector2i(21, -13)], [Vector2i(20, -7), Vector2i(23, -8), Vector2i(24, -10)], [Vector2i(20, -5), Vector2i(23, -5), Vector2i(24, -3)], [Vector2i(18, -4), Vector2i(20, -2), Vector2i(20, 0)]]:
+				_lin(cv, g[0], g[1], "P")
+				_lin(cv, g[1], g[2], "e")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_MIMI)]
 		Pecas.Tipo.RABO_PAPELAO:
-			# rabo em raio de Pikachu feito de papelão: a base marrom presa com fita e o raio amarelo em zigue-zague
-			_ret(cv, -10, -17, -7, -12, "c")
-			_ret(cv, -10, -17, -9, -12, "C")
-			_ret(cv, -10, -18, -7, -17, "t")
-			_ret(cv, -9, -21, -2, -18, "a")
-			_ret(cv, -13, -24, -6, -21, "a")
-			_poli(cv, [-13, -24, -7, -24, -11, -30], "a")
+			# rabo em raio de Pikachu feito de papelão: a base marrom presa com fita na anca e o raio amarelo em zigue-zague (haste, placa baixa
+			# para trás e placa alta para a frente)
+			var raio: Array = [
+				".......aaaaa",
+				".......aaaaa",
+				"......aaaaa.",
+				".....aaaaa..",
+				"....aaaaa...",
+				".aaaaaaaa...",
+				".aaaaaaa....",
+				"..aaaaa.....",
+				"....aaa.....",
+				"....aaa.....",
+				"....aaa.....",
+				"....aaa.....",
+				"....aaa.....",
+				"....ttt.....",
+				"...Cccc.....",
+				"...Cccc.....",
+				"...Cccc.....",
+				"...Cccc.....",
+				"...Cccc.....",
+			]
+			for j in raio.size():
+				var ln: String = raio[j]
+				for i in ln.length():
+					if ln[i] != ".":
+						cv[Vector2i(-13 + i, -31 + j)] = ln[i]
 			_luz(cv, "a", "b", "d")
+			_regra(cv, "a", "d", func(v: Vector2i) -> bool: return v.x == -7 and v.y > -24 or (v.y == -24 and v.x >= -9))
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.TRASEIRA, _PAL_MIMI)]
 		# ---------------------------------------------------------------- Jimiau

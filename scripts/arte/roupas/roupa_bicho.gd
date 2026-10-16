@@ -329,8 +329,8 @@ const _CHAPEU: Array = [
 		"..ooooooo..",
 		".owwwwwwwo.",
 		"owkkwwwkkwo",
-		"owkkwwwkkwo",
-		".owwwwwwwo.",
+		"owkbwwwkbwo",
+		".owwwkwwwo.",
 		"..owowowo.."]},
 	# 28 fênix miaussimo: espetos de cabelo varridos para trás
 	{"cheio": false, "l": [
@@ -343,13 +343,13 @@ const _CHAPEU: Array = [
 		".ooooooooo."]},
 	# 29 mimiau: cabeça de pano com orelhas caídas e tortas de ponta preta, olhos riscados, bochechas e boca em zigue-zague
 	{"cheio": false, "l": [
-		"kk.......kk",
-		".oao...oao.",
+		"ok.......kk",
+		"oao....oaoo",
 		"oaaooooooao",
 		"oaAaaaaaado",
-		"oaakaaakaao",
-		"oraaaaaaaro",
-		"oaakakakaao",
+		"oakkaaaakao",
+		"orkkaaaakko",
+		"orraakakaro",
 		"ooooooooooo"]},
 	# 30 jimiau: chapéu de bobo de três pontas
 	{"cheio": false, "l": [
