@@ -314,34 +314,25 @@ static func _montar(tipo: int, fase: int) -> Array:
 		Pecas.Tipo.MASCARA_OCA:
 			# casco branco arredondado cobrindo o rosto todo, dois chifres em lira (nascem juntos no topo, abrem para fora e sobem, com a ponta
 			# voltada para dentro), dois olhos pretos ovais verticais (o da frente inteiro, o de trás meio escondido) e sem boca
-			_txt(cv, 2, -24, [
-				".ww.....ww.",
-				"ww.......ww",
-				"ww.......ww",
-				".ww.....ww.",
-				"..ww...ww..",
-				"...wwwww...",
-				".wwwwwwwww.",
-				"wwwwwwwwwww",
-				"wwwwwwwwwww",
-				"wwwwwwwwwww",
-				"wwwwwwwwwww",
-				"wwwwwwwwwww",
-				".wwwwwwwwww",
-				"..wwwwwwww.",
-				"...wwwwww..",
+			_txt(cv, 0, -23, [
+				"..ww......ww..",
+				".ww........ww.",
+				"ww..........ww",
+				"www........www",
+				".www......www.",
+				"...wwwwwwww...",
+				"....wwwwww....",
+				"...wwwwwwww...",
+				"...wwwwwkww...",
+				"...wkkwkkkw...",
+				"...wkkwkkkw...",
+				"...wkkwkkkw...",
+				"...wkkwwkww...",
+				"....wwwwww....",
 			])
 			_canto(cv, "w", "d")
-			_ret(cv, 9, -16, 11, -15, "k")
-			_ret(cv, 8, -15, 11, -12, "k")
-			_ret(cv, 9, -12, 11, -11, "k")
-			_px(cv, 8, -15, "e")
-			_ret(cv, 4, -14, 6, -12, "k")
-			_px(cv, 5, -15, "k")
-			_px(cv, 5, -12, "k")
-			_px(cv, 6, -19, "W")
-			_px(cv, 5, -18, "W")
-			_px(cv, 4, -17, "W")
+			_px(cv, 5, -17, "W")
+			_px(cv, 4, -16, "W")
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_HOLLOW)]
 		Pecas.Tipo.MANTO_PRETINHO:
