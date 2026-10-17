@@ -490,19 +490,23 @@ const _CHAPEU: Array = [
 		"obbbbbbbbbo",
 		"oAaaaaaaaAo",
 		".ooooooooo."]},
-	# 44 hollowmiau: casco branco com dois chifres finos e olhos pretos
+	# 44 hollowmiau: casco branco redondo com dois chifres em lira e olhos pretos ovais
 	{"cheio": true, "l": [
-		"oo.......oo",
-		".oo.....oo.",
+		".o.......o.",
+		"oAo.....oAo",
+		"oAo.....oAo",
+		".oAo...oAo.",
+		"..oAAaAAo..",
 		".oAAaaaAAo.",
 		"oaakkaakkao",
 		"oaakkaakkao",
 		".oddddddo.."]},
-	# 45 silkmiau: máscara branca de chifres longos
+	# 45 silkmiau: máscara branca de queixo pontudo e dois chifres longos curvados para trás em gancho
 	{"cheio": true, "l": [
 		"oo.........",
-		".oo.......o",
-		"..oo.....oo",
+		"oAooo..ooo.",
+		".ooAAooAAo.",
+		"...ooAAAo..",
 		".oAAaaaAAo.",
 		"oakkaaakkao",
 		".oddddddo.."]},

@@ -312,14 +312,15 @@ static func _montar(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_NOIR)]
 		# ---------------------------------------------------------------- Hollowmiau (O Cavaleiro): o casco branco de dois chifres curtos
 		Pecas.Tipo.MASCARA_OCA:
-			# casco branco em domo cobrindo o rosto todo, dois chifres grossos curtos e retos, olho oval preto grande (e outro parcial atrás),
-			# uma rachadura no domo
-			_txt(cv, 2, -22, [
+			# casco branco arredondado cobrindo o rosto todo, dois chifres em lira (nascem juntos no topo, abrem para fora e sobem, com a ponta
+			# voltada para dentro), dois olhos pretos ovais verticais (o da frente inteiro, o de trás meio escondido) e sem boca
+			_txt(cv, 2, -24, [
 				".ww.....ww.",
+				"ww.......ww",
+				"ww.......ww",
 				".ww.....ww.",
 				"..ww...ww..",
-				"..ww...ww..",
-				"..wwwwwww..",
+				"...wwwww...",
 				".wwwwwwwww.",
 				"wwwwwwwwwww",
 				"wwwwwwwwwww",
@@ -328,20 +329,19 @@ static func _montar(tipo: int, fase: int) -> Array:
 				"wwwwwwwwwww",
 				".wwwwwwwwww",
 				"..wwwwwwww.",
+				"...wwwwww..",
 			])
 			_canto(cv, "w", "d")
-			_px(cv, 9, -15, "k")
-			_px(cv, 10, -15, "k")
-			_ret(cv, 8, -14, 11, -12, "k")
-			_px(cv, 8, -12, "k")
-			_px(cv, 9, -12, "k")
-			_px(cv, 8, -14, "e")
-			_ret(cv, 5, -14, 7, -11, "k")
-			_px(cv, 7, -18, "d")
-			_px(cv, 7, -17, "d")
-			_px(cv, 6, -16, "d")
-			_px(cv, 5, -17, "W")
-			_px(cv, 4, -18, "W")
+			_ret(cv, 9, -16, 11, -15, "k")
+			_ret(cv, 8, -15, 11, -12, "k")
+			_ret(cv, 9, -12, 11, -11, "k")
+			_px(cv, 8, -15, "e")
+			_ret(cv, 4, -14, 6, -12, "k")
+			_px(cv, 5, -15, "k")
+			_px(cv, 5, -12, "k")
+			_px(cv, 6, -19, "W")
+			_px(cv, 5, -18, "W")
+			_px(cv, 4, -17, "W")
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_HOLLOW)]
 		Pecas.Tipo.MANTO_PRETINHO:
@@ -362,11 +362,11 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(capa, "o")
 			return [_lay(capa, RoupaGato.Onde.CORPO, _PAL_HOLLOW, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
 		Pecas.Tipo.PREGO_AFIADO:
-			# o prego: punho preto curto, guarda de 1 px, lâmina larga e reta que afina em degraus até a ponta
-			_ret(cv, 11, -12, 14, -9, "u")
+			# o prego (Old Nail): cabo curto escuro, guarda pequena, lâmina reta de aço com o fio claro em cima e a ponta estreita e chanfrada
+			_ret(cv, 11, -11, 14, -9, "u")
 			_ret(cv, 14, -13, 15, -8, "u")
-			_ret(cv, 15, -12, 23, -9, "n")
-			_ret(cv, 23, -11, 26, -10, "n")
+			_ret(cv, 15, -12, 24, -9, "n")
+			_ret(cv, 24, -11, 26, -10, "n")
 			_luz(cv, "n", "N", "s")
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_HOLLOW)]
@@ -385,33 +385,34 @@ static func _montar(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
 		# ---------------------------------------------------------------- Silkmiau (Hornet): a máscara pontuda de chifres longos
 		Pecas.Tipo.MASCARA_CASCA:
-			# casco branco estreito de queixo em ponta cobrindo o rosto todo, olho em fenda inclinada e dois chifres LONGOS que sobem e
-			# curvam para trás (o de trás, mais curto e escuro)
-			_txt(cv, 3, -18, [
-				"..wwwwww..",
-				".wwwwwwww.",
-				"wwwwwwwwww",
-				"wwwwwwwwww",
-				"wwwwwwwwww",
-				"wwwwwwwwww",
-				".wwwwwwwww",
-				".wwwwwwww.",
-				"..wwwwww..",
-				"...wwww...",
+			# casco branco estreito de queixo pontudo cobrindo o rosto todo, olhos pretos em fenda triangular inclinada e dois chifres LONGOS
+			# que sobem e curvam para trás em gancho (o de trás, mais curto e escuro)
+			_txt(cv, 4, -19, [
+				"..wwww..",
+				".wwwwww.",
+				"wwwwwwww",
+				"wwwwwwww",
+				"wwwwwwww",
+				"wwwwwwww",
+				".wwwwwww",
+				".wwwwww.",
+				"..wwwww.",
+				"...wwww.",
+				"....ww..",
 			])
 			_canto(cv, "w", "d")
-			_px(cv, 8, -14, "k")
-			_px(cv, 9, -14, "k")
-			_px(cv, 9, -13, "k")
-			_px(cv, 10, -13, "k")
+			for q0 in [Vector2i(7, -15), Vector2i(8, -15), Vector2i(7, -14), Vector2i(8, -14), Vector2i(9, -14), Vector2i(10, -14), Vector2i(9, -13),
+					Vector2i(10, -13), Vector2i(5, -15), Vector2i(5, -14)]:
+				cv[q0] = "k"
+			_px(cv, 7, -19, "W")
 			_px(cv, 6, -18, "W")
-			_px(cv, 7, -18, "W")
 			var hc: Dictionary = {}
-			for q in [Vector2i(9, -19), Vector2i(10, -19), Vector2i(9, -20), Vector2i(10, -20), Vector2i(8, -21), Vector2i(9, -21),
-					Vector2i(7, -22), Vector2i(8, -22), Vector2i(5, -23), Vector2i(6, -23), Vector2i(7, -23), Vector2i(3, -24), Vector2i(4, -24), Vector2i(5, -24)]:
+			for q in [Vector2i(8, -20), Vector2i(9, -20), Vector2i(7, -21), Vector2i(8, -21), Vector2i(6, -22), Vector2i(7, -22), Vector2i(5, -23),
+					Vector2i(6, -23), Vector2i(3, -24), Vector2i(4, -24), Vector2i(5, -24), Vector2i(3, -23)]:
 				hc[q] = "w"
 			_canto(hc, "w", "d")
-			for q2 in [Vector2i(5, -19), Vector2i(6, -19), Vector2i(4, -20), Vector2i(5, -20), Vector2i(3, -21), Vector2i(4, -21), Vector2i(2, -22), Vector2i(3, -22)]:
+			for q2 in [Vector2i(4, -19), Vector2i(5, -19), Vector2i(3, -20), Vector2i(4, -20), Vector2i(2, -21), Vector2i(3, -21), Vector2i(0, -22),
+					Vector2i(1, -22), Vector2i(2, -22), Vector2i(0, -21)]:
 				hc[q2] = "d"
 			for kk in hc.keys():
 				if not cv.has(kk):
