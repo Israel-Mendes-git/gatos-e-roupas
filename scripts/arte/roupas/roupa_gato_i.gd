@@ -394,8 +394,8 @@ static func _mascara_silk() -> Dictionary:
 				cv[Vector2i(2 + i, -24 + j)] = cor[s[i]]
 	return cv
 
-## Agulha da Hornet: agulha de costura gigante. Furo oval de 3x5 (buraco vazio) atrás da pata, haste prateada que afina até a ponta
-## (2 px no terço de trás, 1 px depois) e o fio de seda branco preso no furo, caindo em onda pelo peito.
+## Agulha da Hornet: lança fina e longa (exceção ao limite de 17 px: ~24 px de haste). Olho oval vazado de 3x5 atrás da pata, haste prateada
+## de 2 px que afina para 1 px e termina em ponta, e um fio de seda creme, 1 px e sem contorno próprio, em curva curta saindo do olho.
 static func _agulha_silk() -> Dictionary:
 	var cv: Dictionary = {}
 	for r in [[-13, 15, 15], [-12, 14, 16], [-11, 14, 16], [-10, 14, 16], [-9, 15, 15]]:
@@ -410,24 +410,20 @@ static func _agulha_silk() -> Dictionary:
 	var buraco: Array = [Vector2i(15, -12), Vector2i(15, -11), Vector2i(15, -10)]
 	for h in buraco:
 		cv.erase(h)
-	for x2 in range(17, 22):
-		cv[Vector2i(x2, -11)] = "S"
+	for x2 in range(17, 28):
+		cv[Vector2i(x2, -11)] = "S" if x2 < 22 else "s"
 		cv[Vector2i(x2, -10)] = "z"
-	for x3 in range(22, 26):
-		cv[Vector2i(x3, -11)] = "s" if x3 < 24 else "z"
-	cv[Vector2i(26, -11)] = "z"
+	for x3 in range(28, 36):
+		cv[Vector2i(x3, -11)] = "s"
+	cv[Vector2i(36, -11)] = "s"
+	cv[Vector2i(37, -11)] = "z"
+	cv[Vector2i(38, -11)] = "z"
 	_cont(cv, "o")
 	for h2 in buraco:
 		cv.erase(h2)
-	var fio: Array = [Vector2i(13, -11), Vector2i(13, -10), Vector2i(12, -9), Vector2i(12, -8), Vector2i(13, -7), Vector2i(13, -6), Vector2i(12, -5), Vector2i(12, -4)]
-	var cont_fio: Dictionary = {}
+	var fio: Array = [Vector2i(13, -11), Vector2i(12, -10), Vector2i(12, -9), Vector2i(12, -8), Vector2i(13, -7), Vector2i(13, -6)]
 	for f in fio:
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
-			if not cv.has(f + d) and not fio.has(f + d):
-				cont_fio[f + d] = "o"
-	cv.merge(cont_fio, true)
-	for f2 in fio:
-		cv[f2] = "W"
+		cv[f] = "w"
 	return cv
 
 ## Topo do corpo vestido justo (costas rente ao dorso do gato), usado pelas roupas refeitas pela referência (lote 4: Miaujin, Arqueólogo, Treinador).
