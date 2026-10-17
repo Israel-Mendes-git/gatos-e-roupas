@@ -68,7 +68,7 @@ const _PAL: Array = [
 	# lote 5 da expansão (49 a 54)
 	{"a": Color("2fa050"), "A": Color("6cd486"), "d": Color("1a6234"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # ranger miau (verde)
 	{"a": Color("3e4656"), "A": Color("5e6a7e"), "d": Color("232a36"), "b": Color("6a7688"), "B": Color("9ae0ff"), "e": Color("4cb8f0")},   # miauzilla (grafite, placas azuis)
-	{"a": Color("5e4230"), "A": Color("84624a"), "d": Color("34241a"), "b": Color("a89a88"), "B": Color("cabcaa"), "e": Color("f0d070")},   # king-miau (gorila)
+	{"a": Color("5e4230"), "A": Color("84624a"), "d": Color("34241a"), "b": Color("6c665f"), "B": Color("8e8880"), "e": Color("f0d070")},   # king-miau (gorila)
 	{"a": Color("2a2630"), "A": Color("5a5666"), "d": Color("14121a"), "b": Color("8a5a3a"), "B": Color("b88a60"), "e": Color("d8323a")},   # arthur miaurgon
 	{"a": Color("7a9eb2"), "A": Color("b0cdd8"), "d": Color("46687e"), "b": Color("b0502c"), "B": Color("dc7c4c"), "e": Color("0c1018")},   # submiautica (Reaper Leviathan)
 	{"a": Color("3c7c68"), "A": Color("70b49c"), "d": Color("22483e"), "b": Color("5a3a7a"), "B": Color("8a6aa8"), "e": Color("f0d848")},   # catchullu

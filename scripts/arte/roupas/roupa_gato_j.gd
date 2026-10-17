@@ -660,7 +660,7 @@ static func _mz_cauda() -> Array:
 ## b/B/c prédio (médio, luz, sombra); j janelas; w/W/u/k avião de papel.
 const _PAL_KING := {
 	"o": Color("140c08"), "h": Color("5e4230"), "H": Color("84624a"), "D": Color("34241a"),
-	"s": Color("a89a88"), "S": Color("cabcaa"), "x": Color("6e6256"), "n": Color("22180f"),
+	"s": Color("6c665f"), "S": Color("8e8880"), "x": Color("3e3a36"), "n": Color("22180f"),
 	"b": Color("7c8aa8"), "B": Color("a8b6d0"), "c": Color("4c586e"), "j": Color("f0d070"),
 	"w": Color("f0eee6"), "W": Color("b8b6c0"), "u": Color("4a5a8c"), "k": Color("2a2630"),
 }
@@ -673,14 +673,14 @@ static func _km_gorila() -> Array:
 		"...hHHh.....",
 		"..hhhhhhhh..",
 		".hhhhhhhhhh.",
-		"hhhhhhhhhhhh",
-		"hhhhDDDDDDhh",
+		"hhhDDDDDDDDh",
 		"hhhhDnDDnDhh",
-		"hhhsssssssSh",
-		"hhhsssssssss",
-		".hhxssnsnssx",
-		".hhhxsssssxx",
-		"..hhhhxxxhh.",
+		"hhhhsssssshh",
+		"hhhsssSSsshh",
+		"hhssxnSnxssh",
+		"hhsssssssssh",
+		".hsxxxxxxxs.",
+		"..hhssshhh..",
 	])
 	_luz(cv, "h", "H", "D")
 	_cont(cv, "o")
