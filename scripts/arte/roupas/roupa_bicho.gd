@@ -64,7 +64,7 @@ const _PAL: Array = [
 	{"a": Color("7c3048"), "A": Color("a65870"), "d": Color("4c1c2e"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # silkmiau
 	{"a": Color("f2b01a"), "A": Color("ffe07a"), "d": Color("b0760a"), "b": Color("e87a1a"), "B": Color("ffb060"), "e": Color("3a80e8")},   # super miaujin
 	{"a": Color("8c6a3c"), "A": Color("b8905e"), "d": Color("5a4026"), "b": Color("3a2a1a"), "B": Color("6a5030"), "e": Color("e8c860")},   # o arqueólogo
-	{"a": Color("e03a3a"), "A": Color("ff7a70"), "d": Color("8c1a22"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # treinador
+	{"a": Color("e03a3a"), "A": Color("ff7a70"), "d": Color("8c1a22"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630"), "g": Color("4a9a50")},   # treinador
 ]
 
 ## Cores da roupa de corpo que diferem das do chapéu (o barril do circo é de madeira, o avental do jardineiro é verde).
@@ -499,38 +499,39 @@ const _CHAPEU: Array = [
 		".oaakaakko.",
 		".oaakaakko.",
 		".oddddddo.."]},
-	# 45 silkmiau: máscara branca em gota (larga no alto, queixo estreito), dois chifres longos paralelos em diapasão e olhos triangulares
+	# 45 silkmiau: máscara branca em gota (larga no alto, queixo estreito), dois chifres curvos em U (pontas para dentro) e olhos triangulares
 	{"cheio": true, "l": [
-		".ow.....ow.",
+		".ow.....wo.",
+		"ow.......wo",
+		"ow.......wo",
 		".owo...owo.",
-		".owo...owo.",
-		"..owo.owo..",
 		".owwwwwwwo.",
 		".okkkwwkkko",
 		"..okkwwkko.",
 		"..oWkwwkWo.",
 		"...oWwwWo..",
 		"....ooo...."]},
-	# 46 super miaujin: cabelo dourado em espetos
+	# 46 super miaujin: cabelo dourado em espetos grandes inclinados para trás
 	{"cheio": false, "l": [
 		"..o..o....o",
-		"o.oo.oo.o.o",
-		"ooooAoooAoo",
-		"oAaaaaaaaAo",
-		"oaaaaaaaaao"]},
-	# 47 o arqueólogo: chapéu mole de aba caída e faixa escura
+		".oAo.oAo.oo",
+		"oAaaooAaoAo",
+		"oAaaaaaaaao",
+		"oaaaaaaaado"]},
+	# 47 o arqueólogo: fedora de copa vincada, faixa escura e aba larga
 	{"cheio": false, "l": [
-		"...ooooo...",
-		"..oaaaaao..",
-		".obbbbbbbo.",
+		"...oo.oo...",
+		"..oAaoaao..",
+		"..oaaoaao..",
+		"..obbbbbo..",
 		"oAaaaaaaaAo",
 		"odddddddddo"]},
-	# 48 treinador: boné vermelho com a bola branca na frente
+	# 48 treinador: boné vermelho com o painel branco e o L verde na frente
 	{"cheio": false, "l": [
 		"..ooooooo..",
-		".oAaaaaaao.",
-		"oaaaBBBaaao",
-		"oaaBeBBaaao",
+		".oAaabbbbo.",
+		"oaaaabgbbo.",
+		"oaaaabggbo.",
 		"oddddddddoo"]},
 ]
 ## Quantos pixels a última linha do chapéu fica abaixo do topo do crânio.

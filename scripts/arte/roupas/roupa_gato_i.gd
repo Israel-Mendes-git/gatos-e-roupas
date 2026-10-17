@@ -290,18 +290,19 @@ static func _manto_hollow() -> Array:
 	_cont(bk, "o", true)
 	return [_lay(bk, RoupaGato.Onde.CORPO, _PAL_HOLLOW, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
 
-## Máscara da Hornet: casco branco em gota invertida (largo no alto, afina até o queixo), dois chifres longos e paralelos que abrem de leve
-## (diapasão, pontas arredondadas; o de trás mais escuro) e dois olhos pretos triangulares grandes, com a ponta para dentro e para baixo.
+## Máscara da Hornet: casco branco em gota invertida (largo no alto, afina até o queixo), dois chifres grossos na base que abrem em U
+## e afinam até a ponta (o da frente, maior, arqueia para a frente e a ponta volta para dentro; o de trás, sombreado, abre para trás e
+## a ponta também volta) e dois olhos pretos triangulares grandes, com a ponta para dentro e para baixo.
 static func _mascara_silk() -> Dictionary:
 	var cv: Dictionary = {}
 	_txt(cv, 4, -19, [".wwwww.", "wwwwwww", "wwwwwww", "wwwwwww", "wwwwwww", "wwwwwww", ".wwwwww", ".wwwww.", "..wwww.", "...www.", "....w.."])
 	_canto(cv, "w", "d")
 	var h: Dictionary = {}
-	for s in [[-20, 8, 9], [-21, 8, 9], [-22, 8, 9], [-23, 9, 10], [-24, 9, 10], [-25, 9, 10], [-26, 10, 11], [-27, 10, 11], [-28, 10, 11], [-29, 11, 11]]:
+	for s in [[-20, 7, 9], [-21, 8, 10], [-22, 9, 11], [-23, 9, 11], [-24, 9, 10], [-25, 9, 10], [-26, 9, 10], [-27, 8, 9], [-28, 8, 8]]:
 		for x in range(int(s[1]), int(s[2]) + 1):
 			h[Vector2i(x, int(s[0]))] = "w"
 	_canto(h, "w", "d")
-	for s2 in [[-20, 5, 6], [-21, 5, 6], [-22, 5, 6], [-23, 4, 5], [-24, 4, 5], [-25, 4, 5], [-26, 3, 4], [-27, 3, 4], [-28, 3, 4], [-29, 3, 3]]:
+	for s2 in [[-20, 4, 6], [-21, 3, 5], [-22, 3, 4], [-23, 2, 3], [-24, 2, 3], [-25, 1, 2], [-26, 1, 2], [-27, 2, 2], [-28, 2, 2]]:
 		for x2 in range(int(s2[1]), int(s2[2]) + 1):
 			h[Vector2i(x2, int(s2[0]))] = "d"
 	for k in h.keys():
@@ -469,9 +470,9 @@ static func _montar(tipo: int, fase: int) -> Array:
 			])
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
-		# ---------------------------------------------------------------- Silkmiau (Hornet): a máscara pontuda de chifres longos
+		# ---------------------------------------------------------------- Silkmiau (Hornet): a máscara pontuda de chifres em U
 		Pecas.Tipo.MASCARA_CASCA:
-			# casco branco em gota invertida cobrindo o rosto todo, dois chifres longos paralelos em diapasão e olhos triangulares grandes
+			# casco branco em gota invertida cobrindo o rosto todo, dois chifres curvos em U e olhos triangulares grandes
 			cv = _mascara_silk()
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_SILK)]
 		Pecas.Tipo.CAPA_CARMESIM:
