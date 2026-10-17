@@ -954,10 +954,11 @@ static func progresso_ato(ato: int, vencidos: int, onda: int) -> int:
 	return Fases.TOTAL * PROG_POR_FASE * (ato - 1) + vencidos * PROG_POR_FASE + onda + (PROG_POR_FASE - 1) * (ato - 1)
 
 ## `ato` > 1: famílias misturadas e peças de qualquer cômodo; `vencidos` = cômodos já vencidos nesse ato.
-static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0) -> Array:
+## `pesos_fantasia` (fantasia -> peso) deixa a que falta cair mais; vazio = sorteio uniforme.
+static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0, pesos_fantasia: Dictionary = {}) -> Array:
 	var p: int = progresso(fase, onda) if ato <= 1 else progresso_ato(ato, vencidos, onda)
 	var degrau: float = (fase - 1) if ato <= 1 else (Fases.TOTAL - 1) + vencidos * 0.5
-	var fase_pecas: int = fase if ato <= 1 else Fases.TOTAL
+	var lugar: int = Fases.TOTAL * (ato - 1) + fase   # lugar global, 1 a 15
 	var n: int = int(round(INIMIGOS_BASE + onda * INIMIGOS_POR_ONDA + degrau * INIMIGOS_POR_FASE))
 	if tem_chefe(onda):
 		n = int(round(n * CHEFE_LACAIOS))
@@ -977,15 +978,13 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 		var pecas: Array = [null, null, null, null]
 		for k in qtd:
 			var s: int = slots[k]
-			var opcoes: Array = Fases.pecas_do_slot(fase_pecas, s)
-			var tipo: int = opcoes[rng.randi_range(0, opcoes.size() - 1)]
-			pecas[s] = Peca.new(tipo, nivel)
+			pecas[s] = Peca.new(Fases.pecas_do_slot(lugar - 1, s, ato, rng), nivel)
 		var item: Dictionary = {"pecas": pecas, "tipo": Unidade.Tipo.COMUM, "elite": false}
 		if ato > 1 and rng.randf() >= ATO_FAMILIA_DA_CASA:
 			item["fam"] = rng.randi_range(0, Fases.TOTAL - 1)
 		plano.append(item)
 	_sortear_tipos(plano, p, rng)
-	_sortear_elites(plano, fase + (Fases.TOTAL if ato > 1 else 0), onda, nivel, rng)
+	_sortear_elites(plano, lugar, onda, nivel, rng, pesos_fantasia)
 	return plano
 
 ## Embaralha com o rng da luta (o shuffle() do Godot usa o rng global e tira a repetibilidade das ondas).
@@ -1021,7 +1020,7 @@ static func _sortear_tipos(plano: Array, prog: int, rng: RandomNumberGenerator) 
 		usados += 1
 
 ## Inimigos fantasiados: comuns que vestem uma fantasia da fase (e largam uma peça dela).
-static func _sortear_elites(plano: Array, fase: int, onda: int, nivel: int, rng: RandomNumberGenerator) -> void:
+static func _sortear_elites(plano: Array, fase: int, onda: int, nivel: int, rng: RandomNumberGenerator, pesos_fantasia: Dictionary = {}) -> void:
 	if onda < ELITE_ONDA_MIN:
 		return
 	var quantos: int = 2 if onda >= ELITE_ONDA_DOIS and not tem_chefe(onda) else 1
@@ -1031,13 +1030,14 @@ static func _sortear_elites(plano: Array, fase: int, onda: int, nivel: int, rng:
 			comuns.append(i)
 	for k in mini(quantos, comuns.size()):
 		var i: int = comuns[comuns.size() - 1 - k]  # os últimos a entrar
-		plano[i]["pecas"] = fantasia(fase, nivel, ELITE_PECAS[(fase - 1) % Fases.TOTAL], rng)
+		plano[i]["pecas"] = fantasia(fase, nivel, ELITE_PECAS[(fase - 1) % Fases.TOTAL], rng, pesos_fantasia)
 		plano[i]["elite"] = true
 
-## Peças de uma fantasia sorteada entre as da fase; `quantas` < 4 deixa um espaço vazio.
-static func fantasia(fase: int, nivel: int, quantas: int, rng: RandomNumberGenerator) -> Array:
-	var conjs: Array = Fases.CONJUNTOS[fase - 1]
-	var c: int = conjs[rng.randi_range(0, conjs.size() - 1)]
+## Peças de uma fantasia sorteada entre as do lugar global `fase` (1 a 15); `quantas` < 4 deixa um espaço vazio.
+## `pesos` (fantasia -> peso, 1,0 se faltar) pondera o sorteio; `excluir` tira uma fantasia da roleta.
+static func fantasia(fase: int, nivel: int, quantas: int, rng: RandomNumberGenerator, pesos: Dictionary = {}, excluir: int = -1) -> Array:
+	var conjs: Array = Fases.lista_do_lugar(fase - 1)
+	var c: int = _sortear_conjunto(conjs, rng, pesos, excluir)
 	var pecas: Array = [null, null, null, null]
 	var fora: int = rng.randi_range(0, Pecas.SLOTS - 1) if quantas < Pecas.SLOTS else -1
 	for s in Pecas.SLOTS:
@@ -1046,12 +1046,44 @@ static func fantasia(fase: int, nivel: int, quantas: int, rng: RandomNumberGener
 	return pecas
 
 ## Peças do chefe da fase (fantasia completa, nível alto, uma marca cada). Vazio se a onda não tem chefe.
-static func gerar_chefe(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0) -> Array:
+static func _sortear_conjunto(conjs: Array, rng: RandomNumberGenerator, pesos: Dictionary, excluir: int) -> int:
+	if pesos.is_empty() and excluir < 0:
+		return conjs[rng.randi_range(0, conjs.size() - 1)]
+	var total: float = 0.0
+	for c in conjs:
+		if c != excluir:
+			total += float(pesos.get(c, 1.0))
+	var r: float = rng.randf() * total
+	var ultimo: int = conjs[0]
+	for c in conjs:
+		if c == excluir:
+			continue
+		ultimo = c
+		r -= float(pesos.get(c, 1.0))
+		if r < 0.0:
+			return c
+	return ultimo
+
+## Fantasia completa do conjunto-assinatura do chefe do lugar global `lugar` (1 a 15).
+static func assinatura(lugar: int, nivel: int) -> Array:
+	var sig: int = Fases.CHEFE_ASSINATURA[lugar - 1]
+	var pecas: Array = [null, null, null, null]
+	for s in Pecas.SLOTS:
+		pecas[s] = Peca.new(Pecas.CONJUNTO_PECAS[sig][s], nivel)
+	return pecas
+
+## Com CHEFE_ASSINATURA_CHANCE veste a fantasia-assinatura do lugar; senão, outra do lugar (sorteio ponderado por `pesos`).
+static func gerar_chefe(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0, pesos: Dictionary = {}) -> Array:
 	if not tem_chefe(onda):
 		return []
 	var p: int = progresso(fase, onda) if ato <= 1 else progresso_ato(ato, vencidos, onda)
 	var nivel: int = mini(INIMIGO_NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)) + CHEFE_NIVEL_BONUS)
-	var pecas: Array = fantasia(fase + (Fases.TOTAL if ato > 1 else 0), nivel, Pecas.SLOTS, rng)
+	var lugar: int = Fases.TOTAL * (ato - 1) + fase
+	var pecas: Array
+	if rng.randf() < CHEFE_ASSINATURA_CHANCE:
+		pecas = assinatura(lugar, nivel)
+	else:
+		pecas = fantasia(lugar, nivel, Pecas.SLOTS, rng, pesos, Fases.CHEFE_ASSINATURA[lugar - 1])
 	for pc in pecas:
 		pc.marcar(rng.randi_range(0, Pecas.Marca.size() - 1))
 	return pecas

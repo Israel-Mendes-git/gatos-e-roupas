@@ -142,7 +142,11 @@ func degrau_chefe() -> float:
 		return fase - 1.0
 	return (Fases.TOTAL - 1.0) + (ato - 2) * Fases.TOTAL + degrau_ato()
 
+var _pesos_fantasia: Dictionary = {}   # pesos do sorteio de fantasias da luta em curso (fixos até a luta acabar)
+var _pesos_validos: bool = false
+
 func iniciar_fase(f: int) -> void:
+	_pesos_validos = false
 	invasao = false
 	onda_invasao = 0
 	nocautes_fase = 0
@@ -159,6 +163,7 @@ func iniciar_fase(f: int) -> void:
 func iniciar_fase_casa(f: int) -> void:
 	iniciar_fase(f)
 	ato = 1
+	_pesos_validos = false
 	preparar_onda()
 
 ## Invasão sem fim no cômodo `f` (só depois de zerar a campanha): ondas até a torre cair.
@@ -167,6 +172,7 @@ func iniciar_invasao(f: int, fora: bool = false) -> void:
 	iniciar_fase(f)
 	ato = 2 if fora and vencido[clampi(f, 1, Fases.TOTAL) - 1] >= 2 else 1   # no cômodo: família da casa e a força de sempre
 	invasao = true
+	_pesos_validos = false
 	onda_invasao = 1
 	preparar_onda()
 
@@ -191,9 +197,20 @@ func recolher() -> void:
 		b.saude = 1.0
 
 func preparar_onda() -> void:
-	plano = Balanco.gerar_plano(fase, onda, rng, ato, degrau_ato())
-	chefe = Balanco.gerar_chefe(fase, onda, rng, ato, degrau_ato())
+	if not _pesos_validos:
+		_pesos_fantasia = pesos_fantasia_do_lugar()
+		_pesos_validos = true
+	plano = Balanco.gerar_plano(fase, onda, rng, ato, degrau_ato(), _pesos_fantasia)
+	chefe = Balanco.gerar_chefe(fase, onda, rng, ato, degrau_ato(), _pesos_fantasia)
 	_ver_onda()
+
+## Peso de cada fantasia do lugar em curso no sorteio de fantasiados e chefe: PESO_FANTASIA_FALTA para as que o jogador
+## ainda não completou, 1,0 para as completas (todas completas = sorteio uniforme). Calculado uma vez por luta.
+func pesos_fantasia_do_lugar() -> Dictionary:
+	var pesos: Dictionary = {}
+	for c in Fases.lista_do_lugar(lugar()):
+		pesos[c] = Balanco.PESO_FANTASIA_FALTA if pecas_da_fantasia(c) < Pecas.SLOTS else 1.0
+	return pesos
 
 ## Anota no bestiário tudo o que a onda preparada mostra na prévia: famílias, tipos, fantasiados e chefe.
 func _ver_onda() -> void:
@@ -703,6 +720,7 @@ func _carregar_curso(c: Variant) -> void:
 			bonecos[i].saude = clampf(float(ss[i]), 0.05, 1.0)
 			bonecos[i].vivo = true
 	em_curso = true
+	_pesos_validos = false
 	preparar_onda()
 
 ## Gravação adiada: várias ações no mesmo quadro (vestir o time, promover tudo...) viram uma gravação só, feita no
