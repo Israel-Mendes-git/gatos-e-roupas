@@ -126,6 +126,64 @@ static func _canto(cv: Dictionary, base: String, sombra: String) -> void:
 	for v2 in mud:
 		cv[v2] = sombra
 
+## Topo do corpo vestido em cada coluna x (-8..8): garupa redonda, costas com uma leve corcova, ombro que desce em diagonal até o peito.
+const _TOPO_CORPO := {-8: -9, -7: -10, -6: -11, -5: -12, -4: -12, -3: -13, -2: -13, -1: -13, 0: -13, 1: -12, 2: -12, 3: -11, 4: -10, 5: -9, 6: -9, 7: -9, 8: -9}
+
+## Corpo vestido que SEGUE A SILHUETA do gato (em vez do bloco): `th` = última linha da barra sobre a anca, `bh` = sob a barriga (a barra sobe
+## em arco entre as patas), `fh` = sobre o peito/patas da frente; as pontas atrás e na frente arredondam um pixel.
+static func _corpo(cv: Dictionary, ch: String, th: int, bh: int, fh: int) -> void:
+	for x in range(-8, 9):
+		var b: int
+		if x == -8:
+			b = th - 1
+		elif x <= -3:
+			b = th
+		elif x == -2:
+			b = (th + bh) / 2
+		elif x <= 2:
+			b = bh
+		elif x == 3:
+			b = (bh + fh) / 2
+		elif x <= 7:
+			b = fh
+		else:
+			b = fh - 1
+		for y in range(_TOPO_CORPO[x], b + 1):
+			cv[Vector2i(x, y)] = ch
+
+## Gola levantada atrás do pescoço: cunha que acompanha a nuca da cabeça (x 0..3, até 4 linhas, y -16..-13).
+static func _gola(cv: Dictionary, ch: String, alta: int = 4) -> void:
+	var l: Array = [[3, 3], [2, 3], [1, 3], [0, 3]]
+	for i in alta:
+		var r: Array = l[4 - alta + i]
+		for x in range(int(r[0]), int(r[1]) + 1):
+			cv[Vector2i(x, -16 + (4 - alta) + i)] = ch
+
+## Pinta só onde já há roupa (detalhes não criam cantos novos).
+static func _sobre(cv: Dictionary, x0: int, y0: int, x1: int, y1: int, ch: String) -> void:
+	for y in range(y0, y1):
+		for x in range(x0, x1):
+			if cv.has(Vector2i(x, y)):
+				cv[Vector2i(x, y)] = ch
+
+static func _linsobre(cv: Dictionary, a: Vector2i, b: Vector2i, ch: String) -> void:
+	var t: Dictionary = {}
+	_lin(t, a, b, ch)
+	for k in t.keys():
+		if cv.has(k):
+			cv[k] = ch
+
+## Dobras: riscos de sombra de 2 px subindo da barra em x (acompanham o caimento do pano).
+static func _dobras(cv: Dictionary, xs: Array, ch: String) -> void:
+	for x in xs:
+		var base: int = -99
+		for y in range(-14, 0):
+			if cv.has(Vector2i(x, y)):
+				base = y
+		if base > -99:
+			_px(cv, x, base - 1, ch)
+			_px(cv, x, base, ch)
+
 # ------------------------------------------------------------------ peças
 static var _cache: Dictionary = {}
 
@@ -148,8 +206,8 @@ static func _capa_silk(fase: int) -> Dictionary:
 		var x: int = 3 - k
 		var u: float = k / 18.0
 		var onda: float = sin(u * 5.0 - fase * PI * 0.9) * 1.5 * u
-		var topo: int = floori(-13.0 + 4.0 * u + onda * 0.6)
-		var base: int = ceili(-4.6 + 1.0 * u + onda)
+		var topo: int = floori(-13.0 + 6.0 * u + onda * 0.5)
+		var base: int = ceili(-4.6 + 2.2 * u + onda)
 		if base - topo < 2:
 			continue
 		for y in range(topo, base):
@@ -195,15 +253,24 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_NOIR)]
 		Pecas.Tipo.SOBRETUDO_CINZA:
-			# sobretudo longo cinza-grafite de gola alta levantada, abotoamento duplo, cinto com laço e três gotas de chuva
-			RoupaGatoF._tronco(cv, "c", -12, -4)
-			_ret(cv, 0, -15, 3, -12, "c")
+			# sobretudo longo cinza-grafite que segue o dorso curvo: gola alta levantada, lapela em diagonal, abotoamento duplo, cinto com laço,
+			# a barra que abre atrás (fenda) e sobe em arco sob a barriga, deixando as patas saírem; três gotas de chuva
+			_corpo(cv, "c", -5, -7, -5)
+			_gola(cv, "c")
 			_luz(cv, "c", "C", "S")
-			_ret(cv, -8, -7, 8, -6, "S")
-			_px(cv, -1, -6, "o")
-			for b in [Vector2i(3, -8), Vector2i(3, -5), Vector2i(6, -8), Vector2i(6, -5)]:
-				cv[b] = "C"
-			for g in [Vector2i(-5, -11), Vector2i(-2, -9), Vector2i(-4, -5)]:
+			_px(cv, 3, -15, "S")
+			_px(cv, 3, -14, "S")
+			_linsobre(cv, Vector2i(3, -11), Vector2i(6, -8), "C")
+			_linsobre(cv, Vector2i(4, -11), Vector2i(7, -8), "S")
+			_sobre(cv, -7, -8, 3, -7, "S")
+			_px(cv, 2, -8, "o")
+			_px(cv, -5, -5, "S")
+			_px(cv, -5, -6, "S")
+			_dobras(cv, [-3, 3], "S")
+			for b in [Vector2i(4, -7), Vector2i(4, -6), Vector2i(6, -7), Vector2i(6, -6)]:
+				if cv.has(b):
+					cv[b] = "C"
+			for g in [Vector2i(-5, -10), Vector2i(-2, -11), Vector2i(-4, -6)]:
 				cv[g] = "q"
 				cv[g + Vector2i(0, 1)] = "q"
 			_cont(cv, "o", false)
@@ -278,15 +345,19 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_HOLLOW)]
 		Pecas.Tipo.MANTO_PRETINHO:
-			# manto azul-marinho curto de gola alta e um broche branco; atrás do corpo, a capinha só se abre um pouco para trás (sem pregas)
-			RoupaGatoF._tronco(cv, "a", -12, -5)
-			_ret(cv, 0, -15, 2, -12, "a")
-			_ret(cv, 2, -14, 3, -12, "a")
+			# manto azul-marinho curto de gola alta, curva da garupa à barriga e um broche branco; atrás do corpo, a capa cai sobre a anca
+			# (só se abre um pouco, sem pregas)
+			_corpo(cv, "a", -6, -7, -6)
+			_gola(cv, "a")
 			_luz(cv, "a", "b", "D")
+			_px(cv, 3, -15, "D")
+			_px(cv, 3, -14, "D")
+			_linsobre(cv, Vector2i(3, -11), Vector2i(5, -9), "b")
 			_px(cv, 4, -8, "W")
+			_dobras(cv, [-4, 2], "D")
 			_cont(cv, "o", false)
 			var capa: Dictionary = {}
-			_poli(capa, [3, -13.5, -3, -13.5, -8, -12, -11, -9.5, -12.5, -6, -11.5, -3.5, -8, -4, 3, -4.5], "a")
+			_poli(capa, [3, -14.5, 0, -14.8, -4, -14.2, -8, -13, -10.5, -10.5, -12, -7.5, -11.5, -4.5, -9.5, -5.2, -8, -6.5], "a")
 			_luz(capa, "a", "b", "D")
 			_cont(capa, "o")
 			return [_lay(capa, RoupaGato.Onde.CORPO, _PAL_HOLLOW, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
@@ -348,17 +419,19 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_SILK)]
 		Pecas.Tipo.CAPA_CARMESIM:
-			# a capa carmesim comprida esvoaça ATRÁS do corpo (barra em duas pontas, balança em 2 quadros); na frente só o top vermelho curto
-			# de gola alta, o cinto escuro e a barra em duas pontinhas
+			# a capa carmesim comprida esvoaça ATRÁS do corpo (acompanha o dorso e cai pela anca; barra em duas pontas, balança em 2 quadros);
+			# na frente só o top vermelho curto de gola alta, o cinto escuro e a saia que sobe em arco sob a barriga
 			var cp: Dictionary = _capa_silk(fase)
 			_luz(cp, "a", "b", "D")
 			_cont(cp, "o")
-			RoupaGatoF._tronco(cv, "a", -12, -5)
-			_ret(cv, 0, -15, 3, -12, "a")
-			_ret(cv, -5, -4, -3, -3, "a")
-			_ret(cv, 2, -4, 4, -3, "a")
+			_corpo(cv, "a", -5, -7, -6)
+			_gola(cv, "a")
 			_luz(cv, "a", "b", "D")
-			_ret(cv, -8, -7, 8, -6, "D")
+			_px(cv, 3, -15, "D")
+			_px(cv, 3, -14, "D")
+			_linsobre(cv, Vector2i(3, -11), Vector2i(5, -9), "b")
+			_sobre(cv, -7, -9, 3, -8, "D")
+			_dobras(cv, [-5, -2], "D")
 			_cont(cv, "o", false)
 			return [_lay(cp, RoupaGato.Onde.CORPO, _PAL_SILK, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_SILK)]
 		Pecas.Tipo.AGULHA_GIGANTE:
@@ -414,22 +487,25 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_ret(cv, 7, -14, 10, -13, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_MIAUJIN)]
 		Pecas.Tipo.KIMONO_LARANJA:
-			# gi laranja do Goku: decote em V e camisa azul no ombro rasgado, faixa azul na cintura com nó e as pontas, punhos azuis nas patas
-			RoupaGatoF._tronco(cv, "a", -12, -4)
+			# gi laranja do Goku que segue o corpo: decote em V com a camisa azul, faixa azul na cintura com nó e as pontas, punhos azuis
+			# nas patas (as patas saem por baixo); a barra sobe em arco sob a barriga
+			_corpo(cv, "a", -6, -7, -6)
 			_luz(cv, "a", "b", "D")
-			_ret(cv, 3, -9, 6, -8, "u")
-			_px(cv, 4, -8, "u")
-			_ret(cv, -2, -11, 1, -8, "u")
-			_px(cv, -2, -11, "a")
-			_px(cv, 0, -9, "V")
-			_ret(cv, -8, -7, 8, -6, "u")
-			_ret(cv, -8, -6, 8, -5, "V")
-			_ret(cv, -3, -8, 0, -5, "u")
-			_px(cv, -2, -7, "U")
-			_px(cv, -3, -5, "V")
-			_px(cv, -1, -5, "V")
-			_ret(cv, 4, -4, 8, -3, "u")
-			_ret(cv, -7, -4, -3, -3, "u")
+			_linsobre(cv, Vector2i(5, -9), Vector2i(7, -7), "u")
+			_linsobre(cv, Vector2i(6, -9), Vector2i(8, -7), "U")
+			_sobre(cv, -8, -9, 5, -8, "u")
+			_sobre(cv, -8, -8, 5, -7, "V")
+			_ret(cv, -3, -8, 0, -6, "u")
+			_px(cv, -2, -8, "U")
+			_px(cv, -3, -6, "V")
+			_px(cv, -1, -6, "V")
+			_dobras(cv, [-5, 3], "D")
+			_ret(cv, -5, -5, -1, -3, "u")
+			_ret(cv, -5, -4, -1, -3, "V")
+			_ret(cv, 6, -5, 8, -3, "u")
+			_ret(cv, 6, -4, 8, -3, "V")
+			_px(cv, 4, -5, "u")
+			_px(cv, 4, -4, "V")
 			_cont(cv, "o", false)
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIAUJIN)]
 		Pecas.Tipo.CONCHA_ENERGIA:
@@ -466,24 +542,29 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_ARQ4)]
 		Pecas.Tipo.JAQUETA_GASTA:
-			# jaqueta de couro marrom com gola de lapela, camisa cáqui no peito (V), remendo no cotovelo, tira diagonal e a bolsa no flanco
-			RoupaGatoF._tronco(cv, "j", -12, -4)
-			_ret(cv, 1, -14, 3, -12, "j")
+			# jaqueta de couro marrom na cintura que segue o dorso: gola de lapela, camisa cáqui no peito (V), tira diagonal e a bolsa
+			# arredondada no flanco; mangas curtas deixam as patas aparecerem
+			_corpo(cv, "j", -6, -7, -6)
+			_gola(cv, "j", 3)
 			_luz(cv, "j", "J", "S")
-			_ret(cv, 3, -9, 6, -8, "k")
-			_px(cv, 4, -8, "k")
-			_px(cv, 2, -9, "J")
-			_px(cv, 6, -8, "J")
-			_ret(cv, 5, -6, 7, -4, "k")
-			_lin(cv, Vector2i(3, -10), Vector2i(-4, -7), "l")
-			_txt(cv, -7, -8, [
-				"mmmm",
-				"mllm",
-				"mllm",
-				"mmmm",
-			])
-			_px(cv, -6, -6, "g")
+			_sobre(cv, 5, -9, 9, -8, "k")
+			_sobre(cv, 6, -8, 8, -7, "k")
+			_sobre(cv, 6, -7, 7, -6, "K")
+			_linsobre(cv, Vector2i(3, -11), Vector2i(5, -9), "J")
+			_linsobre(cv, Vector2i(2, -12), Vector2i(-4, -8), "l")
+			_dobras(cv, [-2, 3], "S")
 			_cont(cv, "o", false)
+			var bolsa: Dictionary = {}
+			_txt(bolsa, -7, -8, [
+				".mm.",
+				"mllm",
+				"mllm",
+				".mm.",
+			])
+			_px(bolsa, -6, -6, "g")
+			_cont(bolsa, "o")
+			for k in bolsa.keys():
+				cv[k] = bolsa[k]
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_ARQ4)]
 		Pecas.Tipo.CHICOTE_BARBANTE:
 			# chicote de corda laranja: laço enrolado de 4x4 no punho e a cauda em S suave de 2 px que acaba esfiapada em duas pontas
@@ -536,22 +617,29 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_TREI)]
 		Pecas.Tipo.MOCHILA_AMARELA:
-			# colete azul aberto sobre a camisa branca (a barra dela aparece), bolso e duas alças escuras no peito; da mochila só aparece
-			# a ponta amarela atrás da garupa
-			RoupaGatoF._tronco(cv, "a", -12, -5)
-			_ret(cv, 5, -9, 8, -4, "w")
-			_ret(cv, -8, -5, 8, -3, "w")
+			# colete azul aberto que segue o dorso, camisa branca aparecendo no peito e nas mangas curtas, bolso e duas alças escuras;
+			# da mochila só aparece a ponta amarela arredondada atrás da garupa
+			_corpo(cv, "a", -6, -7, -6)
 			_luz(cv, "a", "b", "v")
+			_sobre(cv, 5, -9, 9, -7, "w")
+			_sobre(cv, 6, -7, 9, -5, "w")
+			_ret(cv, 6, -5, 8, -4, "w")
+			_px(cv, 4, -5, "w")
 			_luz(cv, "w", "", "W")
-			_lin(cv, Vector2i(0, -12), Vector2i(3, -9), "v")
-			_lin(cv, Vector2i(2, -12), Vector2i(5, -9), "v")
-			_ret(cv, -3, -8, -1, -7, "b")
-			_ret(cv, -3, -7, -1, -6, "v")
+			_px(cv, 7, -4, "W")
+			_px(cv, 6, -4, "W")
+			_px(cv, 4, -5, "W")
+			_sobre(cv, 5, -7, 6, -5, "b")
+			_linsobre(cv, Vector2i(-1, -12), Vector2i(4, -8), "v")
+			_linsobre(cv, Vector2i(1, -12), Vector2i(6, -8), "v")
+			_sobre(cv, -4, -9, -2, -8, "b")
+			_sobre(cv, -4, -8, -2, -7, "v")
+			_dobras(cv, [-5, 2], "v")
 			_cont(cv, "o", false)
 			var mo: Dictionary = {}
-			_ret(mo, -11, -10, -6, -3, "y")
-			_ret(mo, -11, -8, -6, -7, "z")
+			_poli(mo, [-6.5, -11.5, -9, -11.5, -11, -10, -11.8, -7.5, -11.5, -4.5, -10, -3.6, -7, -4.5], "y")
 			_luz(mo, "y", "Y", "z")
+			_ret(mo, -10, -8, -9, -5, "z")
 			_cont(mo, "o")
 			return [_lay(mo, RoupaGato.Onde.CORPO, _PAL_TREI, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_TREI)]
 		Pecas.Tipo.MIAUBOLA:

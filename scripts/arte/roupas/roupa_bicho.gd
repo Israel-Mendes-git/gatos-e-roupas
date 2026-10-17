@@ -728,7 +728,7 @@ static func _geometria(q: Dictionary) -> Dictionary:
 	return {"m": m, "topo": topo, "base": base, "xa": xa, "xb": xb, "cheio": cheio}
 
 ## Colete, avental, barril, manta e afins: a faixa [começo, fim] do tronco, do dorso até `altura` da coluna.
-static func _colete(g: Dictionary, med: Array) -> Dictionary:
+static func _colete(g: Dictionary, med: Array, curvo: bool = false) -> Dictionary:
 	var area: Dictionary = {}
 	var xa: int = g["xa"]
 	var w: int = int(g["xb"]) - xa + 1
@@ -746,6 +746,18 @@ static func _colete(g: Dictionary, med: Array) -> Dictionary:
 			continue
 		if v.x - de < 2:
 			alt -= 2 - (v.x - de)
+		if curvo:
+			# lote 4: segue a silhueta do bicho em vez de virar caixa: a barra sobe em arco sob a barriga, a ponta da frente arredonda
+			# e o dorso ganha uma leve corcova no meio
+			var u: float = float(v.x - de) / maxf(1.0, float(ate - de))
+			if u > 0.38 and u < 0.68:
+				alt -= 1
+			if u > 0.46 and u < 0.6:
+				alt -= 1
+			if ate - v.x < 2:
+				alt -= 2 - (ate - v.x)
+			if u > 0.25 and u < 0.75 and v.y == t:
+				area[Vector2i(v.x, t - 1)] = true
 		if v.y < t + alt:
 			area[v] = true
 	return area
