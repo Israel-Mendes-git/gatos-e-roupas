@@ -1325,6 +1325,8 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		var p: Peca = pecas[s]
 		if p == null:
 			continue
+		if s == 0 and gangue_cor.a > 0.0 and not aura and _cabeca_monstro(p.tipo):
+			continue   # rival comum: a cabeça de monstro cobriria o gato inteiro; sem ela o rosto e as orelhas dele aparecem
 		var onde: int = RoupaGato.onde(p.tipo)
 		if onde == RoupaGato.Onde.PATAS:
 			# calçado: um em cada pata, acompanhando o passo
@@ -1357,6 +1359,13 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		c.draw_rect(Rect2(-7, 1, 4, 5), esc_b)
 		c.draw_rect(Rect2(-6, 2, 2, 3), cb)
 	resetar(c)
+
+## Peça de cabeça das fantasias de monstro (Miauzilla, King-Miau, Submiautica, Catchullu): grandes demais, escondem o gato rival.
+static func _cabeca_monstro(tipo: int) -> bool:
+	for cj in [Pecas.Conjunto.MIAUZILLA, Pecas.Conjunto.KING_MIAU, Pecas.Conjunto.SUBMIAUTICA, Pecas.Conjunto.CATCHULLU]:
+		if Pecas.CONJUNTO_PECAS[cj][Pecas.SLOT_CABECA] == tipo:
+			return true
+	return false
 
 ## Chefe de gangue (3º ato): o gato grande da gangue (pelagem, bandana e aura na cor dela), vestindo a fantasia-assinatura,
 ## com a coroa de líder (a pedra da coroa leva a cor da gangue).
