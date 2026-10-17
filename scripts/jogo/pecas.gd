@@ -585,7 +585,7 @@ const PODER_DICA: Array[String] = [
 	"por uns segundos os golpes ferem em volta e roubam vida",
 	"um canteiro cura os aliados dentro e atrasa os inimigos",
 	"seis tiros, sempre no inimigo mais fraco",
-	"explode o maior bando, queima e devolve blocos por bicho derrotado",
+	"explode o maior bando e queima; devolve blocos ou, com a torre cheia, fere mais",
 	"raio fortíssimo no inimigo mais resistente",
 	"pula de inimigo em inimigo, esmagando os mais fortes",
 	"esconde os aliados em volta: os bichos trocam de alvo",

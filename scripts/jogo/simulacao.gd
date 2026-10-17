@@ -2687,11 +2687,18 @@ func _poder_canhao(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], bas
 	extra["raio"] = Balanco.PODER_CANHAO_RAIO
 	if not em_heranca and u.equipe == 0 and mortos > 0:
 		var saque: int = mini(mortos, Balanco.PODER_CANHAO_SAQUE_MAX)
-		saque = mini(saque, maxi(0, estado.tijolos_max() - estado.tijolos))
+		var cabe: int = mini(saque, maxi(0, estado.tijolos_max() - estado.tijolos))
+		var excesso: int = saque - cabe   # torre cheia: o bloco que não cabe vira dano extra
+		saque = cabe
 		if saque > 0:
 			estado.tijolos += saque
 			_tele(u.poder_conj, "tijolos", saque)
 			_ev({"t": "devolve", "x": cc.x, "y": cc.y, "n": saque})
+		if excesso > 0:
+			for v in outros:
+				if v.vivo and _dentro(v, cc.x, cc.y, Balanco.PODER_CANHAO_RAIO):
+					_dano_poder(u, v, base * Balanco.PODER_CANHAO_EXCESSO_DANO * excesso)
+			_cont("canhao_excesso")
 	return true
 
 ## Poder MISSEIS: corpo separado de _usar_poder_i.

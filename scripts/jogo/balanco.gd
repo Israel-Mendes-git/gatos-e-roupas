@@ -698,6 +698,7 @@ const PODER_CANHAO_DANO := 3.0
 const PODER_CANHAO_QUEIMA_T := 3.0
 const PODER_CANHAO_QUEIMA_DPS := 0.4   # x dano base por segundo
 const PODER_CANHAO_SAQUE_MAX := 4
+const PODER_CANHAO_EXCESSO_DANO := 0.8   # torre cheia: cada bloco que não coube vira este tanto (x dano base) de dano a mais em quem sobrou na área
 # Salva de mísseis (Armadura de Ferro): explosões na entrada da torre (distância à torre em x)
 const PODER_MISSEIS_N := 3
 const PODER_MISSEIS_ALCANCE := 800.0   # dispara com inimigo até esta distância da torre

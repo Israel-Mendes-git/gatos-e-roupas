@@ -18,6 +18,7 @@ func _init() -> void:
 	_moral()
 	_tipos_gangue()
 	_truques()
+	_canhao_cheio()
 	_chefes()
 	_save_antigo()
 	_torre_niveis()
@@ -527,6 +528,33 @@ func _truques() -> void:
 	for i in 150:
 		sp._rastros_tick(0.02)
 	_ok(sp.rastros.size() <= 1, "O rastro some com o tempo (%d)" % sp.rastros.size())
+
+## Bala de canhão (Pirata): com a torre cheia, o bloco que não cabe vira dano extra em quem sobrou.
+func _canhao_cheio() -> void:
+	var dano: Array[float] = []
+	for cheia in [true, false]:
+		var sc: Simulacao = _luta(0)
+		var pir: Unidade = sc.aliados[0]
+		sc.estado.tijolos = sc.estado.tijolos_max() if cheia else sc.estado.tijolos_max() - Balanco.PODER_CANHAO_SAQUE_MAX
+		var fracos: Array[Unidade] = []
+		for k in 3:
+			var f: Unidade = _rival(sc, 0, Unidade.Tipo.COMUM, 900.0 + k * 6.0, 550.0)
+			f.vida = 1.0
+			fracos.append(f)
+		var duro: Unidade = _rival(sc, 0, Unidade.Tipo.COMUM, 905.0, 552.0)
+		duro.vida_max = 100000.0
+		duro.vida = 100000.0
+		duro.armadura = 0.0
+		duro.reducao = 0.0
+		var pontos: Array = []
+		var extra: Dictionary = {}
+		var outros: Array[Unidade] = []
+		outros.append_array(sc.inimigos)
+		sc._poder_canhao(pir, sc.aliados, outros, 10.0, pontos, extra)
+		dano.append(100000.0 - duro.vida)
+		_ok(sc.estado.tijolos <= sc.estado.tijolos_max(), "Canhão: a torre nunca passa do máximo")
+	_ok(dano[0] > dano[1] + 1.0, "Canhão: torre cheia fere mais (%.1f x %.1f)" % [dano[0], dano[1]])
+	_ok(Pecas.PODER_DICA[Pecas.Poder.CANHAO].length() <= 80, "dica do Canhão curta")
 
 func _save_antigo() -> void:
 	var e: Estado = _estado()
