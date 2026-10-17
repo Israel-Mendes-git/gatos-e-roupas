@@ -561,11 +561,11 @@ const _CHAPEU: Array = [
 		"oaaAaaaAaao",
 		"oaabbbbbaao",
 		"oddddddddoo"]},
-	# 52 arthur miaurgon: chapéu preto de aba larga amassada
+	# 52 arthur miaurgon: chapéu de caubói preto de copa vincada, faixa marrom e aba com as pontas para cima
 	{"cheio": false, "l": [
-		"...ooooo...",
-		"..oaaaaao..",
-		".obbbbbbbo.",
+		"..ooooooo..",
+		"..oAaaaao..",
+		"..obbbbbo..",
 		"oAaaaaaaaAo",
 		"odddddddddo"]},
 	# 53 submiautica: máscara de mergulho com lentes e o respirador ao lado
