@@ -170,7 +170,15 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.ROCKET_MIAUGUE: [0.2, 0.45],       # velocidade de movimento
 	Pecas.Conjunto.DEADMIAU: [3.0, 6.0],              # regeneração por segundo
 	Pecas.Conjunto.MEON: [0.2, 0.4],                  # chance de aparar um golpe corpo a corpo com a faca
+	# lote 4
+	Pecas.Conjunto.MIAU_NOIR: [1.5, 2.0],             # emboscada: multiplicador do 1º golpe em cada inimigo
+	Pecas.Conjunto.HOLLOWMIAU: [20.0, 50.0],          # alcance a mais
+	Pecas.Conjunto.SILKMIAU: [0.2, 0.45],             # cerco: fração do dano que fere em volta
+	Pecas.Conjunto.SUPER_MIAUJIN: [0.5, 1.2],         # execução: dano a mais em quem está abaixo de EXECUCAO_LIMIAR
+	Pecas.Conjunto.ARQUEOLOGO: [0.1, 0.25],           # esquiva
+	Pecas.Conjunto.TREINADOR: [0.04, 0.1],            # cura por abate (fração da vida máxima)
 }
+const EXECUCAO_LIMIAR := 0.25   # Super Miaujin: vida abaixo da qual o golpe fere mais
 const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
 
 ## Valor do bônus de kit da fantasia `c` no grau `g` (0 = 2 ou 3 peças, 1 = as 4).
@@ -761,6 +769,60 @@ const MEON_VIDA: Array[float] = [0.3, 0.8]        # kit do Meon: vida a mais
 const MEON_RECARGA: Array[float] = [0.0, 0.35]    # kit do Meon: poder recarrega mais rápido
 const APARA_DANO := 2.5                # x dano de ataque de quem aparou
 const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
+# ---- Lote 4 da expansão
+# Apagão (Miau-Noir): zona de escuridão; quem está dentro erra golpes e tiros e troca de alvo
+const PODER_APAGAO_RAIO := 170.0
+const PODER_APAGAO_T := 5.0
+const PODER_APAGAO_ERRA := 0.6
+const PODER_APAGAO_ERRA_CHEFE := 0.4
+const PODER_APAGAO_TROCA := 1.5        # segundos entre trocas de alvo
+const PODER_APAGAO_HER_RAIO := 120.0
+const PODER_APAGAO_HER_T := 3.0
+const PODER_APAGAO_HER_ERRA := 0.4
+const PODER_APAGAO_BICHO_ERRA := 0.4   # o bicho apaga os gatos: eles erram menos
+# Espírito vingativo (Hollowmiau): Alma que cresce com golpes e abates
+const ALMA_GOLPE := 6.0
+const ALMA_ABATE := 20.0
+const ALMA_MAX := 100.0
+const PODER_ESPIRITO_ALCANCE := 520.0
+const PODER_ESPIRITO_LARGURA := 45.0
+const PODER_ESPIRITO_ALMA := 2.2       # dano = base x (1 + isto x Alma/100)
+const PODER_ESPIRITO_CURA := 0.25      # fração da vida x Alma/100
+const PODER_ESPIRITO_HER_GASTO := 0.5  # a herança gasta metade da Alma
+# Laço de seda (Silkmiau): os mais fortes dividem o dano
+const PODER_LACO_N := 4
+const PODER_LACO_T := 6.0
+const PODER_LACO_INICIAL := 0.4        # x dano base em cada ligado
+const PODER_LACO_COMPART := 0.5        # fração do dano que os outros ligados também levam
+const PODER_LACO_CHEFE := 0.25         # o chefe ligado só leva este tanto do compartilhado
+const PODER_LACO_HER_N := 3
+const PODER_LACO_HER_COMPART := 0.35
+const PODER_LACO_HER_T := 4.0
+# Camehamiau! (Super Miaujin): carrega parado, depois um feixe que cruza o campo
+const PODER_KAMEHA_CARGA := 2.0
+const PODER_KAMEHA_LARGURA := 55.0
+const PODER_KAMEHA_DANO := 2.6
+const PODER_KAMEHA_VIDA := 0.3         # abaixo disto no disparo, o dano dobra
+const PODER_KAMEHA_VIDA_MULT := 2.0
+const PODER_KAMEHA_HER_DANO := 1.5
+const PODER_KAMEHA_FEIXE_T := 1.2      # só o desenho do feixe
+# Pedra rolante (O Arqueólogo): onda viajante que atordoa o que cruza
+const PODER_PEDRA_LARGURA := 70.0
+const PODER_PEDRA_T := 2.2
+const PODER_PEDRA_DANO := 1.1
+const PODER_PEDRA_ATORDOA := 0.8
+const PODER_PEDRA_CHEFE := 0.4
+const PODER_PEDRA_GIGANTE := 0.4       # segundos de atordoamento do Gigante
+const PODER_PEDRA_HER_DANO := 0.7
+# Eu escolho você! (Treinador de Miaumons): captura o bicho de menor vida percentual
+const PODER_CAPTURA_LIMIAR := 0.6
+const PODER_CAPTURA_T := 8.0
+const PODER_CAPTURA_VIDA := 0.3        # vida do aliado = vida atual + isto x vida máxima
+const PODER_CAPTURA_LENTO := 0.6
+const PODER_CAPTURA_LENTO_T := 2.0
+const PODER_CAPTURA_BOLA := 0.5        # x dano base quando a bola balança
+const PODER_CAPTURA_CHEFE := 1.0       # chefe e Gigante: "não é muito eficaz"
+const PODER_CAPTURA_HER_T := 5.0
 # Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
 const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato
 const PODER_INIMIGO_FATOR_ATO := 0.08   # soma por ato depois do primeiro

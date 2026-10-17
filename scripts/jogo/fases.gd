@@ -93,10 +93,12 @@ const CONJUNTOS: Array = [
 	[Pecas.Conjunto.ENCANADOR, Pecas.Conjunto.FERRO, Pecas.Conjunto.CIRCO, Pecas.Conjunto.TARTARUGA, Pecas.Conjunto.ROBO_AZUL,
 		Pecas.Conjunto.MOTOQUEIRO_MIAUSMA, Pecas.Conjunto.JIMIAU, Pecas.Conjunto.ROCKET_MIAUGUE, Pecas.Conjunto.DONATEMIAU],
 	[Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.MAGO, Pecas.Conjunto.TROVAO, Pecas.Conjunto.NINJA_FOLHA,
-		Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.ARQUEIRO_MIAU, Pecas.Conjunto.DEADMIAU],
+		Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.ARQUEIRO_MIAU, Pecas.Conjunto.DEADMIAU, Pecas.Conjunto.MIAU_NOIR],
 	[Pecas.Conjunto.CAUBOI, Pecas.Conjunto.PIRATA, Pecas.Conjunto.PATRULHEIRO, Pecas.Conjunto.ESTELAR, Pecas.Conjunto.GUARDIAO, Pecas.Conjunto.TUBARAO,
 		Pecas.Conjunto.FENIX_MIAUSSIMO, Pecas.Conjunto.LEONARMIAU, Pecas.Conjunto.RAFAMIAU],
-	[Pecas.Conjunto.REI, Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.VIKING, Pecas.Conjunto.GELO, Pecas.Conjunto.MIMIAU, Pecas.Conjunto.MIAUCRAFT, Pecas.Conjunto.MEON],
+	[Pecas.Conjunto.REI, Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.VIKING, Pecas.Conjunto.GELO, Pecas.Conjunto.MIMIAU, Pecas.Conjunto.MIAUCRAFT, Pecas.Conjunto.MEON,
+		Pecas.Conjunto.HOLLOWMIAU, Pecas.Conjunto.SILKMIAU,
+		Pecas.Conjunto.SUPER_MIAUJIN, Pecas.Conjunto.ARQUEOLOGO, Pecas.Conjunto.TREINADOR],   # as três últimas são do 3º ato: caem aqui até ele existir
 ]
 
 ## Tipos de peça que os inimigos comuns da fase podem vestir, por espaço:

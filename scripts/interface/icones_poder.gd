@@ -8,9 +8,9 @@ extends RefCounted
 const TAM := 10           # lado de um ícone no atlas (8 + contorno de 1 px)
 const CONTORNO := Color("140c1c")
 
-## Ícones de apoio, depois dos 48 poderes.
-const BLOCO := 48         # bloco da torre (contador de blocos)
-const PECA := 49          # roupinha (caixa de peças)
+## Ícones de apoio, depois dos 54 poderes.
+const BLOCO := 54         # bloco da torre (contador de blocos)
+const PECA := 55          # roupinha (caixa de peças)
 
 const PALETA := {
 	"w": Color("ffffff"), "W": Color("b8c4dc"),
@@ -127,6 +127,18 @@ const BITS: Array = [
 	["..rrrr..", ".rrrrrr.", "rwwrrwwr", "rwkrrkwr", "rrrrrrrr", ".rrkkrr.", "..rrrr..", "...RR..."],
 	# CHUTE (Chute giratório): bota marrom com o arco do golpe
 	["....ww..", "..w...w.", ".w.....w", "w..nnn..", "w.nnnnN.", "...nnnNN", "....NNNN", "....kkkk"],
+	# APAGAO (Apagão): lua escura em crescente
+	["..ssss..", ".ss.....", "ss......", "ss......", "ss......", ".ss.....", "..ssSSS.", "....SS.."],
+	# ESPIRITO (Espírito vingativo): espírito branco de olhos pretos
+	["..wwww..", ".wwwwww.", "wwkwwkww", "wwkwwkww", "wwwwwwww", "wwwwwwww", "wWwwWwwW", ".W.WW.W."],
+	# LACO (Laço de seda): laço de fio vermelho
+	["..rrr...", ".r...r..", "r.....r.", ".r.rr.r.", "..rRRr..", ".r...r..", "r.....r.", ".rrrrr.."],
+	# KAMEHA (Camehamiau!): esfera de energia azul
+	["...cc...", "..cwwc..", ".cwwwwc.", "ccwwwwcc", ".cwwwwc.", "..cCCc..", "...CC...", "........"],
+	# PEDRA (Pedra rolante): rocha cinza
+	["..GGGG..", ".GggggG.", "GgggwggG", "GgggggGG", "GgwggggG", "GggggggG", ".GGggGG.", "..GGGG.."],
+	# CAPTURA (Eu escolho você!): bola vermelha e branca
+	["..rrrr..", ".rrrrrr.", "rrrrrrrr", "kkkwwkkk", "wwwwwwww", "wwwwwwww", ".wwwwww.", "..wwww.."],
 	# BLOCO: bloco de brinquedo da torre
 	["yyyyyyyY", "yooooooO", "yowwooOO", "yowoooOO", "yooooOOO", "yooooOOO", "yOOOOOOO", "YOOOOOOO"],
 	# PECA: camiseta (caixa de peças)

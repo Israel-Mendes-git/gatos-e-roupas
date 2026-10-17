@@ -137,6 +137,19 @@ var esforco_base: float = 0.0   # dano base da explosão ao levantar
 var esforco_conj: int = -1
 var tiro_atordoa: float = 0.0   # kit do Meon: chance de o tiro atordoar (tiro na perna)
 var apara: float = 0.0          # kit do Meon: chance de aparar um golpe corpo a corpo com a faca
+# lote 4 da expansão
+var emboscada: float = 0.0      # kit do Miau-Noir: multiplicador do 1º golpe em cada inimigo (0 = sem kit)
+var emboscou: Dictionary = {}   # inimigos que já levaram o 1º golpe (id da instância)
+var execucao: float = 0.0       # kit do Super Miaujin: dano a mais em quem está abaixo de Balanco.EXECUCAO_LIMIAR
+var alcance_kit: float = 0.0    # kit do Hollowmiau: alcance a mais
+var alma: float = 0.0           # Hollowmiau: Alma acumulada (0 a Balanco.ALMA_MAX)
+var apagao_t: float = 0.0       # dentro do Apagão: erra golpes e tiros (renovado a cada passo)
+var apagao_erra: float = 0.0
+var laco: Dictionary = {}       # Laço de seda: o laço a que pertence (vazio = solto)
+var carga_t: float = 0.0        # Camehamiau!: segundos que faltam para soltar o feixe (parado, vulnerável)
+var carga_dur: float = 0.0
+var carga_dano: float = 0.0
+var capturado: bool = false     # aliado vindo de uma captura do Treinador: desenha como bicho
 # aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
 var aviso_t: float = 0.0        # segundos que faltam para soltar (0 = sem aviso)
 var aviso_dur: float = 0.0
