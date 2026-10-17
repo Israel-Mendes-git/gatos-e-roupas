@@ -488,6 +488,34 @@ func reforcar(p: Peca) -> bool:
 	salvar()
 	return true
 
+## Multiplicador de XP de recuperação: gato abaixo da média de nível dos OUTROS ganha mais XP (1x se empata ou passa).
+func mult_recupera(b: Boneco) -> float:
+	var soma: float = 0.0
+	var n: int = 0
+	for o in bonecos:
+		if o != b:
+			soma += o.nivel
+			n += 1
+	if n == 0:
+		return 1.0
+	var atras: float = soma / n - b.nivel
+	if atras <= 0.0:
+		return 1.0
+	return minf(Balanco.XP_RECUPERA_MAX, 1.0 + Balanco.XP_RECUPERA_POR_NIVEL * atras)
+
+## XP da onda para cada gato (metade, arredondada para cima, a quem caiu), com a recuperação de quem está atrás.
+## Os multiplicadores são calculados antes de qualquer um subir, para a ordem do time não pesar.
+func dar_xp_onda() -> void:
+	var xp_onda: int = Balanco.XP_ONDA_ATO[clampi(ato, 1, Balanco.XP_ONDA_ATO.size()) - 1]
+	var mults: Array[float] = []
+	for b in bonecos:
+		mults.append(mult_recupera(b))
+	for i in bonecos.size():
+		var b: Boneco = bonecos[i]
+		var base: int = xp_onda if b.vivo else (xp_onda + 1) / 2
+		if b.ganhar_xp(roundi(base * mults[i])) > 0:
+			b.pop = 1.0
+
 ## Depois de vencer a onda: mortos saem, baú vai pro guarda-roupa, próxima onda.
 ## Devolve true se a onda vencida era a última da fase (fase vencida).
 func encerrar_onda(sim: Simulacao) -> bool:
@@ -497,10 +525,8 @@ func encerrar_onda(sim: Simulacao) -> bool:
 	for u in sim.aliados:
 		if u.boneco != null and u.vida_max > 0.0:
 			u.boneco.saude = clampf(u.vida / u.vida_max, 0.05, 1.0)
+	dar_xp_onda()
 	for b in bonecos:
-		var xp_onda: int = Balanco.XP_ONDA_ATO[clampi(ato, 1, Balanco.XP_ONDA_ATO.size()) - 1]
-		if b.ganhar_xp(xp_onda if b.vivo else (xp_onda + 1) / 2) > 0:
-			b.pop = 1.0
 		b.vivo = true  # nocaute só dura a onda
 	for p in sim.bau:
 		guardar_drop(p)

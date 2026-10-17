@@ -5035,6 +5035,9 @@ func _dica_ficha(i: int) -> void:
 		["sep"],
 	]
 	itens.append_array(_itens_ficha(b))
+	var rec: float = estado.mult_recupera(b)
+	if rec > 1.0 and b.nivel < Balanco.BONECO_NIVEL_MAX:
+		itens.append(["t", "Alcançando o time: XP x%s" % String.num(rec, 2).trim_suffix("0").trim_suffix("."), 14, Color(0.6, 0.9, 1.0)])
 	itens.append(["sep"])
 	itens.append(["t", "Duplo clique no nome (ou no lápis) troca o nome.", 12, Color(1, 1, 1, 0.55)])
 	itens.append(["t", "Heranças (%d de %d)" % [b.incorporacoes(), Balanco.BONECO_NIVEL_MAX / Balanco.HERANCA_NIVEIS], 16, Color(0.8, 0.7, 1.0)])
