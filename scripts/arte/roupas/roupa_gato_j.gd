@@ -133,6 +133,7 @@ const _PAL_ARTHUR := {
 	"m": Color("5e3a22"), "M": Color("a06a32"), "F": Color("e8b83c"), "G": Color("fff0a0"),
 	"t": Color("6a7484"), "T": Color("b4bece"), "u": Color("363c48"),
 	"p": Color("e6dcc0"),
+	"h": Color("474e63"), "H": Color("b4c8e2"), "s": Color("1c1e28"),
 }
 
 ## Linha mais baixa ocupada de `cv` na coluna x (-99 se vazia).
@@ -193,22 +194,25 @@ static func _asa(cv: Dictionary, sh: Vector2, tips: Array, esc: float, osso: boo
 			var q: Vector2 = t3
 			RoupaGatoI._lin(cv, Vector2i(roundi(sh.x), roundi(sh.y)), Vector2i(roundi(q.x), roundi(q.y)), "W")
 
-## Chapéu de caubói preto gasto: copa alta (5 px) que afina em cima com o vinco em V dos dois lados, faixa marrom e aba larga (14 px) em sela
-## (sobe nos lados, desce na frente e atrás) com a sombra por baixo.
+## Chapéu de caubói de couro preto gasto (cattleman): copa de topo reto com o sulco no meio e dois afundados na frente, faixa de couro com o concho
+## dourado, aba larga de borda enrolada para cima nas laterais e inclinada para a frente; brilho cinza-azulado claro no topo e na borda.
 static func _ar_chapeu() -> Array:
-	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, 0, -25, [
-		"....cc..cc....",
-		"....ccSScc....",
-		"...cccSSccc...",
-		"...cccSSccc...",
-		"...cccccccc...",
-		"c..MMMMMMMM..c",
-		".cccccccccccc.",
-		"..cccccccccc..",
-		"...SSSSSSSS...",
+	var tmp: Dictionary = {}
+	RoupaGatoI._txt(tmp, 0, -25, [
+		"....HHSHHH....",
+		"...hhhShShh...",
+		"...hhhShShh...",
+		"...hhhShShh...",
+		"...hhhhhhhh...",
+		"H..MMMMMFGMM.H",
+		".HhhhhhhhhhhhH",
+		"..hhhhhhhhhh..",
+		"...ssssssss...",
 	])
-	RoupaGatoI._luz(cv, "c", "C", "S")
+	var cv: Dictionary = {}
+	for k in tmp.keys():
+		var q: Vector2i = k
+		cv[Vector2i(q.x, q.y + (1 if (q.x >= 8 and q.y >= -20) else 0))] = tmp[k]
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_ARTHUR)]
 
