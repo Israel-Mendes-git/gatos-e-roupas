@@ -543,6 +543,8 @@ func _spawnar(item: Dictionary) -> void:
 		u.truque_cd = Balanco.TOUPEIRA_FORA_T if u.chefe_tipo == Fases.Chefe.TOUPEIRA else 5.0
 		if u.chefe_tipo >= Fases.Chefe.DOM_GATLEONE:
 			u.gangue = u.chefe_tipo - Fases.Chefe.DOM_GATLEONE   # gato grande da gangue (só desenho e identidade; não é "rival" da Disputa)
+			u.esc_vida *= Balanco.CHEFE_GANGUE_VIDA[u.gangue]
+			u.esc_dano *= Balanco.CHEFE_GANGUE_DANO[u.gangue]
 			u.truque_cd = [Balanco.GATLEONE_PRIMEIRO, Balanco.IMORTAL_PRIMEIRO, Balanco.MESTRE_PRIMEIRO, Balanco.REI_CHUTE_PRIMEIRO, Balanco.MAGNETO_PRIMEIRO][u.gangue]
 		u.esc_vida *= Balanco.CHEFE_VIDA_MULT * (1.0 + Balanco.CHEFE_VIDA_FASE * estado.degrau_chefe())
 		u.esc_dano *= Balanco.CHEFE_DANO_MULT

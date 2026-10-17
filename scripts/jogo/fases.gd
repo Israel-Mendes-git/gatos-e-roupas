@@ -138,7 +138,7 @@ const GANGUE_COR: Array[Color] = [
 ]
 ## Pelagem de cada gangue: [textura, tinta] (todas fora das 5 do time).
 const GANGUE_PELAGEM: Array = [
-	[0, Color(0.55, 0.5, 0.55)], [1, Color(0.7, 0.55, 0.4)], [2, Color(0.5, 0.58, 0.62)], [1, Color(0.6, 0.45, 0.4)], [0, Color(0.7, 0.62, 0.8)],
+	[0, Color(0.78, 0.72, 0.78)], [1, Color(0.95, 0.78, 0.55)], [2, Color(0.72, 0.82, 0.88)], [1, Color(0.9, 0.7, 0.62)], [0, Color(0.88, 0.78, 1.0)],
 ]
 # multiplicadores da gangue sobre o rival comum (partem de 1,0; calibrar por truque nas próximas etapas)
 const GANGUE_VIDA: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0]

@@ -533,6 +533,9 @@ const MUTACAO_LIMIAR := 0.30
 const MUTACAO_DANO := 0.30
 const MUTACAO_VEL := 0.30
 # ---- Chefes de gangue (3º ato, etapa 5; notas/ato3_proposta.md, seção 2)
+# acerto por chefe de gangue (Dom Gatleone, Imortal Miau, Programa Mestre, Rei Miaunidas, Magnetomiau), sobre a vida e o dano do chefe
+const CHEFE_GANGUE_VIDA: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.4]
+const CHEFE_GANGUE_DANO: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.15]
 const CHEFE_FASE2 := 0.5            # abaixo desta fração da vida o chefe entra na fase 2
 const CHEFE_FASE3 := 0.25           # Magnetomiau: fase final
 const GATLEONE_T := 18.0            # segundos entre as chamadas do Mensageiro
@@ -549,8 +552,8 @@ const MESTRE_PIXEL_T := 3.0         # o gato atingido pelo disco vira pixel: nã
 const MESTRE_DISCO_DANO := 1.0
 const MESTRE_RECOMPILA_DANO := 1.6  # recompilando fica frágil por um instante
 const MESTRE_RECOMPILA_T := 1.5
-const REI_FRENTE := 0.7             # redução do dano que vem de frente
-const REI_FRENTE_FASE2 := 0.6
+const REI_FRENTE := 0.55            # redução do dano que vem de frente
+const REI_FRENTE_FASE2 := 0.45
 const REI_CHUTE_T := 13.0
 const REI_CHUTE_PRIMEIRO := 8.0
 const REI_CHUTE_RECUA := 240.0      # o gato da frente é jogado para o fundo
