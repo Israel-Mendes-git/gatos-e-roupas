@@ -149,6 +149,16 @@ static func _mand(cv: Dictionary, pts: Array, ch: String, ch2: String) -> void:
 		cv[Vector2i(p[0], p[1])] = ch
 		cv[Vector2i(p[0], p[1] + 1)] = ch2
 
+## Asa de morcego: do ombro (sx, sy), três dedos claros abertos para cima e para trás com a membrana escura entre eles (`esc` = tamanho).
+static func _asa(cv: Dictionary, sx: int, sy: int, esc: float) -> void:
+	var d1 := Vector2i(sx + roundi(-2 * esc), sy - roundi(9 * esc))
+	var d2 := Vector2i(sx + roundi(-7 * esc), sy - roundi(7 * esc))
+	var d3 := Vector2i(sx + roundi(-9 * esc), sy - roundi(2 * esc))
+	RoupaGatoI._poli(cv, [sx, sy, d1.x, d1.y, (d1.x + d2.x) / 2.0 + 1.0, (d1.y + d2.y) / 2.0 + 1.5, d2.x, d2.y, (d2.x + d3.x) / 2.0 + 1.0, (d2.y + d3.y) / 2.0 + 1.5, d3.x, d3.y, sx - 4, sy + 1], "w")
+	RoupaGatoI._lin(cv, Vector2i(sx, sy), d1, "W")
+	RoupaGatoI._lin(cv, Vector2i(sx, sy), d2, "W")
+	RoupaGatoI._lin(cv, Vector2i(sx, sy), d3, "W")
+
 ## Chapéu de caubói preto gasto: aba larga e reta (12 px) com as pontas erguidas, copa baixa vincada no meio, faixa marrom e a sombra da aba.
 static func _ar_chapeu() -> Array:
 	var cv: Dictionary = {}
@@ -318,7 +328,7 @@ static func _sub_barbatana() -> Array:
 const _PAL_CTHU := {
 	"o": Color("08141a"), "a": Color("3c7c68"), "A": Color("70b49c"), "d": Color("22483e"),
 	"m": Color("245c6a"), "M": Color("3e8896"), "D": Color("143642"),
-	"w": Color("3c3a5e"), "W": Color("6a66a0"),
+	"w": Color("40305e"), "W": Color("c4bcdc"),
 	"y": Color("f0d848"), "Y": Color("fff6b0"),
 	"p": Color("8a5aa8"), "P": Color("b88ad0"), "q": Color("5a3a7a"),
 	"b": Color("6a3f7a"), "B": Color("9a66aa"), "Q": Color("3e2248"), "F": Color("c8a458"), "i": Color("cfeaf4"),
@@ -354,37 +364,33 @@ static func _cth_cabeca() -> Array:
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_CTHU)]
 
-## Asa de morcego atrás do corpo: ossos finos saindo do ombro, membrana escura de borda recortada em arcos e o gancho na ponta.
+## Duas asas de morcego atrás do corpo: a de perto (dedos claros, contorno) e a de longe, menor e mais escura.
 static func _cth_asa() -> Dictionary:
 	var cv: Dictionary = {}
-	RoupaGatoI._poli(cv, [-1, -12, -4, -23, -6, -19, -10, -21, -9, -17, -13, -17, -10, -14, -9, -12], "w")
-	RoupaGatoI._lin(cv, Vector2i(-1, -13), Vector2i(-4, -23), "W")
-	RoupaGatoI._lin(cv, Vector2i(-1, -13), Vector2i(-10, -21), "W")
-	RoupaGatoI._lin(cv, Vector2i(-1, -13), Vector2i(-13, -17), "W")
+	_asa(cv, 1, -13, 1.0)
 	RoupaGatoI._cont(cv, "o", true)
+	var f: Dictionary = {}
+	_asa(f, 5, -13, 0.8)
+	for k in f.keys():
+		if not cv.has(k) or cv[k] == "o":
+			cv[k] = "q" if f[k] == "W" else "w"
 	return cv
 
-## Manto verde-azulado escamado (arcos de 3 px), gola aberta, barra recortada e três gotas; as asinhas vão atrás do corpo.
+## Manto verde-azulado liso com um só fio de arcos de escama, gola aberta, duas gotas e a barra recortada; as asas vão atrás do corpo.
 static func _cth_manto() -> Array:
 	var cv: Dictionary = {}
 	RoupaGatoI._corpo_vest(cv, "m", -4, -6, -5)
 	RoupaGatoI._gola(cv, "m", 3)
 	RoupaGatoI._luz(cv, "m", "M", "D")
-	for y in [-10, -7]:
-		for x in range(-8, 8):
-			if posmod(x + (1 if y == -7 else 0), 3) == 0 and cv.get(Vector2i(x, y)) == "m":
-				cv[Vector2i(x, y)] = "D"
-				if cv.get(Vector2i(x + 1, y - 1)) == "m":
-					cv[Vector2i(x + 1, y - 1)] = "M"
-	for g in [Vector2i(-5, -8), Vector2i(1, -10), Vector2i(4, -8)]:
+	for x in range(-7, 7):
+		if cv.get(Vector2i(x, -7)) == "m":
+			cv[Vector2i(x, -7)] = "D"
+	for g in [Vector2i(-4, -9), Vector2i(3, -9)]:
 		cv[g] = "i"
 		cv[g + Vector2i(0, 1)] = "i"
 	for x2 in range(-7, 7):
-		if posmod(x2, 3) == 1:
-			var b: int = -99
-			for y2 in range(-14, 0):
-				if cv.has(Vector2i(x2, y2)):
-					b = y2
+		if posmod(x2, 4) == 1:
+			var b: int = _topo_col(cv, x2)
 			if b > -99 and b < -4:
 				cv.erase(Vector2i(x2, b))
 	RoupaGatoI._cont(cv, "o", false)
