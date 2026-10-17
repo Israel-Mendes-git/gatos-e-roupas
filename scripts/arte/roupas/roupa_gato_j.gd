@@ -343,20 +343,20 @@ static func _sub_rifle() -> Array:
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.BOCA, _PAL_SUB)]
 
-## Cauda do Reaper, atrás do corpo: nasce na garupa, cai para trás afinando, com faixas ferrugem diagonais e o leque final de três nadadeiras finas.
+## Cauda do Reaper, atrás do corpo: sai da garupa na mesma pele e faixas do corpo, sobe um pouco e cai para trás afinando até o leque de nadadeiras finas.
 static func _sub_cauda() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._poli(cv, [-8, -12, -12, -12.5, -16, -11, -20, -9.5, -23, -8.5, -23, -7.5, -20, -7, -16, -6.5, -12, -5.5, -8, -6], "a")
+	RoupaGatoI._poli(cv, [-6, -12.5, -10, -14.5, -14, -15, -18, -13.5, -21, -11, -23, -8.5, -23, -7.5, -22, -8, -19, -10, -15, -11.5, -11, -10, -8, -7, -6, -6.5], "a")
 	RoupaGatoI._luz(cv, "a", "A", "d")
 	for k in cv.keys():
 		var q: Vector2i = k
-		if posmod(q.x - q.y, 6) < 2 and cv[q] != "A":
+		if posmod(q.x + q.y, 6) < 2 and cv[q] != "A":
 			cv[q] = "r"
-	RoupaGatoI._lin(cv, Vector2i(-23, -8), Vector2i(-28, -12), "r")
-	RoupaGatoI._lin(cv, Vector2i(-23, -8), Vector2i(-28, -4), "r")
-	RoupaGatoI._lin(cv, Vector2i(-22, -8), Vector2i(-27, -10), "R")
-	RoupaGatoI._lin(cv, Vector2i(-22, -8), Vector2i(-27, -6), "R")
-	RoupaGatoI._lin(cv, Vector2i(-24, -8), Vector2i(-29, -8), "r")
+	RoupaGatoI._lin(cv, Vector2i(-23, -8), Vector2i(-26, -11), "r")
+	RoupaGatoI._lin(cv, Vector2i(-23, -8), Vector2i(-26, -5), "r")
+	RoupaGatoI._lin(cv, Vector2i(-23, -8), Vector2i(-27, -8), "r")
+	RoupaGatoI._lin(cv, Vector2i(-22, -8), Vector2i(-25, -10), "R")
+	RoupaGatoI._lin(cv, Vector2i(-22, -8), Vector2i(-25, -6), "R")
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB, true)]
 
