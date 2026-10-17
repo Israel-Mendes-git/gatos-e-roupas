@@ -32,7 +32,7 @@ static func onde(tipo: int) -> int:
 
 ## Peças com camada atrás do corpo do gato (asas do manto do Catchullu).
 static func tem_atras(tipo: int) -> bool:
-	return tipo == Pecas.Tipo.CAUDA_RADIOATIVA or tipo == Pecas.Tipo.MANTO_ABISSAL or tipo == Pecas.Tipo.TANQUE_PEIXINHO
+	return tipo == Pecas.Tipo.CAUDA_RADIOATIVA or tipo == Pecas.Tipo.MANTO_ABISSAL
 
 # ------------------------------------------------------------------ ferramentas (usam as de RoupaGatoF e RoupaGatoG)
 static func _ret(cv: Dictionary, x0: int, y0: int, x1: int, y1: int, ch: String) -> void:
@@ -345,7 +345,8 @@ static func _sub_rifle() -> Array:
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.BOCA, _PAL_SUB)]
 
-## Cauda do Reaper, atrás do corpo: sai da garupa na mesma pele e faixas do corpo, sobe um pouco e cai para trás afinando até o leque de nadadeiras finas.
+## Cauda do Reaper: sai da garupa, DESENHADA NA FRENTE do corpo e do rabo do gato (camada da frente), na mesma pele e faixas do corpo; sobe um pouco e cai
+## para trás afinando até o leque de nadadeiras finas. Dentro do tronco os pixels da cauda somem (o corpo já tem a mesma cor), então a união não tem contorno.
 static func _sub_cauda() -> Array:
 	var cv: Dictionary = {}
 	RoupaGatoI._poli(cv, [-6, -12.5, -10, -14.5, -14, -15, -18, -13.5, -21, -11, -23, -8.5, -23, -7.5, -22, -8, -19, -10, -15, -11.5, -11, -10, -8, -7, -6, -6.5], "a")
@@ -360,7 +361,11 @@ static func _sub_cauda() -> Array:
 	RoupaGatoI._lin(cv, Vector2i(-22, -8), Vector2i(-25, -10), "R")
 	RoupaGatoI._lin(cv, Vector2i(-22, -8), Vector2i(-25, -6), "R")
 	RoupaGatoI._cont(cv, "o")
-	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB, true)]
+	for k2 in cv.keys():
+		var q2: Vector2i = k2
+		if q2.x >= -8 and q2.x <= 8 and q2.y >= int(RoupaGatoI._TOPO_VEST[q2.x]):
+			cv.erase(q2)
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB)]
 
 # ------------------------------------------------------------------ Catchullu (Cthulhu): verde-acinzentado escuro, roxo e olhos amarelos
 ## a/A/d pele verde-acinzentada (média, luz, sombra); m/M/D manto verde-azulado; w/W asa de morcego (membrana escura, luz); y/Y olho amarelo (e brilho);
