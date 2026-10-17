@@ -114,6 +114,14 @@ static func _montar(tipo: int) -> Array:
 			return _mz_garras()
 		Pecas.Tipo.CAUDA_RADIOATIVA:
 			return _mz_cauda()
+		Pecas.Tipo.CABECA_GORILA:
+			return _km_gorila()
+		Pecas.Tipo.PELAGEM_GORILA:
+			return _km_pelagem()
+		Pecas.Tipo.PREDIO_BRINQUEDO:
+			return _km_predio()
+		Pecas.Tipo.BIPLANO_PAPEL:
+			return _km_biplano()
 		_:
 			pass
 	return []
@@ -584,6 +592,106 @@ static func _mz_cauda() -> Array:
 	_mz_placa(cv, -20, -6, 3)
 	_cont(cv, "o")
 	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIAUZILLA, true)]
+
+
+# ------------------------------------------------------------------ King-Miau (Kong de 2005)
+## King-Miau (Kong de 2005): o contorno; h/H/D pelo (médio, luz, sombra); s/S/x cara de pele (médio, luz, sombra); n narinas e olhos;
+## b/B/c prédio (médio, luz, sombra); j janelas; w/W/u/k avião de papel.
+const _PAL_KING := {
+	"o": Color("140c08"), "h": Color("5e4230"), "H": Color("84624a"), "D": Color("34241a"),
+	"s": Color("a89a88"), "S": Color("cabcaa"), "x": Color("6e6256"), "n": Color("22180f"),
+	"b": Color("7c8aa8"), "B": Color("a8b6d0"), "c": Color("4c586e"), "j": Color("f0d070"),
+	"w": Color("f0eee6"), "W": Color("b8b6c0"), "u": Color("4a5a8c"), "k": Color("2a2630"),
+}
+
+# ------------------------------------------------------------------ King-Miau
+static func _km_gorila() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 1, -21, [
+		"....hh......",
+		"...hHHh.....",
+		"..hhhhhhhh..",
+		".hhhhhhhhhh.",
+		"hhhhhhhhhhhh",
+		"hhhhDDDDDDhh",
+		"hhhhDnDDnDhh",
+		"hhhsssssssSh",
+		"hhhsssssssss",
+		".hhxssnsnssx",
+		".hhhxsssssxx",
+		"..hhhhxxxhh.",
+	])
+	_luz(cv, "h", "H", "D")
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_KING)]
+
+const _TOPO_KING := {-8: -9, -7: -10, -6: -11, -5: -12, -4: -13, -3: -14, -2: -15, -1: -15, 0: -15, 1: -15, 2: -14, 3: -13, 4: -12, 5: -11, 6: -10, 7: -9, 8: -8}
+
+static func _km_pelagem() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._corpo_vest(cv, "h", -5, -7, -5, _TOPO_KING)
+	for x in range(-8, 9):
+		var t: int = int(_TOPO_KING[x])
+		if posmod(x, 4) < 2:
+			cv[Vector2i(x, t - 1)] = "h"
+		var b: int = -99
+		for y in range(-16, 0):
+			if cv.has(Vector2i(x, y)):
+				b = y
+		if b > -99 and posmod(x, 4) >= 2:
+			cv.erase(Vector2i(x, b))
+	_luz(cv, "h", "H", "D")
+	for y2 in range(-11, -6):
+		var larg: int = 5 - (y2 + 11)
+		for x2 in range(8 - larg + 1, 9):
+			if x2 >= 4 and cv.has(Vector2i(x2, y2)):
+				cv[Vector2i(x2, y2)] = "s" if y2 > -11 else "S"
+	for p in [Vector2i(-3, -13), Vector2i(-2, -14), Vector2i(0, -14), Vector2i(1, -13), Vector2i(-5, -10), Vector2i(-4, -9)]:
+		if cv.has(p):
+			cv[p] = "H"
+	for x3 in range(5, 8):
+		cv[Vector2i(x3, -5)] = "D"
+	for x4 in range(-8, -4):
+		cv[Vector2i(x4, -5)] = "D"
+	_cont(cv, "o", false)
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_KING)]
+
+static func _km_predio() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 13, -26, [
+		"..B...",
+		"..B...",
+		"..Bb..",
+		"..bc..",
+		"..jc..",
+		"..bc..",
+		".BBbbc",
+		".Bjbjc",
+		".Bbbbc",
+		".Bjbjc",
+		"BBbbbc",
+		"BjbbjC",
+		"BbbbbC",
+		"BjbbjC",
+		"BbbbbC",
+		"BbbbbC",
+		"BcccccC",
+	])
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_KING)]
+
+static func _km_biplano() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, -11, -20, [
+		"wwwuWW",
+		".wwuWW",
+		".wwuW.",
+		"..wuW.",
+		"..wkW.",
+		"...k..",
+	])
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_KING)]
 
 
 static func _fallback(tipo: int) -> Array:
