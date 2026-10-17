@@ -4518,6 +4518,8 @@ class Fundo extends Pixel:
 		for k in n:
 			var sx: float = fposmod(k * 197.0 + semente * 53.0, 1280.0)
 			var sy: float = fposmod(k * 83.0 + semente * 29.0, y_max)
+			if sy < 56.0 and sx < 360.0:
+				continue   # fica fora da faixa do título da luta (um pixel pálido atrás do espaço do título)
 			_ci(Vector2(sx, sy), 1.6, Color(cor.r, cor.g, cor.b, cor.a * (0.5 + 0.25 * float(k % 3))))
 
 	func _montinho(x: float, y: float, r: float, terra: Color) -> void:
