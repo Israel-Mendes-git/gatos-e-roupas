@@ -50,11 +50,11 @@ const _PAL_HOLLOW := {
 	"n": Color("b8c0cc"), "N": Color("e8eef4"), "s": Color("6e7888"), "u": Color("3a2e3e"), "g": Color("8ec8f0"),
 	"l": Color("b6afd2"), "m": Color("726a95"), "r": Color("2a2438"),
 }
-## Silkmiau: o contorno; w/W/d osso (médio, luz, sombra); k olho; a/b/D capa carmesim (médio, luz, sombra); n/N/m fio e novelo (médio, luz,
+## Silkmiau: o contorno; w/W/d osso (médio, luz, sombra); k olho; a/b/D capa bordô (médio, luz, sombra); n/N/m fio e novelo (médio, luz,
 ## sombra); s/S/z aço da agulha (médio, luz, sombra).
 const _PAL_SILK := {
 	"o": Color("0c0b14"), "w": Color("edeae0"), "W": Color("ffffff"), "d": Color("b9b6b0"), "k": Color("14121c"),
-	"a": Color("b02a3a"), "b": Color("dc5a64"), "D": Color("721822"),
+	"a": Color("7c3048"), "b": Color("a65870"), "D": Color("4c1c2e"),
 	"n": Color("e04858"), "N": Color("f59aa0"), "m": Color("8a1e2c"),
 	"s": Color("c4cad4"), "S": Color("f0f4f8"), "z": Color("7a8494"),
 }
@@ -200,29 +200,63 @@ static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 	_cache[ch] = r
 	return r
 
-## Capa comprida da Silkmiau, atrás do corpo: nasce na nuca, esvoaça para trás e a barra acaba em duas pontas (`fase` 0 ou 1).
+## Capa bordô da Silkmiau em sino, atrás do corpo: acompanha o dorso, alarga para trás e para baixo e a barra acaba em bicos
+## (os bicos andam 2 px entre os dois quadros, `fase` 0 ou 1).
 static func _capa_silk(fase: int) -> Dictionary:
 	var cv: Dictionary = {}
-	for k in 19:
-		var x: int = 3 - k
-		var u: float = k / 18.0
-		var onda: float = sin(u * 5.0 - fase * PI * 0.9) * 1.5 * u
-		var topo: int = floori(-13.0 + 6.0 * u + onda * 0.5)
-		var base: int = ceili(-4.6 + 2.2 * u + onda)
-		if base - topo < 2:
-			continue
-		for y in range(topo, base):
+	var lobo: Array = [0, 1, 2, 1]
+	for x in range(-14, 5):
+		var topo: int
+		if x >= -8:
+			topo = int(_TOPO_CORPO[x]) + 2
+		else:
+			topo = mini(-8 + (-9 - x), -4)
+		var hem: int = -1 - int(lobo[((x + fase * 2 + 1) % 4 + 4) % 4])
+		if x < -9:
+			hem = mini(hem, -1 + int(ceil((x + 9) * 0.7)))
+		for y in range(topo, hem + 1):
 			cv[Vector2i(x, y)] = "a"
-		# barra recortada em duas pontas: um entalhe no meio da ponta da capa
-		var cortar: int = 0
-		if k >= 15:
-			cortar = 2
-		elif k >= 13:
-			cortar = 1
-		if cortar > 0:
-			var meio: int = (topo + base) / 2
-			for y2 in range(meio - 1 + (1 if cortar == 1 else 0), meio - 1 + cortar + (1 if cortar == 1 else 0)):
-				cv.erase(Vector2i(x, y2))
+	return cv
+
+## Máscara da Hornet: casco branco em gota invertida (largo no alto, afina até o queixo), dois chifres longos e paralelos que abrem de leve
+## (diapasão, pontas arredondadas; o de trás mais escuro) e dois olhos pretos triangulares grandes, com a ponta para dentro e para baixo.
+static func _mascara_silk() -> Dictionary:
+	var cv: Dictionary = {}
+	_txt(cv, 4, -19, [".wwwww.", "wwwwwww", "wwwwwww", "wwwwwww", "wwwwwww", "wwwwwww", ".wwwwww", ".wwwww.", "..wwww.", "...www.", "....w.."])
+	_canto(cv, "w", "d")
+	var h: Dictionary = {}
+	for s in [[-20, 8, 9], [-21, 8, 9], [-22, 8, 9], [-23, 9, 10], [-24, 9, 10], [-25, 9, 10], [-26, 10, 11], [-27, 10, 11], [-28, 10, 11], [-29, 11, 11]]:
+		for x in range(int(s[1]), int(s[2]) + 1):
+			h[Vector2i(x, int(s[0]))] = "w"
+	_canto(h, "w", "d")
+	for s2 in [[-20, 5, 6], [-21, 5, 6], [-22, 5, 6], [-23, 4, 5], [-24, 4, 5], [-25, 4, 5], [-26, 3, 4], [-27, 3, 4], [-28, 3, 4], [-29, 3, 3]]:
+		for x2 in range(int(s2[1]), int(s2[2]) + 1):
+			h[Vector2i(x2, int(s2[0]))] = "d"
+	for k in h.keys():
+		if not cv.has(k):
+			cv[k] = h[k]
+	for s3 in [[-17, 8, 10], [-16, 8, 10], [-15, 8, 9], [-14, 8, 9], [-13, 8, 8], [-17, 4, 6], [-16, 4, 6], [-15, 5, 6], [-14, 5, 6], [-13, 6, 6]]:
+		for x3 in range(int(s3[1]), int(s3[2]) + 1):
+			cv[Vector2i(x3, int(s3[0]))] = "k"
+	_px(cv, 6, -18, "W")
+	_px(cv, 5, -17, "W")
+	_cont(cv, "o")
+	return cv
+
+## Agulha da Hornet (17 px): anel redondo na ponta de trás (o fio passa por ele) e haste de 1 px até a ponta.
+static func _agulha_silk() -> Dictionary:
+	var cv: Dictionary = {}
+	for r in [[-13, 12, 14], [-12, 11, 11], [-12, 15, 15], [-11, 11, 11], [-11, 15, 15], [-10, 11, 11], [-10, 15, 15], [-9, 12, 14]]:
+		for x in range(int(r[1]), int(r[2]) + 1):
+			cv[Vector2i(x, int(r[0]))] = "s"
+	for x2 in range(16, 28):
+		cv[Vector2i(x2, -11)] = "s"
+	for x3 in range(12, 15):
+		cv[Vector2i(x3, -13)] = "S"
+		cv[Vector2i(x3, -9)] = "z"
+	for t in [Vector2i(12, -12), Vector2i(12, -11), Vector2i(12, -10), Vector2i(12, -9), Vector2i(12, -8), Vector2i(13, -7), Vector2i(13, -6), Vector2i(12, -5), Vector2i(12, -4)]:
+		cv[t] = "n"
+	_cont(cv, "o")
 	return cv
 
 static func _montar(tipo: int, fase: int) -> Array:
@@ -379,67 +413,35 @@ static func _montar(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
 		# ---------------------------------------------------------------- Silkmiau (Hornet): a máscara pontuda de chifres longos
 		Pecas.Tipo.MASCARA_CASCA:
-			# casco branco estreito de queixo pontudo cobrindo o rosto todo, olhos pretos em fenda triangular inclinada e dois chifres LONGOS
-			# que sobem e curvam para trás em gancho (o de trás, mais curto e escuro)
-			_txt(cv, 4, -19, [
-				"..wwww..",
-				".wwwwww.",
-				"wwwwwwww",
-				"wwwwwwww",
-				"wwwwwwww",
-				"wwwwwwww",
-				".wwwwwww",
-				".wwwwww.",
-				"..wwwww.",
-				"...wwww.",
-				"....ww..",
-			])
-			_canto(cv, "w", "d")
-			for q0 in [Vector2i(7, -15), Vector2i(8, -15), Vector2i(7, -14), Vector2i(8, -14), Vector2i(9, -14), Vector2i(10, -14), Vector2i(9, -13),
-					Vector2i(10, -13), Vector2i(5, -15), Vector2i(5, -14)]:
-				cv[q0] = "k"
-			_px(cv, 7, -19, "W")
-			_px(cv, 6, -18, "W")
-			var hc: Dictionary = {}
-			for q in [Vector2i(8, -20), Vector2i(9, -20), Vector2i(7, -21), Vector2i(8, -21), Vector2i(6, -22), Vector2i(7, -22), Vector2i(5, -23),
-					Vector2i(6, -23), Vector2i(3, -24), Vector2i(4, -24), Vector2i(5, -24), Vector2i(3, -23)]:
-				hc[q] = "w"
-			_canto(hc, "w", "d")
-			for q2 in [Vector2i(4, -19), Vector2i(5, -19), Vector2i(3, -20), Vector2i(4, -20), Vector2i(2, -21), Vector2i(3, -21), Vector2i(0, -22),
-					Vector2i(1, -22), Vector2i(2, -22), Vector2i(0, -21)]:
-				hc[q2] = "d"
-			for kk in hc.keys():
-				if not cv.has(kk):
-					cv[kk] = hc[kk]
-			_cont(cv, "o")
+			# casco branco em gota invertida cobrindo o rosto todo, dois chifres longos paralelos em diapasão e olhos triangulares grandes
+			cv = _mascara_silk()
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_SILK)]
 		Pecas.Tipo.CAPA_CARMESIM:
-			# a capa carmesim comprida esvoaça ATRÁS do corpo (acompanha o dorso e cai pela anca; barra em duas pontas, balança em 2 quadros);
+			# a capa bordô em sino cai ATRÁS do corpo (acompanha o dorso e alarga para trás; barra em bicos, balança em 2 quadros);
 			# na frente só o top vermelho curto de gola alta, o cinto escuro e a saia que sobe em arco sob a barriga
 			var cp: Dictionary = _capa_silk(fase)
 			_luz(cp, "a", "b", "D")
 			_cont(cp, "o")
-			_corpo(cv, "a", -5, -7, -6)
+			_corpo(cv, "a", -4, -6, -5)
 			_gola(cv, "a")
 			_luz(cv, "a", "b", "D")
 			_px(cv, 3, -15, "D")
 			_px(cv, 3, -14, "D")
 			_linsobre(cv, Vector2i(3, -11), Vector2i(5, -9), "b")
-			_sobre(cv, -7, -9, 3, -8, "D")
-			_dobras(cv, [-5, -2], "D")
+			_dobras(cv, [-5, -2, 1], "D")
+			for xb in range(-7, 8):
+				if ((xb + fase * 2) % 4 + 4) % 4 == 0:
+					var yb: int = -99
+					for yy in range(-14, 0):
+						if cv.has(Vector2i(xb, yy)):
+							yb = yy
+					if yb > -99:
+						cv.erase(Vector2i(xb, yb))
 			_cont(cv, "o", false)
 			return [_lay(cp, RoupaGato.Onde.CORPO, _PAL_SILK, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_SILK)]
 		Pecas.Tipo.AGULHA_GIGANTE:
-			# agulha longa e fina: a cabeça com o olho grande (o fio vermelho passa por ele e cai ondulando) e a haste de 2 px que afina até a ponta
-			_ret(cv, 11, -13, 15, -8, "s")
-			for e in [Vector2i(12, -12), Vector2i(13, -12), Vector2i(12, -11), Vector2i(13, -11), Vector2i(12, -10), Vector2i(13, -10)]:
-				cv.erase(e)
-			_ret(cv, 15, -11, 23, -9, "s")
-			_ret(cv, 23, -11, 27, -10, "s")
-			_luz(cv, "s", "S", "z")
-			for t in [Vector2i(12, -12), Vector2i(12, -11), Vector2i(12, -10), Vector2i(12, -9), Vector2i(12, -8), Vector2i(13, -7), Vector2i(13, -6), Vector2i(12, -5), Vector2i(12, -4)]:
-				cv[t] = "n"
-			_cont(cv, "o")
+			# agulha longa e fina: anel na ponta de trás (o fio vermelho passa por ele e cai ondulando) e haste de 1 px
+			cv = _agulha_silk()
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_SILK)]
 		Pecas.Tipo.NOVELO_SEDA:
 			# novelo vermelho redondo com duas voltas de fio mais claras e a ponta solta pendendo

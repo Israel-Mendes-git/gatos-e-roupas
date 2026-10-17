@@ -61,7 +61,7 @@ const _PAL: Array = [
 	# lote 4 da expansão (43 a 48)
 	{"a": Color("9a9aa4"), "A": Color("c8c8d0"), "d": Color("5a5a64"), "b": Color("2a2a30"), "B": Color("5a5a66"), "e": Color("e8e8f0")},   # miau-noir
 	{"a": Color("f0f4f8"), "A": Color("ffffff"), "d": Color("b8c0cc"), "b": Color("1c1c24"), "B": Color("4a4a58"), "e": Color("ffffff")},   # hollowmiau
-	{"a": Color("e0344c"), "A": Color("ff7a8a"), "d": Color("9a1428"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # silkmiau
+	{"a": Color("7c3048"), "A": Color("a65870"), "d": Color("4c1c2e"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # silkmiau
 	{"a": Color("f2b01a"), "A": Color("ffe07a"), "d": Color("b0760a"), "b": Color("e87a1a"), "B": Color("ffb060"), "e": Color("3a80e8")},   # super miaujin
 	{"a": Color("8c6a3c"), "A": Color("b8905e"), "d": Color("5a4026"), "b": Color("3a2a1a"), "B": Color("6a5030"), "e": Color("e8c860")},   # o arqueólogo
 	{"a": Color("e03a3a"), "A": Color("ff7a70"), "d": Color("8c1a22"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # treinador
@@ -498,15 +498,18 @@ const _CHAPEU: Array = [
 		".oaakaakko.",
 		".oaakaakko.",
 		".oddddddo.."]},
-	# 45 silkmiau: máscara branca de queixo pontudo e dois chifres longos curvados para trás em gancho
+	# 45 silkmiau: máscara branca em gota (larga no alto, queixo estreito), dois chifres longos paralelos em diapasão e olhos triangulares
 	{"cheio": true, "l": [
-		"oo.........",
-		"oAooo..ooo.",
-		".ooAAooAAo.",
-		"...ooAAAo..",
-		".oAAaaaAAo.",
-		"oakkaaakkao",
-		".oddddddo.."]},
+		".ow.....ow.",
+		".owo...owo.",
+		".owo...owo.",
+		"..owo.owo..",
+		".owwwwwwwo.",
+		".okkkwwkkko",
+		"..okkwwkko.",
+		"..oWkwwkWo.",
+		"...oWwwWo..",
+		"....ooo...."]},
 	# 46 super miaujin: cabelo dourado em espetos
 	{"cheio": false, "l": [
 		"..o..o....o",
