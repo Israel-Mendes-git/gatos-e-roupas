@@ -1467,7 +1467,7 @@ func _metas_fora(e: Estado, todas: Array) -> void:
 		yy += 62.0
 	# as ruas do 3º ato, em linhas mais baixas por baixo dos lugares de fora
 	yy += 2.0
-	_txt("Ruas do bairro  ·  %d/%d vencidas no 3º ato" % [e.vencidos_no_ato(3), Fases.TOTAL], Vector2(COL_D_X + 6.0, yy + 12.0), 15, TINTA)
+	_txt("Ruas do bairro  ·  %d/%d vencidas no 3º ato" % [e.vencidos_no_ato(3), Fases.TOTAL] + ((" · Invasão: onda %d" % e.recordes[Fases.TOTAL * 2]) if e.recordes[Fases.TOTAL * 2] > 0 else (" · Invasão: sem recorde" if e.tudo_vencido() else "")), Vector2(COL_D_X + 6.0, yy + 12.0), 15, TINTA)
 	yy += 20.0
 	for i in Fases.TOTAL:
 		var li3: int = i + Fases.TOTAL * 2

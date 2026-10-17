@@ -70,6 +70,7 @@ func _init() -> void:
 			nivel_fim.append(0.0)
 			torre_fim.append(0.0)
 			mods_fim.append(0.0)
+		var inv_ruas: Array[int] = []      # idem, nas ruas (cinco gangues misturadas)
 		var completas: int = 0
 		var pecas_fim: float = 0.0
 		var marcas_fim: float = 0.0
@@ -126,6 +127,7 @@ func _init() -> void:
 						todas.append(p)
 			pecas_fim += todas.size()
 			for p in todas:
+				inv_ruas.append(_jogar_invasao(pol, e, (g + 3) % Fases.TOTAL + 1, false, 9000 + g, true))
 				marcas_fim += p.marcas.size()
 				if p.raridade == Pecas.Raridade.RARA:
 					raras += 1
@@ -143,7 +145,7 @@ func _init() -> void:
 			if f == Fases.TOTAL - 1:
 				print("      nivel medio dos gatos ao fim do ato %d: %.1f (entre as campanhas que chegaram)" % [fa / Fases.TOTAL + 1, nivel_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos)])
 				print("      torre ao fim do ato %d: soma dos niveis das melhorias %.1f (de %d), modulos liberados %.1f" % [fa / Fases.TOTAL + 1, torre_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos), 4 * Torre.MELHORIA_NIVEL_MAX, mods_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos)])
-		print("   invasao sem fim (time do fim do jogo): comodo %s | lugar de fora %s" % [_resumo_inv(inv_casa), _resumo_inv(inv_fora)])
+		print("   invasao sem fim (time do fim do jogo): comodo %s | lugar de fora %s | ruas %s" % [_resumo_inv(inv_casa), _resumo_inv(inv_fora), _resumo_inv(inv_ruas)])
 		_imprimir_poderes(n_jogos)
 	quit()
 
@@ -279,8 +281,8 @@ func _imprimir_poderes(n_jogos: int) -> void:
 	Simulacao.tele_i.clear()
 
 ## Ondas de invasão vencidas até a torre cair (limite de 60).
-func _jogar_invasao(pol: String, e: Estado, f: int, fora: bool, semente: int) -> int:
-	e.iniciar_invasao(f, fora)
+func _jogar_invasao(pol: String, e: Estado, f: int, fora: bool, semente: int, ruas: bool = false) -> int:
+	e.iniciar_invasao(f, fora, ruas)
 	var vencidas: int = 0
 	while vencidas < 60:
 		_preparar(pol, e, false)

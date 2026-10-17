@@ -850,8 +850,9 @@ func _escolher_fase(f: int, invasao: bool = false, rejogo_casa: bool = false, se
 		if not estado.campanha_vencida():
 			return
 		var fora: bool = mapa_casa != null and mapa_casa.vista_fora() and estado.vencido[f - 1] >= 2
-		invasao_rec_ini = estado.recordes[f - 1 + (Fases.TOTAL if fora else 0)]
-		estado.iniciar_invasao(f, fora)
+		var ruas: bool = fora and mapa_casa.vista_ruas() and estado.tudo_vencido()
+		invasao_rec_ini = estado.recordes[Fases.TOTAL * 2 if ruas else f - 1 + (Fases.TOTAL if fora else 0)]
+		estado.iniciar_invasao(f, fora, ruas)
 	elif secreto:
 		estado.iniciar_secreto()
 	elif rejogo_casa:
@@ -1107,7 +1108,7 @@ func _fim_fase(vitoria: bool) -> void:
 	fim_vitoria = vitoria
 	if not vitoria and fim_invasao:
 		# invasão sem fim: a torre caiu
-		var rec: int = estado.recordes[fi]
+		var rec: int = estado.recordes[estado.indice_recorde()]
 		fim_titulo.text = "Invasão encerrada"
 		fim_titulo.add_theme_color_override("font_color", Color(1, 0.55, 0.4))
 		fim_sub.text = "Invasão encerrada na onda %d em %s. O time se levantou; o que caiu e os troféus ficam com você." % [estado.onda_invasao, nome]
@@ -3248,7 +3249,7 @@ func _draw() -> void:
 		var t_inv: String = "Invasão · %s" % Fases.nome_do_lugar(fi)
 		Desenho.texto(self, t_inv, Vector2(24, 36), _tam_cabe(t_inv, [24, 22, 20, 18], 170.0), Color(1, 1, 1), -1.0, 5)
 		Desenho.texto(self, "Onda %d" % estado.onda_invasao, Vector2(24, 62), 24, Color(1, 0.95, 0.75), -1.0, 5)
-		var r_inv: int = estado.recordes[fi]
+		var r_inv: int = estado.recordes[estado.indice_recorde()]
 		Desenho.texto(self, "Recorde: onda %d" % r_inv if r_inv > 0 else "Sem recorde ainda", Vector2(26, 78), 14, Desenho.DOURADO, -1.0, 3)
 	else:
 		Desenho.texto(self, Fases.nome_do_lugar(fi), Vector2(24, 50), 34, Color(1, 1, 1), -1.0, 6)

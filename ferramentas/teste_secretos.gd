@@ -26,6 +26,7 @@ func _init() -> void:
 	_alternancia()
 	_premio()
 	_save()
+	_invasao_ruas()
 	print("FALHAS: %d" % falhas)
 	quit(1 if falhas > 0 else 0)
 
@@ -150,6 +151,50 @@ func _save() -> void:
 	_ok(not antigo.secreto and not antigo.feitos.has("schro"), "campo opcional: save antigo sem o feito")
 	var d: Dictionary = e._dados_curso()
 	_ok(d.is_empty() or d.has("secreto"), "curso leva o campo opcional")
+
+## Invasão sem fim nas ruas: só com o 3º ato vencido, gangues misturadas, recorde próprio (posição 10).
+func _invasao_ruas() -> void:
+	var e: Estado = _estado()
+	e.iniciar_invasao(4, true, true)
+	_ok(not e.invasao_ruas(), "sem o 3º ato vencido a invasão das ruas não abre")
+	e.fases_vencidas = Fases.TOTAL
+	e.vencido = [3, 3, 3, 3, 3]
+	e.iniciar_invasao(4, true, true)
+	_ok(e.invasao_ruas() and e.ato == 3 and e.invasao, "invasão das ruas em curso")
+	_ok(e.recordes.size() == 11 and e.indice_recorde() == 10, "recorde próprio (posição 10)")
+	var vistas: Dictionary = {}
+	for onda in range(1, 31):
+		e.onda_invasao = onda
+		e.onda = (onda - 1) % Balanco.ONDAS_TOTAIS + 1
+		e.preparar_onda()
+		for it in e.plano:
+			_ok(it.get("rival", false) and int(it["gangue"]) >= 0 and int(it["gangue"]) < 5, "todo bicho é rival de uma gangue")
+			vistas[int(it["gangue"])] = true
+			if it.get("elite", false):
+				for pc in it["pecas"]:
+					if pc != null:
+						_ok(Pecas.CONJUNTO_DE[pc.tipo] in Fases.CONJUNTOS[10 + int(it["gangue"])], "fantasiado veste fantasia da própria gangue")
+		if not e.chefe.is_empty():
+			_ok(e.gangue_chefe >= 0 and e.lugar_chefe() == 10 + e.gangue_chefe, "chefe de uma gangue (lugar %d)" % e.lugar_chefe())
+			_ok(Fases.chefe_base(e.lugar_chefe()) == Fases.Chefe.DOM_GATLEONE + e.gangue_chefe, "chefe com a mecânica da gangue")
+	_ok(vistas.size() == 5, "as cinco gangues aparecem (%d)" % vistas.size())
+	# vencer uma onda anota o recorde nas ruas e não toca nos de lugar
+	e.iniciar_invasao(2, true, true)
+	var sim := Simulacao.new()
+	sim.gerar_eventos = false
+	sim.iniciar(e, 3)
+	sim.terminada = true
+	sim.vitoria = true
+	e.encerrar_onda(sim)
+	_ok(e.recordes[10] == 1 and e.recordes[6] == 0 and e.recordes[1] == 0, "recorde das ruas anotado à parte")
+	_ok(e.melhor_invasao() >= 1, "melhor_invasao conta as ruas")
+	# luta curta para conferir que a simulação aguenta o plano misto
+	var e2: Estado = _estado()
+	e2.fases_vencidas = Fases.TOTAL
+	e2.vencido = [3, 3, 3, 3, 3]
+	e2.iniciar_invasao(1, true, true)
+	var s2 := _lutar(e2, 7, 60.0)
+	_ok(s2.tempo > 1.0, "a luta das ruas roda")
 
 ## Mede a vitória de primeira com um time de fim de jogo (peças Míticas nível 12, 5 gatos).
 func _medir(n: int) -> void:

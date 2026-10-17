@@ -372,6 +372,8 @@ const INVASAO_VIDA_ONDA2 := 0.010    # ...e mais isto vezes o quadrado das ondas
 const INVASAO_DANO_ONDA2 := 0.003
 const INVASAO_FORA_VIDA := 0.38        # a invasão num lugar de fora começa abaixo da força do segundo ato...
 const INVASAO_FORA_DANO := 0.5        # ...porque o time já entra nela no degrau mais alto
+const INVASAO_RUAS_VIDA := 0.26        # invasão nas ruas (3º ato, 5 gangues misturadas): calibrar com o simulador (recorde mediano ~ o de fora)
+const INVASAO_RUAS_DANO := 0.5
 const INVASAO_VIDA_ONDA := 0.30     # +vida dos bichos por onda de invasão vencida
 const INVASAO_DANO_ONDA := 0.13     # +dano dos bichos por onda de invasão vencida
 
@@ -533,7 +535,6 @@ const FALANGE_FLANCO := 60.0        # golpe vindo de mais de |dy| = isto é de f
 const MUTACAO_LIMIAR := 0.30
 const MUTACAO_DANO := 0.30
 const MUTACAO_VEL := 0.30
-# ---- Chefes de gangue (3º ato, etapa 5; notas/ato3_proposta.md, seção 2)
 # ---- Gato de Schrödinger (chefe secreto, caixa do Sótão): alterna entre vivo e morto
 const SCHRO_T := 6.0                # segundos em cada estado
 const SCHRO_AVISO := 1.2            # aviso antes de cada troca
@@ -541,6 +542,7 @@ const SCHRO_VIDA := 4.0             # multiplicador de vida do chefe (calibrar c
 const SCHRO_DANO := 2.0
 const SCHRO_ATORDOA := 0.6          # morto: a pata atordoa o gato atingido
 const SCHRO_TROFEUS := 20           # troféus extras na primeira vitória
+# ---- Chefes de gangue (3º ato, etapa 5; notas/ato3_proposta.md, seção 2)
 # acerto por chefe de gangue (Dom Gatleone, Imortal Miau, Programa Mestre, Rei Miaunidas, Magnetomiau), sobre a vida e o dano do chefe
 const CHEFE_GANGUE_VIDA: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.4]
 const CHEFE_GANGUE_DANO: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.15]
@@ -1062,8 +1064,8 @@ const CHEFE_PODER_CONJ: Array[int] = [
 	Pecas.Conjunto.TROVAO,       # Programa Mestre: Trovoada
 	Pecas.Conjunto.VIKING,       # Rei Miaunidas: Fúria
 	Pecas.Conjunto.MAGO,         # Magnetomiau: Relâmpago
-]
 	Pecas.Conjunto.MAGO,         # Gato de Schrödinger: Relâmpago
+]
 
 # ---------- Geometria do campo ----------
 const TORRE_X := 175.0
@@ -1091,7 +1093,8 @@ static func progresso_ato(ato: int, vencidos: int, onda: int) -> int:
 
 ## `ato` > 1: famílias misturadas e peças de qualquer cômodo; `vencidos` = cômodos já vencidos nesse ato.
 ## `pesos_fantasia` (fantasia -> peso) deixa a que falta cair mais; vazio = sorteio uniforme.
-static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0, pesos_fantasia: Dictionary = {}) -> Array:
+## `mistura` (só no 3º ato, invasão das ruas): cada rival é de uma gangue sorteada, com as peças e os tipos dela.
+static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0, pesos_fantasia: Dictionary = {}, mistura: bool = false) -> Array:
 	var p: int = progresso(fase, onda) if ato <= 1 else progresso_ato(ato, vencidos, onda)
 	var degrau: float = (fase - 1) if ato <= 1 else (Fases.TOTAL - 1) + vencidos * 0.5
 	var lugar: int = Fases.TOTAL * (ato - 1) + fase   # lugar global, 1 a 15
@@ -1101,6 +1104,7 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 	var plano: Array = []
 	var nivel: int = mini(INIMIGO_NIVEL_MAX_ATO[clampi(ato - 1, 0, 2)], int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)))
 	for i in n:
+		var gi: int = rng.randi_range(0, Fases.TOTAL - 1) if mistura else fase - 1
 		var q: float = PECAS_BASE + p * PECAS_POR_ONDA
 		var qtd: int = int(floor(q))
 		if rng.randf() < q - floor(q):
@@ -1114,22 +1118,46 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 		var pecas: Array = [null, null, null, null]
 		for k in qtd:
 			var s: int = slots[k]
-			pecas[s] = Peca.new(Fases.pecas_do_slot(lugar - 1, s, ato, rng, RIVAL_FRACAO_DO_LUGAR if ato >= 3 else -1.0), nivel)
+			pecas[s] = Peca.new(Fases.pecas_do_slot(lugar - 1 + (gi - (fase - 1) if mistura else 0), s, ato, rng, RIVAL_FRACAO_DO_LUGAR if ato >= 3 else -1.0), nivel)
 		var item: Dictionary = {"pecas": pecas, "tipo": Unidade.Tipo.COMUM, "elite": false}
 		if ato >= 3:
 			item["rival"] = true         # 3º ato: 100% gato da gangue do lugar (sem mistura)
-			item["gangue"] = fase - 1
+			item["gangue"] = gi
 		elif ato > 1 and rng.randf() >= ATO_FAMILIA_DA_CASA:
 			item["fam"] = rng.randi_range(0, Fases.TOTAL - 1)
 		plano.append(item)
-	if ato >= 3:
-		_sortear_tipos_gangue(plano, fase - 1, rng)
+	if mistura:
+		for g in Fases.TOTAL:
+			var grupo: Array = []
+			for it in plano:
+				if int(it["gangue"]) == g:
+					grupo.append(it)
+			_sortear_tipos_gangue(grupo, g, rng)
+		_elites_mistos(plano, onda, nivel, rng, pesos_fantasia)
 	else:
-		_sortear_tipos(plano, p, rng)
-	_sortear_elites(plano, lugar, onda, nivel, rng, pesos_fantasia)
+		if ato >= 3:
+			_sortear_tipos_gangue(plano, fase - 1, rng)
+		else:
+			_sortear_tipos(plano, p, rng)
+		_sortear_elites(plano, lugar, onda, nivel, rng, pesos_fantasia)
 	if ato >= 3:
 		_marcar_lider(plano)
 	return plano
+
+## Invasão das ruas: fantasiados da gangue de cada rival escolhido (os últimos comuns a entrar).
+static func _elites_mistos(plano: Array, onda: int, nivel: int, rng: RandomNumberGenerator, pesos: Dictionary) -> void:
+	if onda < ELITE_ONDA_MIN:
+		return
+	var quantos: int = 2 if onda >= ELITE_ONDA_DOIS and not tem_chefe(onda) else 1
+	var comuns: Array = []
+	for i in plano.size():
+		if plano[i]["tipo"] == Unidade.Tipo.COMUM:
+			comuns.append(i)
+	for k in mini(quantos, comuns.size()):
+		var i: int = comuns[comuns.size() - 1 - k]
+		var g: int = int(plano[i]["gangue"])
+		plano[i]["pecas"] = fantasia(Fases.TOTAL * 2 + g + 1, nivel, ELITE_PECAS[g], rng, pesos)
+		plano[i]["elite"] = true
 
 ## 3º ato: o rival mais forte da onda é o líder (fantasiado, depois grandalhão, depois quem veste mais peças).
 ## Sem sorteio, para não mexer no rng da luta; em empate fica o primeiro.

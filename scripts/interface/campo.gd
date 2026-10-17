@@ -6875,8 +6875,8 @@ func _dica_poder(i: int) -> void:
 func _hud() -> void:
 	var nome_fase: String = Fases.nome_do_lugar(estado.lugar())
 	if estado.invasao:
-		Desenho.texto(self, "Invasão · %s · Onda %d" % [nome_fase, estado.onda_invasao], Vector2(20, 40), 30, Color(1, 1, 1), -1.0, 4)
-		var rec_h: int = estado.recordes[estado.lugar()]
+		Desenho.texto(self, "Invasão · %s · Onda %d" % ["as ruas" if estado.invasao_ruas() else nome_fase, estado.onda_invasao], Vector2(20, 40), 30, Color(1, 1, 1), -1.0, 4)
+		var rec_h: int = estado.recordes[estado.indice_recorde()]
 		Desenho.texto(self, ("Recorde: onda %d" % rec_h) if rec_h > 0 else "Sem recorde ainda", Vector2(22, 62), 16, Desenho.DOURADO, -1.0, 3)
 		if estado.onda == Balanco.ONDAS_TOTAIS:
 			Desenho.texto(self, "Onda de chefe", Vector2(190, 62), 16, Color(1.0, 0.45, 0.4), -1.0, 3)

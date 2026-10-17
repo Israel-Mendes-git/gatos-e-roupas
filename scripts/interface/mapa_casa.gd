@@ -321,7 +321,9 @@ func botao_troca_vista(bt: int) -> bool:
 
 ## Lugar de fora (1..5) que já foi vencido no 2º ato e por isso oferece a invasão sem fim.
 func invasao_fora_liberada(f: int) -> bool:
-	return not _ruas and f >= 1 and f <= Fases.TOTAL and p.estado.vencido[f - 1] >= 2
+	if _ruas:
+		return f >= 1 and f <= Fases.TOTAL and p.estado.tudo_vencido()   # nas ruas a invasão mistura as cinco gangues e abre com o 3º ato vencido
+	return f >= 1 and f <= Fases.TOTAL and p.estado.vencido[f - 1] >= 2
 
 ## Qual botão do mapa está sob o ponto (só existem com a campanha vencida).
 static func botao_em(pos: Vector2, vencida: bool) -> int:
@@ -1586,8 +1588,8 @@ func _painel_lateral(f: int) -> void:
 			if invasao_fora_liberada(f):
 				_botao_painel(BT_INVASAO, "Invasão sem fim", UIComum.B_LARANJA)
 			else:
-				# nas ruas não existe invasão sem fim (por enquanto); no lado de fora ela abre ao vencer o lugar no 2º ato
-				var aviso: String = "Nas ruas ainda não há invasão sem fim." if _ruas else "Vença no 2º ato para liberar a invasão"
+				# nas ruas ela abre com o 3º ato inteiro vencido; no lado de fora, ao vencer o lugar no 2º ato
+				var aviso: String = "Vença o 3º ato inteiro para liberar a invasão das ruas" if _ruas else "Vença no 2º ato para liberar a invasão"
 				var lv: Array[String] = p._quebrar(aviso, 12, lr)
 				for k in mini(lv.size(), 2):
 					Desenho.texto(cv, lv[k], Vector2(xr, 348.0 + 14.0 * k), 12, Color(1, 1, 1, 0.5))
@@ -1634,12 +1636,12 @@ func _painel_lateral(f: int) -> void:
 		Desenho.icone(cv, Pecas.CONJUNTO_PECAS[c][0], pq, 24.0)
 	if oferta and (not _fora or invasao_fora_liberada(f)):
 		# recorde da invasão neste lugar (cômodo ou, lá fora, o lugar de fora: posições 5..9), ao lado das fantasias
-		var rec: int = est.recordes[li]
+		var rec: int = est.recordes[Fases.TOTAL * 2 if _ruas else li]   # nas ruas o recorde é um só (as cinco gangues misturadas)
 		var txt_rec: String = "Recorde: onda %d" % rec if rec > 0 else "Sem recorde ainda"
 		var chip_r := Rect2(x0, 563.0, larg, 26.0)
 		cv.draw_rect(chip_r, Color(0.3, 0.22, 0.08, 0.9) if rec > 0 else Color(0.15, 0.1, 0.12, 0.9))
 		cv.draw_rect(chip_r, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.2), false, 2.0)
-		Desenho.texto(cv, "Invasão sem fim  ·  " + txt_rec, Vector2(x0, 582), 15, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.6), larg, 3)
+		Desenho.texto(cv, ("Invasão das ruas  ·  " if _ruas else "Invasão sem fim  ·  ") + txt_rec, Vector2(x0, 582), 15, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.6), larg, 3)
 
 ## O que falta vencer no 3º ato para abrir o lugar `f` (4 = Arena da Praça, 5 = Telhados e Antenas).
 static func _texto_bloqueio_ruas(f: int) -> String:
