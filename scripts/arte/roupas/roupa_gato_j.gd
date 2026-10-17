@@ -117,9 +117,9 @@ static func _montar(tipo: int) -> Array:
 		Pecas.Tipo.PELAGEM_GORILA:
 			return _km_pelagem()
 		Pecas.Tipo.PREDIO_BRINQUEDO:
-			return _km_predio()
+			return _km_mao()
 		Pecas.Tipo.BIPLANO_PAPEL:
-			return _km_biplano()
+			return _km_banana()
 		_:
 			pass
 	return []
@@ -678,8 +678,7 @@ static func _mz_cauda() -> Array:
 const _PAL_KING := {
 	"o": Color("140c08"), "h": Color("5e4230"), "H": Color("84624a"), "D": Color("34241a"),
 	"s": Color("6c665f"), "S": Color("8e8880"), "x": Color("3e3a36"), "n": Color("22180f"),
-	"b": Color("7c8aa8"), "B": Color("a8b6d0"), "c": Color("4c586e"), "j": Color("f0d070"),
-	"w": Color("f0eee6"), "W": Color("b8b6c0"), "u": Color("4a5a8c"), "k": Color("2a2630"),
+	"y": Color("f2d23a"), "Y": Color("fff08a"), "z": Color("b8921c"), "T": Color("5a3a1c"), "w": Color("e8dcb0"),
 }
 
 # ------------------------------------------------------------------ King-Miau
@@ -734,39 +733,31 @@ static func _km_pelagem() -> Array:
 	_cont(cv, "o", false)
 	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_KING)]
 
-static func _km_predio() -> Array:
+static func _km_mao() -> Array:
 	var cv: Dictionary = {}
-	_txt(cv, 13, -26, [
-		"..B...",
-		"..B...",
-		"..Bb..",
-		"..bc..",
-		"..jc..",
-		"..bc..",
-		".BBbbc",
-		".Bjbjc",
-		".Bbbbc",
-		".Bjbjc",
-		"BBbbbc",
-		"BjbbjC",
-		"BbbbbC",
-		"BjbbjC",
-		"BbbbbC",
-		"BbbbbC",
-		"BcccccC",
+	_txt(cv, 11, -16, [
+		"..hhSSSss..",
+		".hhhSssssS.",
+		"hhhHsssssss",
+		"hhhhsssxxx.",
+		"hhhhSssssss",
+		"hhhhsssxxx.",
+		".hhhSssssss",
+		".hhhhsssxx.",
+		"..hhhsssss.",
 	])
+	_luz(cv, "h", "H", "D")
 	_cont(cv, "o")
 	return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_KING)]
 
-static func _km_biplano() -> Array:
+static func _km_banana() -> Array:
 	var cv: Dictionary = {}
-	_txt(cv, -11, -20, [
-		"wwwuWW",
-		".wwuWW",
-		".wwuW.",
-		"..wuW.",
-		"..wkW.",
-		"...k..",
+	_txt(cv, -12, -17, [
+		"T.......T",
+		"yy.....yy",
+		"yyy...yyz",
+		".yyyyyyz.",
+		"..zzzzz..",
 	])
 	_cont(cv, "o")
 	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_KING)]
