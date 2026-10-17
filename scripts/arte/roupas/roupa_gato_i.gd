@@ -41,12 +41,12 @@ const _PAL_NOIR := {
 	"m": Color("4a4852"), "l": Color("d8d8dc"), "q": Color("e8e6e2"),
 	"t": Color("a68a5a"), "T": Color("d2b882"), "u": Color("6e5a38"), "p": Color("2a2830"), "w": Color("5e5c66"),
 }
-## Hollowmiau: o contorno; w/W/d osso (médio, luz, sombra); k/e olho (preto, brilho); a/b/D manto azul-marinho (médio, luz, sombra); n/N/s aço
+## Hollowmiau: o contorno; w/W/d osso (médio, luz, sombra); k/e olho (preto, brilho); a/b/D manto grafite-azulado (médio, luz, sombra); n/N/s aço
 ## do prego (médio, luz, sombra); u couro do punho; g vidro da ampola (e a alma, em W).
 const _PAL_HOLLOW := {
 	"o": Color("0c0b14"), "w": Color("edeae0"), "W": Color("ffffff"), "d": Color("b9b6b0"),
 	"k": Color("14121c"), "e": Color("3a3850"),
-	"a": Color("2f3e6a"), "b": Color("5666a0"), "D": Color("1b2442"),
+	"a": Color("3d414f"), "b": Color("5e647a"), "D": Color("262833"),
 	"n": Color("b8c0cc"), "N": Color("e8eef4"), "s": Color("6e7888"), "u": Color("3a2e3e"), "g": Color("8ec8f0"),
 	"l": Color("b6afd2"), "m": Color("726a95"), "r": Color("2a2438"),
 }
@@ -218,6 +218,77 @@ static func _capa_silk(fase: int) -> Dictionary:
 			cv[Vector2i(x, y)] = "a"
 	return cv
 
+## Colunas ocupadas (topo e base) de `cv` na coluna x; [99, -99] se vazia.
+static func _extremos(cv: Dictionary, x: int) -> Array:
+	var t: int = 99
+	var b: int = -99
+	for y in range(-20, 3):
+		if cv.has(Vector2i(x, y)):
+			t = mini(t, y)
+			b = maxi(b, y)
+	return [t, b]
+
+## Manto do Hollowmiau: poncho grafite de dobras verticais inclinadas e barra em pontas (período de 5 colunas: 0, 2, 0, 3, 1 px de ponta),
+## mais alto nos lados e em arco sob a barriga e no peito para as patas aparecerem; a camada de trás cai pela anca.
+static func _manto_hollow() -> Array:
+	var cv: Dictionary = {}
+	var dente: Array = [0, 2, 0, 3, 1]
+	for x in range(-8, 9):
+		var base: int = -6
+		if x == -8 or x == 8:
+			base = -8
+		elif x == -7 or x == 7:
+			base = -7
+		elif x >= -2 and x <= 2:
+			base = -7
+		elif x >= 4 and x <= 6:
+			base = -5
+		var hem: int = base - 2 + int(dente[posmod(x + 1, 5)])
+		for y in range(int(_TOPO_CORPO[x]) - (1 if (x >= -3 and x <= 2) else 0), hem + 1):
+			cv[Vector2i(x, y)] = "a"
+	_gola(cv, "a")
+	for x in range(-8, 9):
+		if posmod(x + 1, 5) != 0:
+			continue
+		var ci: Array = _extremos(cv, x)
+		var t0: int = int(ci[0])
+		for y in range(t0 + 3, int(ci[1]) + 1):
+			var xx: int = x - int((y - t0) / 4.0)
+			if cv.has(Vector2i(xx, y)):
+				cv[Vector2i(xx, y)] = "D"
+			if cv.has(Vector2i(xx + 1, y)) and cv[Vector2i(xx + 1, y)] == "a" and y < int(ci[1]):
+				cv[Vector2i(xx + 1, y)] = "b"
+	for x2 in range(-8, 9):
+		var tp := Vector2i(x2, int(_extremos(cv, x2)[0]))
+		if cv.get(tp) == "a":
+			cv[tp] = "b"
+	_px(cv, 3, -15, "D")
+	_px(cv, 3, -14, "D")
+	_px(cv, 4, -8, "W")
+	_cont(cv, "o", true)
+	var bk: Dictionary = {}
+	for x3 in range(-14, -1):
+		var top: int = -9
+		if x3 < -8:
+			top = -9 + (-8 - x3)
+		var hm: int = -5 + int(dente[posmod(x3 + 1, 5)])
+		if x3 < -9:
+			hm = mini(hm, -5 - (-9 - x3) + int(dente[posmod(x3 + 1, 5)]))
+		for y in range(top, hm + 1):
+			bk[Vector2i(x3, y)] = "a"
+	for x4 in range(-14, -1):
+		if posmod(x4 + 1, 5) != 0:
+			continue
+		var cb: Array = _extremos(bk, x4)
+		for y in range(int(cb[0]) + 2, int(cb[1]) + 1):
+			var xb: int = x4 - int((y - int(cb[0])) / 4.0)
+			if bk.has(Vector2i(xb, y)):
+				bk[Vector2i(xb, y)] = "D"
+			if bk.has(Vector2i(xb + 1, y)) and bk[Vector2i(xb + 1, y)] == "a" and y < int(cb[1]):
+				bk[Vector2i(xb + 1, y)] = "b"
+	_cont(bk, "o", true)
+	return [_lay(bk, RoupaGato.Onde.CORPO, _PAL_HOLLOW, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
+
 ## Máscara da Hornet: casco branco em gota invertida (largo no alto, afina até o queixo), dois chifres longos e paralelos que abrem de leve
 ## (diapasão, pontas arredondadas; o de trás mais escuro) e dois olhos pretos triangulares grandes, com a ponta para dentro e para baixo.
 static func _mascara_silk() -> Dictionary:
@@ -371,22 +442,10 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_HOLLOW)]
 		Pecas.Tipo.MANTO_PRETINHO:
-			# manto azul-marinho curto de gola alta, curva da garupa à barriga e um broche branco; atrás do corpo, a capa cai sobre a anca
-			# (só se abre um pouco, sem pregas)
-			_corpo(cv, "a", -6, -7, -6)
-			_gola(cv, "a")
-			_luz(cv, "a", "b", "D")
-			_px(cv, 3, -15, "D")
-			_px(cv, 3, -14, "D")
-			_linsobre(cv, Vector2i(3, -11), Vector2i(5, -9), "b")
-			_px(cv, 4, -8, "W")
-			_dobras(cv, [-4, 2], "D")
-			_cont(cv, "o", false)
-			var capa: Dictionary = {}
-			_poli(capa, [3, -14.5, 0, -14.8, -4, -14.2, -8, -13, -10.5, -10.5, -12, -7.5, -11.5, -4.5, -9.5, -5.2, -8, -6.5], "a")
-			_luz(capa, "a", "b", "D")
-			_cont(capa, "o")
-			return [_lay(capa, RoupaGato.Onde.CORPO, _PAL_HOLLOW, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
+			# manto grafite-azulado que cobre o corpo todo como um poncho fechado (gola alta, broche branco): faixas verticais de 1 px que
+			# se inclinam como penas (vinco escuro e fio de luz) e a barra esfarrapada em pontas irregulares, com as patas saindo por baixo;
+			# atrás do corpo, a mesma capa cai pela anca e afina para trás
+			return _manto_hollow()
 		Pecas.Tipo.PREGO_AFIADO:
 			# o Ferrão Velho (a estaca do Cavaleiro): cabo fino e curto perto da boca e, logo depois, a lâmina larga (4 px) que afina até a ponta de 1 px;
 			# a face é dividida ao meio (metade clara em cima, escura embaixo) e duas rachaduras escuras cortam a lâmina na diagonal

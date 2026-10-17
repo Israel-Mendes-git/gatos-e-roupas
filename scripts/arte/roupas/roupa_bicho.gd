@@ -81,6 +81,7 @@ const _PAL_CORPO: Dictionary = {
 	33: {"a": Color("3c9a3c"), "A": Color("6cc15a"), "d": Color("256e2e"), "b": Color("f4c430"), "B": Color("ffe98a")},
 	34: {"a": Color("3f66b0"), "A": Color("6b90d0"), "d": Color("284585"), "b": Color("c8453c"), "B": Color("e8776a")},
 	35: {"a": Color("2eb8b8"), "A": Color("5ed6d0"), "d": Color("1b8a8c"), "b": Color("3b3fa0"), "B": Color("5a5fc8")},
+	44: {"a": Color("3d414f"), "A": Color("5e647a"), "d": Color("262833")},
 	15: _CASCO_BICHO, 37: _CASCO_BICHO, 38: _CASCO_BICHO, 39: _CASCO_BICHO,
 }
 ## Casco do kit Tartaruga nos bichos: verde, plastrão bege na borda e a fivela dourada (e).
@@ -626,7 +627,7 @@ const _FORMA: Array[String] = [
 	"colete", "colete", "colete", "colete", "colete", "colete",
 	"colete", "colete", "colete", "colete", "colete", "colete",
 	"casco", "casco", "casco", "colete", "colete", "colete",
-	"colete", "manta", "capa", "colete", "colete", "colete",
+	"colete", "capa", "capa", "colete", "colete", "colete",
 ]
 const _MEDIDA: Array = [
 	[0.06, 1.0, 0.80], [0.06, 1.0, 0.78], [0.0, 0.92, 0.85], [0.06, 1.0, 0.80], [0.10, 1.0, 0.58], [0.06, 1.0, 0.80],
