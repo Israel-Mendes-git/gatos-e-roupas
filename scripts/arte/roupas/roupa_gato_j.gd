@@ -577,21 +577,19 @@ static func _mz_placa(cv: Dictionary, cx: int, by: int, h: int) -> void:
 
 static func _mz_crista() -> Array:
 	var cv: Dictionary = {}
-	_txt(cv, 1, -20, [
-		"..aAAAAAa...",
-		".aaaaAAAAaa.",
-		"aaaaaaaaaaaa",
-		"aaaaaaaaaaaa",
-		"aaaaadddddda",
-		"aaaaadyyaaaa",
-		"aaaaaaaaaaan",
-		".aaaaawawawa",
-		".aaaaaaaaaa.",
-		"..aaaaaaaa..",
+	_txt(cv, 1, -18, [
+		"..aAAAa......",
+		".aaaAAAaa....",
+		"aaaaaaaaaa...",
+		"aaaaadddddaaa",
+		"aaaaaadyaaaaa",
+		"aaaaaaaaaaaka",
+		"aaaaaawkwkwkw",
+		"aaaaaakkkkkkk",
+		"..aaaddddddd.",
 	])
-	_mz_placa(cv, 3, -21, 3)
-	_mz_placa(cv, 6, -21, 4)
-	_mz_placa(cv, 9, -21, 3)
+	_mz_placa(cv, 2, -17, 4)
+	_mz_placa(cv, 5, -19, 3)
 	_luz(cv, "a", "A", "d")
 	_cont(cv, "o")
 	return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_MIAUZILLA)]
@@ -629,12 +627,16 @@ static func _mz_pele() -> Array:
 
 static func _mz_garras() -> Array:
 	var cv: Dictionary = {}
-	for k in 3:
-		var y: int = -13 + k * 2
-		_ret(cv, 11, y, 14, y + 2, "a")
-		_ret(cv, 14, y, 16, y + 2, "w")
-		_ret(cv, 16, y, 19, y + 1, "w")
-		_px(cv, 19, y + 1, "w")
+	_txt(cv, 14, -10, [
+		"..aaaaaaa..",
+		".aaadaadaa.",
+		".aaaaaaaaa.",
+		"..adaadaa..",
+		"..ww.ww.ww.",
+		".ww..ww..ww",
+		".W...ww...W",
+		"W....W....W",
+	])
 	_luz(cv, "a", "A", "d")
 	_cont(cv, "o")
 	return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_MIAUZILLA)]
