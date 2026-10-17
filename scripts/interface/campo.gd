@@ -229,6 +229,96 @@ static func paleta(fase: int) -> Dictionary:
 				"acento_a": Color(0.45, 0.60, 0.30), "acento_b": Color(0.90, 0.72, 0.30),
 				"luz": Color(1.0, 0.65, 0.25),
 			}
+		11:  # MERCADÃO DO PEIXE: madrugada azul-petróleo, concreto molhado, toldos vinho, néon
+			return {
+				"nome": "Mercadão do Peixe", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"parede_alta": Color(0.04, 0.10, 0.15),
+				"parede_baixa": tom_lum(Color(0.18, 0.30, 0.38), 0.185),
+				"rodape": tom_lum(Color(0.35, 0.42, 0.45), 0.20),
+				"piso_a": tom_lum(Color(0.42, 0.50, 0.52), 0.285),
+				"piso_b": tom_lum(Color(0.40, 0.48, 0.52), 0.262),
+				"junta": tom_lum(Color(0.34, 0.42, 0.46), 0.245),
+				"tapete_borda": tom_lum(Color(0.42, 0.50, 0.52), 0.285),
+				"tapete_meio": tom_lum(Color(0.42, 0.50, 0.52), 0.285),
+				"tapete_dentro": tom_lum(Color(0.42, 0.50, 0.52), 0.285),
+				"tapete_motivo": tom_lum(Color(0.42, 0.50, 0.52), 0.285),
+				"franja": Color(0.6, 0.7, 0.75),
+				"madeira": Color(0.42, 0.28, 0.20), "movel": Color(0.03, 0.05, 0.08),
+				"acento_a": Color(0.62, 0.12, 0.22), "acento_b": Color(0.93, 0.88, 0.75),
+				"luz": Color(0.55, 0.85, 1.0),
+			}
+		12:  # FERRO-VELHO: pôr do sol alaranjado, terra e sucata
+			return {
+				"nome": "Ferro-velho", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"parede_alta": Color(0.20, 0.10, 0.22),
+				"parede_baixa": tom_lum(Color(0.40, 0.28, 0.22), 0.185),
+				"rodape": tom_lum(Color(0.45, 0.32, 0.25), 0.20),
+				"piso_a": tom_lum(Color(0.52, 0.40, 0.30), 0.285),
+				"piso_b": tom_lum(Color(0.50, 0.38, 0.30), 0.262),
+				"junta": tom_lum(Color(0.45, 0.34, 0.26), 0.245),
+				"tapete_borda": tom_lum(Color(0.52, 0.40, 0.30), 0.285),
+				"tapete_meio": tom_lum(Color(0.52, 0.40, 0.30), 0.285),
+				"tapete_dentro": tom_lum(Color(0.52, 0.40, 0.30), 0.285),
+				"tapete_motivo": tom_lum(Color(0.52, 0.40, 0.30), 0.285),
+				"franja": Color(0.7, 0.5, 0.3),
+				"madeira": Color(0.38, 0.26, 0.16), "movel": Color(0.06, 0.04, 0.05),
+				"acento_a": Color(0.95, 0.50, 0.15), "acento_b": Color(0.85, 0.75, 0.35),
+				"luz": Color(1.0, 0.60, 0.25),
+			}
+		13:  # BECO DO FLIPERAMA: tijolo arroxeado, néon ciano e laranja, chão em grade
+			return {
+				"nome": "Beco do Fliperama", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"parede_alta": Color(0.08, 0.05, 0.18),
+				"parede_baixa": tom_lum(Color(0.28, 0.22, 0.40), 0.17),
+				"rodape": tom_lum(Color(0.35, 0.30, 0.50), 0.20),
+				"piso_a": tom_lum(Color(0.38, 0.46, 0.62), 0.28),
+				"piso_b": tom_lum(Color(0.36, 0.44, 0.60), 0.258),
+				"junta": tom_lum(Color(0.35, 0.50, 0.65), 0.245),
+				"tapete_borda": tom_lum(Color(0.38, 0.46, 0.62), 0.28),
+				"tapete_meio": tom_lum(Color(0.38, 0.46, 0.62), 0.28),
+				"tapete_dentro": tom_lum(Color(0.38, 0.46, 0.62), 0.28),
+				"tapete_motivo": tom_lum(Color(0.38, 0.46, 0.62), 0.28),
+				"franja": Color(0.4, 0.8, 0.9),
+				"madeira": Color(0.30, 0.20, 0.20), "movel": Color(0.04, 0.03, 0.09),
+				"acento_a": Color(0.20, 0.85, 0.95), "acento_b": Color(1.0, 0.55, 0.15),
+				"luz": Color(0.30, 0.90, 1.0),
+			}
+		14:  # ARENA DA PRAÇA: céu de tempestade, pedra clara, vermelho da legião
+			return {
+				"nome": "Arena da Praça", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"parede_alta": Color(0.12, 0.10, 0.18),
+				"parede_baixa": tom_lum(Color(0.45, 0.38, 0.34), 0.19),
+				"rodape": tom_lum(Color(0.50, 0.44, 0.40), 0.20),
+				"piso_a": tom_lum(Color(0.58, 0.50, 0.42), 0.295),
+				"piso_b": tom_lum(Color(0.56, 0.48, 0.42), 0.268),
+				"junta": tom_lum(Color(0.48, 0.42, 0.36), 0.245),
+				"tapete_borda": tom_lum(Color(0.58, 0.50, 0.42), 0.295),
+				"tapete_meio": tom_lum(Color(0.58, 0.50, 0.42), 0.295),
+				"tapete_dentro": tom_lum(Color(0.58, 0.50, 0.42), 0.295),
+				"tapete_motivo": tom_lum(Color(0.58, 0.50, 0.42), 0.295),
+				"franja": Color(0.8, 0.6, 0.4),
+				"madeira": Color(0.40, 0.28, 0.18), "movel": Color(0.05, 0.04, 0.06),
+				"acento_a": Color(0.85, 0.20, 0.12), "acento_b": Color(0.95, 0.78, 0.35),
+				"luz": Color(1.0, 0.65, 0.30),
+			}
+		15:  # TELHADOS E ANTENAS: noite roxa com raios, terraço de manta asfáltica
+			return {
+				"nome": "Telhados e Antenas", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"parede_alta": Color(0.07, 0.04, 0.16),
+				"parede_baixa": tom_lum(Color(0.30, 0.20, 0.42), 0.18),
+				"rodape": tom_lum(Color(0.40, 0.32, 0.50), 0.20),
+				"piso_a": tom_lum(Color(0.45, 0.42, 0.52), 0.28),
+				"piso_b": tom_lum(Color(0.42, 0.40, 0.50), 0.26),
+				"junta": tom_lum(Color(0.36, 0.34, 0.44), 0.245),
+				"tapete_borda": tom_lum(Color(0.45, 0.42, 0.52), 0.28),
+				"tapete_meio": tom_lum(Color(0.45, 0.42, 0.52), 0.28),
+				"tapete_dentro": tom_lum(Color(0.45, 0.42, 0.52), 0.28),
+				"tapete_motivo": tom_lum(Color(0.45, 0.42, 0.52), 0.28),
+				"franja": Color(0.6, 0.5, 0.8),
+				"madeira": Color(0.30, 0.24, 0.28), "movel": Color(0.04, 0.03, 0.08),
+				"acento_a": Color(0.62, 0.30, 0.90), "acento_b": Color(0.75, 0.95, 1.0),
+				"luz": Color(0.70, 0.50, 1.0),
+			}
 		_:  # QUARTO: ameixa e rosa, luz âmbar do abajur
 			return {
 				"nome": "Quarto", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,
@@ -3484,15 +3574,62 @@ class Pixel extends Node2D:
 		draw_rect(Rect2(r.position + Vector2(0, e), Vector2(e, r.size.y - 2.0 * e)), c)
 		draw_rect(Rect2(r.position + Vector2(r.size.x - e, e), Vector2(e, r.size.y - 2.0 * e)), c)
 
+	## Letras de 5x5 pixels de cenário, para letreiros de néon (só as do "FLIPERAMA").
+	const GLIFOS := {
+		"F": ["11111", "10000", "11110", "10000", "10000"],
+		"L": ["10000", "10000", "10000", "10000", "11111"],
+		"I": ["11111", "00100", "00100", "00100", "11111"],
+		"P": ["11110", "10001", "11110", "10000", "10000"],
+		"E": ["11111", "10000", "11110", "10000", "11111"],
+		"R": ["11110", "10001", "11110", "10010", "10001"],
+		"A": ["01110", "10001", "11111", "10001", "10001"],
+		"M": ["10001", "11011", "10101", "10001", "10001"],
+	}
+
+	## Letreiro: cada célula do glifo vira um quadrado de `esc` px de tela; `x` é a esquerda, `y` o topo.
+	func _letras(x: float, y: float, txt: String, esc: float, cor: Color, so_letra: int = -1) -> void:
+		var cx: float = x
+		var n: int = 0
+		for ch in txt:
+			if so_letra < 0 or so_letra == n:
+				var g: Array = GLIFOS[ch]
+				for r in 5:
+					var linha: String = g[r]
+					for c in 5:
+						if linha[c] == "1":
+							draw_rect(Rect2(cx + c * esc, y + r * esc, esc, esc), cor)
+			cx += esc * 6.0
+			n += 1
+
+	## Peixe de néon de lado (contorno): corpo, cauda e olho. `c` é o centro do corpo.
+	func _neon_peixe(c: Vector2, cor: Color, w: float = 2.0) -> void:
+		_pl(PackedVector2Array([c + Vector2(-30, 0), c + Vector2(-14, -14), c + Vector2(10, -14), c + Vector2(24, 0), c + Vector2(10, 14), c + Vector2(-14, 14), c + Vector2(-30, 0)]), cor, w)
+		_pl(PackedVector2Array([c + Vector2(24, 0), c + Vector2(40, -14), c + Vector2(40, 14), c + Vector2(24, 0)]), cor, w)
+		_ci(c + Vector2(-16, -4), 3.0, cor)
+
+	## Fantasminha de néon (contorno): cabeça redonda, saia ondulada e dois olhos.
+	func _neon_fantasma(c: Vector2, cor: Color, w: float = 2.0) -> void:
+		var pts := PackedVector2Array()
+		for i in 9:
+			var a: float = PI + PI * i / 8.0
+			pts.append(c + Vector2(cos(a) * 18.0, sin(a) * 18.0))
+		pts.append(c + Vector2(18, 20))
+		pts.append(c + Vector2(9, 12))
+		pts.append(c + Vector2(0, 20))
+		pts.append(c + Vector2(-9, 12))
+		pts.append(c + Vector2(-18, 20))
+		pts.append(c + Vector2(-18, 0))
+		_pl(pts, cor, w)
+		_ci(c + Vector2(-7, -3), 3.0, cor)
+		_ci(c + Vector2(7, -3), 3.0, cor)
+
+
 class Fundo extends Pixel:
 	const YS: Array[float] = [447.0, 466.0, 490.0, 520.0, 556.0, 600.0, 652.0, 712.0]
 	var fase: int = 1
-	var tinta: Color = Color(0, 0, 0, 0)   # 3º ato: véu na cor da gangue sobre o fundo provisório
 
 	func _draw() -> void:
 		_cena_base()
-		if tinta.a > 0.0:
-			draw_rect(Rect2(0, 0, 1280, 740), tinta)
 
 	func _cena_base() -> void:
 		match fase:
@@ -3514,6 +3651,16 @@ class Fundo extends Pixel:
 				_rua()
 			10:
 				_toca()
+			11:
+				_mercado()
+			12:
+				_ferrovelho()
+			13:
+				_beco()
+			14:
+				_arena()
+			15:
+				_antenas()
 			_:
 				_quarto()
 
@@ -3915,6 +4062,18 @@ class Fundo extends Pixel:
 				10:
 					_luz_degraus(Vector2(340, 190), 220.0, Color(1.0, 0.65, 0.25, 0.03), 4)
 					_luz_degraus(Vector2(940, 190), 220.0, Color(1.0, 0.65, 0.25, 0.03), 4)
+				11:
+					_feixe(Vector2(622, 146), Vector2(668, 146), Vector2(470, 447), Vector2(830, 447), Color(1.0, 0.85, 0.55, 0.05))
+					_luz_degraus(Vector2(1180, 150), 150.0, Color(0.3, 0.9, 1.0, 0.03), 3)
+				12:
+					_luz_degraus(Vector2(900, 330), 360.0, Color(1.0, 0.6, 0.25, 0.022), 4)
+				13:
+					_luz_degraus(Vector2(640, 150), 360.0, Color(0.2, 0.85, 0.95, 0.02), 4)
+				14:
+					_luz_degraus(Vector2(590, 330), 170.0, Color(1.0, 0.6, 0.25, 0.03), 3)
+					_luz_degraus(Vector2(790, 330), 170.0, Color(1.0, 0.6, 0.25, 0.03), 3)
+				15:
+					_luz_degraus(Vector2(1010, 230), 300.0, Color(0.7, 0.5, 1.0, 0.02), 4)
 				_:
 					var luz: Color = P.luz
 					_luz_degraus(Vector2(1154, 316), 280.0, Color(luz.r, luz.g, luz.b, 0.035), 4)
@@ -3959,6 +4118,28 @@ class Fundo extends Pixel:
 				# pedra e raiz no canto de baixo
 				draw_colored_polygon(PackedVector2Array([Vector2(1000, 740), Vector2(1020, 700), Vector2(1070, 690), Vector2(1110, 740)]), sil)
 				draw_rect(Rect2(1060, 680, 12, 20), sil)
+			11:
+				# caixote de peixe no canto de baixo
+				draw_rect(Rect2(1010, 702, 90, 38), sil)
+				_elipse(Vector2(1054, 700), 44, 10, sil)
+				draw_colored_polygon(PackedVector2Array([Vector2(1090, 700), Vector2(1112, 684), Vector2(1112, 712)]), sil)
+			12:
+				# pneu encostado no canto de baixo
+				_elipse(Vector2(1056, 722), 48, 20, sil)
+				draw_rect(Rect2(1030, 690, 52, 20), sil)
+			13:
+				# lata de lixo no canto de baixo
+				draw_rect(Rect2(1020, 702, 70, 38), sil)
+				draw_rect(Rect2(1014, 694, 82, 10), sil)
+			14:
+				# pedaço de coluna tombado no canto de baixo
+				draw_rect(Rect2(1010, 704, 80, 36), sil)
+				_elipse(Vector2(1010, 722), 10, 18, sil)
+			15:
+				# duto de ventilação no canto de baixo
+				draw_rect(Rect2(1020, 704, 80, 36), sil)
+				draw_rect(Rect2(1040, 684, 40, 24), sil)
+				draw_rect(Rect2(1030, 678, 60, 8), sil)
 			_:
 				# chinelo esquecido no canto de baixo
 				draw_rect(Rect2(900, 698, 70, 14), sil)
@@ -4904,6 +5085,646 @@ class Fundo extends Pixel:
 			_ci(Vector2(420.0 + k * 38.0, 700.0 + float((k * 7) % 3) * 8.0), 4, ouro)
 		_sombra_vinheta()
 
+
+	# ================================================================ CENAS DO 3º ATO (11 a 15: as ruas das gangues)
+	## Peixe de lado (olha para o lado `dir`): corpo oval, cauda, barriga clara e olho. `c` é o centro do corpo.
+	func _peixe(c: Vector2, comp: float, dir: float, cor: Color) -> void:
+		_elipse(c, comp * 0.5, comp * 0.2, cor)
+		draw_colored_polygon(PackedVector2Array([c + Vector2(-dir * comp * 0.42, 0), c + Vector2(-dir * comp * 0.74, -comp * 0.22), c + Vector2(-dir * comp * 0.74, comp * 0.22)]), cor.darkened(0.2))
+		_elipse(c + Vector2(0, comp * 0.09), comp * 0.38, comp * 0.09, cor.lightened(0.35))
+		_ci(c + Vector2(dir * comp * 0.3, -comp * 0.05), 3.0, Color(0.05, 0.05, 0.08))
+
+	## Peixe pendurado pelo focinho (cabeça em cima).
+	func _peixe_v(c: Vector2, comp: float, cor: Color) -> void:
+		_elipse(c, comp * 0.17, comp * 0.5, cor)
+		draw_colored_polygon(PackedVector2Array([c + Vector2(0, comp * 0.42), c + Vector2(-comp * 0.2, comp * 0.78), c + Vector2(comp * 0.2, comp * 0.78)]), cor.darkened(0.2))
+		_elipse(c + Vector2(comp * 0.05, comp * 0.1), comp * 0.07, comp * 0.28, cor.lightened(0.35))
+		_ci(c + Vector2(0, -comp * 0.3), 3.0, Color(0.05, 0.05, 0.08))
+
+	## Toldo listrado de barraca: trapézio que desce para a frente, listras alternadas e barra recortada.
+	func _toldo(x0: float, x1: float, ytop: float, ybase: float, n: int, c1: Color, c2: Color) -> void:
+		var rec: float = 26.0
+		for i in n:
+			var u0: float = float(i) / n
+			var u1: float = float(i + 1) / n
+			var cc: Color = c1 if i % 2 == 0 else c2
+			var t0: float = lerpf(x0 + rec, x1 - rec, u0)
+			var t1: float = lerpf(x0 + rec, x1 - rec, u1)
+			var b0: float = lerpf(x0, x1, u0)
+			var b1: float = lerpf(x0, x1, u1)
+			draw_colored_polygon(PackedVector2Array([Vector2(t0, ytop), Vector2(t1, ytop), Vector2(b1, ybase), Vector2(b0, ybase)]), cc)
+			_elipse(Vector2((b0 + b1) * 0.5, ybase), (b1 - b0) * 0.5, 9.0, cc)
+		draw_rect(Rect2(x0 + rec, ytop - 4, x1 - x0 - 2.0 * rec, 5), c2.lightened(0.2))
+		_ln(Vector2(x0 + 4.0, ybase + 10.0), Vector2(x1 - 4.0, ybase + 10.0), Color(0, 0, 0, 0.25), 2.0)
+
+	## Caixote de madeira com gelo picado em cima e peixes espiando.
+	func _caixote_gelo(x: float, yb: float, w: float, h: float, mad: Color, peixes: int, semente: int) -> void:
+		draw_rect(Rect2(x, yb - h, w, h), mad)
+		for k in 2:
+			_ln(Vector2(x, yb - h + (k + 1) * h / 3.0), Vector2(x + w, yb - h + (k + 1) * h / 3.0), mad.darkened(0.35), 1.0)
+		_contorno(Rect2(x, yb - h, w, h), mad.darkened(0.55), 2.0)
+		draw_rect(Rect2(x, yb - h, w, 4), mad.lightened(0.15))
+		var gelo := Color(0.66, 0.86, 0.94)
+		draw_colored_polygon(PackedVector2Array([Vector2(x - 2, yb - h), Vector2(x + 8, yb - h - 12), Vector2(x + w * 0.35, yb - h - 8), Vector2(x + w * 0.6, yb - h - 16), Vector2(x + w - 6, yb - h - 8), Vector2(x + w + 2, yb - h)]), gelo)
+		for k in 4:
+			draw_rect(Rect2(x + 4.0 + k * (w - 16.0) / 4.0, yb - h - 12.0 - float(k % 2) * 4.0, 8, 8), Color(0.88, 0.97, 1.0, 0.9))
+		var cores: Array[Color] = [Color(0.62, 0.72, 0.82), Color(0.9, 0.5, 0.42), Color(0.9, 0.78, 0.35)]
+		for k in peixes:
+			var fx: float = x + 22.0 + float(k) * (w - 44.0) / maxf(float(peixes - 1), 1.0)
+			_peixe(Vector2(fx, yb - h - 10.0 - float((k + semente) % 2) * 6.0), 34.0, 1.0 if (k + semente) % 2 == 0 else -1.0, cores[(k + semente) % 3])
+
+	## Barraca do mercado: poste, fundo escuro com peixes pendurados, toldo listrado e balcão com bandeja de gelo.
+	func _barraca(x0: float, x1: float, c1: Color, c2: Color, mad: Color, semente: int) -> void:
+		_sombra(x0, x1, 30, 1.0, 0.25)
+		draw_rect(Rect2(x0 + 8, 288, x1 - x0 - 16, 100), Color(0.04, 0.06, 0.09))
+		_ln(Vector2(x0 + 8, 304), Vector2(x1 - 8, 304), Color(0.5, 0.55, 0.6), 2.0)
+		var cores: Array[Color] = [Color(0.62, 0.72, 0.82), Color(0.9, 0.5, 0.42), Color(0.9, 0.78, 0.35), Color(0.5, 0.7, 0.62)]
+		var n: int = int((x1 - x0 - 50.0) / 44.0)
+		for k in n:
+			var fx: float = x0 + 38.0 + k * 44.0
+			_ln(Vector2(fx, 304), Vector2(fx, 318), Color(0.7, 0.7, 0.75), 1.0)
+			_peixe_v(Vector2(fx, 340.0 + float((k * 3 + semente) % 3) * 5.0), 44.0, cores[(k + semente) % 4])
+		for px in [x0, x1 - 10.0]:
+			draw_rect(Rect2(px, 232, 10, 215), mad.darkened(0.25))
+			draw_rect(Rect2(px, 232, 3, 215), mad.lightened(0.05))
+		_toldo(x0 - 10.0, x1 + 10.0, 226.0, 290.0, 8, c1, c2)
+		draw_rect(Rect2(x0, 386, x1 - x0, 61), mad)
+		for k in 4:
+			var lx: float = x0 + float(k + 1) * (x1 - x0) / 5.0
+			_ln(Vector2(lx, 392), Vector2(lx, 447), mad.darkened(0.4), 1.0)
+		draw_rect(Rect2(x0 - 8, 378, x1 - x0 + 16, 10), mad.lightened(0.2))
+		draw_rect(Rect2(x0 - 8, 378, x1 - x0 + 16, 3), mad.lightened(0.4))
+		draw_colored_polygon(PackedVector2Array([Vector2(x0 + 8, 378), Vector2(x0 + 16, 364), Vector2(x1 - 16, 362), Vector2(x1 - 8, 378)]), Color(0.62, 0.82, 0.9))
+		for k in 5:
+			_peixe(Vector2(x0 + 40.0 + k * 52.0, 366.0 - float((k + semente) % 2) * 3.0), 38.0, 1.0 if (k + semente) % 2 == 0 else -1.0, cores[(k + semente + 1) % 4])
+
+	# ---------------------------------------------------------------- 11 MERCADÃO DO PEIXE (madrugada, cais, barracas listradas, gelo, carro preto)
+	func _mercado() -> void:
+		var P: Dictionary = Campo.paleta(11)
+		var vinho: Color = P.acento_a
+		var creme: Color = P.acento_b
+		var mad: Color = P.madeira
+		var longe := Color(0.04, 0.08, 0.12)
+		_grad(Rect2(-40, -40, 1360, 340), P.parede_alta, Color(0.16, 0.30, 0.38))
+		_estrelas(30, 190.0, 11)
+		_ci(Vector2(470, 84), 20, Color(0.92, 0.96, 0.88))
+		_ci(Vector2(481, 78), 17, Color(0.085, 0.17, 0.235))
+		# água do porto com o reflexo da lua
+		_grad(Rect2(-40, 300, 1360, 74), Color(0.07, 0.15, 0.21), Color(0.04, 0.09, 0.14))
+		for k in 5:
+			_ln(Vector2(452.0 + (k % 2) * 10.0, 308.0 + k * 11.0), Vector2(494.0 - k * 4.0, 308.0 + k * 11.0), Color(0.85, 0.95, 0.9, 0.3), 1.0)
+		# navio no cais da esquerda
+		draw_colored_polygon(PackedVector2Array([Vector2(90, 330), Vector2(430, 330), Vector2(400, 372), Vector2(130, 372)]), longe)
+		draw_rect(Rect2(170, 290, 120, 40), longe.lightened(0.04))
+		draw_rect(Rect2(200, 268, 60, 24), longe)
+		draw_rect(Rect2(246, 238, 12, 32), longe)
+		for k in 4:
+			draw_rect(Rect2(182.0 + k * 26.0, 304, 12, 10), Color(1.0, 0.82, 0.4, 0.8))
+		# contêineres empilhados na direita
+		var cont: Array[Color] = [Color(0.34, 0.12, 0.14), Color(0.12, 0.24, 0.30), Color(0.30, 0.24, 0.10)]
+		for k in 6:
+			var cx2: float = 1000.0 + (k % 3) * 96.0
+			var cy2: float = 338.0 - floorf(k / 3.0) * 36.0
+			draw_rect(Rect2(cx2, cy2, 92, 34), cont[k % 3])
+			for r in 4:
+				_ln(Vector2(cx2 + 12.0 + r * 22.0, cy2 + 2), Vector2(cx2 + 12.0 + r * 22.0, cy2 + 32), cont[k % 3].darkened(0.35), 1.0)
+			draw_rect(Rect2(cx2, cy2, 92, 3), cont[k % 3].lightened(0.2))
+		# guindaste do cais (a luz vermelha pisca no animado)
+		var gui := Color(0.06, 0.11, 0.15)
+		for lx in [884.0, 936.0]:
+			draw_rect(Rect2(lx, 124, 6, 250), gui)
+		for k in 6:
+			var gy: float = 130.0 + k * 40.0
+			_ln(Vector2(890, gy), Vector2(938, gy + 40), gui, 1.0)
+			_ln(Vector2(938, gy), Vector2(890, gy + 40), gui, 1.0)
+		draw_rect(Rect2(640, 112, 420, 10), gui)
+		draw_rect(Rect2(880, 96, 64, 32), gui.lightened(0.04))
+		draw_rect(Rect2(1040, 104, 40, 28), gui.lightened(0.05))
+		_ln(Vector2(912, 96), Vector2(650, 114), gui, 1.0)
+		_ln(Vector2(700, 122), Vector2(700, 236), Color(0.12, 0.18, 0.22), 1.0)
+		draw_rect(Rect2(682, 236, 36, 18), Color(0.34, 0.12, 0.14))
+		draw_rect(Rect2(682, 236, 36, 3), Color(0.5, 0.2, 0.2))
+		# muro do cais com cabeços de amarração
+		draw_rect(Rect2(-40, 372, 1360, 75), P.parede_baixa)
+		draw_rect(Rect2(-40, 372, 1360, 6), P.parede_baixa.lightened(0.35))
+		for k in 12:
+			_ln(Vector2(-40.0 + k * 120.0, 378), Vector2(-40.0 + k * 120.0, 447), P.parede_baixa.darkened(0.3), 1.0)
+		_grad(Rect2(-40, 400, 1360, 47), Color(0, 0, 0.04, 0.0), Color(0, 0, 0.04, 0.4))
+		for bx in [130.0, 1220.0]:
+			draw_rect(Rect2(bx - 10, 424, 20, 23), Color(0.12, 0.16, 0.2))
+			draw_rect(Rect2(bx - 16, 418, 32, 8), Color(0.2, 0.26, 0.3))
+		# barraca da esquerda
+		_barraca(250.0, 560.0, vinho, creme, mad, 0)
+		_caixote_gelo(266.0, 447.0, 72.0, 52.0, mad, 3, 0)
+		_caixote_gelo(274.0, 395.0, 56.0, 42.0, mad, 2, 1)
+		_caixote_gelo(470.0, 447.0, 78.0, 48.0, mad, 3, 2)
+		# poste de luz entre as barracas
+		_sombra(576, 592, 24, 1.0, 0.25)
+		var ferro := Color(0.14, 0.17, 0.22)
+		draw_rect(Rect2(578, 134, 10, 313), ferro)
+		draw_rect(Rect2(578, 134, 3, 313), ferro.lightened(0.25))
+		_ln(Vector2(584, 138), Vector2(640, 130), ferro, 2.0)
+		draw_colored_polygon(PackedVector2Array([Vector2(618, 128), Vector2(668, 128), Vector2(674, 142), Vector2(612, 142)]), ferro.lightened(0.1))
+		draw_rect(Rect2(622, 142, 46, 5), Color(1.0, 0.92, 0.65))
+		# carro preto parado, de lado
+		var pr := Color(0.02, 0.025, 0.04)
+		_elipse(Vector2(712, 448), 108, 6, Color(0, 0, 0, 0.35))
+		draw_colored_polygon(PackedVector2Array([Vector2(612, 432), Vector2(612, 410), Vector2(650, 404), Vector2(676, 380), Vector2(742, 380), Vector2(770, 404), Vector2(808, 410), Vector2(808, 432)]), pr)
+		draw_colored_polygon(PackedVector2Array([Vector2(686, 386), Vector2(738, 386), Vector2(758, 402), Vector2(668, 402)]), Color(0.08, 0.14, 0.2))
+		_ln(Vector2(712, 386), Vector2(712, 402), pr, 1.0)
+		draw_rect(Rect2(618, 418, 184, 3), Color(0.36, 0.42, 0.5))
+		draw_rect(Rect2(676, 380, 66, 3), Color(0.3, 0.36, 0.44))
+		for rx in [652.0, 770.0]:
+			_ci(Vector2(rx, 433), 14, Color(0.01, 0.01, 0.02))
+			_ar(Vector2(rx, 433), 10, 0.0, TAU, 14, Color(0.8, 0.82, 0.85), 2.0)
+			_ci(Vector2(rx, 433), 5, Color(0.5, 0.55, 0.6))
+		_ci(Vector2(806, 420), 4, Color(1.0, 0.95, 0.7))
+		draw_rect(Rect2(610, 414, 5, 8), Color(0.9, 0.12, 0.12))
+		# barraca da direita
+		_barraca(820.0, 1130.0, creme, vinho, mad, 1)
+		_caixote_gelo(836.0, 447.0, 74.0, 50.0, mad, 3, 1)
+		_caixote_gelo(1034.0, 447.0, 72.0, 54.0, mad, 3, 0)
+		_caixote_gelo(1042.0, 393.0, 54.0, 40.0, mad, 2, 2)
+		# placa de néon em forma de peixe (o brilho é animado), pendurada num poste
+		draw_rect(Rect2(1172, 160, 8, 287), ferro)
+		draw_rect(Rect2(1136, 100, 92, 70), Color(0.03, 0.05, 0.09))
+		_contorno(Rect2(1136, 100, 92, 70), ferro.lightened(0.15), 2.0)
+		_neon_peixe(Vector2(1180, 136), Color(0.10, 0.28, 0.32), 2.0)
+		# chão de concreto molhado
+		_chao(P.piso_a, P.piso_b, P.junta)
+		draw_rect(Rect2(-40, 447, 1360, 4), P.junta.darkened(0.3))
+		_elipse(Vector2(560, 560), 110, 12, Color(0.9, 0.3, 0.5, 0.10))
+		_elipse(Vector2(920, 610), 130, 13, Color(0.3, 0.85, 1.0, 0.10))
+		_elipse(Vector2(400, 690), 90, 9, Color(0.3, 0.85, 1.0, 0.08))
+		for k in 36:
+			var sx: float = fposmod(k * 191.0, 1360.0) - 40.0
+			var sy: float = 456.0 + fposmod(k * 71.0, 240.0)
+			draw_rect(Rect2(sx, sy, 4, 4), Color(0.75, 0.86, 0.92, 0.35))
+		_sombra_vinheta()
+
+	# ---------------------------------------------------------------- 12 FERRO-VELHO (pôr do sol, pilhas de carros, pneus, torre de sucata; Estrada Furiosa)
+	## Carro amassado de lado, com a base no chão em `p` (rot inclina em torno da base).
+	func _carro_velho(p: Vector2, rot: float, w: float, cor: Color) -> void:
+		draw_set_transform(p, rot, Vector2.ONE)
+		var h: float = w * 0.3
+		var hw: float = w * 0.5
+		draw_colored_polygon(PackedVector2Array([Vector2(-hw, 0), Vector2(-hw, -h * 0.55), Vector2(-hw * 0.55, -h * 0.65), Vector2(-hw * 0.3, -h * 1.05), Vector2(hw * 0.35, -h * 1.05), Vector2(hw * 0.6, -h * 0.65), Vector2(hw, -h * 0.55), Vector2(hw, 0)]), cor)
+		draw_colored_polygon(PackedVector2Array([Vector2(-hw * 0.25, -h * 0.7), Vector2(-hw * 0.15, -h * 0.98), Vector2(hw * 0.3, -h * 0.98), Vector2(hw * 0.5, -h * 0.7)]), Color(0.05, 0.07, 0.1))
+		_ln(Vector2(hw * 0.05, -h * 0.98), Vector2(hw * 0.05, -h * 0.7), cor, 1.0)
+		draw_rect(Rect2(-hw, -h * 0.34, w, h * 0.12), cor.darkened(0.3))
+		draw_rect(Rect2(-hw, -h * 0.58, w * 0.2, 4), cor.lightened(0.25))
+		draw_colored_polygon(PackedVector2Array([Vector2(hw * 0.2, -h * 0.5), Vector2(hw * 0.5, -h * 0.55), Vector2(hw * 0.44, -h * 0.3), Vector2(hw * 0.22, -h * 0.25)]), Color(0.45, 0.2, 0.1))
+		for rx in [-hw * 0.62, hw * 0.58]:
+			_ci(Vector2(rx, -h * 0.2), h * 0.3, Color(0.03, 0.03, 0.04))
+			_ci(Vector2(rx, -h * 0.2), h * 0.13, Color(0.45, 0.45, 0.5))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+	## Pilha de pneus deitados (a pilha é torta de propósito).
+	func _pilha_pneus(x: float, yb: float, n: int, r: float) -> void:
+		_elipse(Vector2(x + r * 0.15, yb + 1.0), r * 1.1, 6.0, Color(0, 0, 0, 0.3))
+		for k in n:
+			var yy: float = yb - r * 0.42 - k * r * 0.62
+			var xo: float = float((k * 7) % 3 - 1) * 5.0
+			_elipse(Vector2(x + xo, yy), r, r * 0.42, Color(0.05, 0.05, 0.06))
+			_elipse(Vector2(x + xo, yy - r * 0.1), r * 0.62, r * 0.22, Color(0.17, 0.17, 0.19))
+			_elipse(Vector2(x + xo, yy - r * 0.06), r * 0.32, r * 0.11, Color(0.02, 0.02, 0.03))
+
+	## Barril de óleo (a gangue pinta de laranja); `fogo` desenha só a boca apagada.
+	func _barril(x: float, yb: float, cor: Color) -> void:
+		draw_rect(Rect2(x - 22, yb - 62, 44, 62), cor)
+		draw_rect(Rect2(x - 22, yb - 62, 6, 62), cor.lightened(0.2))
+		draw_rect(Rect2(x + 16, yb - 62, 6, 62), cor.darkened(0.3))
+		for ry in [yb - 54.0, yb - 32.0, yb - 10.0]:
+			draw_rect(Rect2(x - 22, ry, 44, 4), cor.darkened(0.4))
+		_elipse(Vector2(x, yb - 62), 22, 6, cor.darkened(0.45))
+
+	func _ferrovelho() -> void:
+		var P: Dictionary = Campo.paleta(12)
+		var laranja: Color = P.acento_a
+		var ferr := Color(0.42, 0.22, 0.13)
+		var chapa := Color(0.30, 0.22, 0.20)
+		var longe := Color(0.20, 0.09, 0.15)
+		_grad(Rect2(-40, -40, 1360, 380), P.parede_alta, Color(0.86, 0.42, 0.20))
+		_estrelas(14, 90.0, 12, Color(1, 0.9, 0.85, 0.7))
+		_elipse(Vector2(420, 170), 220, 10, Color(0.42, 0.18, 0.30, 0.55))
+		_elipse(Vector2(760, 130), 260, 11, Color(0.42, 0.18, 0.30, 0.5))
+		_elipse(Vector2(1000, 220), 200, 9, Color(0.50, 0.22, 0.28, 0.45))
+		_halo(Vector2(900, 326), 160, Color(1.0, 0.7, 0.3, 0.05), 8)
+		_ci(Vector2(900, 326), 56, Color(1.0, 0.8, 0.4))
+		# montes de sucata e o comboio ao longe
+		var mont := PackedVector2Array([Vector2(-40, 342)])
+		for k in 30:
+			mont.append(Vector2(-40.0 + k * 48.0, 314.0 + sin(k * 1.7) * 14.0 + float((k * 5) % 3) * 6.0))
+		mont.append(Vector2(1320, 342))
+		draw_colored_polygon(mont, longe)
+		for k in 4:
+			var tx: float = 300.0 + k * 170.0
+			draw_rect(Rect2(tx, 304, 78, 28), longe.lightened(0.05))
+			draw_rect(Rect2(tx + 78, 312, 26, 20), longe.lightened(0.05))
+			_ci(Vector2(tx + 14, 334), 6, Color(0.1, 0.05, 0.08))
+			_ci(Vector2(tx + 90, 334), 6, Color(0.1, 0.05, 0.08))
+		# cerca de chapa corrugada com arame farpado
+		draw_rect(Rect2(-40, 340, 1360, 107), chapa)
+		for k in 90:
+			var lx: float = -40.0 + k * 15.0
+			_ln(Vector2(lx, 340), Vector2(lx, 447), chapa.darkened(0.3) if k % 2 == 0 else chapa.lightened(0.12), 1.0)
+		draw_rect(Rect2(-40, 336, 1360, 6), chapa.lightened(0.28))
+		for px in [60.0, 330.0, 640.0, 1000.0, 1240.0]:
+			draw_rect(Rect2(px, 318, 8, 129), chapa.darkened(0.5))
+		_ln(Vector2(-40, 322), Vector2(1320, 322), Color(0.1, 0.07, 0.08), 1.0)
+		for k in 44:
+			_ln(Vector2(-30.0 + k * 31.0, 316), Vector2(-20.0 + k * 31.0, 328), Color(0.1, 0.07, 0.08), 1.0)
+		draw_colored_polygon(PackedVector2Array([Vector2(110, 356), Vector2(170, 350), Vector2(160, 420), Vector2(120, 400)]), ferr)
+		draw_colored_polygon(PackedVector2Array([Vector2(760, 360), Vector2(820, 356), Vector2(806, 430), Vector2(770, 410)]), ferr.darkened(0.15))
+		_grad(Rect2(-40, 390, 1360, 57), Color(0, 0, 0.03, 0.0), Color(0, 0, 0.03, 0.4))
+		# pilha de carros amassados (esquerda)
+		_sombra(250, 520, 34, 1.0, 0.3)
+		_carro_velho(Vector2(380, 447), 0.0, 180.0, Color(0.55, 0.22, 0.17))
+		_carro_velho(Vector2(398, 399), -0.05, 156.0, Color(0.26, 0.36, 0.46))
+		_carro_velho(Vector2(372, 354), 0.09, 130.0, Color(0.62, 0.5, 0.2))
+		_carro_velho(Vector2(560, 447), 0.0, 120.0, Color(0.30, 0.34, 0.30))
+		# pneus ao fundo e barris de óleo
+		_pilha_pneus(640.0, 447.0, 5, 44.0)
+		_barril(716.0, 447.0, laranja.darkened(0.25))
+		_barril(758.0, 447.0, laranja.darkened(0.4))
+		_pilha_pneus(1150.0, 447.0, 4, 40.0)
+		# pilha de carros da direita, diante do sol
+		_sombra(790, 940, 30, 1.0, 0.3)
+		_carro_velho(Vector2(860, 447), 0.0, 150.0, Color(0.42, 0.18, 0.2))
+		_carro_velho(Vector2(872, 404), 0.06, 126.0, Color(0.58, 0.58, 0.54))
+		# torre de sucata soldada (a faísca do soldador é animada)
+		_sombra(960, 1100, 26, 1.0, 0.3)
+		var viga: Color = ferr.lightened(0.12)
+		_ln(Vector2(985, 447), Vector2(1020, 124), viga, 10.0)
+		_ln(Vector2(1097, 447), Vector2(1062, 124), viga, 10.0)
+		for k in 7:
+			var ty: float = 447.0 - k * 46.0
+			var ty2: float = ty - 46.0
+			var u0: float = (447.0 - ty) / 323.0
+			var u1: float = (447.0 - ty2) / 323.0
+			var l0: float = lerpf(985.0, 1020.0, u0)
+			var r0: float = lerpf(1097.0, 1062.0, u0)
+			var l1: float = lerpf(985.0, 1020.0, u1)
+			var r1: float = lerpf(1097.0, 1062.0, u1)
+			_ln(Vector2(l0, ty), Vector2(r1, ty2), viga.darkened(0.2), 4.0)
+			_ln(Vector2(r0, ty), Vector2(l1, ty2), viga.darkened(0.2), 4.0)
+			_ln(Vector2(l0, ty), Vector2(r0, ty), viga, 4.0)
+		draw_rect(Rect2(1004, 300, 74, 44), Color(0.2, 0.42, 0.44))
+		_contorno(Rect2(1004, 300, 74, 44), Color(0.08, 0.14, 0.16), 2.0)
+		draw_rect(Rect2(1006, 384, 66, 30), laranja.darkened(0.2))
+		_contorno(Rect2(1006, 384, 66, 30), laranja.darkened(0.6), 2.0)
+		draw_rect(Rect2(1010, 228, 58, 26), Color(0.7, 0.62, 0.3))
+		_contorno(Rect2(1010, 228, 58, 26), Color(0.25, 0.2, 0.08), 2.0)
+		_ar(Vector2(1041, 118), 20, 0.0, TAU, 18, Color(0.06, 0.05, 0.06), 8.0)
+		_ar(Vector2(1041, 118), 12, 0.0, TAU, 14, Color(0.5, 0.5, 0.55), 2.0)
+		_ln(Vector2(1041, 98), Vector2(1041, 70), viga, 2.0)
+		draw_colored_polygon(PackedVector2Array([Vector2(1041, 70), Vector2(1084, 80), Vector2(1041, 92)]), laranja)
+		# chão de terra e cascalho, com marcas de pneu e poças de óleo
+		draw_rect(Rect2(-40, 447, 1360, 293), P.piso_a)
+		var ys: Array = YS.duplicate()
+		ys.append(740.0)
+		for r in range(1, ys.size()):
+			if r % 2 == 0:
+				draw_rect(Rect2(-40, ys[r - 1], 1360, ys[r] - ys[r - 1]), P.piso_b)
+		for k in 90:
+			var sx: float = fposmod(k * 197.0, 1360.0) - 40.0
+			var sy: float = 456.0 + fposmod(k * 83.0, 270.0)
+			draw_rect(Rect2(sx, sy, 8, 4), P.junta)
+			draw_rect(Rect2(sx + 2, sy - 4, 4, 4), P.piso_a.lightened(0.1))
+		_pl(PackedVector2Array([Vector2(240, 520), Vector2(480, 566), Vector2(720, 552), Vector2(980, 600)]), Color(P.junta.r, P.junta.g, P.junta.b, 0.8), 4.0)
+		_pl(PackedVector2Array([Vector2(300, 600), Vector2(560, 640), Vector2(840, 618)]), Color(P.junta.r, P.junta.g, P.junta.b, 0.7), 4.0)
+		_elipse(Vector2(880, 560), 70, 10, Color(0.03, 0.02, 0.04, 0.4))
+		_elipse(Vector2(880, 559), 38, 5, Color(0.5, 0.25, 0.5, 0.18))
+		_elipse(Vector2(420, 690), 80, 9, Color(0.03, 0.02, 0.04, 0.35))
+		draw_rect(Rect2(-40, 447, 1360, 4), P.junta.darkened(0.35))
+		_sombra_vinheta()
+
+	# ---------------------------------------------------------------- 13 BECO DO FLIPERAMA (tijolo, néon, fileira de fliperamas, chão em grade; Tropa do Grid)
+	## Fliperama de pé, base em `yb`: lados e letreiro na cor `cor`, tela apagada (a tela acesa é animada).
+	func _fliper(x: float, yb: float, cor: Color) -> void:
+		var top: float = yb - 168.0
+		_sombra(x, x + 80.0, 28, 1.0, 0.25, top)
+		draw_rect(Rect2(x, top, 80, 168), Color(0.07, 0.06, 0.15))
+		draw_rect(Rect2(x, top, 6, 168), cor.darkened(0.55))
+		draw_rect(Rect2(x + 74, top, 6, 168), cor.darkened(0.65))
+		draw_rect(Rect2(x + 6, top + 6, 68, 22), cor.darkened(0.5))
+		draw_rect(Rect2(x + 10, top + 10, 60, 4), cor.darkened(0.15))
+		draw_rect(Rect2(x + 8, top + 32, 64, 60), Color(0.02, 0.03, 0.07))
+		draw_rect(Rect2(x + 12, top + 36, 56, 52), Color(cor.r * 0.2, cor.g * 0.2, cor.b * 0.2))
+		draw_colored_polygon(PackedVector2Array([Vector2(x + 4, top + 96), Vector2(x + 76, top + 96), Vector2(x + 80, top + 120), Vector2(x, top + 120)]), Color(0.13, 0.12, 0.24))
+		_ln(Vector2(x + 24, top + 108), Vector2(x + 24, top + 100), Color(0.6, 0.6, 0.7), 1.0)
+		_ci(Vector2(x + 24, top + 98), 4, Color(0.85, 0.2, 0.25))
+		_ci(Vector2(x + 46, top + 108), 3, cor)
+		_ci(Vector2(x + 58, top + 108), 3, Color(1.0, 0.6, 0.2))
+		draw_rect(Rect2(x + 28, top + 134, 24, 14), Color(0.03, 0.03, 0.06))
+		draw_rect(Rect2(x + 36, top + 138, 8, 3), cor.darkened(0.2))
+		draw_rect(Rect2(x, yb - 10, 80, 10), Color(0.04, 0.03, 0.08))
+
+	func _beco() -> void:
+		var P: Dictionary = Campo.paleta(13)
+		var cian: Color = P.acento_a
+		var laranja: Color = P.acento_b
+		var metal := Color(0.08, 0.07, 0.17)
+		_grad(Rect2(-40, -40, 1360, 487), P.parede_alta, P.parede_baixa)
+		# tijolos
+		for r in 26:
+			var yy: float = r * 18.0 + 6.0
+			_ln(Vector2(-40, yy), Vector2(1320, yy), Color(0, 0, 0.06, 0.28), 1.0)
+			var xj: float = -40.0 + (r % 2) * 24.0
+			while xj < 1320.0:
+				_ln(Vector2(xj, yy), Vector2(xj, yy + 18.0), Color(0, 0, 0.06, 0.2), 1.0)
+				xj += 48.0
+		_halo(Vector2(640, 140), 300, Color(cian.r, cian.g, cian.b, 0.010), 8)
+		_grad(Rect2(-40, 380, 1360, 67), Color(0, 0, 0.05, 0.0), Color(0, 0, 0.05, 0.4))
+		# janela com grade na esquerda, acesa
+		draw_rect(Rect2(86, 238, 90, 70), Color(0.05, 0.04, 0.1))
+		draw_rect(Rect2(92, 244, 78, 58), Color(0.62, 0.42, 0.2))
+		for k in 3:
+			_ln(Vector2(106.0 + k * 22.0, 244), Vector2(106.0 + k * 22.0, 302), Color(0.05, 0.04, 0.1), 1.0)
+		draw_rect(Rect2(80, 304, 102, 8), Color(0.3, 0.26, 0.4))
+		# letreiro FLIPERAMA (o brilho de néon é animado) e fantasma/peixe de néon dos lados
+		draw_rect(Rect2(404, 88, 480, 92), Color(0.03, 0.02, 0.08))
+		_contorno(Rect2(404, 88, 480, 92), metal.lightened(0.2), 2.0)
+		_letras(436.0, 112.0, "FLIPERAMA", 8.0, Color(cian.r * 0.28, cian.g * 0.28, cian.b * 0.28))
+		_neon_fantasma(Vector2(340, 138), Color(laranja.r * 0.3, laranja.g * 0.3, laranja.b * 0.3), 2.0)
+		_neon_fantasma(Vector2(948, 138), Color(laranja.r * 0.3, laranja.g * 0.3, laranja.b * 0.3), 2.0)
+		# escada de incêndio e cano (direita)
+		draw_rect(Rect2(1244, -40, 12, 487), metal.lightened(0.05))
+		draw_rect(Rect2(1244, -40, 3, 487), metal.lightened(0.3))
+		for k in 6:
+			draw_rect(Rect2(1240, 20.0 + k * 70.0, 20, 6), metal.lightened(0.15))
+		var fe := Color(0.12, 0.11, 0.24)
+		for py in [226.0, 330.0]:
+			draw_rect(Rect2(1010, py, 220, 8), fe)
+			draw_rect(Rect2(1010, py, 220, 3), fe.lightened(0.3))
+			_ln(Vector2(1010, py - 40), Vector2(1230, py - 40), fe, 1.0)
+			for k in 11:
+				_ln(Vector2(1010.0 + k * 22.0, py - 40), Vector2(1010.0 + k * 22.0, py), fe, 1.0)
+		_ln(Vector2(1030, 234), Vector2(1130, 330), fe, 2.0)
+		_ln(Vector2(1046, 234), Vector2(1146, 330), fe, 2.0)
+		_ln(Vector2(1130, 338), Vector2(1214, 440), fe, 2.0)
+		_ln(Vector2(1146, 338), Vector2(1230, 440), fe, 2.0)
+		for k in 8:
+			var u: float = k / 7.0
+			_ln(Vector2(lerpf(1030, 1130, u), lerpf(234, 330, u)), Vector2(lerpf(1046, 1146, u), lerpf(234, 330, u)), fe.lightened(0.2), 1.0)
+		# a fileira de fliperamas (cores se alternam)
+		var cores: Array[Color] = [cian, Color(0.9, 0.25, 0.65), laranja]
+		for k in 8:
+			_fliper(250.0 + k * 92.0, 447.0, cores[k % 3])
+		# latas de lixo ao lado da escada
+		var lata := Color(0.16, 0.16, 0.26)
+		for lx in [1052.0, 1110.0]:
+			_sombra(lx, lx + 44.0, 20, 1.0, 0.3)
+			draw_rect(Rect2(lx, 396, 44, 51), lata)
+			draw_rect(Rect2(lx, 396, 5, 51), lata.lightened(0.2))
+			draw_rect(Rect2(lx - 4, 390, 52, 8), lata.lightened(0.12))
+			for k in 4:
+				_ln(Vector2(lx + 10.0 + k * 9.0, 402), Vector2(lx + 10.0 + k * 9.0, 444), lata.darkened(0.3), 1.0)
+		# chão: pista escura com a grade de luz (a pulsação é animada)
+		_chao(P.piso_a, P.piso_b, P.junta.darkened(0.1))
+		var grade := Color(cian.r, cian.g, cian.b, 0.12)
+		for k in range(-12, 13):
+			_ln(Vector2(_x_prof(k, 110.0, 447.0), 447), Vector2(_x_prof(k, 110.0, 740.0), 740), grade, 1.0)
+		for r in range(1, YS.size()):
+			_ln(Vector2(-40, YS[r]), Vector2(1320, YS[r]), grade, 1.0)
+		_elipse(Vector2(760, 566), 120, 12, Color(0.9, 0.25, 0.65, 0.09))
+		_elipse(Vector2(430, 640), 90, 9, Color(cian.r, cian.g, cian.b, 0.08))
+		draw_rect(Rect2(-40, 447, 1360, 4), P.junta.darkened(0.45))
+		_sombra_vinheta()
+
+	# ---------------------------------------------------------------- 14 ARENA DA PRAÇA (tempestade, arquibancada de falange, colunas, estátua; Legião Miauparta)
+	## Gato-soldado em silhueta, de pé na arquibancada: capacete com crista, lança e escudo redondo.
+	func _falangista(x: float, yb: float, crista: Color, escudo: Color) -> void:
+		var sil := Color(0.06, 0.045, 0.08)
+		draw_rect(Rect2(x - 7, yb - 24, 14, 24), sil)
+		_ci(Vector2(x, yb - 31), 8, sil)
+		draw_colored_polygon(PackedVector2Array([Vector2(x - 8, yb - 34), Vector2(x - 6, yb - 44), Vector2(x - 2, yb - 36)]), sil)
+		draw_colored_polygon(PackedVector2Array([Vector2(x + 8, yb - 34), Vector2(x + 6, yb - 44), Vector2(x + 2, yb - 36)]), sil)
+		draw_rect(Rect2(x - 3, yb - 46, 6, 8), crista)
+		_ln(Vector2(x + 10, yb - 2), Vector2(x + 10, yb - 54), sil, 1.0)
+		draw_colored_polygon(PackedVector2Array([Vector2(x + 7, yb - 54), Vector2(x + 13, yb - 54), Vector2(x + 10, yb - 64)]), Color(0.55, 0.55, 0.6))
+		_ci(Vector2(x - 6, yb - 12), 9, escudo)
+		_ci(Vector2(x - 6, yb - 12), 4, escudo.darkened(0.4))
+
+	## Coluna dórica: base, fuste com caneluras e capitel (ou o topo quebrado).
+	func _coluna(x: float, ytop: float, quebrada: bool, pedra: Color) -> void:
+		var w: float = 56.0
+		_sombra(x - w * 0.5, x + w * 0.5, 30, 1.0, 0.3)
+		draw_rect(Rect2(x - w * 0.5 - 8, 436, w + 16, 11), pedra.darkened(0.15))
+		draw_rect(Rect2(x - w * 0.5 - 8, 436, w + 16, 3), pedra.lightened(0.1))
+		var y0: float = ytop + (16.0 if quebrada else 0.0)
+		draw_rect(Rect2(x - w * 0.5, y0, w, 436.0 - y0), pedra)
+		draw_rect(Rect2(x - w * 0.5, y0, 6, 436.0 - y0), pedra.lightened(0.2))
+		draw_rect(Rect2(x + w * 0.5 - 8, y0, 8, 436.0 - y0), pedra.darkened(0.25))
+		for k in 3:
+			_ln(Vector2(x - 17.0 + k * 17.0, y0), Vector2(x - 17.0 + k * 17.0, 436), pedra.darkened(0.3), 1.0)
+		if quebrada:
+			draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.5, y0 + 2), Vector2(x - 20, ytop - 8), Vector2(x - 6, ytop + 10), Vector2(x + 6, ytop - 16), Vector2(x + 18, ytop + 8), Vector2(x + 28, ytop - 4), Vector2(x + 28, y0 + 2)]), pedra)
+		else:
+			draw_rect(Rect2(x - w * 0.5 - 4, ytop + 4, w + 8, 10), pedra.darkened(0.1))
+			draw_rect(Rect2(x - w * 0.5 - 12, ytop - 10, w + 24, 14), pedra.lightened(0.08))
+			draw_rect(Rect2(x - w * 0.5 - 12, ytop - 10, w + 24, 3), pedra.lightened(0.3))
+
+	func _arena() -> void:
+		var P: Dictionary = Campo.paleta(14)
+		var verm: Color = P.acento_a
+		var ouro: Color = P.acento_b
+		var pedra: Color = Campo.tom_lum(Color(0.55, 0.5, 0.48), 0.3)
+		_grad(Rect2(-40, -40, 1360, 340), P.parede_alta, Color(0.42, 0.30, 0.36))
+		# nuvens de tempestade
+		for k in 8:
+			var nx: float = -80.0 + k * 190.0
+			var ny: float = 70.0 + float((k * 5) % 3) * 44.0
+			_elipse(Vector2(nx, ny), 170, 30, Color(0.07, 0.05, 0.12, 0.6))
+			_elipse(Vector2(nx + 20, ny + 26), 130, 12, Color(0.55, 0.38, 0.48, 0.25))
+		_estrelas(8, 60.0, 14)
+		# arquibancada em degraus, com os gatos da falange nos dois degraus de trás
+		var degr: Array[Color] = [Color(0.20, 0.17, 0.22), Color(0.26, 0.22, 0.26), Color(0.32, 0.27, 0.30), Color(0.38, 0.32, 0.34)]
+		for t in 4:
+			var ty: float = 290.0 + t * 40.0
+			draw_rect(Rect2(-40, ty, 1360, 40.0 + 20.0 if t == 3 else 40.0), degr[t])
+			draw_rect(Rect2(-40, ty, 1360, 4), degr[t].lightened(0.3))
+			var xj: float = -40.0 + (t % 2) * 40.0
+			while xj < 1320.0:
+				_ln(Vector2(xj, ty + 4.0), Vector2(xj, ty + 40.0), degr[t].darkened(0.3), 1.0)
+				xj += 80.0
+		for t in 2:
+			var yb: float = 330.0 + t * 40.0
+			var x: float = 20.0 + (t % 2) * 22.0
+			var k: int = 0
+			while x < 1300.0:
+				var esc: Color = Color(0.5, 0.12, 0.1) if k % 3 != 1 else Color(0.34, 0.1, 0.1)
+				_falangista(x, yb, verm if k % 2 == 0 else ouro.darkened(0.3), esc)
+				x += 44.0
+				k += 1
+		_grad(Rect2(-40, 380, 1360, 67), Color(0, 0, 0.03, 0.0), Color(0, 0, 0.03, 0.4))
+		# estátua do gato-hoplita no meio da praça
+		_sombra(630, 750, 30, 1.0, 0.3)
+		draw_rect(Rect2(644, 382, 92, 65), pedra.lightened(0.14))
+		draw_rect(Rect2(644, 382, 8, 65), pedra.lightened(0.2))
+		draw_rect(Rect2(728, 382, 8, 65), pedra.darkened(0.3))
+		draw_rect(Rect2(634, 372, 112, 14), pedra.lightened(0.1))
+		draw_rect(Rect2(634, 372, 112, 3), pedra.lightened(0.3))
+		draw_rect(Rect2(636, 438, 108, 9), pedra.darkened(0.2))
+		var est: Color = pedra.lightened(0.32)
+		draw_colored_polygon(PackedVector2Array([Vector2(664, 372), Vector2(668, 300), Vector2(712, 300), Vector2(716, 372)]), est.darkened(0.12))
+		draw_rect(Rect2(666, 250, 48, 54), est)
+		draw_rect(Rect2(706, 250, 8, 54), est.darkened(0.25))
+		_ci(Vector2(690, 232), 20, est)
+		draw_colored_polygon(PackedVector2Array([Vector2(672, 222), Vector2(676, 198), Vector2(688, 216)]), est)
+		draw_colored_polygon(PackedVector2Array([Vector2(708, 222), Vector2(704, 198), Vector2(692, 216)]), est)
+		draw_rect(Rect2(678, 196, 24, 10), est.darkened(0.2))
+		draw_rect(Rect2(686, 178, 8, 20), est.darkened(0.1))
+		_ci(Vector2(660, 296), 28, est.darkened(0.15))
+		_ci(Vector2(660, 296), 16, est.darkened(0.3))
+		_ln(Vector2(738, 372), Vector2(738, 150), est.darkened(0.1), 2.0)
+		draw_colored_polygon(PackedVector2Array([Vector2(730, 150), Vector2(746, 150), Vector2(738, 120)]), est.lightened(0.2))
+		# colunas dóricas (uma quebrada à esquerda, duas inteiras, uma tombada)
+		_coluna(330.0, 150.0, false, pedra)
+		_coluna(480.0, 296.0, true, pedra)
+		_coluna(900.0, 330.0, true, pedra)
+		_coluna(1070.0, 150.0, false, pedra)
+		# braseiros nos postes (as chamas e os estandartes vermelhos são animados)
+		for bx in [590.0, 790.0]:
+			_sombra(bx - 6, bx + 6, 16, 1.0, 0.25)
+			draw_rect(Rect2(bx - 4, 332, 8, 115), Color(0.16, 0.12, 0.12))
+			draw_colored_polygon(PackedVector2Array([Vector2(bx - 17, 330), Vector2(bx + 17, 330), Vector2(bx + 11, 348), Vector2(bx - 11, 348)]), Color(0.2, 0.15, 0.14))
+			draw_rect(Rect2(bx - 17, 328, 34, 4), Color(0.4, 0.3, 0.26))
+		# praça de pedra com a marca da arena
+		_chao(P.piso_a, P.piso_b, P.junta)
+		var anel: PackedVector2Array = _pts_elipse(Vector2(700, 596), 560.0, 112.0, 48)
+		anel.append(anel[0])
+		_pl(anel, P.junta.darkened(0.22), 6.0)
+		var anel2: PackedVector2Array = _pts_elipse(Vector2(700, 596), 400.0, 78.0, 40)
+		anel2.append(anel2[0])
+		_pl(anel2, Color(P.junta.r, P.junta.g, P.junta.b, 0.8), 4.0)
+		_elipse(Vector2(700, 596), 330, 60, Color(0.7, 0.6, 0.45, 0.06))
+		for k in 40:
+			var sx: float = fposmod(k * 193.0, 1360.0) - 40.0
+			var sy: float = 456.0 + fposmod(k * 79.0, 250.0)
+			draw_rect(Rect2(sx, sy, 8, 4), P.junta)
+		_pl(PackedVector2Array([Vector2(300, 520), Vector2(330, 556), Vector2(316, 590)]), P.junta.darkened(0.2), 2.0)
+		_pl(PackedVector2Array([Vector2(960, 640), Vector2(990, 610), Vector2(1030, 624)]), P.junta.darkened(0.2), 2.0)
+		draw_rect(Rect2(-40, 447, 1360, 4), P.junta.darkened(0.3))
+		_sombra_vinheta()
+
+	# ---------------------------------------------------------------- 15 TELHADOS E ANTENAS (noite com raios, torre de rádio, caixa d'água; Irmandade Mutante)
+	## Fio com barriga entre dois pontos.
+	func _fio(a: Vector2, b: Vector2, barriga: float, cor: Color) -> void:
+		var pts := PackedVector2Array()
+		for i in 13:
+			var u: float = i / 12.0
+			pts.append(a.lerp(b, u) + Vector2(0, sin(u * PI) * barriga))
+		_pl(pts, cor, 1.0)
+
+	func _antenas() -> void:
+		var P: Dictionary = Campo.paleta(15)
+		var roxo: Color = P.acento_a
+		var metal := Color(0.20, 0.16, 0.32)
+		_grad(Rect2(-40, -40, 1360, 340), P.parede_alta, Color(0.34, 0.18, 0.42))
+		_estrelas(36, 200.0, 15)
+		for k in 6:
+			var nx: float = -60.0 + k * 250.0
+			var ny: float = 100.0 + float((k * 7) % 3) * 40.0
+			_elipse(Vector2(nx, ny), 190, 22, Color(0.05, 0.02, 0.1, 0.55))
+			_elipse(Vector2(nx + 30, ny + 20), 150, 8, Color(roxo.r, roxo.g, roxo.b, 0.22))
+		# horizonte de arranha-céus em duas camadas, com janelas acesas
+		var pred: Array = [[-20, 100, 230], [70, 120, 280], [180, 90, 200], [270, 130, 300], [390, 100, 240], [480, 140, 270], [610, 90, 320], [690, 120, 220], [800, 110, 290], [900, 140, 250], [1030, 100, 310], [1120, 130, 230], [1240, 100, 270]]
+		for i in pred.size():
+			var bd: Array = pred[i]
+			var bx: float = bd[0]
+			var bw: float = bd[1]
+			var topo: float = 436.0 - float(bd[2]) * 0.62 - 40.0
+			var bc: Color = Color(0.09, 0.05, 0.19) if i % 2 == 0 else Color(0.12, 0.07, 0.24)
+			draw_rect(Rect2(bx, topo, bw, 447.0 - topo), bc)
+			if i % 3 == 0:
+				_ln(Vector2(bx + bw * 0.5, topo), Vector2(bx + bw * 0.5, topo - 34.0), bc.lightened(0.2), 1.0)
+			var wy: float = topo + 14.0
+			while wy < 400.0:
+				var wx: float = bx + 10.0
+				while wx < bx + bw - 14.0:
+					var h: int = (int(wx) * 7 + int(wy) * 3 + i) % 6
+					if h == 0:
+						draw_rect(Rect2(wx, wy, 10, 14), Color(1.0, 0.82, 0.45, 0.8))
+					elif h == 1:
+						draw_rect(Rect2(wx, wy, 10, 14), Color(0.55, 0.45, 1.0, 0.7))
+					wx += 26.0
+				wy += 34.0
+		# caixa d'água em palafitas
+		_sombra(320, 450, 28, 1.0, 0.3)
+		var tq := Color(0.17, 0.13, 0.30)
+		for lx in [330.0, 438.0]:
+			draw_rect(Rect2(lx, 316, 8, 120), metal)
+		_ln(Vector2(334, 330), Vector2(442, 420), metal, 1.0)
+		_ln(Vector2(442, 330), Vector2(334, 420), metal, 1.0)
+		draw_rect(Rect2(326, 316, 120, 8), metal.lightened(0.15))
+		draw_rect(Rect2(322, 206, 128, 112), tq)
+		draw_rect(Rect2(322, 206, 14, 112), tq.lightened(0.2))
+		draw_rect(Rect2(436, 206, 14, 112), tq.darkened(0.3))
+		for ry in [230.0, 262.0, 294.0]:
+			draw_rect(Rect2(322, ry, 128, 4), tq.darkened(0.4))
+		draw_colored_polygon(PackedVector2Array([Vector2(322, 206), Vector2(450, 206), Vector2(436, 184), Vector2(336, 184)]), tq.lightened(0.1))
+		_ln(Vector2(386, 184), Vector2(386, 166), metal, 1.0)
+		_ln(Vector2(454, 214), Vector2(454, 436), metal, 1.0)
+		for k in 10:
+			_ln(Vector2(454, 226.0 + k * 22.0), Vector2(470, 226.0 + k * 22.0), metal, 1.0)
+		draw_colored_polygon(PackedVector2Array([Vector2(386, 240), Vector2(410, 282), Vector2(362, 282)]), roxo.darkened(0.2))
+		draw_rect(Rect2(383, 252, 6, 16), tq)
+		draw_rect(Rect2(383, 272, 6, 5), tq)
+		# mastro de antenas de TV e a parabólica
+		var ant := Color(0.42, 0.36, 0.60)
+		_ln(Vector2(640, 220), Vector2(640, 430), ant, 1.0)
+		for k in 5:
+			var ay: float = 232.0 + k * 22.0
+			var hl: float = 46.0 - k * 6.0
+			_ln(Vector2(640.0 - hl, ay), Vector2(640.0 + hl, ay), ant, 1.0)
+		_ln(Vector2(640, 330), Vector2(570, 440), Color(ant.r, ant.g, ant.b, 0.5), 1.0)
+		_ln(Vector2(640, 330), Vector2(712, 440), Color(ant.r, ant.g, ant.b, 0.5), 1.0)
+		_ln(Vector2(820, 430), Vector2(820, 364), ant, 2.0)
+		_ar(Vector2(822, 350), 36, PI * 0.15, PI * 0.9, 12, ant.lightened(0.15), 4.0)
+		_ln(Vector2(822, 350), Vector2(860, 320), ant, 1.0)
+		_ci(Vector2(860, 320), 4, ant.lightened(0.3))
+		# torre de rádio (as luzes vermelhas e o campo magnético são animados)
+		var tc: float = 1010.0
+		for k in 14:
+			var t0: float = k / 14.0
+			var t1: float = (k + 1) / 14.0
+			var y0: float = lerpf(436.0, 34.0, t0)
+			var y1: float = lerpf(436.0, 34.0, t1)
+			var h0: float = lerpf(66.0, 7.0, t0)
+			var h1: float = lerpf(66.0, 7.0, t1)
+			_ln(Vector2(tc - h0, y0), Vector2(tc + h0, y0), metal.lightened(0.1), 1.0)
+			_ln(Vector2(tc - h0, y0), Vector2(tc + h1, y1), metal, 1.0)
+			_ln(Vector2(tc + h0, y0), Vector2(tc - h1, y1), metal, 1.0)
+		_ln(Vector2(tc - 66, 436), Vector2(tc - 7, 34), metal.lightened(0.2), 6.0)
+		_ln(Vector2(tc + 66, 436), Vector2(tc + 7, 34), metal.lightened(0.05), 6.0)
+		_ln(Vector2(tc, 34), Vector2(tc, 2), metal.lightened(0.2), 1.0)
+		for k in 3:
+			_ar(Vector2(tc + 34.0 - k * 8.0, 210.0 - k * 44.0), 14, -PI * 0.5, PI * 0.5, 8, metal.lightened(0.25), 2.0)
+		for ly in [34.0, 168.0, 300.0]:
+			_ci(Vector2(tc, ly), 4, Color(0.3, 0.05, 0.08))
+		# fios entre a torre, o mastro e a caixa d'água
+		_fio(Vector2(tc - 8, 120), Vector2(640, 232), 34.0, Color(0.05, 0.03, 0.1))
+		_fio(Vector2(640, 250), Vector2(446, 214), 22.0, Color(0.05, 0.03, 0.1))
+		_fio(Vector2(tc + 8, 150), Vector2(1330, 200), 26.0, Color(0.05, 0.03, 0.1))
+		# mureta do terraço, com tijolos
+		draw_rect(Rect2(-40, 420, 1360, 27), P.parede_baixa)
+		draw_rect(Rect2(-40, 420, 1360, 5), P.parede_baixa.lightened(0.35))
+		for k in 40:
+			_ln(Vector2(-40.0 + k * 36.0, 425), Vector2(-40.0 + k * 36.0, 444), P.parede_baixa.darkened(0.35), 1.0)
+		draw_rect(Rect2(-40, 444, 1360, 3), Color(0, 0, 0, 0.45))
+		# chão do terraço: manta asfáltica com emendas, cascalho e poças
+		_chao(P.piso_a, P.piso_b, P.junta)
+		for k in 70:
+			var sx: float = fposmod(k * 199.0, 1360.0) - 40.0
+			var sy: float = 456.0 + fposmod(k * 73.0, 260.0)
+			draw_rect(Rect2(sx, sy, 4, 4), P.junta.lightened(0.1) if k % 2 == 0 else P.junta.darkened(0.2))
+		_elipse(Vector2(560, 600), 120, 12, Color(roxo.r, roxo.g, roxo.b, 0.10))
+		_elipse(Vector2(880, 520), 80, 8, Color(roxo.r, roxo.g, roxo.b, 0.08))
+		draw_colored_polygon(PackedVector2Array([Vector2(300, 560), Vector2(350, 556), Vector2(346, 584), Vector2(306, 586)]), P.junta.darkened(0.4))
+		draw_rect(Rect2(-40, 447, 1360, 4), P.junta.darkened(0.3))
+		_sombra_vinheta()
+
 # ---------------------------------------------------------------- animados
 ## Elementos animados do cenário, em baixa resolução (outro SubViewport, atualizado
 ## sempre). O tempo vem do Campo já em passos de 1/12 s: o movimento anda em quadros.
@@ -4987,6 +5808,16 @@ class Animado extends Pixel:
 				_anim_rua()
 			10:
 				_anim_toca()
+			11:
+				_anim_mercado()
+			12:
+				_anim_ferrovelho()
+			13:
+				_anim_beco()
+			14:
+				_anim_arena()
+			15:
+				_anim_antenas()
 			_:
 				_anim_quarto()
 
@@ -5248,6 +6079,174 @@ class Animado extends Pixel:
 			var br: float = clampf(sin(rel * 2.0 + k * 1.6) * 2.0, 0.0, 1.0)
 			_ci(Vector2(236.0 + k * 66.0, 440.0), 3.0, Color(1.0, 0.95, 0.6, 0.8 * br))
 		_poeira(Rect2(260, 100, 780, 340), 20, Color(1.0, 0.85, 0.6, 0.5), 5.0)
+	# ---- cenas das ruas (ato 3)
+	func _anim_mercado() -> void:
+		# placa de néon do peixe: pisca de vez em quando
+		var ciclo: float = fposmod(rel, 5.0)
+		var luz: float = 1.0
+		if ciclo > 3.6 and ciclo < 4.0:
+			luz = 0.3 + 0.7 * (1.0 if int(rel * 14.0) % 2 == 0 else 0.0)
+		_neon_peixe(Vector2(1180, 136), Color(0.3, 0.95, 1.0, luz), 2.0)
+		_halo(Vector2(1180, 136), 70.0, Color(0.3, 0.9, 1.0, 0.018 * luz), 5)
+		# lâmpada do poste, tremendo de leve
+		var fl: float = 0.5 + 0.5 * sin(rel * 13.0) * sin(rel * 2.3)
+		_halo(Vector2(645, 148), 130.0, Color(1.0, 0.85, 0.5, 0.012 + 0.003 * fl), 8)
+		draw_rect(Rect2(622, 142, 46, 5), Color(1.0, 0.95, 0.7))
+		# luz vermelha do guindaste
+		if fposmod(rel, 1.8) < 0.6:
+			_ci(Vector2(912, 90), 3.0, Color(1.0, 0.25, 0.2))
+			_halo(Vector2(912, 90), 16.0, Color(1.0, 0.25, 0.2, 0.06), 3)
+		# brilhos na água do porto
+		for k in 8:
+			var t: float = fposmod(rel * 0.2 + k * 0.137, 1.0)
+			var gx: float = fposmod(k * 211.0, 1280.0)
+			var gy: float = 306.0 + fposmod(k * 29.0, 60.0)
+			_ln(Vector2(gx, gy), Vector2(gx + 28.0, gy), Color(0.8, 0.95, 1.0, 0.3 * sin(t * PI)), 1.0)
+		# neblina baixa passando rente ao cais
+		for k in 5:
+			var nx: float = fposmod(rel * 14.0 + k * 300.0, 1700.0) - 200.0
+			_elipse_a(Vector2(nx, 436.0 + (k % 2) * 8.0), 150, 9, Color(0.7, 0.85, 0.95, 0.07))
+
+	func _anim_ferrovelho() -> void:
+		# faíscas do soldador, saltando da junta da torre
+		var pisca: float = 0.5 + 0.5 * sin(rel * 40.0)
+		_halo(Vector2(1041, 296), 26.0, Color(1.0, 0.9, 0.5, 0.04 + 0.04 * pisca), 4)
+		_ci(Vector2(1041, 296), 4.0, Color(1.0, 0.97, 0.8))
+		for k in 8:
+			var t: float = fposmod(rel * 1.4 + k * 0.125, 1.0)
+			var dx: float = (float((k * 5) % 7) - 3.0) * 18.0 * t
+			var py: float = 296.0 - 46.0 * t + 120.0 * t * t
+			_ci(Vector2(1041.0 + dx, py), 2.0, Color(1.0, 0.85 - 0.45 * t, 0.3, 1.0 - t))
+		# barril em chamas
+		var fo: float = 0.5 + 0.5 * sin(rel * 9.0) * sin(rel * 5.3)
+		for i in 3:
+			var h: float = 34.0 + 16.0 * sin(rel * 11.0 + i * 1.9)
+			var fx: float = 716.0 - 11.0 + i * 11.0
+			draw_colored_polygon(PackedVector2Array([Vector2(fx - 9, 386), Vector2(fx + sin(rel * 7.0 + i) * 4.0, 386.0 - h), Vector2(fx + 9, 386)]), Color(1.0, 0.42, 0.1, 0.95))
+			draw_colored_polygon(PackedVector2Array([Vector2(fx - 5, 386), Vector2(fx, 386.0 - h * 0.6), Vector2(fx + 5, 386)]), Color(1.0, 0.85, 0.3, 0.95))
+		_halo(Vector2(716, 370), 120.0, Color(1.0, 0.55, 0.2, 0.012 + 0.004 * fo), 8)
+		for k in 4:
+			var tt: float = fposmod(rel * 0.6 + k * 0.25, 1.0)
+			_ci(Vector2(716.0 + sin(rel * 3.0 + k) * 10.0, 380.0 - tt * 90.0), 1.6, Color(1.0, 0.75, 0.3, 1.0 - tt))
+		# calor do sol baixo e poeira no ar
+		_halo(Vector2(900, 326), 150.0, Color(1.0, 0.7, 0.3, 0.012 + 0.004 * sin(rel * 2.0)), 6)
+		_poeira(Rect2(300, 300, 700, 140), 16, Color(1.0, 0.8, 0.5, 0.5), 4.0)
+
+	## Sprites de 7x5 das telas dos fliperamas.
+	const INVASOR: Array[String] = ["0010100", "0111110", "1101011", "1111111", "1010101"]
+	const FANTASMA: Array[String] = ["0111110", "1111111", "1011101", "1111111", "1010101"]
+
+	## x na altura y da linha de fuga k da grade do chão (mesma conta do Fundo).
+	func _xp(k: float, esp: float, y: float) -> float:
+		var x0: float = 640.0 + k * esp
+		var xe: float = 640.0 + (x0 - 640.0) * ((740.0 - 180.0) / (447.0 - 180.0))
+		return x0 + (xe - x0) * (y - 447.0) / 293.0
+
+	func _anim_beco() -> void:
+		var cian := Color(0.2, 0.85, 0.95)
+		var laranja := Color(1.0, 0.55, 0.15)
+		# letreiro: néon aceso; a letra "I" (a 3ª) falha de vez em quando
+		var cic: float = fposmod(rel, 4.0)
+		for n in 9:
+			var apagada: bool = n == 2 and cic > 2.6 and cic < 3.2 and int(rel * 10.0) % 2 == 0
+			if not apagada:
+				_letras(436.0, 112.0, "FLIPERAMA", 8.0, cian, n)
+		_halo(Vector2(640, 140), 230.0, Color(cian.r, cian.g, cian.b, 0.012), 6)
+		_neon_fantasma(Vector2(340, 138), laranja, 2.0)
+		if fposmod(rel, 3.0) < 2.4:
+			_neon_fantasma(Vector2(948, 138), Color(0.9, 0.25, 0.65), 2.0)
+		# telas dos fliperamas
+		var cores: Array[Color] = [cian, Color(0.9, 0.25, 0.65), laranja]
+		for k in 8:
+			var x: float = 250.0 + k * 92.0
+			var cor: Color = cores[k % 3]
+			var sx: float = x + 12.0
+			var sy: float = 447.0 - 168.0 + 36.0
+			var pulso: float = 0.7 + 0.3 * sin(rel * 3.0 + k)
+			draw_rect(Rect2(sx, sy, 56, 52), Color(cor.r * 0.4 * pulso, cor.g * 0.4 * pulso, cor.b * 0.4 * pulso))
+			var spr: Array[String] = INVASOR if k % 2 == 0 else FANTASMA
+			var ox: float = sx + 12.0 + float(int(rel * 2.0 + k) % 3 - 1) * 4.0
+			var oy: float = sy + 10.0 + float(int(rel + k) % 2) * 4.0
+			for r in 5:
+				for c in 7:
+					if spr[r][c] == "1":
+						draw_rect(Rect2(ox + c * 4.0, oy + r * 4.0, 4, 4), cor.lightened(0.55))
+			draw_rect(Rect2(sx + 4, sy + 44, 48, 4), Color(cor.r, cor.g, cor.b, 0.6))
+			draw_rect(Rect2(x + 10, 447.0 - 168.0 + 10.0, 60, 4), cor.lightened(0.25))
+			_elipse_a(Vector2(x + 40.0, 458.0), 56.0, 7.0, Color(cor.r, cor.g, cor.b, 0.05))
+		# a grade do chão pulsa em onda, do fundo para a frente
+		for k in range(-12, 13):
+			var al: float = 0.16 * (0.5 + 0.5 * sin(rel * 2.5 - k * 0.5))
+			_ln(Vector2(_xp(k, 110.0, 447.0), 447), Vector2(_xp(k, 110.0, 740.0), 740), Color(cian.r, cian.g, cian.b, al), 1.0)
+		var ys: Array[float] = [466.0, 490.0, 520.0, 556.0, 600.0, 652.0, 712.0]
+		for r in ys.size():
+			var al2: float = 0.16 * (0.5 + 0.5 * sin(rel * 2.5 - r * 0.9))
+			_ln(Vector2(-40, ys[r]), Vector2(1320, ys[r]), Color(cian.r, cian.g, cian.b, al2), 1.0)
+		# fumaça baixa
+		for k in 5:
+			var nx: float = fposmod(rel * 10.0 + k * 300.0, 1700.0) - 200.0
+			_elipse_a(Vector2(nx, 440.0 + (k % 2) * 8.0), 140, 9, Color(0.6, 0.5, 0.8, 0.07))
+
+	func _anim_arena() -> void:
+		# relâmpago: a cada 7 s o céu acende e um raio aparece entre as nuvens
+		var ciclo: float = fposmod(rel, 7.0)
+		if ciclo > 5.2 and ciclo < 5.6:
+			var f: float = 1.0 if int(rel * 12.0) % 2 == 0 else 0.5
+			draw_rect(Rect2(-40, -40, 1360, 330), Color(0.85, 0.88, 1.0, 0.14 * f))
+			_pl(PackedVector2Array([Vector2(820, 20), Vector2(790, 90), Vector2(812, 100), Vector2(764, 200), Vector2(786, 206), Vector2(748, 284)]), Color(0.95, 0.95, 1.0, 0.95), 2.0)
+		# estandartes vermelhos balançando nas colunas inteiras
+		for bx in [330.0, 1070.0]:
+			var sw: float = sin(rel * 1.6 + bx) * 5.0
+			draw_rect(Rect2(bx - 26, 164, 52, 5), Color(0.55, 0.42, 0.2))
+			draw_colored_polygon(PackedVector2Array([Vector2(bx - 22, 169), Vector2(bx + 22, 169), Vector2(bx + 22 + sw, 284), Vector2(bx + sw, 262), Vector2(bx - 22 + sw, 284)]), Color(0.72, 0.14, 0.1))
+			_pl(PackedVector2Array([Vector2(bx - 10 + sw * 0.4, 236), Vector2(bx + sw * 0.4, 190), Vector2(bx + 10 + sw * 0.4, 236)]), Color(0.95, 0.78, 0.35), 2.0)
+		# braseiros
+		for bx in [590.0, 790.0]:
+			var fo: float = 0.5 + 0.5 * sin(rel * 9.0 + bx) * sin(rel * 5.3)
+			for i in 3:
+				var h: float = 28.0 + 14.0 * sin(rel * 11.0 + i * 1.9 + bx)
+				var fx: float = bx - 10.0 + i * 10.0
+				draw_colored_polygon(PackedVector2Array([Vector2(fx - 9, 330), Vector2(fx + sin(rel * 7.0 + i) * 4.0, 330.0 - h), Vector2(fx + 9, 330)]), Color(1.0, 0.42, 0.1, 0.95))
+				draw_colored_polygon(PackedVector2Array([Vector2(fx - 5, 330), Vector2(fx, 330.0 - h * 0.6), Vector2(fx + 5, 330)]), Color(1.0, 0.85, 0.3, 0.95))
+			_halo(Vector2(bx, 312), 120.0, Color(1.0, 0.6, 0.25, 0.012 + 0.004 * fo), 8)
+		_poeira(Rect2(500, 200, 380, 240), 12, Color(1.0, 0.75, 0.4, 0.5), 6.0)
+
+	func _anim_antenas() -> void:
+		var roxo := Color(0.62, 0.30, 0.90)
+		var tc: float = 1010.0
+		# raio entre os arranha-céus, a cada 6 s
+		var ciclo: float = fposmod(rel + 2.0, 6.0)
+		if ciclo > 4.4 and ciclo < 4.8:
+			var f: float = 1.0 if int(rel * 12.0) % 2 == 0 else 0.5
+			draw_rect(Rect2(-40, -40, 1360, 300), Color(0.8, 0.7, 1.0, 0.12 * f))
+			_pl(PackedVector2Array([Vector2(560, 10), Vector2(540, 80), Vector2(566, 90), Vector2(520, 190), Vector2(544, 196), Vector2(500, 270)]), Color(0.95, 0.9, 1.0, 0.95), 2.0)
+		# luzes de aviso da torre, em revezamento
+		var ly: Array[float] = [34.0, 168.0, 300.0]
+		for k in 3:
+			if fposmod(rel + k * 0.5, 1.5) < 0.6:
+				_ci(Vector2(tc, ly[k]), 3.0, Color(1.0, 0.25, 0.2))
+				_halo(Vector2(tc, ly[k]), 16.0, Color(1.0, 0.25, 0.2, 0.06), 3)
+		# campo magnético: linhas de força que saem da torre e se abrem, sumindo
+		for k in 4:
+			var fase: float = fposmod(rel * 0.4 + k * 0.25, 1.0)
+			var rx: float = 36.0 + fase * 180.0
+			var pts := PackedVector2Array()
+			for i in 25:
+				var a: float = TAU * i / 24.0
+				pts.append(Vector2(tc + cos(a) * rx, 232.0 + sin(a) * 196.0))
+			_pl(pts, Color(0.78, 0.55, 1.0, 0.5 * (1.0 - fase)), 1.0)
+		_halo(Vector2(tc, 34), 44.0, Color(roxo.r, roxo.g, roxo.b, 0.03 + 0.02 * sin(rel * 6.0)), 4)
+		# faísca na ponta da parabólica
+		if fposmod(rel, 2.2) < 0.25:
+			_ci(Vector2(860, 320), 3.0, Color(0.9, 0.8, 1.0))
+			_halo(Vector2(860, 320), 14.0, Color(0.8, 0.6, 1.0, 0.06), 3)
+		# estrelas cintilando
+		for k in 8:
+			var sx: float = fposmod(k * 197.0 + 15 * 53.0, 1280.0)
+			var sy: float = fposmod(k * 83.0 + 15 * 29.0, 200.0)
+			var tw: float = 0.5 + 0.5 * sin(rel * 2.0 + k * 1.7)
+			_ci(Vector2(sx, sy), 2.0, Color(1, 1, 0.95, 0.35 * tw))
+		_poeira(Rect2(300, 250, 700, 180), 10, Color(0.8, 0.7, 1.0, 0.45), 4.0)
 
 ## Sombreador do cenário: quantiza as cores em poucos tons e as mistura com pontilhado
 ## ordenado (Bayer 4x4) na grade de 320x180, e escurece 1 pixel no lado escuro das bordas.
@@ -5337,15 +6336,8 @@ func _cenario() -> void:
 		vp_anim.add_child(anim)
 		_nova_tela(vp_anim, true)
 	var cena: int = _cena()
-	# 3º ato (cenas 11..15): fundo PROVISÓRIO, o de um lugar de fora tingido com a cor da gangue (cenários definitivos: etapa 6 do ato 3)
-	var tinta: Color = Color(0, 0, 0, 0)
-	if cena > 10:
-		var gc: Color = Fases.GANGUE_COR[clampi(cena - 11, 0, 4)]
-		tinta = Color(gc.r, gc.g, gc.b, 0.22)
-		cena -= 5
-	if fundo.fase != cena or fundo.tinta != tinta or not fundo_ok:
+	if fundo.fase != cena or not fundo_ok:
 		fundo.fase = cena
-		fundo.tinta = tinta
 		fundo.queue_redraw()
 		fundo_ok = true
 		fundo_rep = 3
