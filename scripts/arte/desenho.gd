@@ -87,6 +87,8 @@ static func forma(c: CanvasItem, tipo: int, f: float, anim: float = 0.0) -> void
 			DesenhoFA.forma(c, tipo, f, anim)
 		elif tipo < 68:
 			DesenhoFB.forma(c, tipo, f, anim)
+		elif tipo >= RoupaGatoI.PRIMEIRO:
+			RoupaGatoI.desenhar(c, tipo, f, anim)
 		elif tipo >= RoupaGatoH.PRIMEIRO:
 			RoupaGatoH.desenhar(c, tipo, f, anim)
 		elif tipo >= RoupaGatoG.PRIMEIRO:
@@ -1118,7 +1120,7 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 		# camadas atrás do corpo do bicho (capa, aljava, roda)
 		for s in [1, 3, 0, 2]:
 			var pa: Peca = pecas[s]
-			if pa == null or not (RoupaGatoF.tem_atras(pa.tipo) or RoupaGatoG.tem_atras(pa.tipo) or RoupaGatoH.tem_atras(pa.tipo)):
+			if pa == null or not (RoupaGatoF.tem_atras(pa.tipo) or RoupaGatoG.tem_atras(pa.tipo) or RoupaGatoH.tem_atras(pa.tipo) or RoupaGatoI.tem_atras(pa.tipo)):
 				continue
 			var oa: int = RoupaGato.onde(pa.tipo)
 			var dpa: Vector2 = BichoPx.desloc(oa, fam, tipo, anim, andando, golpe, ct, parado)
@@ -1253,7 +1255,7 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		# camadas que ficam ATRÁS do corpo (capa, aljava, roda): desenhadas antes do gato, só aparece o que sai da silhueta
 		for s in [1, 3, 0, 2]:
 			var pa: Peca = pecas[s]
-			if pa == null or not (RoupaGatoF.tem_atras(pa.tipo) or RoupaGatoG.tem_atras(pa.tipo) or RoupaGatoH.tem_atras(pa.tipo)):
+			if pa == null or not (RoupaGatoF.tem_atras(pa.tipo) or RoupaGatoG.tem_atras(pa.tipo) or RoupaGatoH.tem_atras(pa.tipo) or RoupaGatoI.tem_atras(pa.tipo)):
 				continue
 			_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.onde(pa.tipo), q) * GATO_K, 0.0, GATO_K)
 			RoupaGato.passo = 1
@@ -1520,7 +1522,7 @@ const ICONE_PIXEL := true
 static func icone(c: CanvasItem, tipo: int, centro: Vector2, tam: float, nivel: int = 0, f: float = 0.0, anim: float = 0.0, marcas: Array = [], raridade: int = 0) -> void:
 	if ICONE_PIXEL:
 		# o ícone é a própria roupa em pixel art que o gato veste (RoupaGato), ampliada para caber
-		var cx: Rect2 = IconeDados.CAIXA[tipo] if tipo < IconeDados.CAIXA.size() else (RoupaGatoH.caixa(tipo) if tipo >= RoupaGatoH.PRIMEIRO else RoupaGatoG.caixa(tipo) if tipo >= RoupaGatoG.PRIMEIRO else (RoupaGatoF.caixa(tipo) if tipo >= RoupaGatoF.PRIMEIRO else RoupaGatoE.caixa(tipo)))
+		var cx: Rect2 = IconeDados.CAIXA[tipo] if tipo < IconeDados.CAIXA.size() else (RoupaGatoI.caixa(tipo) if tipo >= RoupaGatoI.PRIMEIRO else RoupaGatoH.caixa(tipo) if tipo >= RoupaGatoH.PRIMEIRO else RoupaGatoG.caixa(tipo) if tipo >= RoupaGatoG.PRIMEIRO else (RoupaGatoF.caixa(tipo) if tipo >= RoupaGatoF.PRIMEIRO else RoupaGatoE.caixa(tipo)))
 		var px: float = tam * 0.92 / maxf(9.0, maxf(cx.size.x, cx.size.y))
 		var meio: Vector2 = cx.position + cx.size * 0.5
 		c.draw_set_transform(centro - meio * px, 0.0, Vector2(px, px))

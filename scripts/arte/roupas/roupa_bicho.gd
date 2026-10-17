@@ -58,6 +58,13 @@ const _PAL: Array = [
 	{"a": Color("26a0ff"), "A": Color("7fd0ff"), "d": Color("1060b0"), "b": Color("ff8a1c"), "B": Color("ffc060"), "e": Color("ffffff"), "v": Color("1a2a3e"), "V": Color("4a6a88")},   # rocket miaugue
 	{"a": Color("cc1a26"), "A": Color("ff5a60"), "d": Color("80101a"), "b": Color("2a2630"), "B": Color("5a5666"), "e": Color("ffffff")},   # deadmiau
 	{"a": Color("94603a"), "A": Color("bc8a5e"), "d": Color("5e3a22"), "b": Color("cda85a"), "B": Color("f0d58c"), "e": Color("d8c8a0")},   # meon
+	# lote 4 da expansão (43 a 48)
+	{"a": Color("9a9aa4"), "A": Color("c8c8d0"), "d": Color("5a5a64"), "b": Color("2a2a30"), "B": Color("5a5a66"), "e": Color("e8e8f0")},   # miau-noir
+	{"a": Color("f0f4f8"), "A": Color("ffffff"), "d": Color("b8c0cc"), "b": Color("1c1c24"), "B": Color("4a4a58"), "e": Color("ffffff")},   # hollowmiau
+	{"a": Color("e0344c"), "A": Color("ff7a8a"), "d": Color("9a1428"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # silkmiau
+	{"a": Color("f2b01a"), "A": Color("ffe07a"), "d": Color("b0760a"), "b": Color("e87a1a"), "B": Color("ffb060"), "e": Color("3a80e8")},   # super miaujin
+	{"a": Color("8c6a3c"), "A": Color("b8905e"), "d": Color("5a4026"), "b": Color("3a2a1a"), "B": Color("6a5030"), "e": Color("e8c860")},   # o arqueólogo
+	{"a": Color("e03a3a"), "A": Color("ff7a70"), "d": Color("8c1a22"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # treinador
 ]
 
 ## Cores da roupa de corpo que diferem das do chapéu (o barril do circo é de madeira, o avental do jardineiro é verde).
@@ -475,6 +482,51 @@ const _CHAPEU: Array = [
 		"obbbobBBBbo",
 		"obo..obBbbo",
 		".o....oobo."]},
+	# 43 miau-noir: fedora cinza com a faixa escura
+	{"cheio": false, "l": [
+		"...ooooo...",
+		"..oAaaaao..",
+		".oaaaaaaao.",
+		"obbbbbbbbbo",
+		"oAaaaaaaaAo",
+		".ooooooooo."]},
+	# 44 hollowmiau: casco branco com dois chifres finos e olhos pretos
+	{"cheio": true, "l": [
+		"oo.......oo",
+		".oo.....oo.",
+		".oAAaaaAAo.",
+		"oaakkaakkao",
+		"oaakkaakkao",
+		".oddddddo.."]},
+	# 45 silkmiau: máscara branca de chifres longos
+	{"cheio": true, "l": [
+		"o.........o",
+		"oo.......oo",
+		".oo.....oo.",
+		"oAAaaaaaAAo",
+		"oakkaaakkao",
+		".oddddddo.."]},
+	# 46 super miaujin: cabelo dourado em espetos
+	{"cheio": false, "l": [
+		"o..o.o.o..o",
+		"oo.ooooo.oo",
+		"oAoAAAAAoAo",
+		"oAaaaaaaaAo",
+		"oaaaaaaaaao"]},
+	# 47 o arqueólogo: chapéu mole de aba caída e faixa escura
+	{"cheio": false, "l": [
+		"...ooooo...",
+		"..oaaaaao..",
+		".obbbbbbbo.",
+		"oAaaaaaaaAo",
+		"odddddddddo"]},
+	# 48 treinador: boné vermelho com a bola branca na frente
+	{"cheio": false, "l": [
+		"..ooooooo..",
+		".oAaaaaaao.",
+		"oaaaBBBaaao",
+		"oaaBeBBaaao",
+		"oddddddddoo"]},
 ]
 ## Quantos pixels a última linha do chapéu fica abaixo do topo do crânio.
 const _DESCE := 1
@@ -570,6 +622,7 @@ const _FORMA: Array[String] = [
 	"colete", "colete", "colete", "colete", "colete", "colete",
 	"colete", "colete", "colete", "colete", "colete", "colete",
 	"casco", "casco", "casco", "colete", "colete", "colete",
+	"colete", "manta", "capa", "colete", "colete", "colete",
 ]
 const _MEDIDA: Array = [
 	[0.06, 1.0, 0.80], [0.06, 1.0, 0.78], [0.0, 0.92, 0.85], [0.06, 1.0, 0.80], [0.10, 1.0, 0.58], [0.06, 1.0, 0.80],
@@ -580,6 +633,7 @@ const _MEDIDA: Array = [
 	[0.06, 1.0, 0.82], [0.06, 1.0, 0.80], [0.06, 1.0, 0.82], [0.06, 1.0, 0.82], [0.04, 1.0, 0.84], [0.06, 1.0, 0.80],
 	[0.06, 1.0, 0.82], [0.06, 1.0, 0.84], [0.06, 1.0, 0.84], [0.06, 1.0, 0.82], [0.06, 1.0, 0.84], [0.04, 1.0, 0.92],
 	[0.05, 0.95, 0.62], [0.05, 0.95, 0.62], [0.05, 0.95, 0.62], [0.06, 1.0, 0.84], [0.06, 1.0, 0.82], [0.06, 1.0, 0.84],
+	[0.06, 1.0, 0.82], [0.10, 1.0, 0.58], [0.0, 0.92, 0.85], [0.06, 1.0, 0.80], [0.06, 1.0, 0.82], [0.06, 1.0, 0.82],
 ]
 
 ## Pixels pintados da roupa: {Vector2i: Color}.
@@ -852,6 +906,12 @@ const _EMBLEMA: Array = [
 	["bB", "Bb"],                                # rocket miaugue: chama pintada
 	["bB", "Bb"],                                # deadmiau: remendo
 	[],                                          # meon
+	[],                                          # miau-noir
+	[],                                          # hollowmiau
+	[],                                          # silkmiau (capa)
+	[],                                          # super miaujin
+	[],                                          # o arqueólogo
+	[],                                          # treinador
 ]
 ## Fantasias com barra de outra cor na bainha (a letra da barra).
 const _BARRA: Dictionary = {0: "b", 1: "b", 3: "y", 4: "", 6: "b", 7: "B", 11: "b", 13: "b", 16: "", 17: "b", 20: "b", 21: "b", 22: "b", 25: "b", 27: "b", 30: "b"}
