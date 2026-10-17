@@ -32,15 +32,14 @@ static func tem_atras(tipo: int) -> bool:
 	return tipo == Pecas.Tipo.MANTO_PRETINHO or tipo == Pecas.Tipo.CAPA_CARMESIM or tipo == Pecas.Tipo.MOCHILA_AMARELA
 
 # ------------------------------------------------------------------ paletas
-## Miau-Noir (frio e quase monocromático, como a referência dos quadrinhos): o contorno; h/H/s chapéu (médio, luz, sombra); f/F/e faixa do chapéu
-## (médio, luz, sombra); c/C/S sobretudo grafite-azulado (médio, luz, sombra); m máscara cinza; g linha de teia; L lente branca (só ela é branca pura);
-## l vidro do lampião; q branco sujo (quadros do filme); t/T/u latão (médio, luz, sombra); p película; w arame e cinto.
+## Miau-Noir (como a referência dos quadrinhos): o contorno quase preto; H/h/s chapéu (preto puro, brilho vertical, sombra da aba); B faixa cinza-azulada;
+## W lente branca com aro escuro r; G máscara cinza média e g linhas de teia; c/C/S sobretudo azul-acinzentado (médio, luz, sombra); k lapela clara;
+## F botões e fivela; w cinto; t/T/u ferro do lampião (médio, luz, sombra); l vidro; q/f quadros do filme; p película.
 const _PAL_NOIR := {
-	"o": Color("0a0c12"), "h": Color("1c2029"), "H": Color("3a4658"), "s": Color("10131a"),
-	"f": Color("4a566c"), "F": Color("8c9ab2"), "e": Color("2c3444"),
-	"c": Color("3e4a60"), "C": Color("7a8eac"), "S": Color("222a3a"),
-	"m": Color("a8b2c2"), "g": Color("1a202c"), "L": Color("f6f8fc"), "l": Color("c4ccd8"), "q": Color("e8eaee"),
-	"t": Color("a68a5a"), "T": Color("d2b882"), "u": Color("6e5a38"), "p": Color("22262e"), "w": Color("5a6478"),
+	"o": Color("080a10"), "H": Color("14161d"), "h": Color("5a6c88"), "s": Color("0c0e13"), "B": Color("5d6f86"),
+	"W": Color("f6f8fc"), "r": Color("12151c"), "G": Color("9aa3b0"), "g": Color("1e242e"),
+	"c": Color("4c5d76"), "C": Color("8597ad"), "S": Color("2a3240"), "k": Color("a9b8cc"), "F": Color("d4dde8"), "w": Color("161a22"),
+	"t": Color("565e6c"), "T": Color("8a94a4"), "u": Color("363c48"), "l": Color("aab4c2"), "q": Color("e8eaee"), "f": Color("c4ccd8"), "p": Color("1e222a"),
 }
 ## Hollowmiau: o contorno; w/W/d osso (médio, luz, sombra); k/e olho (preto, brilho); a/b/D manto grafite-azulado (médio, luz, sombra); n/N/s aço
 ## do prego (médio, luz, sombra); u couro do punho; g vidro da ampola (e a alma, em W).
@@ -558,83 +557,56 @@ static func _montar(tipo: int, fase: int) -> Array:
 	match tipo:
 		# ---------------------------------------------------------------- Miau-Noir (Spider-Man Noir): monocromático
 		Pecas.Tipo.FEDORA_TEIA:
-			# fedora preto de copa alta (faixa azulada e brilho vertical) e aba larga caída; sob a aba, a máscara cinza com duas lentes brancas
-			# redondas de aviador (aro escuro nos cantos de fora) e a teia em linhas escuras de 1 px; o focinho do gato fica à mostra
-			_txt(cv, -1, -25, [
-				"....hhhhhh....",
-				"...hhHHhhhs...",
-				"...hhHHhhhs...",
-				"...hhHHhhhs...",
-				"...hhHHhhhs...",
-				"...hhHhhhhs...",
-				"...ffFffffe...",
-				"...ffffffee...",
-				"hhhhHHhhhhhHHhh",
-				".sssssssssssss.",
+			# fedora preto pequeno (aba de 11 px, copa de 6, faixa cinza-azulada e brilho vertical); logo sob a aba, óculos de duas lentes redondas
+			# brancas com aro escuro; abaixo, a máscara cinza média com a teia em raias e arcos escuros e a gola alta do sobretudo nos lados
+			_txt(cv, 0, -23, [
+				"....oooooo....",
+				"...oHHhHHHo...",
+				"...oHHhHHHo...",
+				"...oBBBBBBo...",
+				".ooHHHHHHHHoo.",
+				"oHHHHHHHHHHHHo",
+				".oooooooooooo.",
+				"..orWWroorWWro",
+				"..orWWrGGrWWro",
+				"..oGrrgGgGrrGo",
+				"..ogGGgGgGGgo.",
+				"...oGgGgGgGo..",
+				"..oCoGGgGGoCo.",
+				".oCCooooooCCo.",
 			])
-			_txt(cv, 3, -15, [
-				"gLLggLLg",
-				"LLLgLLLL",
-				"gLLggLLg",
-				"mgmmgmg.",
-				"mmgggm..",
-				".mmgm...",
-			])
-			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_NOIR)]
 		Pecas.Tipo.SOBRETUDO_CINZA:
-			# sobretudo transpassado grafite-azulado que segue o dorso curvo: gola alta levantada, lapela larga em diagonal, fileira dupla de botões,
-			# cinto com fivela e a barra que sobe em arco sob a barriga, deixando as patas saírem
+			# sobretudo transpassado azul-acinzentado que segue o dorso curvo: gola alta, lapela larga e clara em diagonal, duas fileiras de botões
+			# claros, cinto escuro com fivela, dobras de luz e sombra e a barra que sobe em arco sob a barriga, deixando as patas saírem
 			_corpo(cv, "c", -4, -7, -4)
 			_gola(cv, "c")
 			_luz(cv, "c", "C", "S")
-			_px(cv, 3, -15, "S")
-			_px(cv, 3, -14, "S")
+			_px(cv, 3, -15, "C")
+			_px(cv, 3, -14, "C")
+			_px(cv, 2, -14, "S")
 			_linsobre(cv, Vector2i(2, -12), Vector2i(5, -9), "C")
 			_linsobre(cv, Vector2i(3, -12), Vector2i(6, -9), "C")
-			_linsobre(cv, Vector2i(4, -12), Vector2i(7, -9), "S")
-			_sobre(cv, -7, -6, 3, -5, "w")
-			_sobre(cv, 3, -6, 9, -5, "w")
-			_px(cv, 6, -6, "F")
+			_linsobre(cv, Vector2i(4, -12), Vector2i(7, -9), "k")
+			_linsobre(cv, Vector2i(5, -12), Vector2i(8, -9), "S")
+			_sobre(cv, -8, -6, 9, -5, "w")
+			_px(cv, 5, -6, "F")
 			_dobras(cv, [-3, 2], "S")
-			for b in [Vector2i(5, -8), Vector2i(7, -8), Vector2i(5, -6), Vector2i(7, -6)]:
-				if cv.has(b):
+			_dobras(cv, [-5, 0], "C")
+			for b in [Vector2i(4, -8), Vector2i(7, -8), Vector2i(4, -7), Vector2i(7, -7)]:
+				if cv.has(b) and cv[b] != "w":
 					cv[b] = "F"
 			_cont(cv, "o", false)
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_NOIR)]
 		Pecas.Tipo.LANTERNA_BECO:
-			# lampião de beco APAGADO: alça de arame, tampa pontuda, vidro cinza rachado na diagonal e base de latão
-			_txt(cv, 12, -15, [
-				"..ww..",
-				".w..w.",
-				"..tt..",
-				".tttt.",
-				"tttttt",
-				"tqllot",
-				"tllolt",
-				"tlolft",
-				"tolllt",
-				"tlfflt",
-				".tttt.",
-				"..uu..",
-			])
+			# lampião de beco APAGADO, pequeno e de ferro cinza (alça de arame, vidro fosco), para não roubar o olho do rosto
+			_txt(cv, 12, -14, [".ww.", "tttt", "tlqt", "tlft", "tlft", "tttt", ".uu."])
 			_luz(cv, "t", "T", "u")
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_NOIR)]
 		Pecas.Tipo.ROLO_FILME:
-			# carretel preto com dois furos claros e a tira de película (quadros claros e escuros de 2 px) pendendo do carretel
-			_txt(cv, -7, -20, [
-				".ppppp.",
-				"ppppppp",
-				"ppqpppp",
-				"pppfppp",
-				"ppppqpp",
-				"ppppppp",
-				".ppppp.",
-			])
-			_luz(cv, "p", "H", "")
-			_ret(cv, -4, -13, -2, -11, "q")
-			_ret(cv, -4, -11, -2, -9, "p")
+			# carretel de filme pequeno e escuro deitado no dorso, com dois quadros claros
+			_txt(cv, -6, -13, [".pppp", "pqfpp", ".ppp."])
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_NOIR)]
 		# ---------------------------------------------------------------- Hollowmiau (O Cavaleiro): o casco branco de dois chifres curtos

@@ -59,7 +59,7 @@ const _PAL: Array = [
 	{"a": Color("cc1a26"), "A": Color("ff5a60"), "d": Color("80101a"), "b": Color("2a2630"), "B": Color("5a5666"), "e": Color("ffffff")},   # deadmiau
 	{"a": Color("94603a"), "A": Color("bc8a5e"), "d": Color("5e3a22"), "b": Color("cda85a"), "B": Color("f0d58c"), "e": Color("d8c8a0")},   # meon
 	# lote 4 da expansão (43 a 48)
-	{"a": Color("1c2029"), "A": Color("3a4658"), "d": Color("10131a"), "b": Color("a8b2c2"), "B": Color("1a202c"), "e": Color("4a566c")},   # miau-noir
+	{"a": Color("14161d"), "A": Color("5a6c88"), "d": Color("0c0e13"), "b": Color("9aa3b0"), "B": Color("1e242e"), "e": Color("5d6f86")},   # miau-noir
 	{"a": Color("f0f4f8"), "A": Color("ffffff"), "d": Color("b8c0cc"), "b": Color("1c1c24"), "B": Color("4a4a58"), "e": Color("ffffff")},   # hollowmiau
 	{"a": Color("7c3048"), "A": Color("a65870"), "d": Color("4c1c2e"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # silkmiau
 	{"a": Color("f2b01a"), "A": Color("ffe07a"), "d": Color("b0760a"), "b": Color("e87a1a"), "B": Color("ffb060"), "e": Color("3a80e8")},   # super miaujin
@@ -483,7 +483,7 @@ const _CHAPEU: Array = [
 		"obbbobBBBbo",
 		"obo..obBbbo",
 		".o....oobo."]},
-	# 43 miau-noir: fedora preto de copa alta e aba larga, duas lentes brancas redondas e a máscara cinza com a teia
+	# 43 miau-noir: fedora preto pequeno com faixa cinza-azulada, óculos de lentes brancas redondas e a máscara cinza com a teia
 	{"cheio": false, "l": [
 		"...ooooo...",
 		"..oaAaaao..",
