@@ -95,7 +95,7 @@ func _init() -> void:
 ## Varre as constantes de todas as classes do projeto: lista de 25 itens (tamanho antigo de Conjunto) ou 100 (antigo de Tipo)
 ## é tabela paralela que não ganhou as fantasias do lote 1 (foi assim que RoupaBicho estourou no índice 26).
 func _tabelas_paralelas(nc: int, nt: int) -> void:
-	var antigos: Array[int] = [nc - 24, nt - 96, nc - 18, nt - 72, nc - 12, nt - 48, nc - 6, nt - 24]   # tamanhos antes do lote 1, do 2, do 3 e do 4
+	var antigos: Array[int] = [nc - 30, nt - 120, nc - 24, nt - 96, nc - 18, nt - 72, nc - 12, nt - 48, nc - 6, nt - 24]   # tamanhos antes do lote 1, do 2, do 3, do 4 e do 5
 	for gc in ProjectSettings.get_global_class_list():
 		var sc: Script = load(gc["path"])
 		var m: Dictionary = sc.get_script_constant_map()
@@ -236,6 +236,7 @@ func _efeitos_diretos() -> void:
 	_efeitos_lote2()
 	_efeitos_lote3()
 	_efeitos_lote4()
+	_efeitos_lote5()
 	# kits de 4 peças: números dos bônus
 	for c in range(Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.size()):
 		print("%-20s 2 peças: %s | 4 peças: %s" % [Pecas.CONJUNTO_NOME[c], Pecas.conjunto_bonus(c, 1), Pecas.conjunto_bonus(c, 2)])
@@ -651,5 +652,171 @@ func _efeitos_lote4() -> void:
 		for b in sim.inimigos:
 			if b.vivo:
 				b.vida = b.vida_max
+
+## Lote 5: Ranger Miau, Miauzilla, King-Miau, Arthur Miaurgon, Submiautica, Catchullu.
+func _prepara(sim: Simulacao, g: Unidade, n: int, dx: float, vida: float = 9999.0) -> Array[Unidade]:
+	var lista: Array[Unidade] = []
+	for b in sim.inimigos:
+		if b.vivo and not b.chefe and not b.estrutura and not b.clone and lista.size() < n:
+			b.x = g.x + dx + 20.0 * lista.size()
+			b.y = g.y
+			b.vida_max = vida
+			b.vida = vida
+			b.atordoado_t = 0.0
+			b.cd = 99.0
+			lista.append(b)
+	return lista
+
+func _efeitos_lote5() -> void:
+	var C := Pecas.Conjunto
+	# Ranger Miau (enxuto): ligados ganham escudo, o Ranger cresce e não é atordoado
+	var sim := _cena(C.RANGER_MIAU, 51)
+	var rg: Unidade = _gato_do_poder(sim, C.RANGER_MIAU)
+	_ok(rg != null and rg.poder == Pecas.Poder.MEGAZORD, "Ranger sem Megazord")
+	if rg != null:
+		var vr: Array[Unidade] = _prepara(sim, rg, 1, 100.0)
+		var amigo: Unidade = null
+		for a in sim.aliados:
+			if a != rg and a.vivo:
+				amigo = a
+				a.x = rg.x + 40.0
+				a.y = rg.y
+				break
+		rg.gigante_t = 0.0
+		rg.escudo = 0.0
+		var esc0: float = rg.escala()
+		rg.poder_cd = 0.0
+		_ok(not vr.is_empty() and sim.disparar_poder(rg), "Megazord não disparou")
+		_ok(rg.gigante_t > 0.0 and rg.escudo > 0.0 and rg.escala() > esc0 * 1.5, "o Ranger não virou gigante com escudo")
+		_ok(rg.buff_dano_t > 0.0 and rg.buff_dano > 0.4, "o Ranger gigante sem dano a mais")
+		if amigo != null:
+			_ok(amigo.escudo > 0.0, "o aliado perto não ficou ligado")
+		rg.atordoado_t = 2.0
+		sim.passo(Balanco.DT)
+		_ok(rg.atordoado_t == 0.0, "o Ranger gigante devia ser imune a atordoar")
+		var v0: float = rg.vida
+		var esc_v: float = rg.escudo
+		sim._dano_poder(vr[0], rg, 10.0)
+		_ok(rg.vida == v0 and rg.escudo < esc_v, "o escudo devia absorver o dano antes da vida")
+	# Miauzilla: espinho no kit; o sopro contamina e a explosão passa o contágio
+	sim = _cena(C.MIAUZILLA, 52)
+	var zg: Unidade = _gato_do_poder(sim, C.MIAUZILLA)
+	_ok(zg != null and zg.espinho >= Balanco.conj_valor(C.MIAUZILLA, 1), "Miauzilla sem espinho")
+	if zg != null:
+		var vz: Array[Unidade] = _prepara(sim, zg, 3, 100.0)
+		if vz.size() >= 2:
+			zg.poder_cd = 0.0
+			_ok(sim.disparar_poder(zg), "Sopro radioativo não disparou")
+			_ok(vz[0].radio_t > 0.0, "o sopro não deixou o alvo radioativo")
+			vz[1].x = vz[0].x + 20.0
+			vz[1].radio_t = 0.0
+			var vida_vz: float = vz[1].vida
+			vz[0].vida = 0.0
+			sim._matar(vz[0], zg)
+			_ok(vz[1].vida < vida_vz, "o radioativo não explodiu ao cair")
+			_ok(vz[1].radio_t > 0.0 and vz[1].radio_gen == 2, "a explosão não contaminou o vizinho")
+			# chefe contaminado não explode
+			vz[1].chefe = true
+			vz[2].x = vz[1].x + 10.0
+			var vida_c: float = vz[2].vida
+			vz[1].vida = 0.0
+			sim._matar(vz[1], zg)
+			_ok(vz[2].vida == vida_c, "chefe radioativo não devia explodir")
+	# King-Miau: dano no kit; o brado assusta bichos comuns, poupa chefe, e o King fica mais forte
+	sim = _cena(C.KING_MIAU, 53)
+	var kg: Unidade = _gato_do_poder(sim, C.KING_MIAU)
+	_ok(kg != null and kg.poder == Pecas.Poder.BRADO, "King-Miau sem Bater no peito")
+	if kg != null:
+		var vk: Array[Unidade] = _prepara(sim, kg, 2, 80.0)
+		if vk.size() >= 2:
+			vk[1].chefe = true
+			kg.poder_cd = 0.0
+			_ok(sim.disparar_poder(kg), "Bater no peito não disparou")
+			_ok(vk[0].medo_t > 0.0, "o bicho comum devia fugir")
+			_ok(vk[1].medo_t == 0.0, "o chefe devia ser imune ao medo")
+			_ok(kg.resist_t > 0.0 and kg.buff_dano > 0.4, "o King-Miau devia ficar mais forte e mais duro")
+			var x0: float = vk[0].x
+			var vida_k: float = kg.vida
+			for _i in 20:
+				vk[0].cd = 0.0
+				sim.passo(Balanco.DT)
+			_ok(vk[0].vivo and vk[0].x > x0 + 5.0, "o bicho com medo devia andar para o fundo")
+			_ok(kg.vida >= vida_k, "o King-Miau não devia perder vida com os bichos em fuga")
+			vk[0].medo_t = 0.0
+	# Arthur Miaurgon: cantil no kit; a Recompensa paga o time quando o marcado cai
+	sim = _cena(C.ARTHUR_MIAURGON, 54)
+	var ag: Unidade = _gato_do_poder(sim, C.ARTHUR_MIAURGON)
+	_ok(ag != null and ag.cantil >= Balanco.conj_valor(C.ARTHUR_MIAURGON, 1), "Arthur sem cantil")
+	if ag != null:
+		var va: Array[Unidade] = _prepara(sim, ag, 2, 100.0)
+		if va.size() >= 2:
+			va[1].vida = 12000.0
+			va[1].vida_max = 12000.0
+			ag.poder_cd = 0.0
+			_ok(sim.disparar_poder(ag), "Recompensa não disparou")
+			_ok(va[1].rec_t > 0.0 and va[0].rec_t == 0.0, "a recompensa devia marcar o bicho de maior vida")
+			ag.poder_cd = 8.0
+			var amigo2: Unidade = null
+			for a in sim.aliados:
+				if a != ag and a.vivo:
+					amigo2 = a
+					a.vida = a.vida_max * 0.4
+					break
+			var vida_a0: float = amigo2.vida if amigo2 != null else 0.0
+			sim._dano_poder(ag, va[1], 99999.0)
+			_ok(not va[1].vivo, "o marcado devia cair")
+			if amigo2 != null:
+				_ok(amigo2.vida > vida_a0, "a recompensa devia curar o time")
+				_ok(amigo2.buff_dano_t > 0.0, "a recompensa devia dar dano a mais")
+			_ok(ag.poder_cd < 8.0, "a recompensa devia adiantar a recarga do poder")
+	# Submiautica: segundo fôlego no kit; a estase retém o dano e solta no fim
+	sim = _cena(C.SUBMIAUTICA, 55)
+	var sg: Unidade = _gato_do_poder(sim, C.SUBMIAUTICA)
+	_ok(sg != null and sg.folego >= Balanco.conj_valor(C.SUBMIAUTICA, 1), "Submiautica sem segundo fôlego")
+	if sg != null:
+		var vs: Array[Unidade] = _prepara(sim, sg, 2, 100.0)
+		if not vs.is_empty():
+			sg.poder_cd = 0.0
+			_ok(sim.disparar_poder(sg), "Rifle de estase não disparou")
+			_ok(vs[0].estase_t > 0.0, "a bolha devia congelar o bicho")
+			var vida_s: float = vs[0].vida
+			sim._dano_poder(sg, vs[0], 500.0)
+			_ok(vs[0].vida == vida_s and vs[0].estase_ret >= 400.0, "o dano devia ficar retido na estase")
+			var xs: float = vs[0].x
+			for _i in int(5.0 / Balanco.DT):
+				sim.passo(Balanco.DT)
+				if not vs[0].vivo:
+					break
+			_ok(vs[0].vida < vida_s or not vs[0].vivo, "o dano retido devia ser solto no fim da estase")
+		sg.vida = 1.0
+		sim._matar(sg, null)
+		_ok(sg.vivo and sg.vida > sg.vida_max * 0.1, "o segundo fôlego devia levantar o gato")
+		sg.vida = 0.0
+		sim._matar(sg, null)
+		_ok(not sg.vivo, "o segundo fôlego só vale uma vez")
+	# Catchullu: susto no kit; a Loucura faz os mais fortes atacarem o bicho mais perto
+	sim = _cena(C.CATCHULLU, 56)
+	var cg: Unidade = _gato_do_poder(sim, C.CATCHULLU)
+	_ok(cg != null and cg.susto >= Balanco.conj_valor(C.CATCHULLU, 1), "Catchullu sem susto")
+	if cg != null:
+		var vc: Array[Unidade] = _prepara(sim, cg, 3, 100.0)
+		if vc.size() >= 3:
+			cg.susto = 1.0
+			sim._dano(cg, vc[2], 1.0, true)
+			_ok(vc[2].medo_t > 0.0, "o golpe do Catchullu devia assustar")
+			vc[2].medo_t = 0.0
+			cg.poder_cd = 0.0
+			_ok(sim.disparar_poder(cg), "Loucura não disparou")
+			var loucos: int = 0
+			for b in vc:
+				if b.louco_t > 0.0:
+					loucos += 1
+			_ok(loucos == Balanco.PODER_LOUCURA_N, "Loucura devia enlouquecer %d bichos (%d)" % [Balanco.PODER_LOUCURA_N, loucos])
+			for b in vc:
+				b.cd = 0.0
+			sim.passo(Balanco.DT)
+			for b in vc:
+				if b.louco_t > 0.0 and b.alvo != null:
+					_ok(sim.inimigos.has(b.alvo) and b.alvo != b, "o enlouquecido devia mirar o bicho mais perto")
 		_ok(sim.disparar_poder(tg), "Eu escolho você! (bola) não disparou")
 		_ok(vt.vivo or sim.nascidos_aliados.is_empty(), "o bicho sadio não devia ser capturado")
