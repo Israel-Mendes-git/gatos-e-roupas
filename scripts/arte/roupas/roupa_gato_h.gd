@@ -55,11 +55,11 @@ const _PAL_ROCKET := {
 	"f": Color("f0922a"), "n": Color("ffd36a"), "F": Color("c25a14"),
 }
 ## Deadmiau: o preto-vinho; a/b/d vermelho (médio, luz, sombra); p/P preto do traje (médio, luz); k mancha dos olhos; w branco do olho;
-## C fivela e guarda; c/D papelão (médio, sombra) e papelão claro L; g fita cinza; m remendo; Y/y/z chimichanga (luz, média, sombra).
+## C fivela e guarda; c/D papelão (médio, sombra) e papelão claro L; g fita cinza (D também a bolsinha); Y/y/z chimichanga (luz, média, sombra).
 const _PAL_DEAD := {
 	"o": Color("0a0608"), "a": Color("b8222c"), "b": Color("e0565a"), "d": Color("7c161f"),
 	"p": Color("2b2630"), "P": Color("4a4350"), "k": Color("2b2630"), "w": Color("f4f2ee"),
-	"C": Color("c9b98c"), "c": Color("c9a878"), "L": Color("e3cfa3"), "D": Color("9c7c4f"), "g": Color("8a8e98"), "m": Color("7a6a8c"),
+	"C": Color("c9b98c"), "c": Color("c9a878"), "L": Color("e3cfa3"), "D": Color("9c7c4f"), "g": Color("8a8e98"),
 	"Y": Color("f2cd7a"), "y": Color("d9a441"), "z": Color("a66f26"),
 }
 ## Meon: o marrom-noite; h/H/s cabelo (médio, luz, sombra); j/J/d jaqueta (média, luz, sombra); C/c gola de pelo (média, sombra);
@@ -433,8 +433,8 @@ static func _montar_b(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.TRASEIRA, _PAL_ROCKET, true)]
 		# ---------------------------------------------------------------- Deadmiau (Deadpool)
 		Pecas.Tipo.MASCARA_VERMELHA:
-			# cabeça redonda inteira de tecido vermelho, colada na do gato (cobre as orelhas): a mancha preta da frente, grande e inclinada
-			# (desce para o focinho), com o olho branco dentro; a de trás aparece pequena no perfil; costura fina escura na testa
+			# cabeça redonda inteira de tecido vermelho, colada na do gato (cobre as orelhas): a mancha preta da frente em cunha (alta atrás,
+			# desce até o focinho) com o olho branco estreito e torto dentro, como a do Deadpool; a de trás aparece pequena no perfil
 			_txt(cv, 3, -17, [
 				".aaaaa.",
 				"aaaaaaa",
@@ -446,43 +446,49 @@ static func _montar_b(tipo: int, fase: int) -> Array:
 				".aaaaa.",
 			])
 			_luz(cv, "a", "b", "d")
-			_px(cv, 6, -17, "d")
-			_px(cv, 6, -16, "d")
-			_txt(cv, 5, -15, [
-				".kk..",
-				"kkkk.",
-				"kwwkk",
-				".kwwk",
-				"..kkk",
+			_txt(cv, 4, -16, [
+				"kkk...",
+				"kkkkk.",
+				"kkwwkk",
+				".kkwwk",
+				"..kkkk",
 			])
-			_px(cv, 3, -14, "k")
 			_px(cv, 3, -13, "k")
-			_px(cv, 4, -13, "w")
-			_px(cv, 4, -12, "k")
+			_px(cv, 3, -12, "k")
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_DEAD)]
 		Pecas.Tipo.TRAJE_REMENDADO:
-			# traje bicolor: vermelho no peito e preto nas costas e na barriga (divisão limpa), cinto preto fino com a fivela bege e um
-			# remendo; atrás do corpo, os dois cabos das katanas cruzadas nas costas
-			RoupaGatoF._tronco(cv, "a", -12, -5)
+			# traje do Deadpool: vermelho com o flanco e o ombro da frente pretos, a tira diagonal do peito, o cinto preto com a fivela
+			# redonda e uma bolsinha de couro; atrás do corpo, as duas empunhaduras das katanas cruzadas nas costas
+			RoupaGatoF._tronco(cv, "a", -12, -6)
 			_luz(cv, "a", "b", "d")
 			for k in cv.keys():
 				var v: Vector2i = k
-				if v.x <= -7 + (v.y + 12) * 2 / 7:
+				if v.y >= -10 and v.y <= -8 and v.x >= -6 and v.x <= 1:
 					cv[v] = "p"
-			_luz(cv, "p", "P", "")
+				elif v.x >= 5 and v.y <= -9:
+					cv[v] = "p"
+			_lin(cv, Vector2i(-3, -12), Vector2i(4, -6), "p")
+			_lin(cv, Vector2i(-2, -12), Vector2i(5, -6), "p")
 			_ret(cv, -8, -7, 7, -6, "p")
-			_ret(cv, 2, -7, 4, -6, "C")
-			_px(cv, 3, -7, "c")
-			_ret(cv, 0, -11, 1, -10, "m")
+			_txt(cv, 0, -8, [
+				"CCC",
+				"CpC",
+				"CCC",
+			])
+			_ret(cv, -5, -6, -4, -5, "D")
+			_luz(cv, "p", "P", "")
 			_cont(cv, "o", false)
 			var at: Dictionary = {}
-			_txt(at, -9, -17, [
-				"C.....C",
-				"pp...pp",
-				".pp.pp.",
-				"..ppp..",
-			])
+			for x in range(-3, 0):
+				at[Vector2i(x, -15)] = "C"
+			for x2 in range(-7, -4):
+				at[Vector2i(x2, -15)] = "C"
+			for q in [Vector2i(-2, -16), Vector2i(-1, -16), Vector2i(-1, -17), Vector2i(0, -17), Vector2i(-1, -18), Vector2i(0, -18), Vector2i(0, -19), Vector2i(1, -19),
+					Vector2i(-7, -16), Vector2i(-6, -16), Vector2i(-7, -17), Vector2i(-6, -17), Vector2i(-8, -18), Vector2i(-7, -18), Vector2i(-8, -19), Vector2i(-7, -19)]:
+				at[q] = "P"
+			for q2 in [Vector2i(-1, -17), Vector2i(0, -19), Vector2i(-7, -17), Vector2i(-8, -19)]:
+				at[q2] = "p"
 			_cont(at, "o")
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_DEAD), _lay(at, RoupaGato.Onde.CORPO, _PAL_DEAD, true)]
 		Pecas.Tipo.KATANAS_PAPELAO:
