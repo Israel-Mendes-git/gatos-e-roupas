@@ -77,14 +77,15 @@ const _PAL_ARQ4 := {
 	"c": Color("d9803a"), "C": Color("f2ae70"), "x": Color("9c4f20"),
 	"g": Color("e3b53c"), "G": Color("ffe488"), "y": Color("a87a1e"),
 }
-## Treinador de Miaumons: o contorno (e a faixa e o botão da bola); r/R/d vermelho (médio, luz, sombra); w/W branco (médio, sombra);
-## a/b/v colete azul (médio, luz, sombra); y/Y/z mochila (média, luz, sombra); p/P/q pelúcia (média, luz, sombra); k preto.
+## Treinador de Miaumons: o contorno (e a faixa e o botão da bola); r/R/d vermelho (médio, luz, sombra); w/W branco (médio, sombra); a/b/v colete
+## azul (médio, luz, sombra); K camiseta preta; g/G/n verde (médio, claro, escuro: luvas e mochila); y laranja da mochila; p/P/q Pikachu (médio, luz,
+## sombra); z base marrom do rabo.
 const _PAL_TREI := {
 	"o": Color("1a0a10"), "k": Color("1a0a10"), "r": Color("d63c3c"), "R": Color("f27872"), "d": Color("8c1e26"),
 	"w": Color("f0f0f0"), "W": Color("b8bac4"),
-	"a": Color("3a62b8"), "b": Color("6c92e0"), "v": Color("223c7c"),
-	"y": Color("e8b438"), "Y": Color("f8da78"), "z": Color("a87a1e"),
-	"p": Color("f2d040"), "P": Color("ffee88"), "q": Color("c09a20"),
+	"a": Color("3a62b8"), "b": Color("6c92e0"), "v": Color("223c7c"), "K": Color("2a2a3c"),
+	"g": Color("4a9a50"), "G": Color("a8d070"), "n": Color("2a6034"), "y": Color("e8883a"),
+	"p": Color("f2d040"), "P": Color("ffee88"), "q": Color("c09a20"), "z": Color("8a5a30"),
 }
 
 # ------------------------------------------------------------------ ferramentas (usam as de RoupaGatoF e RoupaGatoG)
@@ -332,6 +333,200 @@ static func _agulha_silk() -> Dictionary:
 	_cont(cv, "o")
 	return cv
 
+## Topo do corpo vestido justo (costas rente ao dorso do gato), usado pelas roupas refeitas pela referência (lote 4: Miaujin, Arqueólogo, Treinador).
+const _TOPO_VEST := {-8: -9, -7: -10, -6: -11, -5: -12, -4: -12, -3: -12, -2: -12, -1: -12, 0: -12, 1: -12, 2: -12, 3: -11, 4: -10, 5: -9, 6: -9, 7: -9, 8: -8}
+
+## Triângulo de pixels: base x0..x1 (última linha `by`) e ponta em (tx, ty).
+static func _tri(cv: Dictionary, x0: int, x1: int, by: int, tx: int, ty: int, ch: String) -> void:
+	_poli(cv, [x0, by + 1, x1 + 1, by + 1, tx + 0.5, ty - 0.3], ch)
+
+## Luz pelo lado: o pixel `base` sem vizinho à esquerda ou em cima vira `luz`; sem vizinho à direita ou embaixo, `sombra`.
+static func _luz_lado(cv: Dictionary, base: String, luz: String, sombra: String) -> void:
+	var m: Dictionary = {}
+	for k in cv.keys():
+		var v: Vector2i = k
+		if cv[v] != base:
+			continue
+		if not cv.has(v + Vector2i(-1, 0)) or not cv.has(v + Vector2i(0, -1)):
+			m[v] = luz
+		elif not cv.has(v + Vector2i(1, 0)) or not cv.has(v + Vector2i(0, 1)):
+			m[v] = sombra
+	for k2 in m.keys():
+		cv[k2] = m[k2]
+
+
+## Corpo vestido justo: `th` = barra sobre a anca e a pata de trás, `bh` = sob a barriga, `fh` = sobre o peito e a pata da frente.
+static func _corpo_vest(cv: Dictionary, ch: String, th: int, bh: int, fh: int, topo: Dictionary = _TOPO_VEST) -> void:
+	for x in range(-8, 9):
+		var b: int
+		if x == -8:
+			b = th - 1
+		elif x <= -4:
+			b = th
+		elif x == -3:
+			b = (th + bh) / 2
+		elif x <= 2:
+			b = bh
+		elif x == 3:
+			b = (bh + fh) / 2
+		elif x <= 7:
+			b = fh
+		else:
+			b = fh - 1
+		for y in range(int(topo[x]), b + 1):
+			cv[Vector2i(x, y)] = ch
+
+## Cabelo do Super Miaujin: cinco espetos dourados de alturas desiguais inclinados para trás, mecha na testa e sobrancelha brava.
+static func _mj_cabelo() -> Array:
+	var cv: Dictionary = {}
+	_ret(cv, 2, -18, 12, -15, "h")
+	_ret(cv, 3, -15, 5, -13, "h")
+	_tri(cv, 1, 3, -19, 0, -23, "h")
+	_tri(cv, 3, 5, -19, 1, -26, "h")
+	_tri(cv, 5, 7, -19, 4, -27, "h")
+	_tri(cv, 7, 9, -19, 7, -26, "h")
+	_tri(cv, 9, 11, -19, 11, -24, "h")
+	_tri(cv, 8, 11, -16, 11, -13, "h")
+	_luz_lado(cv, "h", "H", "d")
+	_cont(cv, "o")
+	_ret(cv, 8, -14, 11, -13, "o")
+	return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_MIAUJIN)]
+
+## Gi do Goku: decote em V azul-escuro, faixa azul em volta da barriga (nó e pontas), calça e mangas com munhequeiras e botas azuis.
+static func _mj_gi() -> Array:
+	var cv: Dictionary = {}
+	_corpo_vest(cv, "a", -5, -7, -5)
+	_luz(cv, "a", "b", "D")
+	# decote em V: camisa azul-escura no peito
+	for p in [Vector2i(5, -10), Vector2i(6, -10), Vector2i(7, -10), Vector2i(5, -9), Vector2i(6, -9), Vector2i(7, -9), Vector2i(6, -8), Vector2i(7, -8), Vector2i(7, -7)]:
+		if cv.has(p):
+			cv[p] = "V"
+	_linsobre(cv, Vector2i(3, -11), Vector2i(5, -9), "b")
+	_linsobre(cv, Vector2i(4, -11), Vector2i(5, -10), "b")
+	# faixa: banda de 3 colunas em volta da barriga, com no e pontas
+	var fx: int = -3
+	for y in range(-13, -4):
+		for x in range(fx, fx + 3):
+			if cv.has(Vector2i(x, y)):
+				cv[Vector2i(x, y)] = "u" if x == fx + 1 else ("U" if x == fx else "V")
+	_px(cv, fx + 3, -8, "u")
+	_px(cv, fx + 4, -8, "V")
+	_px(cv, fx + 3, -7, "V")
+	_px(cv, fx + 3, -6, "V")
+	# dobras do pano
+	_dobras(cv, [-6, 2], "D")
+	# munhequeiras e botas azuis
+	for x in range(5, 8):
+		cv[Vector2i(x, -5)] = "u"
+		cv[Vector2i(x, -4)] = "V"
+	for x2 in range(-8, -4):
+		cv[Vector2i(x2, -5)] = "u"
+		cv[Vector2i(x2, -4)] = "V"
+	_cont(cv, "o", false)
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIAUJIN)]
+
+## Fedora do Indy: copa alta com vinco, faixa escura e aba que cai na frente.
+static func _aq_chapeu() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 1, -23, ["...hhhhh....", "..hhhshhh...", "..hhhshhh...", "..hhhshhh...", "..ffffffff..", ".hhhhhhhhhhh", "hh.......hhh"])
+	_luz(cv, "h", "H", "s")
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_ARQ4)]
+
+## Jaqueta de couro aberta sobre a camisa cáqui, tira a tiracolo, bolsa no flanco e punhos cáqui.
+static func _aq_jaqueta() -> Array:
+	var cv: Dictionary = {}
+	_corpo_vest(cv, "j", -5, -7, -5)
+	_luz(cv, "j", "J", "S")
+	# camisa cáqui aparecendo na frente aberta do peito e na gola
+	for y in range(-10, -5):
+		for x in range(5, 8):
+			if cv.has(Vector2i(x, y)) and not (x == 5 and y == -10):
+				cv[Vector2i(x, y)] = "k"
+	_px(cv, 7, -6, "K")
+	_px(cv, 6, -6, "K")
+	_px(cv, 7, -7, "K")
+	_ret(cv, 3, -12, 5, -10, "S")
+	_px(cv, 4, -10, "k")
+	# tira a tiracolo, do ombro ao quadril
+	_linsobre(cv, Vector2i(4, -11), Vector2i(-3, -6), "l")
+	_dobras(cv, [-6, 1], "S")
+	# punhos cáqui nas mangas
+	for x in range(5, 8):
+		cv[Vector2i(x, -5)] = "K"
+	_cont(cv, "o", false)
+	var bolsa: Dictionary = {}
+	_txt(bolsa, -7, -9, [".mmm.", "mlllm", "mlllm", "mllgm", ".mmm."])
+	_cont(bolsa, "o")
+	for k in bolsa.keys():
+		cv[k] = bolsa[k]
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_ARQ4)]
+
+## Chicote em S: laço enrolado no punho e a cauda de corda que sobe, desce e esfia.
+static func _aq_chicote() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 11, -14, [".cc.", "cxxc", "cxxc", ".cc."])
+	var pts: Array = [[15, -12], [16, -12], [17, -13], [18, -14], [19, -15], [20, -15], [21, -15], [22, -14], [23, -13], [24, -12], [25, -12]]
+	for i in pts.size():
+		var q: Array = pts[i]
+		cv[Vector2i(q[0], q[1])] = "c"
+		if i < 6:
+			cv[Vector2i(q[0], q[1] + 1)] = "x" if i % 2 == 0 else "c"
+	var l: Array = pts[pts.size() - 1]
+	cv[Vector2i(l[0] + 1, l[1] + 1)] = "c"
+	cv[Vector2i(l[0] + 1, l[1] - 1)] = "c"
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_ARQ4)]
+
+## Boné de Kanto: copa vermelha, painel branco com o "L" verde e aba para a frente.
+static func _tr_bone() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 2, -23, ["..rrrrrr....", ".rrrrwwww...", "rrrrrwgwww..", "rrrrrwgwww..", "rrrrrwggww..", "rrrrrrrrrrrr", "........rrrr"])
+	_luz(cv, "r", "R", "d")
+	_luz(cv, "w", "w", "W")
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_TREI)]
+
+## Colete azul sobre a camiseta preta, gola e mangas brancas, luvas verdes sem dedos; atrás, a ponta da mochila verde.
+static func _tr_colete() -> Array:
+	var cv: Dictionary = {}
+	_corpo_vest(cv, "a", -5, -7, -5)
+	_luz(cv, "a", "b", "v")
+	# camiseta preta no peito aberto do colete, gola branca, manga curta branca
+	for y in range(-10, -6):
+		for x in range(5, 8):
+			if cv.has(Vector2i(x, y)) and not (x == 5 and y == -10):
+				cv[Vector2i(x, y)] = "K"
+	_ret(cv, 3, -12, 6, -11, "w")
+	_px(cv, 6, -11, "w")
+	_px(cv, 7, -10, "w")
+	for y in range(-7, -5):
+		for x in range(5, 8):
+			if cv.has(Vector2i(x, y)):
+				cv[Vector2i(x, y)] = "w"
+	# luvas verdes sem dedos, punho amarelo-esverdeado
+	for x in range(5, 8):
+		cv[Vector2i(x, -5)] = "G"
+		cv[Vector2i(x, -4)] = "g"
+	_linsobre(cv, Vector2i(1, -12), Vector2i(5, -9), "v")
+	_dobras(cv, [-6, 0], "v")
+	_px(cv, -3, -9, "b")
+	_cont(cv, "o", false)
+	var mo: Dictionary = {}
+	_poli(mo, [-7, -11.5, -9.5, -11.5, -11.5, -10, -12, -7.5, -11.5, -4.5, -9, -4, -7, -5], "g")
+	_luz(mo, "g", "G", "n")
+	_ret(mo, -11, -8, -9, -6, "y")
+	_cont(mo, "o")
+	return [_lay(mo, RoupaGato.Onde.CORPO, _PAL_TREI, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_TREI)]
+
+## Pikachu sentado no dorso: orelhas de ponta preta, bochecha vermelha e o rabo em raio.
+static func _tr_pika() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, -11, -23, ["..k.k...", ".pp.pp..", ".pp.pp..", ".pppppp.", ".ppoppp.", ".pprprp.", "..pppp..", "qqpppp..", "z.pppp.."])
+	_luz(cv, "p", "P", "q")
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_TREI)]
+
 static func _montar(tipo: int, fase: int) -> Array:
 	var cv: Dictionary = {}
 	match tipo:
@@ -519,51 +714,11 @@ static func _montar(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_SILK)]
 		# ---------------------------------------------------------------- Super Miaujin (Super Saiyajin): o cabelo dourado espetado
 		Pecas.Tipo.CABELO_DOURADO:
-			# cabelo dourado em quatro espetos de alturas desiguais inclinados para trás, uma mecha na testa, sobrancelha reta e brava
-			# e uma faísca azul-clara zigue-zagueando num espeto; o rosto do gato fica à mostra
-			_txt(cv, 0, -25, [
-				"...h.........",
-				"..hh.....h...",
-				".hhh..h..hh..",
-				"hhhh.hh.hhh..",
-				"hhhhhhh.hhhh.",
-				".hhhhhhhhhhh.",
-				".hhhhhhhhhhh.",
-				"..hhhhhhhhhh.",
-				"..hhhhhhhhhh.",
-				"..hhhhhhhhhh.",
-				"..hh......hh.",
-				"..h.......h..",
-			])
-			_luz(cv, "h", "H", "d")
-			_px(cv, 3, -24, "E")
-			_px(cv, 2, -23, "E")
-			_px(cv, 3, -22, "E")
-			_cont(cv, "o")
-			_ret(cv, 7, -14, 10, -13, "o")
-			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_MIAUJIN)]
+			# cabelo dourado de espetos grandes inclinados para trás (alturas desiguais), mecha na testa; o rosto do gato fica à mostra
+			return _mj_cabelo()
 		Pecas.Tipo.KIMONO_LARANJA:
-			# gi laranja do Goku que segue o corpo: decote em V com a camisa azul, faixa azul na cintura com nó e as pontas, punhos azuis
-			# nas patas (as patas saem por baixo); a barra sobe em arco sob a barriga
-			_corpo(cv, "a", -6, -7, -6)
-			_luz(cv, "a", "b", "D")
-			_linsobre(cv, Vector2i(5, -9), Vector2i(7, -7), "u")
-			_linsobre(cv, Vector2i(6, -9), Vector2i(8, -7), "U")
-			_sobre(cv, -8, -9, 5, -8, "u")
-			_sobre(cv, -8, -8, 5, -7, "V")
-			_ret(cv, -3, -8, 0, -6, "u")
-			_px(cv, -2, -8, "U")
-			_px(cv, -3, -6, "V")
-			_px(cv, -1, -6, "V")
-			_dobras(cv, [-5, 3], "D")
-			_ret(cv, -5, -5, -1, -3, "u")
-			_ret(cv, -5, -4, -1, -3, "V")
-			_ret(cv, 6, -5, 8, -3, "u")
-			_ret(cv, 6, -4, 8, -3, "V")
-			_px(cv, 4, -5, "u")
-			_px(cv, 4, -4, "V")
-			_cont(cv, "o", false)
-			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIAUJIN)]
+			# gi laranja do Goku que segue o corpo, com decote azul, faixa azul em volta da barriga e munhequeiras e botas azuis
+			return _mj_gi()
 		Pecas.Tipo.CONCHA_ENERGIA:
 			# esfera de energia azul-clara de 9 px, núcleo branco 3x3 e contorno azul-noite, segurada numa pata só
 			_disco(cv, 16.5, -10.5, 4.5, "e")
@@ -583,62 +738,14 @@ static func _montar(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIAUJIN)]
 		# ---------------------------------------------------------------- O Arqueólogo (Indiana Jones): tudo marrom, valor e acento
 		Pecas.Tipo.CHAPEU_AMASSADO:
-			# fedora marrom de copa baixa amassada (vinco na sombra), faixa escura e aba mole que cai nas pontas e sombreia os olhos
-			_txt(cv, 1, -21, [
-				"...hhhhh....",
-				"..hhhhhhh...",
-				"..hhhhhhh...",
-				"..fffffff...",
-				"hhhhhhhhhhhh",
-				"hh......hhhh",
-			])
-			_luz(cv, "h", "H", "s")
-			_px(cv, 6, -21, "s")
-			_px(cv, 6, -20, "s")
-			_cont(cv, "o")
-			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_ARQ4)]
+			# fedora do Indy: copa alta de vinco, faixa escura e aba larga
+			return _aq_chapeu()
 		Pecas.Tipo.JAQUETA_GASTA:
-			# jaqueta de couro marrom na cintura que segue o dorso: gola de lapela, camisa cáqui no peito (V), tira diagonal e a bolsa
-			# arredondada no flanco; mangas curtas deixam as patas aparecerem
-			_corpo(cv, "j", -6, -7, -6)
-			_gola(cv, "j", 3)
-			_luz(cv, "j", "J", "S")
-			_sobre(cv, 5, -9, 9, -8, "k")
-			_sobre(cv, 6, -8, 8, -7, "k")
-			_sobre(cv, 6, -7, 7, -6, "K")
-			_linsobre(cv, Vector2i(3, -11), Vector2i(5, -9), "J")
-			_linsobre(cv, Vector2i(2, -12), Vector2i(-4, -8), "l")
-			_dobras(cv, [-2, 3], "S")
-			_cont(cv, "o", false)
-			var bolsa: Dictionary = {}
-			_txt(bolsa, -7, -8, [
-				".mm.",
-				"mllm",
-				"mllm",
-				".mm.",
-			])
-			_px(bolsa, -6, -6, "g")
-			_cont(bolsa, "o")
-			for k in bolsa.keys():
-				cv[k] = bolsa[k]
-			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_ARQ4)]
+			# jaqueta de couro aberta sobre a camisa cáqui, tira a tiracolo e bolsa no flanco
+			return _aq_jaqueta()
 		Pecas.Tipo.CHICOTE_BARBANTE:
-			# chicote de corda laranja: laço enrolado de 4x4 no punho e a cauda em S suave de 2 px que acaba esfiapada em duas pontas
-			_txt(cv, 11, -13, [
-				".cc.",
-				"cxxc",
-				"cxxc",
-				".cc.",
-			])
-			_ret(cv, 15, -12, 18, -10, "c")
-			_ret(cv, 18, -13, 21, -11, "c")
-			_ret(cv, 21, -12, 24, -10, "c")
-			_ret(cv, 24, -11, 27, -9, "c")
-			_px(cv, 27, -11, "c")
-			_px(cv, 26, -8, "c")
-			_luz(cv, "c", "C", "x")
-			_cont(cv, "o")
-			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_ARQ4)]
+			# chicote de corda laranja: laço no punho e cauda em S esfiapada
+			return _aq_chicote()
 		Pecas.Tipo.IDOLO_ATUM:
 			# ídolo dourado de atum: corpo oval em pé de olhos grandes e barbatana, sobre a base larga
 			_txt(cv, -10, -21, [
@@ -656,48 +763,11 @@ static func _montar(tipo: int, fase: int) -> Array:
 			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_ARQ4)]
 		# ---------------------------------------------------------------- Treinador de Miaumons (Ash, Kanto)
 		Pecas.Tipo.BONE_VERMELHO:
-			# boné clássico de Kanto: copa vermelha, painel branco na frente com o emblema da bola e a aba curta para a frente
-			_txt(cv, 2, -22, [
-				"..rrrrr.....",
-				".rrrrwwww...",
-				"rrrrrwrrr...",
-				"rrrrrwowo...",
-				"rrrrrwwww...",
-				"rrrrrrrrrrrr",
-				"........rrrr",
-			])
-			_luz(cv, "r", "R", "d")
-			_px(cv, 8, -19, "o")
-			_px(cv, 9, -19, "w")
-			_px(cv, 10, -19, "o")
-			_cont(cv, "o")
-			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_TREI)]
+			# boné de Kanto: vermelho, painel branco com o L verde, aba para a frente
+			return _tr_bone()
 		Pecas.Tipo.MOCHILA_AMARELA:
-			# colete azul aberto que segue o dorso, camisa branca aparecendo no peito e nas mangas curtas, bolso e duas alças escuras;
-			# da mochila só aparece a ponta amarela arredondada atrás da garupa
-			_corpo(cv, "a", -6, -7, -6)
-			_luz(cv, "a", "b", "v")
-			_sobre(cv, 5, -9, 9, -7, "w")
-			_sobre(cv, 6, -7, 9, -5, "w")
-			_ret(cv, 6, -5, 8, -4, "w")
-			_px(cv, 4, -5, "w")
-			_luz(cv, "w", "", "W")
-			_px(cv, 7, -4, "W")
-			_px(cv, 6, -4, "W")
-			_px(cv, 4, -5, "W")
-			_sobre(cv, 5, -7, 6, -5, "b")
-			_linsobre(cv, Vector2i(-1, -12), Vector2i(4, -8), "v")
-			_linsobre(cv, Vector2i(1, -12), Vector2i(6, -8), "v")
-			_sobre(cv, -4, -9, -2, -8, "b")
-			_sobre(cv, -4, -8, -2, -7, "v")
-			_dobras(cv, [-5, 2], "v")
-			_cont(cv, "o", false)
-			var mo: Dictionary = {}
-			_poli(mo, [-6.5, -11.5, -9, -11.5, -11, -10, -11.8, -7.5, -11.5, -4.5, -10, -3.6, -7, -4.5], "y")
-			_luz(mo, "y", "Y", "z")
-			_ret(mo, -10, -8, -9, -5, "z")
-			_cont(mo, "o")
-			return [_lay(mo, RoupaGato.Onde.CORPO, _PAL_TREI, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_TREI)]
+			# colete azul sobre camiseta preta, mangas brancas, luvas verdes; atrás, a ponta da mochila verde
+			return _tr_colete()
 		Pecas.Tipo.MIAUBOLA:
 			# a bola: metade de cima vermelha, a de baixo branca, a faixa preta e o botão central branco de contorno escuro
 			_disco(cv, 16.5, -10.5, 4.5, "r")
@@ -718,20 +788,8 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_TREI)]
 		Pecas.Tipo.RATO_ELETRICO:
-			# rato elétrico de pelúcia sentado no dorso: orelhas de ponta preta, bochechas vermelhas, olhos pretos e o rabo em raio
-			_txt(cv, -10, -21, [
-				"k....k..",
-				"pp..pp..",
-				"pp..pp..",
-				"pppppp..",
-				"poppop.p",
-				"rppppr.p",
-				".pppppp.",
-				".pppp...",
-			])
-			_luz(cv, "p", "P", "q")
-			_cont(cv, "o")
-			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_TREI)]
+			# Pikachu sentado no dorso
+			return _tr_pika()
 	return []
 
 static func _fallback(tipo: int) -> Array:
