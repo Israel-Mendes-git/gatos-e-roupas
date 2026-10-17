@@ -54,7 +54,7 @@ const _PAL_HOLLOW := {
 ## Silkmiau: o contorno; w/W/d osso (médio, luz, sombra); k olho; a/b/D capa bordô (médio, luz, sombra); n/N/m fio e novelo (médio, luz,
 ## sombra); s/S/z aço da agulha (médio, luz, sombra).
 const _PAL_SILK := {
-	"o": Color("0c0b14"), "w": Color("edeae0"), "W": Color("ffffff"), "d": Color("b9b6b0"), "k": Color("14121c"),
+	"o": Color("0c0b14"), "w": Color("edeae0"), "W": Color("ffffff"), "d": Color("b9b6b0"), "k": Color("14121c"), "L": Color("c2c8d6"),
 	"a": Color("7c3048"), "b": Color("a65870"), "D": Color("4c1c2e"),
 	"n": Color("e04858"), "N": Color("f59aa0"), "m": Color("8a1e2c"),
 	"s": Color("c4cad4"), "S": Color("f0f4f8"), "z": Color("7a8494"),
@@ -291,30 +291,36 @@ static func _manto_hollow() -> Array:
 	_cont(bk, "o", true)
 	return [_lay(bk, RoupaGato.Onde.CORPO, _PAL_HOLLOW, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
 
-## Máscara da Hornet: casco branco em gota invertida (largo no alto, afina até o queixo), dois chifres grossos na base que abrem em U
-## e afinam até a ponta (o da frente, maior, arqueia para a frente e a ponta volta para dentro; o de trás, sombreado, abre para trás e
-## a ponta também volta) e dois olhos pretos triangulares grandes, com a ponta para dentro e para baixo.
+## Máscara da Hornet (13x17, bitmap da referência): casco largo no alto que afina até o queixo pontudo, dois chifres grossos em U (diapasão gordo)
+## e dois olhos pretos triangulares grandes. W osso, L sombra fria do osso, K olho; cobre a cabeça inteira (ancorada no queixo, em x 8).
+const _MASCARA_SILK := [
+	".oo.......oo.",
+	"oWWo.....oWLo",
+	"oWWo.....oWLo",
+	"oWWLo...oWWLo",
+	".oWWo...oWLo.",
+	".oWWLo.oWWLo.",
+	"..oWWoooWWLo.",
+	"..oWWWWWWWo..",
+	".oWWWWWWWWWo.",
+	".oWKKWWWKKWo.",
+	".oWKKKWKKKWo.",
+	"..oWKKWKKWo..",
+	"..oWWWWWWWo..",
+	"...oWWWWWo...",
+	"....oWWWo....",
+	".....oWo.....",
+	"......o......",
+]
+
 static func _mascara_silk() -> Dictionary:
 	var cv: Dictionary = {}
-	_txt(cv, 4, -19, [".wwwww.", "wwwwwww", "wwwwwww", "wwwwwww", "wwwwwww", "wwwwwww", ".wwwwww", ".wwwww.", "..wwww.", "...www.", "....w.."])
-	_canto(cv, "w", "d")
-	var h: Dictionary = {}
-	for s in [[-20, 7, 9], [-21, 8, 10], [-22, 9, 11], [-23, 9, 11], [-24, 9, 10], [-25, 9, 10], [-26, 9, 10], [-27, 8, 9], [-28, 8, 8]]:
-		for x in range(int(s[1]), int(s[2]) + 1):
-			h[Vector2i(x, int(s[0]))] = "w"
-	_canto(h, "w", "d")
-	for s2 in [[-20, 4, 6], [-21, 3, 5], [-22, 3, 4], [-23, 2, 3], [-24, 2, 3], [-25, 1, 2], [-26, 1, 2], [-27, 2, 2], [-28, 2, 2]]:
-		for x2 in range(int(s2[1]), int(s2[2]) + 1):
-			h[Vector2i(x2, int(s2[0]))] = "d"
-	for k in h.keys():
-		if not cv.has(k):
-			cv[k] = h[k]
-	for s3 in [[-17, 8, 10], [-16, 8, 10], [-15, 8, 9], [-14, 8, 9], [-13, 8, 8], [-17, 4, 6], [-16, 4, 6], [-15, 5, 6], [-14, 5, 6], [-13, 6, 6]]:
-		for x3 in range(int(s3[1]), int(s3[2]) + 1):
-			cv[Vector2i(x3, int(s3[0]))] = "k"
-	_px(cv, 6, -18, "W")
-	_px(cv, 5, -17, "W")
-	_cont(cv, "o")
+	var cor: Dictionary = {"W": "w", "L": "L", "K": "k", "o": "o"}
+	for j in _MASCARA_SILK.size():
+		var s: String = _MASCARA_SILK[j]
+		for i in s.length():
+			if s[i] != ".":
+				cv[Vector2i(2 + i, -24 + j)] = cor[s[i]]
 	return cv
 
 ## Agulha da Hornet (17 px): anel redondo na ponta de trás (o fio passa por ele) e haste de 1 px até a ponta.

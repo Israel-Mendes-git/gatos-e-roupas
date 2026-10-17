@@ -499,17 +499,17 @@ const _CHAPEU: Array = [
 		".oaakaakko.",
 		".oaakaakko.",
 		".oddddddo.."]},
-	# 45 silkmiau: máscara branca em gota (larga no alto, queixo estreito), dois chifres curvos em U (pontas para dentro) e olhos triangulares
+	# 45 silkmiau: máscara da Hornet (diapasão gordo: chifres grossos em U, casco que afina até o queixo, olhos triangulares)
 	{"cheio": true, "l": [
-		".ow.....wo.",
-		"ow.......wo",
-		"ow.......wo",
-		".owo...owo.",
+		".oo.....oo.",
+		"owwo...owWo",
+		".owwo.owWo.",
+		"..owwowWo..",
 		".owwwwwwwo.",
-		".okkkwwkkko",
-		"..okkwwkko.",
-		"..oWkwwkWo.",
-		"...oWwwWo..",
+		"owkkkwkkkwo",
+		".owkkwkkwo.",
+		"..owwwwwo..",
+		"...owwwo...",
 		"....ooo...."]},
 	# 46 super miaujin: cabelo dourado em espetos grandes inclinados para trás
 	{"cheio": false, "l": [
