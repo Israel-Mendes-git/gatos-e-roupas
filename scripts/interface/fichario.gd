@@ -1828,7 +1828,7 @@ func _indice_bichos(e: Estado) -> void:
 		if en["k"] == "chefe" and _derrotado(e, en):
 			chefes_der += 1
 	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), "Bestiário", [30, 26], COR_OURO)
-	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), "Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d" % [vistos, lista.size(), chefes_der, Fases.CHEFE_NOME.size()], [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), ("Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d" % [vistos, lista.size(), chefes_der, Fases.CHEFE_NOME.size()]) + ("  ·  Secreto: Schrödinger" if e.feitos.has("schro") else ""), [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
 	_rotulo_bichos("Famílias da casa", rect_tile_bicho(0), COR_ABA[1])
 	_rotulo_bichos("Tipos de bicho", rect_tile_bicho(10), COR_ABA[2], "e o fantasiado")
 	_rotulo_bichos("Chefes da casa", rect_tile_bicho(20), COR_ABA[3])

@@ -1033,6 +1033,9 @@ static func boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, equipe: 
 	if equipe == 0:
 		_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, fantasma_slots, destaque_slot, furia, variante, nocaute)
 		return
+	if chefe and chefe_tipo == Fases.Chefe.SCHRODINGER:
+		_gato_schro(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, parado)
+		return
 	if chefe and chefe_tipo >= Fases.Chefe.DOM_GATLEONE:
 		_gato_chefe(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, chefe_tipo - Fases.Chefe.DOM_GATLEONE)
 		return
@@ -1359,6 +1362,37 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		c.draw_rect(Rect2(-7, 1, 4, 5), esc_b)
 		c.draw_rect(Rect2(-6, 2, 2, 3), cb)
 	resetar(c)
+
+## Gato de Schrödinger (chefe secreto). Duas paletas, sem alfa: VIVO (cinza-chumbo, contorno cheio) e MORTO/fantasma (cinza claro azulado,
+## contorno pontilhado). `morto` chega pelo parâmetro `parado` de boneco(). A caixa de papelão com o símbolo de radiação fica ao lado.
+const SCHRO_VIVO: Array = [0, Color(0.55, 0.57, 0.62)]
+const SCHRO_MORTO: Array = [0, Color(0.86, 0.9, 0.95)]
+static func _gato_schro(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, morto: bool) -> void:
+	_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+	caixa_schro(c, Vector2(-16, 0), alfa, morto)
+	var cor: Color = Color(0.7, 0.85, 1.0, alfa) if morto else Color(0.25, 0.26, 0.3, alfa)
+	# contorno: cheio (vivo) ou pontilhado (morto), em elipse de 1 pixel em volta do gato
+	var passos: int = 40
+	for i in passos:
+		if morto and i % 2 == 1:
+			continue
+		var ang: float = TAU * i / passos
+		c.draw_rect(Rect2(roundf(cos(ang) * 10.0), roundf(-10.0 + sin(ang) * 14.0), 1, 1), cor)
+	_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, false, -1, furia, 0, false, SCHRO_MORTO if morto else SCHRO_VIVO, Color(0, 0, 0, 0), false)
+
+## Caixa de papelão com o símbolo de radiação, na grade de pixels do sprite (base em `base`).
+static func caixa_schro(c: CanvasItem, base: Vector2, alfa: float, morto: bool) -> void:
+	var b: Vector2 = base
+	c.draw_rect(Rect2(b.x - 6, b.y - 10, 13, 10), Color(0.4, 0.28, 0.16, alfa))
+	c.draw_rect(Rect2(b.x - 5, b.y - 9, 11, 8), Color(0.72, 0.55, 0.34, alfa))
+	c.draw_rect(Rect2(b.x - 6, b.y - 10, 13, 2), Color(0.84, 0.68, 0.44, alfa))
+	var am := Color(1.0, 0.88, 0.1, alfa)
+	var pr := Color(0.1, 0.07, 0.09, alfa)
+	c.draw_rect(Rect2(b.x - 2, b.y - 7, 5, 5), am)
+	c.draw_rect(Rect2(b.x, b.y - 5, 1, 1), pr)
+	c.draw_rect(Rect2(b.x - 2, b.y - 7, 1, 1), pr)
+	c.draw_rect(Rect2(b.x + 2, b.y - 7, 1, 1), pr)
+	c.draw_rect(Rect2(b.x, b.y - 3, 1, 1), pr)
 
 ## Peça de cabeça das fantasias de monstro (Miauzilla, King-Miau, Submiautica, Catchullu): grandes demais, escondem o gato rival.
 static func _cabeca_monstro(tipo: int) -> bool:

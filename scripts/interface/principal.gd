@@ -836,7 +836,12 @@ func _soma_niveis() -> int:
 func _escolher_invasao(f: int) -> void:
 	_escolher_fase(f, true)
 
-func _escolher_fase(f: int, invasao: bool = false, rejogo_casa: bool = false) -> void:
+## Luta secreta da caixa do Sótão (Gato de Schrödinger): só com o bestiário completo.
+func _escolher_secreto() -> void:
+	if estado.schro_liberado():
+		_escolher_fase(4, false, false, true)
+
+func _escolher_fase(f: int, invasao: bool = false, rejogo_casa: bool = false, secreto: bool = false) -> void:
 	if f < 1 or f > estado.fase_liberada:
 		return
 	if mapa_casa != null and mapa_casa.vista_ruas() and not estado.lugar_aberto(3, f):
@@ -847,6 +852,8 @@ func _escolher_fase(f: int, invasao: bool = false, rejogo_casa: bool = false) ->
 		var fora: bool = mapa_casa != null and mapa_casa.vista_fora() and estado.vencido[f - 1] >= 2
 		invasao_rec_ini = estado.recordes[f - 1 + (Fases.TOTAL if fora else 0)]
 		estado.iniciar_invasao(f, fora)
+	elif secreto:
+		estado.iniciar_secreto()
 	elif rejogo_casa:
 		estado.iniciar_fase_casa(f)
 	else:
@@ -1016,14 +1023,14 @@ func _causa_derrota(sim: Simulacao) -> Dictionary:
 				cont[kk] = int(cont.get(kk, 0)) + 1
 				if u.chefe:
 					cont[kk] = 99
-					derrota_chefe = estado.lugar()
+					derrota_chefe = estado.lugar_chefe()
 		for k in cont:
 			if int(cont[k]) > blocos:
 				blocos = int(cont[k])
 				chave = k
 		blocos = 0   # sem contagem exata de blocos: a frase fica sem número
 	if chave is String and chave == "chefe":
-		var ct: int = clampi(derrota_chefe if derrota_chefe >= 0 else estado.lugar(), 0, Fases.TOTAL * 3 - 1)
+		var ct: int = clampi(derrota_chefe if derrota_chefe >= 0 else estado.lugar_chefe(), 0, Fases.TOTAL * 3)
 		return {"causa": "O chefe %s acabou com a torre." % Fases.nome_do_chefe(ct), "dica": Fases.fraqueza_do_chefe(ct) + "." + ((" " + dica_poder) if sim.gatos_por_poder_bicho > 0 else "")}
 	var q: String = " (%d bloco%s)" % [blocos, "" if blocos == 1 else "s"] if blocos > 0 else ""
 	match chave:
@@ -1095,6 +1102,7 @@ func _fim_fase(vitoria: bool) -> void:
 	fim_painel.visible = true
 	var fi: int = estado.lugar()
 	var nome: String = Fases.nome_do_lugar(fi)
+	var era_secreto: bool = estado.secreto
 	var linhas_time: Array[String] = []
 	fim_vitoria = vitoria
 	if not vitoria and fim_invasao:
@@ -1109,6 +1117,10 @@ func _fim_fase(vitoria: bool) -> void:
 			linhas_time.append("Recorde de %s: onda %d." % [nome, rec])
 		else:
 			linhas_time.append("Nenhuma onda vencida desta vez. Tente de novo!")
+	elif vitoria and era_secreto:
+		fim_titulo.text = "Gato de Schrödinger vencido!"
+		fim_titulo.add_theme_color_override("font_color", Desenho.DOURADO)
+		fim_sub.text = "Vivo e morto ao mesmo tempo, e agora de vez só um. A caixa do Sótão guarda um prêmio para quem a abre de novo."
 	elif vitoria:
 		fim_titulo.text = "%s %s!" % [nome, VENCIDO_GENERO[fi]]
 		fim_titulo.add_theme_color_override("font_color", Desenho.DOURADO)
@@ -2473,6 +2485,9 @@ func _entrada_mapa(ev: InputEvent) -> void:
 		mouse = mb.position
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 			if MAPA_EM_CORTE:
+				if estado.schro_liberado() and MapaCasa.caixa_em(mb.position):
+					menus.ir(_escolher_secreto)
+					return
 				var bt: int = MapaCasa.botao_em(mb.position, estado.campanha_vencida())
 				if bt != MapaCasa.BOTAO_NENHUM:
 					_botao_do_mapa(bt)
@@ -2532,6 +2547,9 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 	if menus.ativo() or menus.em_transicao():
 		return
 	if k == null or not k.pressed or k.echo:
+		return
+	if k.keycode == KEY_C and estado.schro_liberado():
+		menus.ir(_escolher_secreto)   # atalho da caixa do Sótão
 		return
 	if k.keycode == KEY_I and estado.campanha_vencida():
 		if mapa_casa.vista_fora():
@@ -4555,7 +4573,7 @@ func _celula_previa(g: Dictionary, topo_esq: Vector2, larg: float, alt: float, e
 		_texto_dir("×%d" % cnt, tx, topo_esq.y + 16.0, 16, Color(1, 0.95, 0.6), 4)
 
 func _previa() -> void:
-	var fi: int = estado.lugar()
+	var fi: int = estado.lugar_chefe()
 	_painel(PREVIA, Color(0.24, 0.1, 0.12, 0.96))
 	var xi: float = PREVIA.position.x + 18.0
 	var li: float = PREVIA.size.x - 36.0

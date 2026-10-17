@@ -16,6 +16,8 @@ static func lista() -> Array:
 	for f in range(Fases.TOTAL, Fases.NOME.size()):
 		l.append({"id": "sem_nocaute_%d" % f, "nome": "%s sem um arranhão" % Fases.NOME[f], "texto": "Vença o lugar sem nenhum gato nocauteado", "premio": PREMIO_SEM_NOCAUTE, "grupo": "Lado de fora"})
 	l.append({"id": "heranca", "nome": "De pai para filhote", "texto": "Um gato incorpora o poder de uma fantasia", "premio": 5, "grupo": "Lado de fora"})
+	l.append({"id": "schro", "nome": "Vivo e morto", "texto": "Complete o bestiário e abra a caixa do Sótão", "premio": 15, "grupo": "Secretos"})
+	l.append({"id": "atelie", "nome": "Feita sob medida", "texto": "Complete o fichário e crie a sua fantasia no Ateliê", "premio": 15, "grupo": "Secretos"})
 	l.append({"id": "marcada", "nome": "Roupa de guerra", "texto": "Tenha uma peça com 4 marcas", "premio": 5, "grupo": "Guarda-roupa"})
 	l.append({"id": "colecao_42", "nome": "Meio armário", "texto": "Junte 50 peças diferentes", "premio": 5, "grupo": "Guarda-roupa"})
 	l.append({"id": "colecao_84", "nome": "Armário cheio", "texto": "Junte todas as %d peças" % Pecas.n_pecas_ativas(), "premio": 10, "grupo": "Guarda-roupa"})

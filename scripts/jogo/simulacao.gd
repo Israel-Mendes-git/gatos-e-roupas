@@ -543,9 +543,11 @@ func _spawnar(item: Dictionary) -> void:
 	u.esc_vida = Balanco.INIMIGO_VIDA_MULT * (1.0 + Balanco.INIMIGO_VIDA_ONDA * (p - 1)) * estado.mult_vida() * estado.forca_vida()
 	u.esc_dano = (1.0 + Balanco.INIMIGO_DANO_ONDA * (p - 1)) * estado.mult_dano() * estado.forca_dano()
 	if chefe:
-		u.chefe_tipo = Fases.chefe_base(estado.lugar())
+		u.chefe_tipo = Fases.chefe_base(estado.lugar_chefe())
+		if u.chefe_tipo == Fases.Chefe.SCHRODINGER:
+			u.truque_cd = Balanco.SCHRO_T
 		u.truque_cd = Balanco.TOUPEIRA_FORA_T if u.chefe_tipo == Fases.Chefe.TOUPEIRA else 5.0
-		if u.chefe_tipo >= Fases.Chefe.DOM_GATLEONE:
+		if u.chefe_tipo >= Fases.Chefe.DOM_GATLEONE and u.chefe_tipo <= Fases.Chefe.MAGNETOMIAU:
 			u.gangue = u.chefe_tipo - Fases.Chefe.DOM_GATLEONE   # gato grande da gangue (só desenho e identidade; não é "rival" da Disputa)
 			u.esc_vida *= Balanco.CHEFE_GANGUE_VIDA[u.gangue]
 			u.esc_dano *= Balanco.CHEFE_GANGUE_DANO[u.gangue]
@@ -1020,6 +1022,16 @@ func _chefe_age(u: Unidade, dt: float) -> bool:
 				u.frenesi_t = maxf(u.frenesi_t, 0.5)   # ferido, ataca em dobro até cair
 		Fases.Chefe.DOM_GATLEONE, Fases.Chefe.IMORTAL_MIAU, Fases.Chefe.PROGRAMA_MESTRE, Fases.Chefe.REI_MIAUNIDAS, Fases.Chefe.MAGNETOMIAU:
 			return _chefe_gangue(u, dt)
+		Fases.Chefe.SCHRODINGER:
+			# alterna entre vivo e morto a cada SCHRO_T segundos; o aviso aparece nos últimos SCHRO_AVISO
+			u.truque_cd -= dt
+			u.troca_t = u.truque_cd if u.truque_cd <= Balanco.SCHRO_AVISO else 0.0   # o campo desenha o aviso enquanto > 0
+			if u.truque_cd <= 0.0:
+				u.morto = not u.morto
+				u.truque_cd = Balanco.SCHRO_T
+				u.troca_t = 0.0
+				_cont("schro_morto" if u.morto else "schro_vivo")
+				_ev({"t": "schro", "x": u.x, "y": u.y, "morto": u.morto})
 	return true
 
 ## Magnetomiau: o bônus de conjunto suspenso volta quando o tempo acaba.
@@ -1379,7 +1391,8 @@ func _agir(u: Unidade, dt: float) -> void:
 	if u.queima_t > 0.0:
 		u.queima_t -= dt
 		u.sono_t = 0.0
-		u.vida -= u.queima_dps * dt * u.fraq_fogo * _vul(u)
+		if not u.morto:
+			u.vida -= u.queima_dps * dt * u.fraq_fogo * _vul(u)
 		if u.vida <= 0.0:
 			var fonte: Unidade = u.queima_fonte
 			_matar(u, fonte if fonte != null and fonte.vivo else null, Pecas.Marca.BRASA)
@@ -1703,6 +1716,10 @@ func _golpe_em_area(u: Unidade, centro: Unidade, dano: float) -> void:
 func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_area: bool = false) -> void:
 	if not alvo.vivo or alvo.sequestro_t > 0.0:
 		return
+	if alvo.morto and not (atk != null and atk.perfura):
+		_ev({"t": "esquiva", "x": alvo.x, "y": alvo.y})   # Schrödinger morto: golpes atravessam (só poder e Varinha ferem)
+		_cont("schro_imune")
+		return
 	if alvo.esquiva > 0.0 and rng.randf() < alvo.esquiva:
 		_ev({"t": "esquiva", "x": alvo.x, "y": alvo.y})
 		return
@@ -1773,6 +1790,8 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 	if not alvo.chefe and alvo.tipo != Unidade.Tipo.GIGANTE:
 		alvo.x += sinal * 6.0
 	_ev({"t": "golpe", "x": alvo.x, "y": alvo.y, "dano": d, "eq": alvo.equipe})
+	if atk != null and atk.morto and alvo.equipe == 0 and alvo.vida > 0.0:
+		alvo.atordoado_t = maxf(alvo.atordoado_t, Balanco.SCHRO_ATORDOA)   # a pata do fantasma atordoa
 	if atk != null and atk.vivo:
 		var roubo: float = atk.roubo + (atk.furor_roubo if atk.furor_t > 0.0 else 0.0)
 		if roubo > 0.0:
@@ -1934,6 +1953,9 @@ func _largar(u: Unidade, causa: int) -> void:
 	for k in mini(vestidas.size(), 2 if u.chefe else 1):
 		var orig: Peca = vestidas.pop_at(_sortear_peca_vestida(vestidas, u.chefe or u.elite))
 		var nova := Peca.new(orig.tipo, nivel, _raridade_do_drop(u))
+		if u.chefe_tipo == Fases.Chefe.SCHRODINGER:
+			# a primeira vitória larga uma peça Miaujestosa; depois, uma Mítica
+			nova.raridade = Pecas.Raridade.MIAUJESTOSA if (k == 0 and not estado.feitos.has("schro")) else Pecas.Raridade.MITICA
 		if u.chefe:
 			nova.nivel = maxi(nova.nivel, orig.nivel)  # o chefe larga no nível que usava
 		var veio: int = -1

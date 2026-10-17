@@ -6,7 +6,7 @@ extends RefCounted
 ## ROBO = Raposa Ligeira, BONECA = Corvo Velho, REI_MASSINHA = Sapo-Rei; e CORUJA = Esquilo Acrobata, que entrou no lugar da coruja.)
 
 enum Familia { LATA, PELUCIA, CORDA, PORCELANA, MASSINHA }
-enum Chefe { GENERAL, URSO, ROBO, BONECA, REI_MASSINHA, TOUPEIRA, GAMBA, CORUJA, VIRALATA, TEXUGO, DOM_GATLEONE, IMORTAL_MIAU, PROGRAMA_MESTRE, REI_MIAUNIDAS, MAGNETOMIAU }
+enum Chefe { GENERAL, URSO, ROBO, BONECA, REI_MASSINHA, TOUPEIRA, GAMBA, CORUJA, VIRALATA, TEXUGO, DOM_GATLEONE, IMORTAL_MIAU, PROGRAMA_MESTRE, REI_MIAUNIDAS, MAGNETOMIAU, SCHRODINGER }
 
 const TOTAL := 5
 ## Os índices 0..4 são os cômodos (primeiro ato); 5..9 são os lugares de fora da casa (segundo ato).
@@ -123,7 +123,7 @@ const CHEFE_ASSINATURA: Array[int] = [
 
 ## Lugares e chefes do 3º ato (índices globais 10..14; ficam fora de NOME e CHEFE_NOME, que têm só 2 atos).
 const NOME_ATO3: Array[String] = ["Mercadão do Peixe", "Ferro-velho", "Beco do Fliperama", "Arena da Praça", "Telhados e Antenas"]
-const CHEFE_NOME_ATO3: Array[String] = ["Dom Gatleone", "Imortal Miau", "Programa Mestre", "Rei Miaunidas", "Magnetomiau"]
+const CHEFE_NOME_ATO3: Array[String] = ["Dom Gatleone", "Imortal Miau", "Programa Mestre", "Rei Miaunidas", "Magnetomiau", "Gato de Schrödinger"]
 ## As gangues de gatos rivais (uma por lugar do 3º ato), a cor da bandana e a pelagem (índice de Desenho.PELAGENS não usado pelo time).
 const GANGUE_NOME: Array[String] = ["Família Gatíssima", "Estrada Furiosa", "Tropa do Grid", "Legião Miauparta", "Irmandade Mutante"]
 const GANGUE_DICA: Array[String] = [
@@ -151,6 +151,7 @@ const CHEFE_ATAQUE_ATO3: Array[String] = [
 	"Lança disco que quica em 3 gatos e deixa em pixel por 3 s. Volta uma vez ao cair. Poder: Trovoada",
 	"Falange: de frente quase não leva dano. Chuta o gato da frente; depois, chuva de flechas. Poder: Fúria",
 	"Campo magnético puxa o time e anula o bônus de conjunto por 6 s; no fim, levanta um carro. Poder: Relâmpago",
+	"A cada 6 s alterna entre vivo e morto (aviso antes). Morto, atordoa com a pata. Poder: Relâmpago",
 ]
 const CHEFE_FRAQUEZA_ATO3: Array[String] = [
 	"Mate o Mensageiro antes da torre; pelo seco, fogo fere em dobro",
@@ -158,17 +159,18 @@ const CHEFE_FRAQUEZA_ATO3: Array[String] = [
 	"Quando recompila, fica um instante frágil: guarde força",
 	"Ataque pelos flancos e use poderes: de frente ele quase não sente",
 	"Sem o bônus de conjunto o time fica fraco: espalhe-se e mate rápido",
+	"Vivo, apanha normal; morto, só poder e Varinha o ferem. Guarde o poder",
 ]
 
 ## Chefe (Fases.Chefe) cujo desenho e mecânica o chefe do lugar global `i` usa.
 static func chefe_base(i: int) -> int:
-	return clampi(i, 0, TOTAL * 3 - 1)
+	return clampi(i, 0, TOTAL * 3)
 
 static func ataque_do_chefe(i: int) -> String:
-	return CHEFE_ATAQUE[i] if i < CHEFE_ATAQUE.size() else CHEFE_ATAQUE_ATO3[clampi(i - CHEFE_ATAQUE.size(), 0, 4)]
+	return CHEFE_ATAQUE[i] if i < CHEFE_ATAQUE.size() else CHEFE_ATAQUE_ATO3[clampi(i - CHEFE_ATAQUE.size(), 0, 5)]
 
 static func fraqueza_do_chefe(i: int) -> String:
-	return CHEFE_FRAQUEZA[i] if i < CHEFE_FRAQUEZA.size() else CHEFE_FRAQUEZA_ATO3[clampi(i - CHEFE_FRAQUEZA.size(), 0, 4)]
+	return CHEFE_FRAQUEZA[i] if i < CHEFE_FRAQUEZA.size() else CHEFE_FRAQUEZA_ATO3[clampi(i - CHEFE_FRAQUEZA.size(), 0, 5)]
 
 ## Nome do grupo de bichos do lugar global `i` (família, bando ou gangue).
 static func grupo_nome(i: int) -> String:

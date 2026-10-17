@@ -1076,7 +1076,7 @@ func _consumir() -> void:
 				tremor = maxf(tremor, 6.0)
 			"chefe":
 				chefe_t = 2.2
-				var nome_ch: String = Fases.nome_do_chefe(estado.lugar())
+				var nome_ch: String = Fases.nome_do_chefe(estado.lugar_chefe())
 				_faixa(nome_ch, "CHEFE!", Color(1.0, 0.35, 0.3), 2.0, 0.0, "chefe")
 				tfx.append({"k": "chefe_chega", "p": Vector2(1120.0, 520.0), "t": 0.0, "dur": 1.0})
 				tremor = maxf(tremor, 8.0)
@@ -3326,7 +3326,7 @@ func _draw() -> void:
 			CaoGuarda.desenhar(self, pos, ESC * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
 			Desenho.noir = uu2.noir_t > 0.0   # Modo Noir: gato e roupa em preto e branco
-			Desenho.boneco(self, pos, esc_d, dir_d, (1 if uu2.capturado else uu2.equipe), (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0), false, uu2.gangue)
+			Desenho.boneco(self, pos, esc_d, dir_d, (1 if uu2.capturado else uu2.equipe), (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, (uu2.parado or uu2.morto), (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0), false, uu2.gangue)
 			Desenho.noir = false
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
@@ -6893,7 +6893,7 @@ func _hud() -> void:
 		var ub: Unidade = u
 		if ub.chefe and ub.vida_max > 0.0:
 			var fr_b: float = clampf(ub.vida / ub.vida_max, 0.0, 1.0)
-			var nome_b: String = Fases.nome_do_chefe(estado.lugar())
+			var nome_b: String = Fases.nome_do_chefe(estado.lugar_chefe())
 			Desenho.texto(self, nome_b, Vector2(632, 42), 22, Color(1.0, 0.85, 0.8), 424.0, 4)
 			# barra de pixel: 140 quadradinhos x 3, contorno escuro, brilho em cima e sombra embaixo
 			var q: float = V.Q
@@ -6967,7 +6967,7 @@ func _montar_preparacao() -> void:
 		b.familia = clampi(int(item.get("fam", estado.fase - 1)), 0, Fases.TOTAL - 1)
 		b.rival = item.get("rival", false)
 		b.gangue = int(item.get("gangue", -1)) if b.rival else -1
-		b.chefe_tipo = Fases.chefe_base(estado.lugar()) if chefe else -1
+		b.chefe_tipo = Fases.chefe_base(estado.lugar_chefe()) if chefe else -1
 		var nome: String = Balanco.TIPO_NOMES[clampi(b.tipo, 0, Balanco.TIPO_NOMES.size() - 1)]
 		var dica: String = TIPO_DICA[clampi(b.tipo, 0, TIPO_DICA.size() - 1)]
 		if b.rival:
@@ -6976,7 +6976,7 @@ func _montar_preparacao() -> void:
 			if dica_g != "":
 				dica = dica_g
 		if chefe:
-			nome = Fases.nome_do_chefe(estado.lugar())
+			nome = Fases.nome_do_chefe(estado.lugar_chefe())
 			dica = "O chefe do cômodo. Chega por último."
 		elif elite:
 			nome = "Fantasiado"
@@ -7309,7 +7309,7 @@ func _nome_unidade(u: Unidade) -> String:
 	if u.equipe == 0:
 		return u.boneco.nome if u.boneco != null else "Gato"
 	if u.chefe:
-		return Fases.nome_do_chefe(estado.lugar())
+		return Fases.nome_do_chefe(estado.lugar_chefe())
 	if u.parte:
 		return "Sapinho"
 	if u.pequeno:
@@ -7572,6 +7572,13 @@ func _desenhar_prep() -> void:
 func _desenhar_avisos() -> void:
 	for u in sim.inimigos:
 		var uu: Unidade = u
+		if uu.vivo and uu.troca_t > 0.0:
+			# Gato de Schrödinger prestes a trocar de estado: balão que pisca com o que vem a seguir
+			var pk: float = 0.5 + 0.5 * sin(rel * 22.0)
+			var esc_s: float = ESC * uu.escala()
+			var ps: Vector2 = Vector2(uu.vx, uu.vy - (CORPO_ALT + 40.0) * esc_s)
+			var cs: Color = Color(0.75, 0.9, 1.0) if not uu.morto else Color(1.0, 0.85, 0.5)
+			Desenho.texto(self, "Vai virar fantasma!" if not uu.morto else "Vai voltar à vida!", ps + Vector2(-110, -6.0), 22, Color(cs.r, cs.g, cs.b, 0.6 + 0.4 * pk), 220.0, 5)
 		if not uu.vivo or uu.aviso_t <= 0.0:
 			continue
 		var cj: int = clampi(uu.poder_conj, 0, Pecas.PODER_NOME.size() - 1)

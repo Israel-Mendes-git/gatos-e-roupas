@@ -29,6 +29,8 @@ var invasao: bool = false
 var onda_invasao: int = 0
 var recordes: Array[int] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]    # melhor onda vencida na invasão, por lugar (ver lugar())
 # números da campanha (tela de final) e feitos anotados para as metas do fichário
+# chefe secreto (Gato de Schrödinger, caixa do Sótão): uma onda só, só de chefe; a vitória fica em feitos["schro"]
+var secreto: bool = false
 var ato: int = 1                             # ato do cômodo em curso (1 na campanha de ida e na invasão)
 var vencido: Array[int] = [0, 0, 0, 0, 0]    # maior ato já vencido em cada cômodo
 var fundida_em: Dictionary = {}               # peça que caiu -> peça do jogador em que ela se fundiu (a tela lê e esvazia)
@@ -137,6 +139,8 @@ func mult_vida() -> float:
 		return Balanco.FASE_VIDA[fase - 1] * _facil()
 	return Balanco.ATO_VIDA[ato - 1] * Balanco.ATO_COMODO_VIDA[ato - 1][fase - 1] * (1.0 + Balanco.ATO_VIDA_DEGRAU * degrau_ato())
 
+	if secreto:
+		return Balanco.SCHRO_VIDA
 ## Só com o tutorial ativo e só na primeira onda do cômodo; fora disso é 1 (o balanço normal não muda).
 func _facil() -> float:
 	return Tutorial.FACIL if tutorial_facil and onda <= 1 and not invasao else 1.0
@@ -146,12 +150,16 @@ func mult_dano() -> float:
 		return Balanco.FASE_DANO[fase - 1] * _facil()
 	return Balanco.ATO_DANO[ato - 1] * Balanco.ATO_COMODO_DANO[ato - 1][fase - 1] * (1.0 + Balanco.ATO_DANO_DEGRAU * degrau_ato())
 
+	if secreto:
+		return Balanco.SCHRO_DANO
 ## "Fase" que conta para a vida extra do chefe.
 func degrau_chefe() -> float:
 	if ato <= 1:
 		return fase - 1.0
 	return (Fases.TOTAL - 1.0) + (ato - 2) * Fases.TOTAL + degrau_ato()
 
+	if secreto:
+		return 0.0
 var _pesos_fantasia: Dictionary = {}   # pesos do sorteio de fantasias da luta em curso (fixos até a luta acabar)
 var _pesos_validos: bool = false
 
@@ -161,6 +169,7 @@ func iniciar_fase(f: int) -> void:
 	onda_invasao = 0
 	nocautes_fase = 0
 	fase = clampi(f, 1, Fases.TOTAL)
+	secreto = false
 	ato = ato_atual()
 	tijolos = tijolos_max()
 	onda = 1
@@ -190,6 +199,38 @@ func iniciar_invasao(f: int, fora: bool = false) -> void:
 func forca_vida() -> float:
 	return (Balanco.INVASAO_FORA_VIDA if ato > 1 else 1.0) * (1.0 + Balanco.INVASAO_VIDA_ONDA * (onda_invasao - 1) + Balanco.INVASAO_VIDA_ONDA2 * (onda_invasao - 1) * (onda_invasao - 1)) if invasao else 1.0
 
+## Todos os 35 bichos do bestiário vistos (inclui as 5 gangues e os 10 chefes de casa e de fora; o chefe de cada gangue, não).
+func bestiario_completo() -> bool:
+	return bichos_vistos_total() >= BICHOS_TOTAL
+
+## A luta secreta pode ser aberta? (bestiário completo e a campanha de ida vencida)
+func schro_liberado() -> bool:
+	return bestiario_completo() and campanha_vencida()
+
+## Lugar global cujo chefe está em campo (15 = Gato de Schrödinger).
+func lugar_chefe() -> int:
+	return Fases.TOTAL * 3 if secreto else lugar()
+
+## Luta secreta: a caixa do Sótão. Uma onda só, só com o chefe; time descansado, torre cheia.
+func iniciar_secreto() -> void:
+	iniciar_fase(4)
+	ato = 1
+	secreto = true
+	_pesos_validos = false
+	onda = Balanco.ONDAS_TOTAIS
+	preparar_onda()
+
+## Peças do Gato de Schrödinger: uma fantasia do 3º ato (as que o jogador ainda não completou pesam mais), nível alto, uma marca cada.
+func _chefe_schro() -> Array:
+	var pesos: Dictionary = {}
+	for i in range(Fases.TOTAL * 2, Fases.TOTAL * 3):
+		for c in Fases.lista_do_lugar(i):
+			pesos[c] = Balanco.PESO_FANTASIA_FALTA if pecas_da_fantasia(c) < Pecas.SLOTS else 1.0
+	var pecas: Array = Balanco.fantasia(rng.randi_range(11, 15), Balanco.INIMIGO_NIVEL_MAX_ATO[2], Pecas.SLOTS, rng, pesos)
+	for pc in pecas:
+		pc.marcar(rng.randi_range(0, Pecas.Marca.size() - 1))
+	return pecas
+
 func forca_dano() -> float:
 	return (Balanco.INVASAO_FORA_DANO if ato > 1 else 1.0) * (1.0 + Balanco.INVASAO_DANO_ONDA * (onda_invasao - 1) + Balanco.INVASAO_DANO_ONDA2 * (onda_invasao - 1) * (onda_invasao - 1)) if invasao else 1.0
 
@@ -211,6 +252,11 @@ func preparar_onda() -> void:
 		_pesos_fantasia = pesos_fantasia_do_lugar()
 		_pesos_validos = true
 	plano = Balanco.gerar_plano(fase, onda, rng, ato, degrau_ato(), _pesos_fantasia)
+	if secreto:
+		plano = []
+		chefe = _chefe_schro()
+		bichos_vistos["sch"] = true   # chave de 3 letras: não entra na contagem do bestiário
+		return
 	chefe = Balanco.gerar_chefe(fase, onda, rng, ato, degrau_ato(), _pesos_fantasia)
 	_ver_onda()
 
@@ -592,6 +638,16 @@ func encerrar_onda(sim: Simulacao) -> bool:
 		# invasão: nunca "vence"; anota o recorde e segue para a onda seguinte
 		recordes[lugar()] = maxi(recordes[lugar()], onda_invasao)
 		onda_invasao += 1
+	if secreto:
+		# luta secreta vencida: a primeira vez rende também troféus extras; a peça Miaujestosa vem no drop (Simulacao._largar)
+		if not feitos.has("schro"):
+			trofeus += Balanco.SCHRO_TROFEUS
+		feitos["schro"] = true
+		estat["schro"] = int(estat.get("schro", 0)) + 1
+		recolher()
+		conferir_metas()
+		salvar()
+		return true
 		onda = (onda_invasao - 1) % Balanco.ONDAS_TOTAIS + 1
 		preparar_onda()
 		conferir_metas()
@@ -741,7 +797,7 @@ func _dados_curso() -> Dictionary:
 	var saudes: Array = []
 	for b in bonecos:
 		saudes.append(b.saude)
-	return {"fase": fase, "ato": ato, "invasao": invasao, "onda": onda, "onda_invasao": onda_invasao, "tijolos": tijolos, "nocautes": nocautes_fase, "saudes": saudes}
+	return {"fase": fase, "ato": ato, "invasao": invasao, "secreto": secreto, "onda": onda, "onda_invasao": onda_invasao, "tijolos": tijolos, "nocautes": nocautes_fase, "saudes": saudes}
 
 func _carregar_curso(c: Variant) -> void:
 	em_curso = false
@@ -764,6 +820,10 @@ func _carregar_curso(c: Variant) -> void:
 	_pesos_validos = false
 	preparar_onda()
 
+	secreto = bool(d.get("secreto", false)) and invasao == false
+	if secreto:
+		ato = 1
+		onda = Balanco.ONDAS_TOTAIS
 ## Gravação adiada: várias ações no mesmo quadro (vestir o time, promover tudo...) viram uma gravação só, feita no
 ## início do quadro seguinte, em vez de uma escrita em disco por peça no meio do clique.
 static var _pendente: Estado = null

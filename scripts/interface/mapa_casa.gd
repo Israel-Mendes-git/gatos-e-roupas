@@ -231,6 +231,28 @@ static func _av() -> int:
 static func lugares() -> Array[Rect2]:
 	return RUAS if _ruas else (FORA if _fora else COMODOS)
 
+## Caixa de papelão com o símbolo de radiação, no Sótão: abre a luta secreta (Gato de Schrödinger). Só aparece com o bestiário completo.
+## (x, y) = canto da caixa dentro do cômodo.
+static var _caixa: Rect2 = Rect2()
+static func caixa_em(pos: Vector2) -> bool:
+	return _caixa.size.x > 0.0 and _caixa.grow(4.0).has_point(pos) and not _fora
+
+func _caixa_schro(x: float, y: float, t: float) -> void:
+	_l(x, y, 28, 24, Color(0.4, 0.28, 0.16))
+	_l(x + 4, y + 4, 24, 20, Color(0.72, 0.55, 0.34))
+	_l(x, y, 28, 4, Color(0.84, 0.68, 0.44))
+	_l(x + 12, y, 4, 8, Color(0.9, 0.82, 0.6))
+	var cx: float = _o.x + x + 14.0
+	var cy: float = _o.y + y + 14.0
+	_disco(cx, cy, 8.0, Color(1.0, 0.88, 0.1))
+	_rr(Rect2(cx - 2, cy - 2, 4, 4), C_CONTORNO)
+	_rr(Rect2(cx - 6, cy - 6, 4, 4), C_CONTORNO)
+	_rr(Rect2(cx + 2, cy - 6, 4, 4), C_CONTORNO)
+	_rr(Rect2(cx - 2, cy + 2, 4, 4), C_CONTORNO)
+	if int(t * 2.0) % 2 == 0:
+		_moldura(Rect2(_o.x + x - 4, _o.y + y - 4, 36, 32), 4.0, Color(1.0, 0.9, 0.4, 0.8))
+	_caixa = Rect2(_o.x + x, _o.y + y, 28, 24)
+
 ## Casa vista no segundo ato: dá para passar o mouse e ver os cômodos, mas não para iniciar um.
 static func _casa_so_para_ver() -> bool:
 	return _ato > 1 and not _fora
@@ -416,6 +438,7 @@ func _largura(txt: String, tam: int) -> float:
 # ------------------------------------------------------------------ desenho geral
 func desenhar() -> void:
 	desenhos += 1
+	_caixa = Rect2()
 	_sincronizar()
 	var t: float = p.t
 	var est: Estado = p.estado
@@ -859,6 +882,8 @@ func _mobilia(fi: int, t: float) -> void:
 			_l(128, fy - 16, 28, 16, C_MADEIRA)
 			_l(128, fy - 12, 28, 4, C_MADEIRA_ESC)
 			_l(138, fy - 12, 8, 8, C_OURO)
+			if p.estado.schro_liberado():
+				_caixa_schro(64.0, fy - 24.0, t)
 		4:  # Porão: canos, caldeira, barril
 			_l(0, 36, iw, 8, Color(0.46, 0.52, 0.6))
 			_l(0, 36, iw, 4, Color(0.62, 0.68, 0.76))

@@ -317,7 +317,7 @@ const CHEFE_TORRE_DANO := 2         # tijolos por golpe do chefe na torre
 const CHEFE_NIVEL_BONUS := 1        # níveis das peças do chefe acima dos inimigos da onda
 const CHEFE_LACAIOS := 0.6          # fração dos inimigos comuns numa onda de chefe
 const CHEFE_ATRASO := 2.5           # segundos depois do último lacaio
-const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 0.88, 1.0, 1.0, 0.8, 0.8, 0.8, 0.9, 0.78, 0.78, 0.78, 0.8, 0.8]   # acerto por chefe: nenhum passa de ~2,1x a altura de um gato
+const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 0.88, 1.0, 1.0, 0.8, 0.8, 0.8, 0.9, 0.78, 0.78, 0.78, 0.8, 0.8, 0.8]   # acerto por chefe: nenhum passa de ~2,1x a altura de um gato
 const CHEFE_ESCALA := 1.7           # tamanho na tela
 
 # ---------- Chefes de cada fase (ver Fases.Chefe) ----------
@@ -533,6 +533,13 @@ const MUTACAO_LIMIAR := 0.30
 const MUTACAO_DANO := 0.30
 const MUTACAO_VEL := 0.30
 # ---- Chefes de gangue (3º ato, etapa 5; notas/ato3_proposta.md, seção 2)
+# ---- Gato de Schrödinger (chefe secreto, caixa do Sótão): alterna entre vivo e morto
+const SCHRO_T := 6.0                # segundos em cada estado
+const SCHRO_AVISO := 1.2            # aviso antes de cada troca
+const SCHRO_VIDA := 4.0             # multiplicador de vida do chefe (calibrar com teste_secretos)
+const SCHRO_DANO := 2.0
+const SCHRO_ATORDOA := 0.6          # morto: a pata atordoa o gato atingido
+const SCHRO_TROFEUS := 20           # troféus extras na primeira vitória
 # acerto por chefe de gangue (Dom Gatleone, Imortal Miau, Programa Mestre, Rei Miaunidas, Magnetomiau), sobre a vida e o dano do chefe
 const CHEFE_GANGUE_VIDA: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.4]
 const CHEFE_GANGUE_DANO: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.15]
@@ -1055,6 +1062,7 @@ const CHEFE_PODER_CONJ: Array[int] = [
 	Pecas.Conjunto.VIKING,       # Rei Miaunidas: Fúria
 	Pecas.Conjunto.MAGO,         # Magnetomiau: Relâmpago
 ]
+	Pecas.Conjunto.MAGO,         # Gato de Schrödinger: Relâmpago
 
 # ---------- Geometria do campo ----------
 const TORRE_X := 175.0
