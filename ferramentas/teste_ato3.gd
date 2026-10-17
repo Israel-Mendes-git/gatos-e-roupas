@@ -462,6 +462,72 @@ func _truques() -> void:
 	_ok(mu.mutante and absf(mu.bonus_dano - (1.0 + Balanco.MUTACAO_DANO)) < 0.001 and mu.lento >= 1.0 + Balanco.MUTACAO_VEL - 0.001, "Mutação: +30%% dano e velocidade (%.2f/%.2f)" % [mu.bonus_dano, mu.lento])
 	_ok(IconesEstado.E.MUTANTE in _estados_de(mu), "ícone de mutante")
 
+	# Garra-Fera: regenera vida devagar
+	var sr: Simulacao = _luta(4)
+	var ga: Unidade = _rival(sr, 4, Unidade.Tipo.SALTADOR, 1500.0, 550.0)
+	_ok(ga.rival and ga.regen > 0.0, "Garra-Fera nasce com regeneração (%.2f)" % ga.regen)
+	ga.vida = ga.vida_max * 0.5
+	ga.x = 1500.0
+	var v0: float = ga.vida
+	for i in 50:
+		sr.passo(0.02)
+	_ok(ga.vida > v0, "Garra-Fera recupera vida (%.1f -> %.1f)" % [v0, ga.vida])
+
+	# Telepata: o tiro confunde o gato, que bate no aliado mais perto
+	var st: Simulacao = _luta(4)
+	var tg1: Unidade = st.aliados[0]
+	var tg2: Unidade = Unidade.new()
+	tg2.boneco = tg1.boneco
+	tg2.vida_max = 9999.0
+	tg2.vida = 9999.0
+	st.aliados.append(tg2)
+	tg1.x = 500.0
+	tg1.y = 550.0
+	tg2.x = 540.0
+	tg2.y = 550.0
+	var te: Unidade = _rival(st, 4, Unidade.Tipo.ATIRADOR, 900.0, 550.0)
+	te.cd = 0.0
+	st._atacar(te, tg1)
+	for i in 400:
+		st._mover_projeteis(0.02)
+	_ok(tg1.confuso_t > 0.0, "Telepata: o gato atingido fica confuso (%.2f)" % tg1.confuso_t)
+	_ok(IconesEstado.E.CONFUSO in _estados_de(tg1), "ícone de confuso")
+	_ok(st._escolher(tg1) == tg2, "Confuso escolhe o aliado mais perto")
+	tg1.cd = 0.0
+	tg1.alvo = tg2
+	st._atacar(tg1, tg2)
+	_ok(tg2.vida < 9999.0, "Confuso fere o aliado")
+	var cd_antes: float = tg1.confuso_cd
+	st._confundir(tg1)
+	_ok(tg1.confuso_cd == cd_antes, "Confusão não reinicia enquanto dura")
+	tg1.confuso_t = 0.0
+	_ok(st._escolher(tg1) != tg2 or st.inimigos.is_empty(), "Passada a confusão, volta a olhar os inimigos")
+	tg1.confuso_cd = 3.0
+	st._confundir(tg1)
+	_ok(tg1.confuso_t == 0.0, "Imune logo depois de confuso")
+
+	# Piloto de moto de luz: o rastro fere o gato que o atravessa
+	var sp: Simulacao = _luta(2)
+	var pi: Unidade = _rival(sp, 2, Unidade.Tipo.SALTADOR, 900.0, 550.0)
+	var gp: Unidade = sp.aliados[0]
+	gp.vida_max = 9999.0
+	gp.vida = 9999.0
+	sp._rastros_tick(0.02)
+	_ok(sp.rastros.size() == 1, "Piloto larga um pedaço de rastro")
+	pi.x -= Balanco.RASTRO_PASSO + 1.0
+	sp._rastros_tick(0.02)
+	_ok(sp.rastros.size() == 2, "Piloto larga outro depois de andar")
+	gp.x = pi.x
+	gp.y = 550.0
+	sp._rastros_tick(0.02)
+	_ok(gp.vida < 9999.0, "O rastro fere o gato que passa (%.1f)" % gp.vida)
+	var vv: float = gp.vida
+	sp._rastros_tick(0.02)
+	_ok(gp.vida == vv, "Ferroada tem intervalo")
+	for i in 150:
+		sp._rastros_tick(0.02)
+	_ok(sp.rastros.size() <= 1, "O rastro some com o tempo (%d)" % sp.rastros.size())
+
 func _save_antigo() -> void:
 	var e: Estado = _estado()
 	e.vencido = [2, 2, 2, 2, 2]

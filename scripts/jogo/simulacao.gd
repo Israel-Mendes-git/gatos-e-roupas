@@ -11,6 +11,7 @@ var gatos_por_poder_bicho: int = 0   # gatos derrubados por poder de bicho (dica
 var truques_n: Dictionary = {}   # quantas vezes cada truque de gangue agiu na luta (oferta, atropelo, recompila, quica, mutacao), para testes e telemetria
 var perdas: Dictionary = {}   # blocos tirados da torre por tipo de bicho ("chefe" para chefe), para a tela de derrota
 var nascidos_aliados: Array[Unidade] = []   # clones dos gatos: entram fora dos laços
+var rastros: Array = []   # Rastro de luz do Piloto: {x, y, t, dano, dono}
 var ondas: Array = []   # ondas viajantes (Pedra rolante): {x, y, vx, t, larg, dano, atordoa, dono, eq, hit}
 var lacos: Array = []   # Laço de seda: {membros, t, dur, compart, passou, conj, eq, dono}
 var _em_laco: bool = false   # trava contra o dano compartilhado repetir sem fim
@@ -562,6 +563,8 @@ func _spawnar(item: Dictionary) -> void:
 	u.x = Balanco.INIMIGO_X0
 	u.y = rng.randf_range(Balanco.CHAO_Y0, Balanco.CHAO_Y1)
 	calcular(u)
+	if u.rival and u.gangue == 4 and u.tipo == Unidade.Tipo.SALTADOR and not chefe:
+		u.regen += u.vida_max * Balanco.GARRA_REGEN   # Garra-Fera: regenera vida devagar
 	u.disfarcado = u.disfarce_atordoa > 0.0
 	u.furioso_t = 0.0
 	u.vida = u.vida_max
@@ -593,6 +596,7 @@ func passo(dt: float) -> void:
 			u.lento *= 1.0 - Balanco.MORAL_VEL        # Moral: anda e ataca mais devagar
 			u.bonus_dano *= 1.0 - Balanco.MORAL_DANO
 	_truques_das_gangues()
+	_rastros_tick(dt)
 	_sem_conjunto_tick(dt)
 	for u in aliados + inimigos:
 		if u.assombrado_t > 0.0:
@@ -1269,6 +1273,8 @@ func _vul(v: Unidade) -> float:
 	return v.vulneravel * ((1.0 + v.marcado_bonus) if v.marcado_t > 0.0 else 1.0) * ((1.0 + v.foco_bonus) if v.foco_t > 0.0 else 1.0) * ((1.0 + v.rec_bonus) if v.rec_t > 0.0 else 1.0)
 
 func _escolher(u: Unidade) -> Unidade:
+	if u.equipe == 0 and u.confuso_t > 0.0:
+		return _aliado_perto(u)   # Confusão do Telepata: só enxerga o aliado mais perto
 	if u.equipe == 1 and u.louco_t > 0.0:
 		return _alvo_louco(u)   # Loucura: só enxerga o bicho mais perto
 	# Motoqueiro (Estrada Furiosa): passa pela linha e acerta o gato de trás uma vez, depois segue à torre
@@ -1381,6 +1387,9 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.resist_t = maxf(0.0, u.resist_t - dt)
 	u.rec_t = maxf(0.0, u.rec_t - dt)
 	u.louco_t = maxf(0.0, u.louco_t - dt)
+	u.confuso_t = maxf(0.0, u.confuso_t - dt)
+	u.confuso_cd = maxf(0.0, u.confuso_cd - dt)
+	u.rastro_cd = maxf(0.0, u.rastro_cd - dt)
 	u.radio_t = maxf(0.0, u.radio_t - dt)
 	u.gigante_t = maxf(0.0, u.gigante_t - dt)
 	if u.escudo_t > 0.0:
@@ -1470,7 +1479,7 @@ func _agir(u: Unidade, dt: float) -> void:
 	elif u.poder >= 0:
 		u.poder_cd -= dt
 		u.poder_pronto = u.poder_cd <= 0.0
-		if u.poder_pronto and not (poder_manual and u.equipe == 0) and _usar_poder(u):
+		if u.poder_pronto and u.confuso_t <= 0.0 and not (poder_manual and u.equipe == 0) and _usar_poder(u):
 			u.poder_cd = _intervalo_poder(u)
 			u.poder_cd_menos = 0.0
 			u.poder_pronto = false
@@ -1505,6 +1514,8 @@ func _agir(u: Unidade, dt: float) -> void:
 				u.x += dx / d * passo
 				u.y += dy / d * passo
 				u.andando = true
+	elif u.equipe == 0 and u.confuso_t > 0.0:
+		u.andando = false   # confuso sem ninguém por perto: fica onde está
 	elif u.equipe == 0:
 		# sem alvo: volta ao posto da linha
 		var cx: float = u.casa_x - u.x
@@ -1564,6 +1575,8 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 			tiro["quica"] = Balanco.DISCO_QUICAS   # Lançador de Discos: o disco quica
 			tiro["ja"] = [a]
 			tiro["disco"] = true
+		if u.rival and u.gangue == 4 and u.tipo == Unidade.Tipo.ATIRADOR and not u.chefe:
+			tiro["telepata"] = true   # Telepata: o tiro confunde o gato
 		projeteis.append(tiro)
 		if u.tiro_duplo > 0.0 and rng.randf() < u.tiro_duplo:
 			projeteis.append({"x": u.x, "y": u.y - 7.0, "alvo": a, "dono": u, "dano": dm, "erra": erra})
@@ -1692,6 +1705,8 @@ func _mover_projeteis(dt: float) -> void:
 					_cont("pixel")
 				if p.has("quica") and int(p["quica"]) > 0:
 					_disco_quica(p, a)
+				if p.get("telepata", false):
+					_confundir(a)
 				var dn: Unidade = p["dono"]
 				if dn != null and dn.tiro_atordoa > 0.0 and a.vivo and not a.chefe and not a.bola_t > 0.0 and rng.randf() < dn.tiro_atordoa:
 					a.atordoado_t = maxf(a.atordoado_t, Balanco.TIRO_ATORDOA_T)   # tiro na perna (Meon)
@@ -1702,6 +1717,43 @@ func _mover_projeteis(dt: float) -> void:
 		else:
 			p["x"] += dx / d * mv
 			p["y"] += dy / d * mv
+
+## Telepata (Irmandade Mutante): o gato atingido bate no aliado mais perto por TELEPATA_T s e depois fica imune um tempo.
+func _confundir(a: Unidade) -> void:
+	if not a.vivo or a.equipe != 0 or a.chefe or a.estrutura or a.clone or a.confuso_t > 0.0 or a.confuso_cd > 0.0:
+		return
+	a.confuso_t = Balanco.TELEPATA_T
+	a.confuso_cd = Balanco.TELEPATA_T + Balanco.TELEPATA_RECARGA
+	a.alvo = null
+	a.retarget = 0.0
+	if a.aviso_t > 0.0:
+		a.aviso_t = 0.0
+		a.aviso_forma = {}
+	_cont("telepata")
+	_ev({"t": "telepata", "x": a.x, "y": a.y})
+
+## Rastro de luz (Tropa do Grid): o Piloto larga pedaços de luz que ferem os gatos que passam por eles.
+func _rastros_tick(dt: float) -> void:
+	for u in inimigos:
+		if not u.vivo or not u.rival or u.chefe or u.gangue != 2 or u.tipo != Unidade.Tipo.SALTADOR or u.fugindo or u.x > Balanco.VISIVEL_X:
+			continue
+		if u.rastro_x < 0.0 or absf(u.rastro_x - u.x) >= Balanco.RASTRO_PASSO:
+			u.rastro_x = u.x
+			rastros.append({"x": u.x, "y": u.y, "t": Balanco.RASTRO_T, "dano": u.dano * u.bonus_dano * Balanco.RASTRO_DANO, "dono": u})
+	for i in range(rastros.size() - 1, -1, -1):
+		var r: Dictionary = rastros[i]
+		r["t"] = float(r["t"]) - dt
+		if float(r["t"]) <= 0.0:
+			rastros.remove_at(i)
+			continue
+		for v in aliados:
+			if not v.vivo or v.estrutura or v.clone or v.sequestro_t > 0.0 or v.rastro_cd > 0.0:
+				continue
+			if absf(v.x - float(r["x"])) <= Balanco.RASTRO_RAIO and absf(v.y - float(r["y"])) <= Balanco.RASTRO_RAIO_Y:
+				v.rastro_cd = Balanco.RASTRO_INTERVALO
+				var dn: Unidade = r["dono"]
+				_dano(dn if dn.vivo else null, v, float(r["dano"]), false)
+				_cont("rastro")
 
 ## Marca Cerco: o golpe também fere os outros inimigos perto do alvo (sem refletir espinhos).
 func _golpe_em_area(u: Unidade, centro: Unidade, dano: float) -> void:
@@ -4164,6 +4216,21 @@ func _poder_loucura(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 		_dano_poder(u, c, base * Balanco.PODER_LOUCURA_CHEFE)
 	extra["dur"] = dur
 	return true
+
+## O gato de pé mais perto de um gato confuso (Telepata), sem ele mesmo.
+func _aliado_perto(u: Unidade) -> Unidade:
+	var melhor: Unidade = null
+	var md: float = 1e12
+	for v in aliados:
+		if v == u or not v.vivo or v.estrutura or v.clone or v.sequestro_t > 0.0:
+			continue
+		var dx: float = v.x - u.x
+		var dy: float = v.y - u.y
+		var d2: float = dx * dx + dy * dy
+		if d2 < md:
+			md = d2
+			melhor = v
+	return melhor
 
 ## O inimigo vivo mais perto de um enlouquecido (da própria equipe dele).
 func _alvo_louco(u: Unidade) -> Unidade:

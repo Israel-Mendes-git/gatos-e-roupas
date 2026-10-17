@@ -4,14 +4,14 @@ extends RefCounted
 ## A ordem do enum é a prioridade: controle primeiro, depois dano, depois os bônus.
 ## Os mesmos ícones aparecem sobre os bichos, na ficha do mouse e na legenda do Fichário.
 
-enum E { ATORDOADO, PRESO, LENTO, MARCADO, QUEIMA, SEM_FOLEGO, OCULTO, PROTEGIDO, DISFARCADO, FRENESI, FURIA, BOLA, CURA, FUGINDO, ABALADO, DORMINDO, MUTANTE, MAIS }
+enum E { ATORDOADO, PRESO, LENTO, MARCADO, QUEIMA, SEM_FOLEGO, OCULTO, PROTEGIDO, DISFARCADO, FRENESI, FURIA, BOLA, CURA, FUGINDO, ABALADO, DORMINDO, MUTANTE, CONFUSO, MAIS }
 
 const TAM := 10           # lado de um ícone no atlas (8 + contorno de 1 px)
-const QTD := 17           # estados de verdade (MAIS é só o "…" do excesso)
+const QTD := 18           # estados de verdade (MAIS é só o "…" do excesso)
 const SEM_TEMPO := 99.0   # estado sem relógio (dura enquanto a condição valer)
 
-const NOME: Array[String] = ["Atordoado", "Preso na teia", "Lento", "Marcado", "Queimando", "Sem fôlego", "Oculto", "Protegido", "Disfarçado", "Frenesi", "Fúria", "Bola de espinhos", "Curando", "Fugindo", "Abalado", "Dormindo", "Mutante", "Mais"]
-const CURTO: Array[String] = ["Atordoado", "Preso", "Lento", "Marcado", "Queimando", "Sem fôlego", "Oculto", "Protegido", "Disfarçado", "Frenesi", "Fúria", "Espinhos", "Curando", "Fugindo", "Abalado", "Dormindo", "Mutante", "Mais"]
+const NOME: Array[String] = ["Atordoado", "Preso na teia", "Lento", "Marcado", "Queimando", "Sem fôlego", "Oculto", "Protegido", "Disfarçado", "Frenesi", "Fúria", "Bola de espinhos", "Curando", "Fugindo", "Abalado", "Dormindo", "Mutante", "Confuso", "Mais"]
+const CURTO: Array[String] = ["Atordoado", "Preso", "Lento", "Marcado", "Queimando", "Sem fôlego", "Oculto", "Protegido", "Disfarçado", "Frenesi", "Fúria", "Espinhos", "Curando", "Fugindo", "Abalado", "Dormindo", "Mutante", "Confuso", "Mais"]
 const DICA: Array[String] = [
 	"não age e não anda",
 	"não anda, mas ataca quem alcançar",
@@ -30,6 +30,7 @@ const DICA: Array[String] = [
 	"o líder caiu: dano e velocidade menores",
 	"dorme com os peixes: fora da luta",
 	"com pouca vida: mais dano e mais velocidade",
+	"bate no aliado mais perto",
 	"há mais estados nele",
 ]
 
@@ -86,6 +87,8 @@ const BITS: Array = [
 	["....llll", ".....ll.", "...ll...", "...llll.", "........", ".cccc...", "cCcccc.c", ".CCCC..."],
 	# MUTANTE: gota roxa com raio amarelo
 	["...ll...", "..llll..", ".lllyyl.", ".llyyll.", ".lllyyl.", ".LlllyL.", "..LLLL..", "........"],
+	# CONFUSO: espiral roxa com estrela
+	[".llllll.", "l......l", "l.llll.l", "l.l..l.l", "l.l.yy.l", "l.l..l.l", ".l.llL..", "..LLL..."],
 	# MAIS: reticências
 	["........", "........", "........", "w.w.w...", "w.w.w...", "........", "........", "........"],
 ]
@@ -172,6 +175,8 @@ static func tempo(u: Unidade, id: int) -> float:
 			return u.sequestro_t if u.sequestro_t > 0.0 else -1.0
 		E.MUTANTE:
 			return SEM_TEMPO if u.mutante else -1.0
+		E.CONFUSO:
+			return u.confuso_t if u.confuso_t > 0.0 else -1.0
 	return -1.0
 
 ## A unidade está dentro de um canteiro do seu time (cura)?

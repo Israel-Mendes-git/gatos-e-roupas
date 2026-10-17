@@ -509,9 +509,9 @@ const GANGUE_TIPO_NOME: Array = [
 const GANGUE_TIPO_DICA: Array = [
 	["", "Corre de moto direto à torre.", "Ao tocar a torre, leva um gato para dormir 6 s. Mate antes!", "Lento, muita vida; derruba 2 blocos por golpe.", "", "", "", "", ""],
 	["", "Passa batido e acerta o gato de trás antes de ir à torre.", "Rouba blocos da torre e foge com eles.", "", "Ao cair, vira dois filhotes.", "Dá velocidade ao comboio em volta; atira de longe.", "", "", "Corre ao primeiro gato ou à torre e explode."],
-	["Volta uma vez com 40% de vida ao ser derrotado.", "Corre direto à torre.", "Rouba blocos da torre e foge com eles.", "Lento, muita vida; derruba 2 blocos por golpe.", "", "Atira discos que quicam em até 3 gatos.", "", "", ""],
+	["Volta uma vez com 40% de vida ao ser derrotado.", "Corre à torre largando um rastro de luz que fere quem passa.", "Rouba blocos da torre e foge com eles.", "Lento, muita vida; derruba 2 blocos por golpe.", "", "Atira discos que quicam em até 3 gatos.", "", "", ""],
 	["", "Corre direto à torre.", "Rouba blocos da torre e foge com eles.", "", "Ao cair, vira dois filhotes.", "", "", "Em falange, leva menos dano de frente. Ataque pelos flancos!", ""],
-	["Abaixo de 30% de vida, fica mais forte e mais rápido.", "Corre direto à torre.", "Rouba blocos da torre e foge com eles.", "Lento, muita vida; derruba 2 blocos por golpe.", "Ao cair, vira dois filhotes.", "Atira de longe nos gatos e na torre.", "", "", ""],
+	["Abaixo de 30% de vida, fica mais forte e mais rápido.", "Corre à torre, regenera vida e enfurece com pouca vida.", "Rouba blocos da torre e foge com eles.", "Lento, muita vida; derruba 2 blocos por golpe.", "Ao cair, vira dois filhotes.", "Seu tiro confunde: o gato bate no aliado mais perto.", "", "", ""],
 ]
 # Oferta (Família Gatíssima): o Mensageiro, ao tocar a torre, leva um gato para dormir com os peixes
 const OFERTA_T := 6.0               # segundos que o gato sequestrado fica fora da luta
@@ -535,6 +535,18 @@ const FALANGE_FLANCO := 60.0        # golpe vindo de mais de |dy| = isto é de f
 const MUTACAO_LIMIAR := 0.30
 const MUTACAO_DANO := 0.30
 const MUTACAO_VEL := 0.30
+# Rastro de luz (Tropa do Grid): o Piloto deixa pedaços de luz pelo caminho que ferem os gatos que os atravessam
+const RASTRO_T := 2.0               # segundos que cada pedaço dura
+const RASTRO_PASSO := 36.0          # a cada tanto andado, o Piloto larga um pedaço
+const RASTRO_RAIO := 30.0           # alcance (x) de um pedaço sobre o gato
+const RASTRO_RAIO_Y := 24.0
+const RASTRO_DANO := 0.7            # fração do dano do Piloto a cada ferroada
+const RASTRO_INTERVALO := 0.6       # segundos entre ferroadas no mesmo gato
+# Confusão (Irmandade Mutante): o tiro do Telepata faz o gato bater no aliado mais perto
+const TELEPATA_T := 1.5             # segundos de confusão
+const TELEPATA_RECARGA := 4.0       # depois de confuso, o gato fica imune por este tempo
+# Regeneração (Irmandade Mutante): a Garra-Fera recupera esta fração da vida máxima por segundo
+const GARRA_REGEN := 0.02
 # ---- Gato de Schrödinger (chefe secreto, caixa do Sótão): alterna entre vivo e morto
 const SCHRO_T := 6.0                # segundos em cada estado
 const SCHRO_AVISO := 1.2            # aviso antes de cada troca

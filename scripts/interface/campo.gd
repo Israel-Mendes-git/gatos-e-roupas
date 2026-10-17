@@ -1286,6 +1286,11 @@ func _consumir() -> void:
 				_som("poder_pronto", 1.5, -2.0, true)
 				_faisca(prc, Color(0.3, 0.9, 1.0), 16, 260.0, 0.5, 3.5)
 				_numero(prc + Vector2(0, -26), "Recompilando!", Color(0.4, 0.95, 1.0), 20, 1.2, 160.0)
+			"telepata":
+				var ptp: Vector2 = Vector2(e["x"], e["y"] - 40 * ESC)
+				_som("negado", 1.3, -4.0, true)
+				_faisca(ptp, Color(0.8, 0.5, 1.0), 10, 200.0, 0.5, 3.0)
+				_numero(ptp + Vector2(0, -20), "Confuso!", Color(0.85, 0.6, 1.0), 20, 1.0, 120.0)
 			"mutacao":
 				var pmu: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("poder_pronto", 0.7, -2.0, true)
@@ -2655,6 +2660,14 @@ func _desenhar_domos() -> void:
 		V.domo(self, Vector2(float(z["x"]), float(z["y"]) + 24.0 * ESC), float(z["raio"]), rel, viva, Color(0.55, 0.75, 1.0))
 
 ## Pedra rolante: a rocha em movimento, com poeira atrás.
+func _desenhar_rastros() -> void:
+	for rr in sim.rastros:
+		var r: Dictionary = rr
+		var a: float = clampf(float(r["t"]) / Balanco.RASTRO_T, 0.0, 1.0)
+		var p := Vector2(V.sn(float(r["x"])), V.sn(float(r["y"])))
+		V.quadro(self, p.x - V.Q * 4.0, p.y - V.Q, V.Q * 8.0, V.Q * 2.0, Color(0.3, 0.95, 1.0, 0.35 + 0.5 * a))
+		V.quadro(self, p.x - V.Q * 2.0, p.y - V.Q * 0.0, V.Q * 4.0, V.Q, Color(1, 1, 1, 0.3 + 0.6 * a))
+
 func _desenhar_pedras() -> void:
 	for oo in sim.ondas:
 		var o: Dictionary = oo
@@ -2784,6 +2797,10 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 		V.aro(self, meio, (CORPO_LARG + 8.0) * esc_u, (CORPO_MEIO + 10.0) * esc_u, Color(0.6, 0.85, 1.0), 0.9, 2.0)
 		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.05 * esc_u, 8.0 * esc_u, Color(0.6, 0.85, 1.0, 0.4))
 		V.ponto(self, meio + Vector2(-CORPO_LARG * 0.6 * esc_u, -CORPO_MEIO * 0.6 * esc_u), Color(1, 1, 1))
+	if uu.confuso_t > 0.0:
+		for k in 3:
+			var ar_c: float = rel * 7.0 + k * 2.1
+			V.quadro(self, V.sn(pos.x + cos(ar_c) * 13.0 * esc_u), V.sn(pos.y - h - 10.0 + sin(ar_c) * 4.0), V.Q, V.Q, Color(1.0, 0.9, 0.3) if k % 2 == 0 else Color(0.8, 0.5, 1.0))
 	if uu.louco_t > 0.0:
 		for k in 3:
 			var ar_l: float = rel * 6.0 + k * 2.1
@@ -3235,6 +3252,7 @@ func _draw() -> void:
 	_desenhar_domos()
 	_desenhar_chamas()
 	_desenhar_mudas()
+	_desenhar_rastros()
 	_desenhar_pedras()
 	_desenhar_lacos()
 	# unidades ordenadas por profundidade
@@ -7348,6 +7366,8 @@ func _estados_linhas(u: Unidade) -> Array:
 				nome = "Dormindo com os peixes: fora da luta"
 			IconesEstado.E.MUTANTE:
 				nome = "Mutante: +%s de dano e de velocidade" % Simulacao.pct(Balanco.MUTACAO_DANO)
+			IconesEstado.E.CONFUSO:
+				nome = "Confuso: ataca o aliado mais perto"
 		saida.append([id, nome, ("%s s" % Simulacao.num(tp)) if tp < IconesEstado.SEM_TEMPO else "", 13, Color(0.85, 1.0, 0.85)])
 	var extra: Array[String] = []
 	if u.bonus_dano > 1.01:

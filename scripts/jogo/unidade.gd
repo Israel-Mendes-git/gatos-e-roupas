@@ -194,6 +194,10 @@ var estase_extra: float = 0.0
 var estase_conj: int = -1
 var louco_t: float = 0.0        # Loucura (Catchullu): ataca o inimigo mais perto, da própria equipe
 var louco_dano: float = 0.0
+var confuso_t: float = 0.0      # Telepata (Irmandade Mutante): o gato bate no aliado mais perto
+var confuso_cd: float = 0.0     # imunidade depois de confuso
+var rastro_cd: float = 0.0      # Rastro de luz (Tropa do Grid): tempo até a próxima ferroada neste gato
+var rastro_x: float = -1.0      # onde o Piloto largou o último pedaço de rastro
 var folego: float = 0.0         # kit da Submiautica: fração da vida com que levanta uma vez (0 = sem kit)
 var folego_usado: bool = false
 var susto: float = 0.0          # kit do Catchullu: chance de o golpe assustar o alvo
