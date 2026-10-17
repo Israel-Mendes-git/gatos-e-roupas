@@ -269,7 +269,7 @@ const MOLDE_PODER: Array[float] = [
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
-	1.1, 1.1, 1.1, 1.1,
+	0.6, 0.6, 0.6, 0.6,   # Super Miaujin: Coroa, Cetro e Colar já rendem muito
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
 ]

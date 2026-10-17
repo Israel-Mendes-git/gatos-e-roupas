@@ -174,7 +174,7 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.MIAU_NOIR: [1.5, 2.0],             # emboscada: multiplicador do 1º golpe em cada inimigo
 	Pecas.Conjunto.HOLLOWMIAU: [20.0, 50.0],          # alcance a mais
 	Pecas.Conjunto.SILKMIAU: [0.2, 0.45],             # cerco: fração do dano que fere em volta
-	Pecas.Conjunto.SUPER_MIAUJIN: [0.5, 1.2],         # execução: dano a mais em quem está abaixo de EXECUCAO_LIMIAR
+	Pecas.Conjunto.SUPER_MIAUJIN: [0.3, 0.6],         # execução: dano a mais em quem está abaixo de EXECUCAO_LIMIAR
 	Pecas.Conjunto.ARQUEOLOGO: [0.1, 0.25],           # esquiva
 	Pecas.Conjunto.TREINADOR: [0.04, 0.1],            # cura por abate (fração da vida máxima)
 }
@@ -457,6 +457,7 @@ const PODER_KIT_FORCA: Dictionary = {
 	Pecas.Conjunto.ARANHA: 1.15, Pecas.Conjunto.ROCKET_MIAUGUE: 1.4, Pecas.Conjunto.SOMBRIO: 1.7, Pecas.Conjunto.TUBARAO: 1.2,
 	Pecas.Conjunto.STARDEW_MIAULLEY: 2.2, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
 	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7, Pecas.Conjunto.MIMIAU: 0.6,
+	Pecas.Conjunto.SUPER_MIAUJIN: 0.7, Pecas.Conjunto.TREINADOR: 1.6,
 }
 # Acerto da recarga por fantasia (x PODER_INTERVALO), medido com o simulador (kits=todos): >1 recarrega mais devagar.
 const PODER_KIT_INTERVALO: Dictionary = {
@@ -468,6 +469,7 @@ const PODER_KIT_INTERVALO: Dictionary = {
 	Pecas.Conjunto.ROCKET_MIAUGUE: 0.75, Pecas.Conjunto.STARDEW_MIAULLEY: 0.8, Pecas.Conjunto.SOMBRIO: 0.8,
 	Pecas.Conjunto.GELO: 0.8, Pecas.Conjunto.FENIX_MIAUSSIMO: 0.8, Pecas.Conjunto.MEON: 0.85,
 	Pecas.Conjunto.MAGO: 0.9, Pecas.Conjunto.PIRATA: 1.15,
+	Pecas.Conjunto.SUPER_MIAUJIN: 1.5, Pecas.Conjunto.TREINADOR: 0.6,
 }
 const PODER_PRIMEIRO := 3.5         # segundos até o primeiro uso
 const PODER_DANO := 14.0            # dano de referência (x força média das peças)
