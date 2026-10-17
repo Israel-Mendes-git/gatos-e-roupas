@@ -15,6 +15,9 @@ extends RefCounted
 ## O save guarda as escolhas num campo opcional "atelie" (Estado.atelie); sem ele o Ateliê está vazio.
 
 const ORCAMENTO := 14
+## Ajuste do poder da fantasia criada (calibrado com o simulador: as combinações de 14 pontos ficam na faixa das outras fantasias).
+const PODER_FORCA_FATOR := 0.5
+const PODER_RECARGA_FATOR := 1.4
 const NOME_MAX := 16
 const NOME_VAZIO := "Fantasia sem nome"
 const MATIZES := 13

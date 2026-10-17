@@ -312,7 +312,7 @@ const MOLDE_PODER: Array[float] = [
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
-	1.0, 1.0, 1.0, 1.0,   # Ateliê: força fixa 1,0 (versátil, nunca superior)
+	0.6, 0.6, 0.6, 0.6,   # Ateliê: força fixa (calibrada com o simulador)
 ]
 
 # ---------- Fantasias (conjuntos) ----------

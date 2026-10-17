@@ -343,6 +343,7 @@ func calcular(u: Unidade) -> void:
 	var cont: Array[int] = Pecas.contar_conjuntos(u.pecas)
 	u.poder = -1
 	u.poder_conj = -1
+	u.poder_atelie = false
 	for c in cont.size():
 		var g: int = Pecas.grau_conjunto(cont[c]) - 1
 		if g < 0:
@@ -351,6 +352,7 @@ func calcular(u: Unidade) -> void:
 			# fantasia completa: ganha o poder especial
 			u.poder_conj = Pecas.conj_do_poder(c)   # no Ateliê: o poder (com a força e a recarga) da fantasia escolhida
 			u.poder = Pecas.PODER_TIPO[u.poder_conj]
+			u.poder_atelie = c == Pecas.Conjunto.ATELIE
 			var soma: float = 0.0
 			for p in u.pecas:
 				soma += p.poder()
@@ -2039,7 +2041,7 @@ func _herancas_agem(u: Unidade, dt: float) -> bool:
 
 ## Intervalo até o próximo poder: o padrão (acertado por fantasia), menos o kit do Jimiau e (se `com_menos`) os segundos tirados por Alvo travado.
 func _intervalo_poder(u: Unidade, com_menos: bool = true) -> float:
-	var base: float = Balanco.PODER_INTERVALO * float(Balanco.PODER_KIT_INTERVALO.get(u.poder_conj, 1.0))
+	var base: float = Balanco.PODER_INTERVALO * float(Balanco.PODER_KIT_INTERVALO.get(u.poder_conj, 1.0)) * (Atelie.PODER_RECARGA_FATOR if u.poder_atelie else 1.0)
 	return maxf(1.0, base * (1.0 - u.recarga_menos) - (u.poder_cd_menos if com_menos else 0.0))
 
 ## Fração da carga do poder do gato (1 = pronto).
@@ -2075,7 +2077,7 @@ func _tele_marca(v: Unidade, d: float) -> void:
 func _usar_poder(u: Unidade) -> bool:
 	_conj_tele = u.poder_conj
 	_eq_tele = u.equipe
-	_fi = _fator_inimigo(u) if u.equipe == 1 else (1.0 if em_heranca else float(Balanco.PODER_KIT_FORCA.get(u.poder_conj, 1.0)))
+	_fi = _fator_inimigo(u) if u.equipe == 1 else (1.0 if em_heranca else float(Balanco.PODER_KIT_FORCA.get(u.poder_conj, 1.0)) * (Atelie.PODER_FORCA_FATOR if u.poder_atelie else 1.0))
 	var ok: bool = _usar_poder_i(u)
 	if ok:
 		if not (u.poder_conj in Pecas.IMITAR_EXCLUI):

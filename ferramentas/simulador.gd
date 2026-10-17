@@ -11,6 +11,16 @@ const PRIORIDADE: Array[int] = [
 	4, 3, 4, 4,
 	2, 4, 3, 2, 5, 2, 4, 4, 3,
 ]
+## Fantasias do Ateliê para medir com `kits=atelie atelie=<letra>`; todas no orçamento máximo de 14 pontos.
+const ATELIE_CONFIGS: Dictionary = {
+	"A": {"nome": "Ateliê A", "formas": [Pecas.Tipo.CARTOLA, Pecas.Tipo.COLETE, Pecas.Tipo.VARINHA, Pecas.Tipo.BOTAS], "matizes": [0, 0, 0, 0], "estampa": 0, "poder": Pecas.Conjunto.CIRCO, "bonus": Pecas.Conjunto.VIKING},
+	"B": {"nome": "Ateliê B", "formas": [Pecas.Tipo.CARTOLA, Pecas.Tipo.CASACO, Pecas.Tipo.VARINHA, Pecas.Tipo.AMULETO], "matizes": [0, 0, 0, 0], "estampa": 0, "poder": Pecas.Conjunto.MIMIAU, "bonus": Pecas.Conjunto.CAVALEIRO},
+	"C": {"nome": "Ateliê C", "formas": [Pecas.Tipo.COROA, Pecas.Tipo.PELE, Pecas.Tipo.CETRO, Pecas.Tipo.COLAR], "matizes": [0, 0, 0, 0], "estampa": 0, "poder": Pecas.Conjunto.JARDINEIRO, "bonus": Pecas.Conjunto.CIRCO},
+	"E": {"nome": "Ateliê E", "formas": [Pecas.Tipo.CARTOLA, Pecas.Tipo.COLETE, Pecas.Tipo.VARINHA, Pecas.Tipo.BOTAS], "matizes": [0, 0, 0, 0], "estampa": 0, "poder": Pecas.Conjunto.CIRCO, "bonus": Pecas.Conjunto.CIRCO},
+	"F": {"nome": "Ateliê F", "formas": [Pecas.Tipo.CARTOLA, Pecas.Tipo.COLETE, Pecas.Tipo.VARINHA, Pecas.Tipo.BOTAS], "matizes": [0, 0, 0, 0], "estampa": 0, "poder": Pecas.Conjunto.MIMIAU, "bonus": Pecas.Conjunto.VIKING},
+	"G": {"nome": "Ateliê G", "formas": [Pecas.Tipo.CAPACETE, Pecas.Tipo.COLETE, Pecas.Tipo.PORRETE, Pecas.Tipo.BOTAS], "matizes": [0, 0, 0, 0], "estampa": 0, "poder": Pecas.Conjunto.CIRCO, "bonus": Pecas.Conjunto.VIKING},
+	"D": {"nome": "Ateliê D", "formas": [Pecas.Tipo.CAPACETE, Pecas.Tipo.COLETE, Pecas.Tipo.ESCUDO, Pecas.Tipo.BOTAS], "matizes": [0, 0, 0, 0], "estampa": 0, "poder": Pecas.Conjunto.MIAUZILLA, "bonus": Pecas.Conjunto.GUARDIAO},
+}
 const TENTATIVAS_MAX := 6   # por fase; depois disso a campanha conta como travada
 const A_DISTANCIA: Array[int] = [Pecas.Tipo.ESTILINGUE, Pecas.Tipo.VARINHA, Pecas.Tipo.REGADOR]
 
@@ -63,6 +73,7 @@ func _init() -> void:
 			onda_derrota.append({})
 		var inv_casa: Array[int] = []      # ondas vencidas na invasão sem fim de um cômodo, por campanha que zerou tudo
 		var inv_fora: Array[int] = []      # idem, num lugar de fora
+		var inv_ruas: Array[int] = []      # idem, nas ruas (cinco gangues misturadas)
 		var nivel_fim: Array[float] = []
 		var torre_fim: Array[float] = []   # soma dos níveis das 4 melhorias ao fim de cada ato
 		var mods_fim: Array[float] = []    # módulos liberados ao fim de cada ato
@@ -70,7 +81,6 @@ func _init() -> void:
 			nivel_fim.append(0.0)
 			torre_fim.append(0.0)
 			mods_fim.append(0.0)
-		var inv_ruas: Array[int] = []      # idem, nas ruas (cinco gangues misturadas)
 		var completas: int = 0
 		var pecas_fim: float = 0.0
 		var marcas_fim: float = 0.0
@@ -120,6 +130,7 @@ func _init() -> void:
 				# invasão sem fim com o time do fim do jogo: um cômodo e um lugar de fora, um por campanha
 				inv_casa.append(_jogar_invasao(pol, e, g % Fases.TOTAL + 1, false, 5000 + g))
 				inv_fora.append(_jogar_invasao(pol, e, (g + 2) % Fases.TOTAL + 1, true, 7000 + g))
+				inv_ruas.append(_jogar_invasao(pol, e, (g + 3) % Fases.TOTAL + 1, false, 9000 + g, true))
 			var todas: Array = e.guarda.duplicate()
 			for b in e.bonecos:
 				for p in b.pecas:
@@ -127,7 +138,6 @@ func _init() -> void:
 						todas.append(p)
 			pecas_fim += todas.size()
 			for p in todas:
-				inv_ruas.append(_jogar_invasao(pol, e, (g + 3) % Fases.TOTAL + 1, false, 9000 + g, true))
 				marcas_fim += p.marcas.size()
 				if p.raridade == Pecas.Raridade.RARA:
 					raras += 1
@@ -529,7 +539,13 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 	var primeiro_novo: int = Pecas.Conjunto.SUPER_MIAU
 	var lista: Array[int] = []
 	var k: String = str(opcoes["kits"])
-	if k == "todos" or k == "novos" or k == "antigos":
+	var cfg_atelie: Dictionary = {}
+	if k == "atelie":
+		# kits=atelie atelie=A|B|C: uma fantasia do Ateliê no orçamento máximo (14 pontos); ver ATELIE_CONFIGS
+		cfg_atelie = ATELIE_CONFIGS[str(opcoes.get("atelie", "A"))]
+		print("Ateliê %s: custo %d de %d | %s" % [str(opcoes.get("atelie", "A")), Atelie.custo(cfg_atelie), Atelie.ORCAMENTO, str(cfg_atelie)])
+		lista = [Pecas.Conjunto.ATELIE]
+	elif k == "todos" or k == "novos" or k == "antigos":
 		for c in Pecas.CONJUNTO_NOME.size():
 			if Pecas.retirada(c):
 				continue
@@ -586,6 +602,8 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 				var pk: int = todos_k[(g * 5 + i * 11) % todos_k.size()]
 				for s in Pecas.SLOTS:
 					e.bonecos[i].pecas[s] = Peca.new(Pecas.CONJUNTO_PECAS[pk][s], nivel, rar)
+		if not cfg_atelie.is_empty():
+			Atelie.aplicar(cfg_atelie)   # depois de novo_jogo, que esvazia o Ateliê
 		var base: Array = _foto(e)   # o time antes de qualquer kit: cada kit parte dele
 		for c in lista + [-1]:
 			_restaurar(e, base)
@@ -615,7 +633,7 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 					a["vivos"] += sim.aliados.size()
 					a["tempo"] += sim.tempo
 			var tel: Dictionary = acc[c]["tele"]
-			var d: Dictionary = Simulacao.tele.get(c, {}) if c >= 0 else {}
+			var d: Dictionary = Simulacao.tele.get(Pecas.conj_do_poder(c), {}) if c >= 0 else {}
 			for kk in d:
 				tel[kk] = float(tel.get(kk, 0.0)) + float(d[kk])
 		for s in Pecas.SLOTS:
