@@ -33,6 +33,10 @@ func _argumentos() -> PackedStringArray:
 func _init() -> void:
 	var args: PackedStringArray = _argumentos()
 	var n_jogos: int = 30
+	if args.size() > 0 and args[0] == "drops":
+		_modo_drops(int(args[1]) if args.size() > 1 else 40)
+		quit()
+		return
 	if args.size() > 0:
 		n_jogos = int(args[0])
 	var politicas: Array[String] = ["veste", "misto", "sacrifica", "fantasia"]
@@ -139,6 +143,114 @@ func _init() -> void:
 		print("   invasao sem fim (time do fim do jogo): comodo %s | lugar de fora %s" % [_resumo_inv(inv_casa), _resumo_inv(inv_fora)])
 		_imprimir_poderes(n_jogos)
 	quit()
+
+## Modo drops (notas/onde_cai_final.md, seção 6, item 2): sem combate, todo fantasiado e todo chefe morre e o comum larga com
+## DROP_CHANCE. Por lugar, `n` campanhas com coleção vazia lutam o lugar até completar todas as fantasias dele (máx. 80 lutas).
+## Mede peças por luta por origem, % da lista do lugar, lutas até a 1ª fantasia e o lugar inteiro (média, mediana, p95),
+## a mediana das lutas da última peça que falta e a taxa da assinatura do chefe. Roda com e sem pity (Simulacao.sem_pity).
+func _modo_drops(n: int) -> void:
+	for pity in [true, false]:
+		Simulacao.sem_pity = not pity
+		print("=== drops: %d campanhas por lugar, %s ===" % [n, "COM pity" if pity else "SEM pity"])
+		var tot_med: float = 0.0
+		for lugar in Fases.TOTAL * Balanco.ATOS:
+			var lista: Array = Fases.lista_do_lugar(lugar)
+			var ato: int = lugar / Fases.TOTAL + 1
+			var f: int = lugar % Fases.TOTAL + 1
+			var pecas_lista: Array = []
+			for c in lista:
+				for tp in Pecas.CONJUNTO_PECAS[c]:
+					pecas_lista.append(tp)
+			var org: Array = [0, 0, 0]   # comum, fantasiado, chefe
+			var da_lista: Array = [0, 0, 0]
+			var lutas_total: int = 0
+			var ate_uma: Array[int] = []
+			var ate_tudo: Array[int] = []
+			var ultima: Array[int] = []
+			var assin: int = 0
+			var lutas_assin: int = 0
+			for g in n:
+				var e := Estado.new(3000 + g * 13 + lugar * 101)
+				e.persistir = false
+				e.novo_jogo()
+				e.colecao.fill(false)
+				var sim := Simulacao.new()
+				sim.estado = e
+				sim.rng.seed = 9000 + g * 17 + lugar
+				var uma: int = -1
+				var falta1: int = -1
+				var lutas: int = 0
+				while lutas < 80:
+					e.iniciar_fase(f)
+					e.ato = ato
+					e._pesos_validos = false
+					for w in range(1, Balanco.ONDAS_TOTAIS + 1):
+						e.onda = w
+						e.preparar_onda()
+						if w == Balanco.ONDAS_TOTAIS and not e.chefe.is_empty():
+							lutas_assin += 1
+							if Pecas.CONJUNTO_DE[e.chefe[0].tipo] == Fases.CHEFE_ASSINATURA[lugar]:
+								assin += 1
+						var fontes: Array = []
+						for it in e.plano:
+							var pcs: Array = []
+							for pc in it["pecas"]:
+								if pc != null:
+									pcs.append(pc)
+							fontes.append([pcs, 1 if it["elite"] else 0, 0])
+						if not e.chefe.is_empty():
+							fontes.append([e.chefe.duplicate(), 2, 2])
+						for ft in fontes:
+							var vest: Array = ft[0]
+							if vest.is_empty():
+								continue
+							var o: int = ft[1]
+							if o == 0 and sim.rng.randf() >= Balanco.DROP_CHANCE:
+								continue
+							for k in mini(vest.size(), 2 if o == 2 else 1):
+								var i: int = sim._sortear_peca_vestida(vest, o > 0)
+								var tp: int = vest[i].tipo
+								vest.remove_at(i)
+								org[o] += 1
+								if pecas_lista.has(tp):
+									da_lista[o] += 1
+								e.registrar(tp)
+					lutas += 1
+					var feitas: int = 0
+					var pecas_t: int = 0
+					for c in lista:
+						var q: int = e.pecas_da_fantasia(c)
+						pecas_t += q
+						if q >= Pecas.SLOTS:
+							feitas += 1
+					if uma < 0 and feitas > 0:
+						uma = lutas
+					if falta1 < 0 and pecas_t >= lista.size() * Pecas.SLOTS - 1:
+						falta1 = lutas
+					if feitas >= lista.size():
+						break
+				lutas_total += lutas
+				ate_uma.append(uma if uma > 0 else 80)
+				ate_tudo.append(lutas)
+				ultima.append(lutas - falta1 if falta1 > 0 else 0)
+			ate_uma.sort()
+			ate_tudo.sort()
+			ultima.sort()
+			var nl: float = float(lutas_total)
+			tot_med += float(lutas_total) / n
+			print("%-9s (%d fantasias) pecas/luta comum %.1f fantasiado %.1f chefe %.1f | da lista: comum %.0f%% fant %.0f%% chefe %.0f%% | 1a fantasia: media %.1f p95 %d | lugar inteiro: media %.1f mediana %d p95 %d | ultima peca (mediana) %d | assinatura %.0f%%" % [
+				Fases.NOME[lugar], lista.size(), org[0] / nl, org[1] / nl, org[2] / nl,
+				100.0 * da_lista[0] / maxf(1.0, org[0]), 100.0 * da_lista[1] / maxf(1.0, org[1]), 100.0 * da_lista[2] / maxf(1.0, org[2]),
+				_media(ate_uma), ate_uma[int(n * 0.95)], _media(ate_tudo), ate_tudo[n / 2], ate_tudo[mini(n - 1, int(n * 0.95))],
+				ultima[n / 2], 100.0 * assin / maxf(1.0, lutas_assin)])
+		print("   soma das medias de lutas (lugares jogados): %.1f" % tot_med)
+	Simulacao.sem_pity = false
+
+func _media(a: Array) -> float:
+	var t: float = 0.0
+	for x in a:
+		t += x
+	return t / maxf(1.0, a.size())
 
 ## Telemetria dos poderes (Simulacao.tele), por fantasia, média por campanha.
 func _imprimir_poderes(n_jogos: int) -> void:
