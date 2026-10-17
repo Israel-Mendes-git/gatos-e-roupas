@@ -156,7 +156,7 @@ const NOME: Array[String] = [
 	"Crista de Placas Dorsais", "Pele de Dinossauro Atômico", "Garras de Monstro Marinho", "Cauda Radioativa Gigante",
 	"Cabeça de Gorila Peluda", "Pelagem Preta de Gorila", "Prédio de Brinquedo", "Biplano de Papel Atacando",
 	"Chapéu de Fora-da-Lei Surrado", "Casaco de Couro com Lenço Vermelho", "Rifle de Caçador", "Caderninho de Esboços",
-	"Máscara de Mergulho com Respirador", "Macacão Pressurizado", "Rifle de Estase", "Tanque de Oxigênio com Peixinho",
+	"Capuz de Leviatã com Mandíbulas", "Pele de Leviatã de Faixas Ferrugem", "Rifle de Estase", "Barbatana Dorsal de Leviatã",
 	"Cabeça de Polvo com Barba de Tentáculos", "Manto Verde com Asinhas de Morcego", "Necronomiau", "Tentáculo Fofo",
 ]
 const DICA: Array[String] = [

@@ -20,6 +20,8 @@ const _MOLDE_FALLBACK: Array = [
 ## Lugar do acessório no gato (RoupaGato.Onde); -1 = padrão (cabeça, corpo, boca e traseira).
 static func onde(tipo: int) -> int:
 	match tipo:
+		Pecas.Tipo.TANQUE_PEIXINHO:
+			return RoupaGato.Onde.CORPO
 		Pecas.Tipo.CADERNINHO:
 			return RoupaGato.Onde.CORPO
 	return -1
@@ -74,6 +76,14 @@ static func _montar(tipo: int) -> Array:
 			return _ar_revolver()
 		Pecas.Tipo.CADERNINHO:
 			return _ar_diario()
+		Pecas.Tipo.CAPACETE_AQUARIO:
+			return _sub_capuz()
+		Pecas.Tipo.MACACAO_PRESSURIZADO:
+			return _sub_pele()
+		Pecas.Tipo.RIFLE_ESTASE:
+			return _sub_rifle()
+		Pecas.Tipo.TANQUE_PEIXINHO:
+			return _sub_barbatana()
 		_:
 			pass
 	return []
@@ -164,6 +174,86 @@ static func _ar_diario() -> Array:
 	])
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_ARTHUR)]
+
+# ------------------------------------------------------------------ Submiautica (Reaper Leviathan): azul-acinzentado, faixas ferrugem, mandíbulas em gancho
+## a/A/d corpo azul-acinzentado (médio, luz, sombra); r/R/D faixas e barbatana vermelho-ferrugem; m/M mandíbulas verde-oliva escuras; k/E olho preto e aro;
+## w barriga clara; s/S/e/h aço azul do rifle de estase e brilho ciano da câmara (halo, núcleo, miolo).
+const _PAL_SUB := {
+	"o": Color("0c1822"), "a": Color("7a9eb2"), "A": Color("b0cdd8"), "d": Color("46687e"),
+	"r": Color("b0502c"), "R": Color("dc7c4c"), "D": Color("78301c"),
+	"m": Color("56503a"), "M": Color("8a8260"), "k": Color("0c1018"), "E": Color("d6e6ea"),
+	"w": Color("dfe9e4"), "s": Color("96a6b6"), "S": Color("2a78b0"), "e": Color("4cc8f0"), "h": Color("eafbff"), "u": Color("2e3a48"),
+}
+
+## Cabeça do Reaper: a grande barbatana ferrugem inclinada para trás, o crânio azul-acinzentado com o olho grande preto de aro claro e
+## quatro mandíbulas em gancho (duas sobem na frente, duas descem sob o queixo); o focinho do gato aparece entre elas.
+static func _sub_capuz() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._txt(cv, 1, -24, [
+		"rr.............",
+		".rrrr..........",
+		".rrrrr.........",
+		"..rrrrrr.......",
+		"..rrrrrrr......",
+		"..arrrrraaa....",
+		"..aaaaaaaaaa...",
+		"..aaaEEEEEaaa.M",
+		"..aaaEkkkEaaMMM",
+		"..aadEkkkEaMMM.",
+		"...ddaEEEaaMM..",
+		"....dAaaaaa....",
+	])
+	RoupaGatoI._luz(cv, "a", "A", "d")
+	# gancho de cima sobe na ponta
+	RoupaGatoI._txt(cv, 14, -17, ["M", "M"])
+	# mandíbulas de baixo: descem sob o queixo e voltam a curvar para a frente
+	RoupaGatoI._txt(cv, 10, -12, ["mM", ".mMM", "..mMM", "....mM", ".....m"])
+	RoupaGatoI._cont(cv, "o")
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_SUB)]
+
+## Pele do Leviatã: corpo azul-acinzentado justo, faixas vermelho-ferrugem na vertical seguindo o dorso e a barriga clara.
+static func _sub_pele() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._corpo_vest(cv, "a", -5, -7, -5)
+	RoupaGatoI._luz(cv, "a", "A", "d")
+	for fx in [-6, -2, 2]:
+		for y in range(-13, 0):
+			for x in range(fx, fx + 2):
+				if cv.has(Vector2i(x, y)) and cv[Vector2i(x, y)] != "o" and y < -5:
+					cv[Vector2i(x, y)] = "r" if x == fx else "D"
+	for x in range(-3, 4):
+		for y in range(-9, 0):
+			if cv.has(Vector2i(x, y)) and cv[Vector2i(x, y)] in ["a", "d"] and y >= -7:
+				cv[Vector2i(x, y)] = "w"
+	RoupaGatoI._cont(cv, "o", false)
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB)]
+
+## Rifle de estase: coronha, câmara larga com núcleo ciano e halo escuro, cano com anéis e as duas pontas do fim.
+static func _sub_rifle() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._txt(cv, 13, -16, [
+		"..SSSSS........",
+		"ssSeeeSAAAAAAAA",
+		"ssSehheSaaDaaDa",
+		"ssSeeeSddddddd.",
+		"u.SSSSS...aa.aa",
+		"uu.............",
+	])
+	RoupaGatoI._cont(cv, "o")
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.BOCA, _PAL_SUB)]
+
+## Barbatana dorsal do Leviatã: vela vermelho-ferrugem com nervuras escuras, inclinada para trás.
+static func _sub_barbatana() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._txt(cv, -11, -17, [
+		"....R....",
+		"...rrR...",
+		"..rDrrR..",
+		".rrDrDrR.",
+		"rrDrrDrrR",
+	])
+	RoupaGatoI._cont(cv, "o")
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB)]
 
 static func _fallback(tipo: int) -> Array:
 	var col: int = ((tipo - PRIMEIRO) / Pecas.SLOTS) % 4

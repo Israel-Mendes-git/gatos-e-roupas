@@ -70,7 +70,7 @@ const _PAL: Array = [
 	{"a": Color("3aa898"), "A": Color("78d8c8"), "d": Color("1e6a60"), "b": Color("6a7a8a"), "B": Color("a0b0c0"), "e": Color("5ac8ff")},   # miauzilla (verde-água)
 	{"a": Color("4a3a30"), "A": Color("7a6252"), "d": Color("2a2018"), "b": Color("b08a62"), "B": Color("d8b88c"), "e": Color("f2c230")},   # king-miau
 	{"a": Color("2a2630"), "A": Color("5a5666"), "d": Color("14121a"), "b": Color("8a5a3a"), "B": Color("b88a60"), "e": Color("d8323a")},   # arthur miaurgon
-	{"a": Color("ff8a1c"), "A": Color("ffc060"), "d": Color("b05a0c"), "b": Color("2eb8c8"), "B": Color("7ae8f0"), "e": Color("9ae8ff")},   # submiautica
+	{"a": Color("7a9eb2"), "A": Color("b0cdd8"), "d": Color("46687e"), "b": Color("b0502c"), "B": Color("dc7c4c"), "e": Color("0c1018")},   # submiautica (Reaper Leviathan)
 	{"a": Color("3a8a70"), "A": Color("6ac0a0"), "d": Color("1e5040"), "b": Color("5a3a7a"), "B": Color("8a6aa8"), "e": Color("e8d048")},   # catchullu
 ]
 
@@ -568,13 +568,14 @@ const _CHAPEU: Array = [
 		"..obbbbbo..",
 		"oAaaaaaaaAo",
 		"odddddddddo"]},
-	# 53 submiautica: máscara de mergulho com lentes e o respirador ao lado
+	# 53 submiautica: cabeça do Reaper Leviathan (barbatana ferrugem inclinada, crânio azul-acinzentado, olho preto e mandíbulas)
 	{"cheio": false, "l": [
-		"..ooooooo.o",
-		".oaaaaaaaoa",
-		"oaBBeeBBaao",
-		"oaBBeeBBaao",
-		".oddddddo.."]},
+		"bb.........",
+		"bBbb.......",
+		".bbbbaaaa..",
+		"oaaaaaeeaao",
+		"oaaaaAaaaao",
+		".odd...odd."]},
 	# 54 catchullu: cabeça de polvo verde com tentáculos na barba
 	{"cheio": true, "l": [
 		"..ooooooo..",
