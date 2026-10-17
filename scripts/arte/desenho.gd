@@ -1377,12 +1377,16 @@ static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, pec
 	_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.Onde.CABECA, q) * GATO_K, 0.0, GATO_K)
 	var ouro := Color(0.98, 0.8, 0.2, alfa)
 	var sombra := Color(0.45, 0.28, 0.0, alfa)
-	c.draw_rect(Rect2(-5, -11, 10, 3), sombra)
-	c.draw_rect(Rect2(-4, -10, 8, 1), ouro)
+	# cabeças de Miauzilla e King-Miau são baixas no sprite: a coroa desce 2 px para ficar logo acima delas
+	var dy: int = 0
+	if pecas[0] != null and (pecas[0].tipo == Pecas.CONJUNTO_PECAS[Pecas.Conjunto.MIAUZILLA][0] or pecas[0].tipo == Pecas.CONJUNTO_PECAS[Pecas.Conjunto.KING_MIAU][0]):
+		dy = 2
+	c.draw_rect(Rect2(-5, -11 + dy, 10, 3), sombra)
+	c.draw_rect(Rect2(-4, -10 + dy, 8, 1), ouro)
 	for dx in [-5, -1, 3]:
-		c.draw_rect(Rect2(dx, -14, 2, 3), sombra)
-		c.draw_rect(Rect2(dx, -13, 2, 2), ouro)
-	c.draw_rect(Rect2(-1, -10, 2, 2), Color(cg.r, cg.g, cg.b, alfa))
+		c.draw_rect(Rect2(dx, -14 + dy, 2, 3), sombra)
+		c.draw_rect(Rect2(dx, -13 + dy, 2, 2), ouro)
+	c.draw_rect(Rect2(-1, -10 + dy, 2, 2), Color(cg.r, cg.g, cg.b, alfa))
 	resetar(c)
 
 ## Sombra, aura e fantasma em pixel: valem para a grade de pixels do sprite do gato/bicho (transform com GATO_K).
