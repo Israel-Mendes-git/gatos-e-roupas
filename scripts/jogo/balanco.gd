@@ -16,7 +16,9 @@ const BONECOS_INICIAIS := 3     # o time é fixo; cresce ao vencer fases, até M
 const NIVEL_MAX := 15           # nível máximo de uma peça (do 11 ao 15 cada nível rende menos: BONUS_NIVEL_ALTO)
 const NIVEL_BASE := 10          # até aqui cada nível soma BONUS_NIVEL
 const DROP_NIVEL_MAX := 10      # peça que cai de bicho nunca vem acima disto
-const INIMIGO_NIVEL_MAX := 5    # ...e o das peças que os bichos vestem (a curva deles não acompanha a das peças do jogador)
+const INIMIGO_NIVEL_MAX := 5    # (1º e 2º atos; o 3º usa INIMIGO_NIVEL_MAX_ATO)
+const INIMIGO_NIVEL_MAX_ATO: Array[int] = [5, 5, 8]   # nível máximo das peças dos bichos por ato (os rivais do 3º ato enfrentam peças de nível 10 a 15)
+# ...e o das peças que os bichos vestem (a curva deles não acompanha a das peças do jogador)
 const ABATES_BASE := 2          # abates p/ 1º nível; +1 a cada nível
 const BONUS_NIVEL := 0.5        # cada nível (até NIVEL_BASE) soma 50% ao efeito numérico
 const BONUS_NIVEL_ALTO := 0.25  # ...e cada nível de NIVEL_BASE a NIVEL_MAX soma só 25% (nível 15 = 1 + 5 + 1,25 = 7,25x; antes, 6x no 10)
@@ -237,7 +239,7 @@ const FRACAO_COMUM_DO_LUGAR := 0.25    # 2º e 3º atos: fração das peças dos
 const CHEFE_ASSINATURA_CHANCE := 0.6   # chance de o chefe vestir a fantasia-assinatura do lugar
 const PESO_PECA_FALTA := 3.0           # fantasiado e chefe: peso de largar uma peça que o jogador ainda não teve (as outras pesam 1)
 const PESO_FANTASIA_FALTA := 2.0       # peso, no sorteio de fantasiados e do chefe, da fantasia que o jogador ainda não completou
-const DEGRAU_RARIDADE_MAX := 9.0       # teto do degrau de drop nas curvas de raridade; ainda sem uso: o 3º ato (degraus 10..14) pede medição antes de ligar
+const DEGRAU_RARIDADE_MAX := 12.0      # teto do degrau de drop nas curvas de raridade (3º ato: degraus 10..14; sem teto o fantasiado somava 108% no último lugar)
 
 ## Blocos para subir a peça do nível `nivel` para o seguinte.
 static func custo_promocao(nivel: int) -> int:
@@ -246,6 +248,32 @@ static func custo_promocao(nivel: int) -> int:
 ## Troféus para subir uma peça da raridade `rar` para a seguinte.
 static func custo_reforco(rar: int) -> int:
 	return REFORCO_CUSTO[clampi(rar, 0, REFORCO_CUSTO.size() - 1)]
+
+## Chances de raridade [mítica, lendária, épica, rara] de um drop no degrau `g` (já com o teto DEGRAU_RARIDADE_MAX);
+## o resto é comum. A soma nunca passa de 1 (testado).
+static func chances_raridade(g: float, chefe: bool, elite: bool) -> Array[float]:
+	g = minf(g, DEGRAU_RARIDADE_MAX)
+	var mitica: float
+	var lend: float
+	var epica: float
+	var rara: float
+	if chefe:
+		# o chefe larga no mínimo rara
+		mitica = maxf(0.0, g - CHEFE_MITICA_DESDE) * CHEFE_MITICA_FASE
+		lend = maxf(0.0, g - DROP_LENDARIA_DESDE) * CHEFE_LENDARIA_FASE
+		epica = CHEFE_EPICA + minf(g, CHEFE_EPICA_TETO) * CHEFE_EPICA_FASE
+		rara = 1.0
+	elif elite:
+		mitica = maxf(0.0, g - DROP_MITICA_DESDE) * ELITE_MITICA_FASE
+		lend = maxf(0.0, g - DROP_LENDARIA_DESDE) * ELITE_LENDARIA_FASE
+		epica = ELITE_EPICA + g * ELITE_EPICA_FASE
+		rara = ELITE_RARA
+	else:
+		mitica = maxf(0.0, g - DROP_MITICA_DESDE) * DROP_MITICA_FASE
+		lend = maxf(0.0, g - DROP_LENDARIA_DESDE) * DROP_LENDARIA_FASE
+		epica = g * DROP_EPICA_FASE
+		rara = DROP_RARA + minf(g, DROP_RARA_TETO) * DROP_RARA_FASE
+	return [mitica, lend, epica, rara]
 
 ## Degrau do lugar para os drops: 0..4 nos cômodos, 5..9 fora da casa, 10..14 no 3º ato, mais o avanço da invasão.
 static func degrau_drop(fase: int, ato: int, invasao: bool, onda_invasao: int) -> float:
@@ -441,14 +469,17 @@ const XP_ONDA_DE_PE := 2            # por onda vencida terminando de pé
 const XP_ONDA_ATO: Array[int] = [2, 5, 5]   # ...por ato: cada ato leva o time uns 10 níveis adiante (quem cai ganha a metade)
 
 # ---------- Atos: depois do Porão a casa é invadida de novo, na ordem que o jogador quiser ----------
-const ATOS := 2
+const ATOS := 3
 const ATO_NOME: Array[String] = ["Primeiro ato", "Segundo ato", "Terceiro ato"]
 const ATO_VIDA: Array[float] = [1.0, 2.0, 2.6] # força dos bichos no primeiro cômodo vencido do ato
 const ATO_DANO: Array[float] = [1.0, 1.3, 1.3]
 const ATO_VIDA_DEGRAU := 0.10       # cada cômodo já vencido no ato deixa os que faltam mais fortes
 const ATO_DANO_DEGRAU := 0.05
-const ATO_COMODO_VIDA: Array[float] = [1.12, 0.92, 1.05, 1.15, 1.08] # acerto por lugar do 2º ato em diante (chefe e família pesam diferente; refeito com as listas novas, onde_cai_final.md)
-const ATO_COMODO_DANO: Array[float] = [1.08, 0.82, 1.0, 1.15, 1.06]
+# acerto por lugar, uma lista por ato (o 1º ato não usa); chefe e família pesam diferente; 2º ato refeito com as listas novas (onde_cai_final.md)
+const ATO_COMODO_VIDA: Array = [[1.0, 1.0, 1.0, 1.0, 1.0], [1.12, 0.92, 1.05, 1.15, 1.08], [1.0, 1.0, 1.0, 1.0, 1.0]]
+const ATO_COMODO_DANO: Array = [[1.0, 1.0, 1.0, 1.0, 1.0], [1.08, 0.82, 1.0, 1.15, 1.06], [1.0, 1.0, 1.0, 1.0, 1.0]]
+const RIVAL_FRACAO_DO_LUGAR := 0.6  # 3º ato: fração das peças vestidas pelos rivais comuns que vem da lista do lugar (o resto, dos atos anteriores)
+const AGGRO_RIVAL := 100000.0       # Disputa: o rival escolhe alvo entre todos os gatos de pé, sem o limite do AGGRO
 const ATO_FAMILIA_DA_CASA := 0.4    # fração dos bichos que ainda é da família do cômodo; o resto vem misturado
 const XP_ONDA_NOCAUTE := 1          # por onda vencida tendo caído
 const XP_RECUPERA_POR_NIVEL := 0.25  # XP de recuperação: +esta fração da XP da onda por nível que o gato está abaixo da média dos outros
@@ -472,7 +503,8 @@ const PODER_KIT_FORCA: Dictionary = {
 	Pecas.Conjunto.STARDEW_MIAULLEY: 2.2, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
 	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7, Pecas.Conjunto.MIMIAU: 0.6,
 	Pecas.Conjunto.SUPER_MIAUJIN: 0.7, Pecas.Conjunto.TREINADOR: 1.6,
-	Pecas.Conjunto.MIAUZILLA: 1.45, Pecas.Conjunto.ARTHUR_MIAURGON: 2.6, Pecas.Conjunto.CATCHULLU: 0.7,
+	Pecas.Conjunto.MIAUZILLA: 2.8, Pecas.Conjunto.ARTHUR_MIAURGON: 2.6, Pecas.Conjunto.CATCHULLU: 0.5,
+	Pecas.Conjunto.SUBMIAUTICA: 0.7,
 }
 # Acerto da recarga por fantasia (x PODER_INTERVALO), medido com o simulador (kits=todos): >1 recarrega mais devagar.
 const PODER_KIT_INTERVALO: Dictionary = {
@@ -485,7 +517,7 @@ const PODER_KIT_INTERVALO: Dictionary = {
 	Pecas.Conjunto.GELO: 0.8, Pecas.Conjunto.FENIX_MIAUSSIMO: 0.8, Pecas.Conjunto.MEON: 0.85,
 	Pecas.Conjunto.MAGO: 0.9, Pecas.Conjunto.PIRATA: 1.15,
 	Pecas.Conjunto.SUPER_MIAUJIN: 1.5, Pecas.Conjunto.TREINADOR: 0.6, Pecas.Conjunto.MIAU_NOIR: 0.7,
-	Pecas.Conjunto.ARTHUR_MIAURGON: 0.85, Pecas.Conjunto.CATCHULLU: 1.2,
+	Pecas.Conjunto.ARTHUR_MIAURGON: 0.85, Pecas.Conjunto.MIAUZILLA: 0.6, Pecas.Conjunto.CATCHULLU: 1.45,
 }
 const PODER_PRIMEIRO := 3.5         # segundos até o primeiro uso
 const PODER_DANO := 14.0            # dano de referência (x força média das peças)
@@ -963,7 +995,7 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 	if tem_chefe(onda):
 		n = int(round(n * CHEFE_LACAIOS))
 	var plano: Array = []
-	var nivel: int = mini(INIMIGO_NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)))
+	var nivel: int = mini(INIMIGO_NIVEL_MAX_ATO[clampi(ato - 1, 0, 2)], int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)))
 	for i in n:
 		var q: float = PECAS_BASE + p * PECAS_POR_ONDA
 		var qtd: int = int(floor(q))
@@ -978,9 +1010,12 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 		var pecas: Array = [null, null, null, null]
 		for k in qtd:
 			var s: int = slots[k]
-			pecas[s] = Peca.new(Fases.pecas_do_slot(lugar - 1, s, ato, rng), nivel)
+			pecas[s] = Peca.new(Fases.pecas_do_slot(lugar - 1, s, ato, rng, RIVAL_FRACAO_DO_LUGAR if ato >= 3 else -1.0), nivel)
 		var item: Dictionary = {"pecas": pecas, "tipo": Unidade.Tipo.COMUM, "elite": false}
-		if ato > 1 and rng.randf() >= ATO_FAMILIA_DA_CASA:
+		if ato >= 3:
+			item["rival"] = true         # 3º ato: 100% gato da gangue do lugar (sem mistura)
+			item["gangue"] = fase - 1
+		elif ato > 1 and rng.randf() >= ATO_FAMILIA_DA_CASA:
 			item["fam"] = rng.randi_range(0, Fases.TOTAL - 1)
 		plano.append(item)
 	_sortear_tipos(plano, p, rng)
@@ -1045,7 +1080,6 @@ static func fantasia(fase: int, nivel: int, quantas: int, rng: RandomNumberGener
 			pecas[s] = Peca.new(Pecas.CONJUNTO_PECAS[c][s], nivel)
 	return pecas
 
-## Peças do chefe da fase (fantasia completa, nível alto, uma marca cada). Vazio se a onda não tem chefe.
 static func _sortear_conjunto(conjs: Array, rng: RandomNumberGenerator, pesos: Dictionary, excluir: int) -> int:
 	if pesos.is_empty() and excluir < 0:
 		return conjs[rng.randi_range(0, conjs.size() - 1)]
@@ -1072,12 +1106,13 @@ static func assinatura(lugar: int, nivel: int) -> Array:
 		pecas[s] = Peca.new(Pecas.CONJUNTO_PECAS[sig][s], nivel)
 	return pecas
 
+## Peças do chefe da fase (fantasia completa, nível alto, uma marca cada). Vazio se a onda não tem chefe.
 ## Com CHEFE_ASSINATURA_CHANCE veste a fantasia-assinatura do lugar; senão, outra do lugar (sorteio ponderado por `pesos`).
 static func gerar_chefe(fase: int, onda: int, rng: RandomNumberGenerator, ato: int = 1, vencidos: int = 0, pesos: Dictionary = {}) -> Array:
 	if not tem_chefe(onda):
 		return []
 	var p: int = progresso(fase, onda) if ato <= 1 else progresso_ato(ato, vencidos, onda)
-	var nivel: int = mini(INIMIGO_NIVEL_MAX, int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)) + CHEFE_NIVEL_BONUS)
+	var nivel: int = mini(INIMIGO_NIVEL_MAX_ATO[clampi(ato - 1, 0, 2)], int(floor((p - 1) * NIVEL_INIMIGO_POR_ONDA)) + CHEFE_NIVEL_BONUS)
 	var lugar: int = Fases.TOTAL * (ato - 1) + fase
 	var pecas: Array
 	if rng.randf() < CHEFE_ASSINATURA_CHANCE:
