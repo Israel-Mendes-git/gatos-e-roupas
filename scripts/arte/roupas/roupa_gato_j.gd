@@ -26,9 +26,7 @@ static func onde(tipo: int) -> int:
 			return RoupaGato.Onde.CORPO
 		Pecas.Tipo.CADERNINHO:
 			return RoupaGato.Onde.CORPO
-		Pecas.Tipo.PULSEIRA_TRANSFORMAR:
-			return RoupaGato.Onde.CORPO
-		Pecas.Tipo.PULSEIRA_TRANSFORMAR, Pecas.Tipo.CAUDA_RADIOATIVA:
+		Pecas.Tipo.PULSEIRA_TRANSFORMAR, Pecas.Tipo.CAUDA_RADIOATIVA, Pecas.Tipo.BIPLANO_PAPEL:
 			return RoupaGato.Onde.CORPO
 	return -1
 
