@@ -48,6 +48,7 @@ const _PAL_HOLLOW := {
 	"k": Color("14121c"), "e": Color("3a3850"),
 	"a": Color("2f3e6a"), "b": Color("5666a0"), "D": Color("1b2442"),
 	"n": Color("b8c0cc"), "N": Color("e8eef4"), "s": Color("6e7888"), "u": Color("3a2e3e"), "g": Color("8ec8f0"),
+	"l": Color("b6afd2"), "m": Color("726a95"), "r": Color("2a2438"),
 }
 ## Silkmiau: o contorno; w/W/d osso (médio, luz, sombra); k olho; a/b/D capa carmesim (médio, luz, sombra); n/N/m fio e novelo (médio, luz,
 ## sombra); s/S/z aço da agulha (médio, luz, sombra).
@@ -353,12 +354,14 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(capa, "o")
 			return [_lay(capa, RoupaGato.Onde.CORPO, _PAL_HOLLOW, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_HOLLOW)]
 		Pecas.Tipo.PREGO_AFIADO:
-			# o prego (Old Nail): cabo curto escuro, guarda pequena, lâmina reta de aço com o fio claro em cima e a ponta estreita e chanfrada
-			_ret(cv, 11, -11, 14, -9, "u")
-			_ret(cv, 14, -13, 15, -8, "u")
-			_ret(cv, 15, -12, 24, -9, "n")
-			_ret(cv, 24, -11, 26, -10, "n")
-			_luz(cv, "n", "N", "s")
+			# o Ferrão Velho (a estaca do Cavaleiro): cabo fino e curto perto da boca e, logo depois, a lâmina larga (4 px) que afina até a ponta de 1 px;
+			# a face é dividida ao meio (metade clara em cima, escura embaixo) e duas rachaduras escuras cortam a lâmina na diagonal
+			_txt(cv, 11, -12, [
+				"..lrll........",
+				"mmllrllrlll...",
+				"mmmmmrmmrmmmmm",
+				"..mmmmrmmr....",
+			])
 			_cont(cv, "o")
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_HOLLOW)]
 		Pecas.Tipo.FRASCO_ALMA:
