@@ -357,8 +357,12 @@ func torre_dano() -> float:
 func torre_rapidez() -> float:
 	return 1.0 + Torre.CADENCIA_RAPIDEZ * melhorias[Torre.Melhoria.CADENCIA]
 
+## Nível máximo das melhorias agora: 8 até entrar no 3º ato, depois 10.
+func nivel_max_melhoria() -> int:
+	return Torre.nivel_max_ato(ato_atual())
+
 func pode_melhorar(m: int) -> bool:
-	return melhorias[m] < Torre.MELHORIA_NIVEL_MAX and trofeus >= Torre.custo_melhoria(melhorias[m])
+	return melhorias[m] < nivel_max_melhoria() and trofeus >= Torre.custo_melhoria(melhorias[m])
 
 ## Compra um nível da melhoria com troféus. A Estrutura vale a partir do próximo cômodo; as demais, já.
 func melhorar(m: int) -> bool:

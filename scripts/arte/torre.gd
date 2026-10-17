@@ -4,15 +4,19 @@ extends RefCounted
 
 enum Melhoria { ESTRUTURA, CANHAO, CADENCIA, ENFERMARIA }
 const MELHORIA_NOME: Array[String] = ["Estrutura", "Canhão", "Rapidez", "Enfermaria"]
-const MELHORIA_NIVEL_MAX := 8
+const MELHORIA_NIVEL_MAX := 10       # teto absoluto (nível 9 e 10 chegam com o 3º ato)
+const MELHORIA_NIVEL_ATO: Array[int] = [8, 8, 10]   # nível máximo liberado em cada ato (notas/ato3_proposta.md, etapa 7)
 const MELHORIA_CUSTO := 4            # troféus por nível, do 1 ao 5 (preço fixo)
 const MELHORIA_CUSTO_ALTO := 6       # ...e dos níveis 6 a 8
+const MELHORIA_CUSTO_TOPO := 8       # ...e dos níveis 9 e 10 (3º ato)
+const NIVEL_TOPO := 8                # a partir daqui (níveis 9 e 10) o preço é o do topo
 const NIVEL_BASE := 5                # até aqui valem os números "cheios"; depois cada nível rende menos em cura
 const ESTRUTURA_BLOCOS := 3          # blocos iniciais a mais por nível
 const CANHAO_DANO := 0.15            # +dano do tiro por nível
 const CADENCIA_RAPIDEZ := 0.10       # +tiros por segundo por nível
 const ENFERMARIA_CURA := 0.06        # +cura entre ondas por nível, até o 5 (somada a Balanco.CURA_MAX)
 const ENFERMARIA_CURA_ALTO := 0.025  # ...e por nível do 6 ao 8 (passar de 100% de cura seria desperdício)
+const ENFERMARIA_CURA_TOPO := 0.0125 # ...e nos níveis 9 e 10 (fecha em 100% com Balanco.CURA_MAX)
 
 const TROFEU_ELITE := 1              # por inimigo fantasiado derrotado
 const TROFEU_CHEFE_ATO: Array[int] = [5, 6, 8]   # por chefe derrotado, por ato
@@ -80,14 +84,20 @@ static func melhoria_dica(m: int) -> String:
 
 ## Troféus do próximo nível da melhoria que está no nível `n`.
 static func custo_melhoria(n: int) -> int:
+	if n >= NIVEL_TOPO:
+		return MELHORIA_CUSTO_TOPO
 	return MELHORIA_CUSTO if n < NIVEL_BASE else MELHORIA_CUSTO_ALTO
+
+## Nível máximo das melhorias que o ato `ato` (1 a 3) libera.
+static func nivel_max_ato(ato: int) -> int:
+	return MELHORIA_NIVEL_ATO[clampi(ato, 1, MELHORIA_NIVEL_ATO.size()) - 1]
 
 static func trofeu_chefe(ato: int) -> int:
 	return TROFEU_CHEFE_ATO[clampi(ato, 1, TROFEU_CHEFE_ATO.size()) - 1]
 
 ## Cura entre ondas da Enfermaria no nível `n` (somada a Balanco.CURA_MAX).
 static func enfermaria_cura(n: int) -> float:
-	return ENFERMARIA_CURA * mini(n, NIVEL_BASE) + ENFERMARIA_CURA_ALTO * maxi(0, n - NIVEL_BASE)
+	return ENFERMARIA_CURA * mini(n, NIVEL_BASE) + ENFERMARIA_CURA_ALTO * clampi(n - NIVEL_BASE, 0, NIVEL_TOPO - NIVEL_BASE) + ENFERMARIA_CURA_TOPO * maxi(0, n - NIVEL_TOPO)
 
 ## Vagas de módulo com `atos` atos totalmente vencidos.
 static func vagas(atos: int) -> int:

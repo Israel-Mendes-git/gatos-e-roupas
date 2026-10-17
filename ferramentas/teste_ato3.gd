@@ -20,6 +20,7 @@ func _init() -> void:
 	_truques()
 	_chefes()
 	_save_antigo()
+	_torre_niveis()
 	print("FALHAS: %d" % falhas)
 	quit(1 if falhas > 0 else 0)
 
@@ -468,3 +469,31 @@ func _save_antigo() -> void:
 	_ok(e.campanha_vencida() and not e.tudo_vencido(), "pós-jogo aberto e o 3º ato ainda por vencer")
 	e.vencido = [3, 3, 3, 3, 3]
 	_ok(e.tudo_vencido() and e.atos_vencidos() == 3, "3º ato vencido")
+
+## Torre (etapa 7): níveis 9 e 10 só no 3º ato, preço 8, Enfermaria fecha em 100%, vagas e herança.
+func _torre_niveis() -> void:
+	var e: Estado = _estado()
+	_ok(e.nivel_max_melhoria() == 8, "antes do 3º ato o teto é 8")
+	e.melhorias[0] = 8
+	e.trofeus = 100
+	_ok(not e.pode_melhorar(0) and Oficina.motivo_melhoria(e, 0) == "Libera no 3º ato", "nível 9 trancado antes do 3º ato")
+	e.fases_vencidas = Fases.TOTAL
+	e.vencido = [2, 2, 2, 2, 2]
+	_ok(e.ato_atual() == 3 and e.nivel_max_melhoria() == 10, "entrar no 3º ato libera o 10")
+	_ok(Torre.custo_melhoria(7) == 6 and Torre.custo_melhoria(8) == 8 and Torre.custo_melhoria(9) == 8, "preços: 6 até o 8, 8 nos níveis 9 e 10")
+	_ok(e.melhorar(0) and e.melhorias[0] == 9 and e.trofeus == 92, "compra o nível 9 por 8")
+	_ok(e.melhorar(0) and e.melhorias[0] == 10 and not e.pode_melhorar(0), "nível 10 e fim")
+	_ok(e.tijolos_max() == Balanco.TIJOLOS_INICIAIS + Torre.ESTRUTURA_BLOCOS * 10, "Estrutura 10: +3 blocos por nível")
+	_ok(absf(Balanco.CURA_MAX + Torre.enfermaria_cura(10) - 1.0) < 0.001, "Enfermaria 10 fecha em 100%% (%.4f)" % (Balanco.CURA_MAX + Torre.enfermaria_cura(10)))
+	_ok(Balanco.CURA_MAX + Torre.enfermaria_cura(8) < Balanco.CURA_MAX + Torre.enfermaria_cura(9), "Enfermaria 9 > 8")
+	# save antigo (níveis até 8) carrega igual; nível 10 sobrevive à gravação
+	e.persistir = false
+	var d: Dictionary = {"melhorias": [8, 3, 0, 8]}
+	_ok(Torre.MELHORIA_NIVEL_MAX == 10 and clampi(int(d["melhorias"][0]), 0, Torre.MELHORIA_NIVEL_MAX) == 8, "save antigo: níveis até 8 continuam")
+	# 4ª vaga ao vencer o 3º ato e 4ª herança aos 40
+	_ok(e.vagas_modulos() == 3, "3 vagas com o 2º ato vencido")
+	e.vencido = [3, 3, 3, 3, 3]
+	_ok(e.vagas_modulos() == 4, "4ª vaga ao vencer o 3º ato")
+	var b := Boneco.new()
+	b.nivel = 40
+	_ok(b.herancas_pendentes() == 4, "4ª herança no nível 40 (%d pendentes)" % b.herancas_pendentes())

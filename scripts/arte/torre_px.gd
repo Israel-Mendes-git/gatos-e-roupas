@@ -331,7 +331,7 @@ static func _corridas(linhas: Array) -> Array:
 	return out
 
 static func nivel(melhorias: Array, m: int) -> int:
-	return clampi(int(melhorias[m]), 0, Torre.MELHORIA_NIVEL_MAX) if melhorias.size() > m else 0
+	return clampi(int(melhorias[m]), 0, Torre.NIVEL_TOPO) if melhorias.size() > m else 0
 
 # ---------------------------------------------------------------- geometria
 static func y_corpo(base: Vector2) -> float:

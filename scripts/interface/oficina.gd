@@ -36,6 +36,7 @@ const BTN_MELHORAR_W := 136.0
 const TEXTO_DESLOC := 84.0        # x do texto numa linha de melhoria, a partir da borda dela
 const QUADRADOS_DESLOC := 214.0   # x dos oito quadradinhos de nível, a partir da borda da linha
 const COR_NIVEL_ALTO := Color(1.0, 0.58, 0.22)   # níveis 6 a 8 (custam mais)
+const COR_NIVEL_TOPO := Color(0.95, 0.4, 0.75)   # níveis 9 e 10 (3º ato)
 
 # ---- ícones em pixel: 12 linhas de 12 letras (a cor de cada letra está em PALETA) ----
 const PALETA: Dictionary = {
@@ -215,6 +216,8 @@ static func _maiuscula(s: String) -> String:
 static func motivo_melhoria(e: Estado, m: int) -> String:
 	if e.melhorias[m] >= Torre.MELHORIA_NIVEL_MAX:
 		return "Máximo"
+	if e.melhorias[m] >= e.nivel_max_melhoria():
+		return "Libera no 3º ato"
 	var falta: int = Torre.custo_melhoria(e.melhorias[m]) - e.trofeus
 	if falta > 0:
 		return "Falta 1 troféu" if falta == 1 else "Faltam %d troféus" % falta
@@ -372,7 +375,7 @@ func _montar() -> void:
 	var e: Estado = dono.estado
 	itens.clear()
 	for m in Torre.MELHORIA_NOME.size():
-		var maximo: bool = e.melhorias[m] >= Torre.MELHORIA_NIVEL_MAX
+		var maximo: bool = e.melhorias[m] >= e.nivel_max_melhoria()
 		itens.append({"id": "m%d" % m, "r": rect_melhorar(m), "on": e.pode_melhorar(m), "txt": "Máximo" if maximo else "Melhorar (%d)" % Torre.custo_melhoria(e.melhorias[m]),
 			"cor": Color(1.0, 0.82, 0.4), "tam": 16, "custo": not maximo})
 	for a in 2:
@@ -436,7 +439,12 @@ func acionar(id: String) -> void:
 			Som.tocar("promover")
 		else:
 			var mot: String = motivo_melhoria(e, m)
-			_avisar("%s já está no nível máximo" % Torre.MELHORIA_NOME[m] if mot == "Máximo" else "%s: %s para melhorar" % [Torre.MELHORIA_NOME[m], mot.to_lower()])
+			if mot == "Máximo":
+				_avisar("%s já está no nível máximo" % Torre.MELHORIA_NOME[m])
+			elif mot.begins_with("Libera"):
+				_avisar("%s: os níveis 9 e 10 chegam no 3º ato" % Torre.MELHORIA_NOME[m])
+			else:
+				_avisar("%s: %s para melhorar" % [Torre.MELHORIA_NOME[m], mot.to_lower()])
 			_recusar(id)
 	elif id.begins_with("d"):
 		var m: int = int(id.substr(1))
@@ -727,7 +735,8 @@ func _vagas(e: Estado) -> void:
 func _linha_melhoria(e: Estado, m: int) -> void:
 	var r: Rect2 = rect_linha(m)
 	var n: int = e.melhorias[m]
-	var maximo: bool = n >= Torre.MELHORIA_NIVEL_MAX
+	var libera: int = e.nivel_max_melhoria()
+	var maximo: bool = n >= libera
 	var pode: bool = e.pode_melhorar(m)
 	var n_exib: int = n - (1 if compra_t[m] < 0.0 else 0)   # o nível novo só enche quando os troféus chegam
 	draw_rect(r, Color(0.27, 0.18, 0.1, 0.95) if pode else Color(0.2, 0.12, 0.1, 0.92))
@@ -748,7 +757,11 @@ func _linha_melhoria(e: Estado, m: int) -> void:
 			q = q.grow(5.0 * sin(compra_t[m] / 0.5 * PI))   # estufa e assenta
 		draw_rect(q, Color(0.07, 0.04, 0.06))
 		var alto: bool = k >= Torre.NIVEL_BASE
-		draw_rect(q.grow(-2.0), (COR_NIVEL_ALTO if alto else Color(1.0, 0.82, 0.25)) if cheio else (Color(0.3, 0.17, 0.12) if alto else Color(0.25, 0.18, 0.16)))
+		var topo: bool = k >= Torre.NIVEL_TOPO
+		var cor_cheio: Color = COR_NIVEL_TOPO if topo else (COR_NIVEL_ALTO if alto else Color(1.0, 0.82, 0.25))
+		draw_rect(q.grow(-2.0), cor_cheio if cheio else (Color(0.3, 0.12, 0.25) if topo else (Color(0.3, 0.17, 0.12) if alto else Color(0.25, 0.18, 0.16))))
+		if k >= libera and not cheio:
+			draw_rect(q, Color(0.0, 0.0, 0.0, 0.5))   # nível trancado (chega com o 3º ato)
 		if cheio:
 			draw_rect(Rect2(q.position.x + 2.0, q.position.y + 2.0, q.size.x - 4.0, 4.0), Color(1.0, 0.96, 0.7))
 		if novo:
@@ -775,7 +788,7 @@ func _linha_melhoria(e: Estado, m: int) -> void:
 		_texto("Vale a partir do próximo cômodo", Vector2(x, r.position.y + 94.0), 12, Color(0.6, 0.85, 1.0, 0.8), -1.0, 3)
 	# o porquê do botão apagado
 	var mot: String = motivo_melhoria(e, m)
-	if mot != "" and not maximo:
+	if mot != "" and (not maximo or mot.begins_with("Libera")):
 		var br: Rect2 = rect_melhorar(m)
 		_texto(mot, Vector2(br.position.x, br.end.y + 20.0), 13, Color(1.0, 0.6, 0.5), br.size.x, 3)
 
