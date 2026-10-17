@@ -500,17 +500,17 @@ const _CHAPEU: Array = [
 		".oddddddo.."]},
 	# 45 silkmiau: máscara branca de chifres longos
 	{"cheio": true, "l": [
-		"o.........o",
-		"oo.......oo",
-		".oo.....oo.",
-		"oAAaaaaaAAo",
+		"oo.........",
+		".oo.......o",
+		"..oo.....oo",
+		".oAAaaaAAo.",
 		"oakkaaakkao",
 		".oddddddo.."]},
 	# 46 super miaujin: cabelo dourado em espetos
 	{"cheio": false, "l": [
-		"o..o.o.o..o",
-		"oo.ooooo.oo",
-		"oAoAAAAAoAo",
+		"..o..o....o",
+		"o.oo.oo.o.o",
+		"ooooAoooAoo",
 		"oAaaaaaaaAo",
 		"oaaaaaaaaao"]},
 	# 47 o arqueólogo: chapéu mole de aba caída e faixa escura
