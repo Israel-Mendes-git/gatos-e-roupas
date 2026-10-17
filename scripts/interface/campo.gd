@@ -914,6 +914,24 @@ func _consumir() -> void:
 					Pecas.Poder.CAPTURA:
 						snd_p = "poder_pronto"
 						tom_p = 1.5
+					Pecas.Poder.MEGAZORD:
+						snd_p = "poder_pronto"
+						tom_p = 0.7
+					Pecas.Poder.SOPRO:
+						snd_p = "golpe_forte"
+						tom_p = 0.5
+					Pecas.Poder.BRADO:
+						snd_p = "golpe_forte"
+						tom_p = 0.4
+					Pecas.Poder.RECOMPENSA:
+						snd_p = "poder_pronto"
+						tom_p = 1.2
+					Pecas.Poder.ESTASE:
+						snd_p = "poder"
+						tom_p = 1.4
+					Pecas.Poder.LOUCURA:
+						snd_p = "poder"
+						tom_p = 0.4
 				_som(snd_p, tom_p, -1.0, true, 0.03)
 				# nome do poder: cor da fantasia clareada até uma luminância mínima + contorno escuro grosso
 				# empilha: se já há um nome de poder aqui perto, este sobe uma linha (sem sobrepor)
@@ -1030,6 +1048,30 @@ func _consumir() -> void:
 				_som("poder_pronto", 1.7, -2.0, true)
 				_faisca(pcp, Color(1.0, 1.0, 0.9), 14, 220.0, 0.5, 3.5)
 				_numero(pcp + Vector2(0, -26), "Capturado!", Color(1.0, 0.5, 0.45), 22, 1.2, 160.0)
+			"medo":
+				_faisca(Vector2(e["x"], e["y"] - 40 * ESC), Color(1.0, 0.9, 0.3), 3, 90.0, 0.3, 2.5)
+			"folego":
+				var pfo: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
+				_som("poder_pronto", 1.3, -1.0, true)
+				_faisca(pfo, Color(0.6, 1.0, 0.9), 14, 220.0, 0.5, 3.5)
+				_numero(pfo + Vector2(0, -26), "Segundo fôlego!", Color(0.6, 1.0, 0.9), 22, 1.2, 160.0)
+			"estase_fim":
+				var pef: Vector2 = Vector2(e["x"], e["y"] - 24 * ESC)
+				_som("golpe_forte", 0.9, -2.0, true)
+				_faisca(pef, Color(0.7, 0.9, 1.0), 12, 240.0, 0.45, 3.5)
+			"radio_explode":
+				var per: Vector2 = Vector2(e["x"], e["y"] - 20 * ESC)
+				_som("golpe_forte", 0.8, -1.0, true)
+				_faisca(per, Color(0.55, 1.0, 0.3), 18, 280.0, 0.55, 4.0)
+				fx.append({"poder": -4, "p": per, "c": per, "alvos": [], "cor": Color(0.55, 1.0, 0.3), "t": 0.0, "dur": 0.45, "sem": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "ex": {"raio": float(e["raio"])}})
+				tremor = maxf(tremor, 2.5)
+			"recompensa_paga":
+				var prp: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
+				_som("poder_pronto", 1.5, -1.0, true)
+				_faisca(prp, Color(1.0, 0.85, 0.2), 16, 240.0, 0.55, 3.5)
+				_numero(prp + Vector2(0, -26), "Recompensa paga!", Color(1.0, 0.85, 0.2), 22, 1.3, 180.0)
+			"escudo_quebra":
+				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Color(0.6, 0.9, 1.0), 6, 160.0, 0.3, 2.5)
 			"fala":
 				_numero(Vector2(e["x"], e["y"] - 110 * ESC), String(e["txt"]), Color(1.0, 0.35, 0.35), 26, 1.4, 220.0)
 			"muda":
@@ -1484,6 +1526,22 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 			tremor = maxf(tremor, 3.0)
 		Pecas.Poder.CAPTURA:
 			dur = 0.9
+		Pecas.Poder.MEGAZORD:
+			dur = 1.0
+		Pecas.Poder.SOPRO:
+			dur = 0.8
+			tremor = maxf(tremor, 3.0)
+		Pecas.Poder.BRADO:
+			dur = 0.8
+			tremor = maxf(tremor, 5.0)
+		Pecas.Poder.RECOMPENSA:
+			dur = 1.0
+		Pecas.Poder.ESTASE:
+			dur = 1.0
+		Pecas.Poder.LOUCURA:
+			dur = 1.0
+		-4:
+			dur = 0.45
 		-3:
 			dur = Balanco.PODER_KAMEHA_FEIXE_T
 			tremor = maxf(tremor, 6.0)
@@ -2312,6 +2370,56 @@ func _desenhar_fx(f: Dictionary) -> void:
 			V.ponto(self, pc, V.CONT)
 			if voo >= 1.0:
 				V.estrela(self, d_c + Vector2(0, -24.0), 14.0 * a + 4.0, Color(1.0, 0.95, 0.8), esc_c)
+		Pecas.Poder.MEGAZORD:
+			# anéis verdes sobem do Ranger e os ligados recebem uma estrela
+			var ra_m: float = 24.0 + 90.0 * u
+			V.aro(self, gp, ra_m, ra_m * 0.4, Color(0.4, 1.0, 0.5), a * 1.4, 2.0)
+			V.aro(self, gp + Vector2(0, -20.0), ra_m * 0.6, ra_m * 0.24, Color(0.9, 1.0, 0.7), a * 1.2, 1.5)
+			for b in alvos:
+				V.estrela(self, (b as Vector2) + Vector2(0, -34.0), 8.0 * a + 3.0, Color(0.7, 1.0, 0.8), esc_c)
+		Pecas.Poder.SOPRO:
+			# jato verde em cone: bolinhas que se abrem a partir da boca
+			var an_s: float = float(ex.get("ang", 0.0))
+			var al_s: float = float(ex.get("alc", 260.0))
+			var ab_s: float = deg_to_rad(float(ex.get("abre", 60.0))) * 0.5
+			var o_s: Vector2 = p + Vector2(0, -24.0 * ESC)
+			for k in 18:
+				var fr_s: float = fposmod(float(sem[k % 8]) * 0.5 + k * 0.137 + u * 0.8, 1.0)
+				var aa_s: float = an_s + (fposmod(k * 0.618, 1.0) - 0.5) * 2.0 * ab_s * fr_s
+				var rr_s: float = al_s * fr_s * minf(1.0, u * 4.0)
+				V.disco(self, o_s + Vector2(cos(aa_s), sin(aa_s)) * rr_s, 3.0 + 9.0 * fr_s, Color(0.45, 0.95, 0.55, 0.85 * a + 0.15))
+			for b in alvos:
+				V.estrela(self, (b as Vector2) + Vector2(0, -24.0), 8.0 * a + 3.0, Color(0.7, 1.0, 0.4), esc_c)
+		Pecas.Poder.BRADO:
+			# o rugido: anéis que se abrem até o raio
+			var ra_b: float = float(ex.get("raio", 230.0)) * (1.0 - pow(1.0 - u, 2.0))
+			V.aro(self, gp, ra_b, ra_b * 0.4, Color(1.0, 0.85, 0.5), a * 1.4, 3.0)
+			V.aro(self, gp, ra_b * 0.7, ra_b * 0.28, Color(1.0, 0.6, 0.3), a * 1.2, 2.0)
+			for b in alvos:
+				V.cruz(self, (b as Vector2) + Vector2(0, -48.0), 4.0 + 4.0 * a, Color(1.0, 0.9, 0.3), esc_c)
+		Pecas.Poder.RECOMPENSA:
+			# a mira dourada cai sobre o marcado
+			var d_r: Vector2 = ((alvos[0] as Vector2) if not alvos.is_empty() else p) + Vector2(0, -24.0)
+			var ra_r: float = 12.0 + 40.0 * a
+			V.aro(self, d_r, ra_r, ra_r, Color(1.0, 0.85, 0.2), 1.0, 2.0)
+			V.cruz(self, d_r, ra_r * 0.8, Color(1.0, 0.85, 0.2), esc_c)
+		Pecas.Poder.ESTASE:
+			# bolha de estase abre sobre o bando
+			var cx_e: Vector2 = Vector2(float(ex.get("x", p.x)), float(ex.get("y", p.y)) + 24.0 * ESC)
+			V.domo(self, cx_e, float(ex.get("raio", 110.0)), rel, minf(1.0, u * 5.0), Color(0.55, 0.85, 1.0))
+		Pecas.Poder.LOUCURA:
+			# tentáculos roxos sobem do chão sob os enlouquecidos
+			for b in alvos:
+				var pe_l: Vector2 = (b as Vector2) + Vector2(0, 24.0 * ESC)
+				for k in 3:
+					var topo: Vector2 = pe_l + Vector2((k - 1) * 12.0 + sin(rel * 9.0 + k) * 8.0, -46.0 * minf(1.0, u * 4.0) * (1.0 - 0.25 * k))
+					V.linha(self, pe_l + Vector2((k - 1) * 10.0, 0.0), topo, Color(0.55, 0.35, 0.8), 4.0)
+					V.ponto(self, topo, Color(0.85, 0.7, 1.0))
+		-4:
+			# explosão radioativa
+			var ra_x: float = float(ex.get("raio", 75.0)) * (1.0 - pow(1.0 - u, 2.0))
+			V.aro(self, p + Vector2(0, 20.0), ra_x, ra_x * 0.4, Color(0.55, 1.0, 0.3), a * 1.4, 2.0)
+			V.estrela(self, p, 18.0 * a + 4.0, Color(0.8, 1.0, 0.5), esc_c)
 		-2:
 			# Aparar com a faca: lâmina cruza o golpe e brilha
 			V.faca_brilho(self, p, u, esc_c)
@@ -2524,6 +2632,29 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 		for k in 5:
 			var wk_k: float = fposmod(rel * 2.0 + k * 0.2, 1.0)
 			V.quadro(self, pos.x + (k - 2) * 8.0 * esc_u - V.Q * 0.5, pos.y - h * wk_k, V.Q, V.Q * 3.0, Color(1.0, 0.9, 0.35))
+	if uu.gigante_t > 0.0:
+		V.aro(self, meio, (CORPO_LARG + 8.0) * esc_u, (CORPO_MEIO + 10.0) * esc_u, Color(0.4, 1.0, 0.5), 0.6 + 0.4 * sin(rel * 8.0), 1.5)
+	if uu.escudo > 0.0:
+		V.aro(self, meio, (CORPO_LARG + 3.0) * esc_u, (CORPO_MEIO + 5.0) * esc_u, Color(0.6, 0.9, 1.0), 0.8, 2.0)
+	if uu.medo_t > 0.0:
+		V.quadro(self, pos.x - V.Q * 0.5, pos.y - h - 26.0, V.Q, V.Q * 3.0, Color(1.0, 0.9, 0.3))
+		V.quadro(self, pos.x - V.Q * 0.5, pos.y - h - 26.0 + V.Q * 4.0, V.Q, V.Q, Color(1.0, 0.9, 0.3))
+	if uu.radio_t > 0.0:
+		V.aro(self, meio, (CORPO_LARG + 2.0) * esc_u, (CORPO_MEIO + 3.0) * esc_u, Color(0.5, 1.0, 0.3), 0.5 + 0.4 * sin(rel * 12.0), 1.5)
+		for k in 3:
+			var fr_r: float = fposmod(rel * 1.2 + k * 0.33, 1.0)
+			V.ponto(self, pos + Vector2((k - 1) * 12.0 * esc_u, -h * fr_r), Color(0.6, 1.0, 0.35))
+	if uu.estase_t > 0.0:
+		V.aro(self, meio, (CORPO_LARG + 8.0) * esc_u, (CORPO_MEIO + 10.0) * esc_u, Color(0.6, 0.85, 1.0), 0.9, 2.0)
+		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.05 * esc_u, 8.0 * esc_u, Color(0.6, 0.85, 1.0, 0.4))
+		V.ponto(self, meio + Vector2(-CORPO_LARG * 0.6 * esc_u, -CORPO_MEIO * 0.6 * esc_u), Color(1, 1, 1))
+	if uu.louco_t > 0.0:
+		for k in 3:
+			var ar_l: float = rel * 6.0 + k * 2.1
+			V.ponto(self, pos + Vector2(cos(ar_l) * 14.0 * esc_u, -h - 8.0 + sin(ar_l) * 5.0), Color(0.8, 0.5, 1.0))
+	if uu.rec_t > 0.0:
+		V.aro(self, meio, 18.0 * esc_u, 18.0 * esc_u, Color(1.0, 0.85, 0.2), 0.9, 1.5)
+		V.cruz(self, meio, 12.0 * esc_u, Color(1.0, 0.85, 0.2), V.CONT)
 	if uu.alma > 0.0:
 		var larg_a: float = 24.0
 		V.quadro(self, pos.x - larg_a * 0.5 - V.Q, pos.y - h - 16.0 - V.Q, larg_a + V.Q * 2.0, V.Q * 3.0, V.CONT)

@@ -8,9 +8,9 @@ extends RefCounted
 const TAM := 10           # lado de um ícone no atlas (8 + contorno de 1 px)
 const CONTORNO := Color("140c1c")
 
-## Ícones de apoio, depois dos 54 poderes.
-const BLOCO := 54         # bloco da torre (contador de blocos)
-const PECA := 55          # roupinha (caixa de peças)
+## Ícones de apoio, depois dos 60 poderes.
+const BLOCO := 60         # bloco da torre (contador de blocos)
+const PECA := 61          # roupinha (caixa de peças)
 
 const PALETA := {
 	"w": Color("ffffff"), "W": Color("b8c4dc"),
@@ -139,6 +139,18 @@ const BITS: Array = [
 	["..GGGG..", ".GggggG.", "GgggwggG", "GgggggGG", "GgwggggG", "GggggggG", ".GGggGG.", "..GGGG.."],
 	# CAPTURA (Eu escolho você!): bola vermelha e branca
 	["..rrrr..", ".rrrrrr.", "rrrrrrrr", "kkkwwkkk", "wwwwwwww", "wwwwwwww", ".wwwwww.", "..wwww.."],
+	# MEGAZORD (Ranger Miau): cabeça de robô gigante verde
+	["..xxxx..", ".xXXXXx.", "xXwXXwXx", "xXXXXXXx", ".xXkkXx.", "..xXXx..", ".xx..xx.", "xx....xx"],
+	# SOPRO (Sopro radioativo): jato verde em cone
+	["........", "..x....x", ".xXx..Xx", "xXXXxxXX", ".xXXXXXx", "..xXXXx.", "...xXx..", "....x..."],
+	# BRADO (Bater no peito): dois punhos de gorila
+	["........", "nn....nn", "nNn..nNn", "nnn..nnn", ".nnnnnn.", "..nNNn..", "..nNNn..", "...nn..."],
+	# RECOMPENSA: moeda de ouro com cifrão
+	["..yyyy..", ".yyYYyy.", "yyYyyYyy", "yyyYYyyy", "yyYyyYyy", "yyyYYyyy", ".yyYYyy.", "..yyyy.."],
+	# ESTASE (Rifle de estase): bolha de gelo
+	["..cccc..", ".cwwccC.", "cwcccccC", "cccccccC", "ccccbccC", "cccccCCC", ".cCCCCC.", "..CCCC.."],
+	# LOUCURA (Catchullu): espiral de tentáculo roxo
+	["..llll..", ".l....l.", "l..ll..l", "l.l..l.l", "l.l.ll.l", "l..LL..l", ".l....L.", "..LLLL.."],
 	# BLOCO: bloco de brinquedo da torre
 	["yyyyyyyY", "yooooooO", "yowwooOO", "yowoooOO", "yooooOOO", "yooooOOO", "yOOOOOOO", "YOOOOOOO"],
 	# PECA: camiseta (caixa de peças)
