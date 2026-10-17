@@ -8,6 +8,7 @@ var inimigos: Array[Unidade] = []
 var fila: Array = []
 var nascidos: Array[Unidade] = []
 var gatos_por_poder_bicho: int = 0   # gatos derrubados por poder de bicho (dica da tela de derrota)
+var truques_n: Dictionary = {}   # quantas vezes cada truque de gangue agiu na luta (oferta, atropelo, recompila, quica, mutacao), para testes e telemetria
 var perdas: Dictionary = {}   # blocos tirados da torre por tipo de bicho ("chefe" para chefe), para a tela de derrota
 var nascidos_aliados: Array[Unidade] = []   # clones dos gatos: entram fora dos laços
 var ondas: Array = []   # ondas viajantes (Pedra rolante): {x, y, vx, t, larg, dano, atordoa, dono, eq, hit}
@@ -571,6 +572,7 @@ func passo(dt: float) -> void:
 			u.abalado_t -= dt
 			u.lento *= 1.0 - Balanco.MORAL_VEL        # Moral: anda e ataca mais devagar
 			u.bonus_dano *= 1.0 - Balanco.MORAL_DANO
+	_truques_das_gangues()
 	for u in aliados + inimigos:
 		if u.assombrado_t > 0.0:
 			u.lento = minf(u.lento, Balanco.PODER_ESPIRITO_ASSOMBRA_LENTO)   # Alma Sombria
@@ -612,6 +614,112 @@ func passo(dt: float) -> void:
 	elif tempo > Balanco.TEMPO_MAX:
 		terminada = true
 		vitoria = false
+
+func _cont(chave: String) -> void:
+	truques_n[chave] = int(truques_n.get(chave, 0)) + 1
+
+## Truques de gangue que valem o tempo todo (3º ato, etapa 4): Comboio (Estrada Furiosa), Falange (Legião Miauparta)
+## e Mutação (Irmandade Mutante). Roda depois das auras e da Moral, antes de cada um agir.
+func _truques_das_gangues() -> void:
+	var guitarras: Array[Unidade] = []
+	var hoplitas: Array[Unidade] = []
+	for u in inimigos:
+		u.comboio = false
+		u.falange = 0
+		if not u.vivo or not u.rival or u.chefe:
+			continue
+		if u.gangue == 1 and u.tipo == Unidade.Tipo.ATIRADOR:
+			guitarras.append(u)
+		elif u.gangue == 3 and u.tipo == Unidade.Tipo.ESCUDEIRO:
+			hoplitas.append(u)
+		elif u.gangue == 4:
+			var m: bool = u.vida < u.vida_max * Balanco.MUTACAO_LIMIAR
+			if m and not u.mutante:
+				_cont("mutacao")
+				_ev({"t": "mutacao", "x": u.x, "y": u.y})
+			u.mutante = m
+			if m:
+				u.bonus_dano *= 1.0 + Balanco.MUTACAO_DANO
+				u.lento *= 1.0 + Balanco.MUTACAO_VEL
+	if not guitarras.is_empty():
+		var r2: float = Balanco.COMBOIO_RAIO * Balanco.COMBOIO_RAIO
+		for g in guitarras:
+			for v in inimigos:
+				if v.vivo and v.rival and v.gangue == 1 and not v.chefe:
+					var dx: float = v.x - g.x
+					var dy: float = v.y - g.y
+					if dx * dx + dy * dy <= r2:
+						v.comboio = true
+		for v in inimigos:
+			if v.comboio:
+				v.lento *= 1.0 + Balanco.COMBOIO_VEL
+	for h in hoplitas:
+		var n: int = 0
+		for o in hoplitas:
+			if o != h and absf(o.x - h.x) <= Balanco.FALANGE_RAIO and absf(o.y - h.y) <= Balanco.FALANGE_RAIO_Y:
+				n += 1
+		h.falange = mini(n, Balanco.FALANGE_MAX)
+
+## Falange: o golpe vem de frente (de quem está do lado dos gatos e na mesma fileira)? Flanco, golpe pelas costas e poderes furam.
+func _golpe_frontal(atk: Unidade, alvo: Unidade) -> bool:
+	if atk == null:
+		return true   # tiro da torre
+	return absf(atk.y - alvo.y) <= Balanco.FALANGE_FLANCO and atk.x <= alvo.x + 10.0
+
+## Oferta (Família Gatíssima): o gato de pé com mais peças (e mais vida) dorme com os peixes.
+func _vitima_da_oferta() -> Unidade:
+	var melhor: Unidade = null
+	var nota_melhor: float = -1.0
+	for v in aliados:
+		if not v.vivo or v.clone or v.estrutura or v.boneco == null or v.sequestro_t > 0.0:
+			continue
+		var n: int = 0
+		for p in v.pecas:
+			if p != null:
+				n += 1
+		var nota: float = n * 100000.0 + v.vida_max
+		if nota > nota_melhor:
+			nota_melhor = nota
+			melhor = v
+	return melhor
+
+## O Mensageiro tocou a torre: em vez de blocos, leva um gato a dormir. Devolve false se não há gato para levar.
+func _oferta(u: Unidade) -> bool:
+	var v: Unidade = _vitima_da_oferta()
+	if v == null:
+		return false
+	v.sequestro_t = Balanco.OFERTA_T
+	v.alvo = null
+	v.aviso_t = 0.0
+	v.aviso_forma = {}
+	u.fugindo = true
+	u.alvo = null
+	u.golpe = 0.0
+	u.carga = 0
+	_cont("oferta")
+	_ev({"t": "oferta", "x": v.x, "y": v.y, "mx": u.x, "my": u.y})
+	return true
+
+## Disco quicando (Lançador de Discos, Tropa do Grid): o projétil pula para o gato mais perto que ainda não levou.
+func _disco_quica(p: Dictionary, de: Unidade) -> void:
+	var ja: Array = p["ja"]
+	var melhor: Unidade = null
+	var md: float = Balanco.DISCO_RAIO * Balanco.DISCO_RAIO
+	for v in aliados:
+		if not v.vivo or v.estrutura or v.sequestro_t > 0.0 or v in ja:
+			continue
+		var dx: float = v.x - de.x
+		var dy: float = v.y - de.y
+		var d2: float = dx * dx + dy * dy
+		if d2 <= md:
+			md = d2
+			melhor = v
+	if melhor == null:
+		return
+	var nova: Array = ja.duplicate()
+	nova.append(melhor)
+	projeteis.append({"x": de.x, "y": de.y, "alvo": melhor, "dono": p["dono"], "dano": float(p["dano"]) * Balanco.DISCO_FATOR, "quica": int(p["quica"]) - 1, "ja": nova, "disco": true})
+	_cont("quica")
 
 ## Unidades do mesmo lado que ficaram uma em cima da outra se afastam de leve, mais na vertical
 ## (a luta é lida de lado). Chefes, quem pula, quem foge e quem está atordoado não são empurrados.
@@ -888,7 +996,7 @@ func _chefe_age(u: Unidade, dt: float) -> bool:
 func _mais_atras() -> Unidade:
 	var melhor: Unidade = null
 	for v in aliados:
-		if v.vivo and (melhor == null or v.x < melhor.x):
+		if v.vivo and v.sequestro_t <= 0.0 and (melhor == null or v.x < melhor.x):
 			melhor = v
 	return melhor
 
@@ -935,6 +1043,9 @@ func _vul(v: Unidade) -> float:
 func _escolher(u: Unidade) -> Unidade:
 	if u.equipe == 1 and u.louco_t > 0.0:
 		return _alvo_louco(u)   # Loucura: só enxerga o bicho mais perto
+	# Motoqueiro (Estrada Furiosa): passa pela linha e acerta o gato de trás uma vez, depois segue à torre
+	if u.equipe == 1 and u.rival and u.gangue == 1 and u.tipo == Unidade.Tipo.SALTADOR and not u.atropelou:
+		return _mais_atras()
 	# saltador e ladrão ignoram os bonecos e vão direto à torre
 	if u.equipe == 1 and (u.tipo == Unidade.Tipo.SALTADOR or u.tipo == Unidade.Tipo.LADRAO):
 		return null
@@ -954,7 +1065,7 @@ func _escolher(u: Unidade) -> Unidade:
 	# Disputa (parcial): o rival enxerga todos os gatos de pé; o Suicida (BOMBA) mantém o alcance de sempre (corre à torre)
 	var aggro: float = Balanco.AGGRO_RIVAL if (u.rival and u.tipo != Unidade.Tipo.BOMBA) else Balanco.AGGRO
 	for v in lista:
-		if not v.vivo:
+		if not v.vivo or v.sequestro_t > 0.0:
 			continue
 		if u.equipe == 0 and v.x > Balanco.VISIVEL_X:
 			continue
@@ -996,6 +1107,16 @@ func _agir(u: Unidade, dt: float) -> void:
 				_estrutura_cai(u)
 			_ev({"t": "clone_fim", "x": u.x, "y": u.y, "eq": u.equipe, "tempo": true})
 			return
+	if u.sequestro_t > 0.0:
+		# Oferta: dorme com os peixes, fora da luta (nada o fere e ele não age)
+		u.sequestro_t -= dt
+		u.andando = false
+		if u.sequestro_t <= 0.0:
+			u.sequestro_t = 0.0
+			u.alvo = null
+			u.retarget = 0.0
+			_ev({"t": "acorda", "x": u.x, "y": u.y})
+		return
 	if u.estase_t > 0.0:
 		# Rifle de estase: congelado no tempo; o dano que leva fica retido e sai no fim
 		u.estase_t -= dt
@@ -1135,7 +1256,7 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.retarget -= dt
 	if u.alvo != null and u.alvo.oculto_t > 0.0 and not _enxerga_oculto(u, u.alvo):
 		u.alvo = null   # Fumaça: perdeu o alvo de vista
-	if u.alvo == null or not u.alvo.vivo or u.retarget <= 0.0:
+	if u.alvo == null or not u.alvo.vivo or u.alvo.sequestro_t > 0.0 or u.retarget <= 0.0:
 		u.alvo = _escolher(u)
 		u.retarget = Balanco.RETARGET
 	u.andando = false
@@ -1209,7 +1330,12 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 		dm *= u.noir_dano   # Modo Noir: tiro de emboscada
 	var erra: bool = a.noir_t > 0.0 and rng.randf() < a.noir_erra * (Balanco.PODER_NOIR_ERRA_CHEFE / Balanco.PODER_NOIR_ERRA if u.chefe else 1.0)   # o Noir some nas sombras
 	if u.distancia:
-		projeteis.append({"x": u.x, "y": u.y, "alvo": a, "dono": u, "dano": dm, "erra": erra})
+		var tiro: Dictionary = {"x": u.x, "y": u.y, "alvo": a, "dono": u, "dano": dm, "erra": erra}
+		if u.rival and u.gangue == 2 and u.tipo == Unidade.Tipo.ATIRADOR and not u.chefe:
+			tiro["quica"] = Balanco.DISCO_QUICAS   # Lançador de Discos: o disco quica
+			tiro["ja"] = [a]
+			tiro["disco"] = true
+		projeteis.append(tiro)
 		if u.tiro_duplo > 0.0 and rng.randf() < u.tiro_duplo:
 			projeteis.append({"x": u.x, "y": u.y - 7.0, "alvo": a, "dono": u, "dano": dm, "erra": erra})
 		_ev({"t": "tiro", "x": u.x, "y": u.y, "eq": u.equipe})
@@ -1218,6 +1344,12 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 			_ev({"t": "esquiva", "x": a.x, "y": a.y})
 			return
 		_dano(u, a, dm, true)
+		if u.rival and u.gangue == 1 and u.tipo == Unidade.Tipo.SALTADOR and not u.atropelou and not u.chefe:
+			u.atropelou = true   # Motoqueiro: acertou o gato de trás e segue à torre
+			u.alvo = null
+			u.retarget = 0.0
+			_cont("atropelo")
+			_ev({"t": "atropelo", "x": a.x, "y": a.y})
 		if u.atordoa_chance > 0.0 and a.vivo and not a.chefe and rng.randf() < u.atordoa_chance:
 			a.atordoado_t = maxf(a.atordoado_t, Balanco.ATORDOA_KIT_T)
 		var cerco: float = u.cerco + (u.furor_cerco if u.furor_t > 0.0 else 0.0)
@@ -1246,6 +1378,8 @@ func _bater_torre(u: Unidade) -> void:
 	elif u.tipo == Unidade.Tipo.LADRAO:
 		if not u.vivo or u.fugindo:
 			return
+		if u.rival and u.gangue == 0 and _oferta(u):
+			return   # Mensageiro: leva um gato a dormir em vez de blocos
 		n = Balanco.LADRAO_ROUBO  # rouba num golpe só e foge
 		u.fugindo = true
 		u.alvo = null
@@ -1306,6 +1440,8 @@ func _mover_projeteis(dt: float) -> void:
 				_acerta_ervilha(p, a)
 			else:
 				_dano(p["dono"], a, p["dano"], false)
+				if p.has("quica") and int(p["quica"]) > 0:
+					_disco_quica(p, a)
 				var dn: Unidade = p["dono"]
 				if dn != null and dn.tiro_atordoa > 0.0 and a.vivo and not a.chefe and not a.bola_t > 0.0 and rng.randf() < dn.tiro_atordoa:
 					a.atordoado_t = maxf(a.atordoado_t, Balanco.TIRO_ATORDOA_T)   # tiro na perna (Meon)
@@ -1328,7 +1464,7 @@ func _golpe_em_area(u: Unidade, centro: Unidade, dano: float) -> void:
 			_dano(u, v, dano, true, true)
 
 func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_area: bool = false) -> void:
-	if not alvo.vivo:
+	if not alvo.vivo or alvo.sequestro_t > 0.0:
 		return
 	if alvo.esquiva > 0.0 and rng.randf() < alvo.esquiva:
 		_ev({"t": "esquiva", "x": alvo.x, "y": alvo.y})
@@ -1368,6 +1504,8 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 	else:
 		d *= 1.0 - alvo.furo
 	d *= _vul(alvo)
+	if alvo.falange > 0 and _golpe_frontal(atk, alvo):
+		d *= 1.0 - Balanco.FALANGE_POR_VIZINHO * alvo.falange   # Falange: escudos juntos, de frente
 	if alvo.protegido_t > 0.0:
 		d *= Balanco.PODER_PROTEGE_DANO
 	if alvo.cochilo_t > 0.0:
@@ -1457,6 +1595,19 @@ func _matar(u: Unidade, killer: Unidade, base: int = Pecas.Marca.CICATRIZ) -> vo
 		u.vida = u.vida_max * u.folego
 		u.protegido_t = maxf(u.protegido_t, 1.0)
 		_ev({"t": "folego", "x": u.x, "y": u.y})
+		return
+	if u.rival and u.gangue == 2 and u.tipo == Unidade.Tipo.COMUM and not u.chefe and not u.pequeno and not u.recompilou:
+		# Recompilação (Tropa do Grid): o Programa volta uma vez, com parte da vida
+		u.recompilou = true
+		u.recompila_t = 0.0
+		u.vida = u.vida_max * Balanco.RECOMPILA_VIDA
+		u.protegido_t = maxf(u.protegido_t, Balanco.RECOMPILA_PROTEGE)
+		u.atordoado_t = 0.0
+		u.queima_t = 0.0
+		u.alvo = null
+		u.retarget = 0.0
+		_cont("recompila")
+		_ev({"t": "recompila", "x": u.x, "y": u.y})
 		return
 	u.vivo = false
 	if not u.laco.is_empty():
@@ -3755,7 +3906,7 @@ func _usar_poder_i(u: Unidade) -> bool:
 	var meus: Array[Unidade] = aliados if u.equipe == 0 else inimigos
 	var outros: Array[Unidade] = []
 	for v in (inimigos if u.equipe == 0 else aliados):
-		if v.vivo and v.x <= Balanco.VISIVEL_X:
+		if v.vivo and v.sequestro_t <= 0.0 and v.x <= Balanco.VISIVEL_X:
 			outros.append(v)
 	if u.equipe == 1 and u.x > Balanco.VISIVEL_X:
 		return false
@@ -3993,7 +4144,7 @@ func _zonas(dt: float) -> void:
 
 ## Dano direto de um poder (ignora armadura e esquiva). Devolve o dano causado.
 func _dano_poder(u: Unidade, v: Unidade, dano: float) -> float:
-	if not v.vivo:
+	if not v.vivo or v.sequestro_t > 0.0:
 		return 0.0
 	var d: float = dano * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0) * (Balanco.PODER_COCHILO_DANO if v.cochilo_t > 0.0 else 1.0) * ((1.0 - Balanco.PODER_LOBO_REDUCAO) if v.lobo_t > 0.0 and v.lobo_prov else 1.0)
 	if v.resist_t > 0.0:

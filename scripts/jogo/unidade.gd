@@ -28,6 +28,14 @@ var rival: bool = false        # gato de gangue (3º ato): briga com o time ante
 var lider: bool = false        # 3º ato: o rival-líder da onda; quando cai, os outros ficam abalados (Moral)
 var abalado_t: float = 0.0     # Moral: segundos que faltam de -dano e -velocidade
 var gangue: int = -1           # gangue do rival (0..4, índice do lugar no 3º ato)
+# truques das gangues (3º ato, etapa 4)
+var sequestro_t: float = 0.0   # Oferta (Família Gatíssima): o gato dorme com os peixes, fora da luta
+var atropelou: bool = false    # Motoqueiro (Estrada Furiosa): já deu o golpe no gato de trás e agora segue à torre
+var recompilou: bool = false   # Recompilação (Tropa do Grid): já voltou uma vez
+var recompila_t: float = 0.0   # só desenho: segundos desde que recompilou
+var falange: int = 0           # Falange (Legião Miauparta): hoplitas vizinhos (0 a FALANGE_MAX), recalculado a cada passo
+var mutante: bool = false      # Mutação (Irmandade Mutante): abaixo do limiar de vida, mais dano e velocidade
+var comboio: bool = false      # Comboio (Estrada Furiosa): o guitarrista está acelerando este rival
 var chefe_tipo: int = -1       # Fases.Chefe; -1 se não é chefe
 var parte: bool = false        # pedaço do Rei de Massinha
 var pecas: Array = [null, null, null, null]

@@ -16,6 +16,8 @@ func _init() -> void:
 	_plano_rival()
 	_disputa()
 	_moral()
+	_tipos_gangue()
+	_truques()
 	_save_antigo()
 	print("FALHAS: %d" % falhas)
 	quit(1 if falhas > 0 else 0)
@@ -181,6 +183,186 @@ func _moral() -> void:
 	for k in int(Balanco.MORAL_T / 0.5) + 2:
 		sim.passo(0.5)
 	_ok(riv.vivo == false or (riv.abalado_t <= 0.0 and absf(riv.bonus_dano - 1.0) < 0.001), "o abalo passa depois de %.0f s" % Balanco.MORAL_T)
+
+func _luta(gangue: int) -> Simulacao:
+	var e: Estado = _estado()
+	e.fases_vencidas = Fases.TOTAL
+	e.vencido = [2, 2, 2, 2, 2]
+	e.iniciar_fase(gangue + 1)
+	e.onda = 3
+	e.preparar_onda()
+	var sim := Simulacao.new()
+	sim.gerar_eventos = false
+	sim.iniciar(e, 99)
+	sim.inimigos.clear()
+	sim.fila.clear()
+	return sim
+
+func _rival(sim: Simulacao, gangue: int, tipo: int, x: float, y: float) -> Unidade:
+	sim._spawnar({"pecas": [null, null, null, null], "tipo": tipo, "rival": true, "gangue": gangue})
+	var u: Unidade = sim.inimigos[sim.inimigos.size() - 1]
+	u.x = x
+	u.y = y
+	return u
+
+func _tipos_gangue() -> void:
+	_ok(Balanco.GANGUE_TIPOS.size() == 5 and Balanco.GANGUE_TIPO_NOME.size() == 5 and Balanco.GANGUE_TIPO_DICA.size() == 5, "tabelas de tipos das 5 gangues")
+	for g in 5:
+		_ok((Balanco.GANGUE_TIPO_NOME[g] as Array).size() == Balanco.TIPO_NOMES.size() and (Balanco.GANGUE_TIPO_DICA[g] as Array).size() == Balanco.TIPO_NOMES.size(), "nomes e dicas completos da gangue %d" % g)
+		for d in Balanco.GANGUE_TIPO_DICA[g]:
+			_ok(String(d).length() < 80, "dica curta: " + String(d))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 21
+	for g in 5:
+		var permitidos: Array = [0]
+		for par in Balanco.GANGUE_TIPOS[g]:
+			permitidos.append(int(par[0]))
+		var vistos: Dictionary = {}
+		for onda in range(1, Balanco.ONDAS_TOTAIS + 1):
+			for it in Balanco.gerar_plano(g + 1, onda, rng, 3, 0):
+				_ok(int(it["tipo"]) in permitidos, "gangue %d só sorteia seus tipos (tipo %d)" % [g, it["tipo"]])
+				vistos[int(it["tipo"])] = true
+		_ok(vistos.size() >= 3, "gangue %d tem variedade de tipos (%d)" % [g, vistos.size()])
+	_ok(Balanco.nome_rival(0, Unidade.Tipo.LADRAO) == "Mensageiro" and Balanco.nome_rival(3, Unidade.Tipo.ESCUDEIRO) == "Hoplita", "nomes dos rivais")
+	_ok(Balanco.nome_rival(0, Unidade.Tipo.ESCUDEIRO) == Balanco.TIPO_NOMES[Unidade.Tipo.ESCUDEIRO], "nome de reserva")
+
+func _estados_de(u: Unidade) -> Array:
+	var ids := PackedInt32Array()
+	var tps := PackedFloat32Array()
+	ids.resize(IconesEstado.QTD + 2)
+	tps.resize(IconesEstado.QTD + 2)
+	var n: int = IconesEstado.ativos(u, [], ids, tps)
+	var r: Array = []
+	for i in n:
+		r.append(ids[i])
+	return r
+
+func _truques() -> void:
+	# Oferta: o Mensageiro toca a torre e o gato com mais peças dorme 6 s, fora da luta
+	var sim: Simulacao = _luta(0)
+	var gato: Unidade = sim.aliados[0]
+	gato.pecas[0] = Peca.new(Pecas.Tipo.values()[0], 1)
+	var m: Unidade = _rival(sim, 0, Unidade.Tipo.LADRAO, Balanco.TORRE_X + 10.0, 550.0)
+	var tij: int = sim.estado.tijolos
+	sim._bater_torre(m)
+	_ok(gato.sequestro_t > Balanco.OFERTA_T - 0.01, "Oferta: o gato com mais peças dorme %.1f s" % gato.sequestro_t)
+	_ok(sim.estado.tijolos == tij and m.fugindo and m.carga == 0, "Oferta: nenhum bloco roubado e o Mensageiro foge")
+	_ok(sim._escolher(_rival(sim, 0, Unidade.Tipo.COMUM, 600.0, 550.0)) != gato, "Oferta: o gato dormindo não é alvo")
+	var vida0: float = gato.vida
+	sim._dano(m, gato, 50.0, true)
+	_ok(gato.vida == vida0, "Oferta: o gato dormindo não leva dano")
+	_ok(IconesEstado.E.DORMINDO in _estados_de(gato), "ícone de dormindo")
+	for k in int(Balanco.OFERTA_T / 0.5) + 2:
+		sim._agir(gato, 0.5)
+	_ok(gato.sequestro_t == 0.0, "Oferta: o gato acorda")
+	# sem gato para levar, volta a roubar blocos
+	var sim_b: Simulacao = _luta(0)
+	for a in sim_b.aliados:
+		a.vivo = false
+	var m2: Unidade = _rival(sim_b, 0, Unidade.Tipo.LADRAO, Balanco.TORRE_X + 10.0, 550.0)
+	var t2: int = sim_b.estado.tijolos
+	sim_b._bater_torre(m2)
+	_ok(sim_b.estado.tijolos < t2, "Oferta: sem gato de pé, rouba blocos")
+	# o ladrão de outra gangue só rouba blocos
+	var sim_c: Simulacao = _luta(1)
+	var l: Unidade = _rival(sim_c, 1, Unidade.Tipo.LADRAO, Balanco.TORRE_X + 10.0, 550.0)
+	var t3: int = sim_c.estado.tijolos
+	sim_c._bater_torre(l)
+	_ok(sim_c.estado.tijolos < t3 and sim_c.aliados[0].sequestro_t == 0.0, "Saqueador da Estrada rouba blocos, não gatos")
+
+	# Comboio: o Guitarrista acelera os rivais da gangue em volta; Motoqueiro acerta o gato de trás e segue à torre
+	var sc: Simulacao = _luta(1)
+	var g1: Unidade = _rival(sc, 1, Unidade.Tipo.ATIRADOR, 800.0, 550.0)
+	var perto: Unidade = _rival(sc, 1, Unidade.Tipo.COMUM, 850.0, 560.0)
+	var longe: Unidade = _rival(sc, 1, Unidade.Tipo.COMUM, 1250.0, 560.0)
+	sc.passo(0.05)
+	_ok(perto.comboio and g1.comboio and not longe.comboio, "Comboio: só quem está perto")
+	_ok(perto.lento >= 1.0 + Balanco.COMBOIO_VEL - 0.01 and longe.lento <= 1.0, "Comboio: +velocidade (%.2f)" % perto.lento)
+	var mo: Unidade = _rival(sc, 1, Unidade.Tipo.SALTADOR, 900.0, 550.0)
+	var atras: Unidade = sc._mais_atras()
+	_ok(sc._escolher(mo) == atras, "Motoqueiro vai ao gato da fileira de trás")
+	mo.x = atras.x + 10.0
+	mo.y = atras.y
+	mo.cd = 0.0
+	sc._atacar(mo, atras)
+	_ok(mo.atropelou and sc._escolher(mo) == null, "Motoqueiro acerta uma vez e segue à torre")
+
+	# Recompilação: o Programa volta uma vez com 40%
+	var sg: Simulacao = _luta(2)
+	var pr: Unidade = _rival(sg, 2, Unidade.Tipo.COMUM, 800.0, 550.0)
+	var vm: float = pr.vida_max
+	sg._matar(pr, null)
+	_ok(pr.vivo and absf(pr.vida - vm * Balanco.RECOMPILA_VIDA) < 0.01 and pr.recompilou, "Recompilação: volta com 40%")
+	sg._matar(pr, null)
+	_ok(not pr.vivo, "Recompilação: só uma vez")
+	var gr: Unidade = _rival(sg, 2, Unidade.Tipo.GIGANTE, 800.0, 550.0)
+	sg._matar(gr, null)
+	_ok(not gr.vivo, "Recompilação: só o Programa comum")
+	# Disco: quica em até 3 alvos
+	var sd: Simulacao = _luta(2)
+	var base_g: Unidade = sd.aliados[0]
+	while sd.aliados.size() < 3:
+		var nu := Unidade.new()
+		nu.boneco = base_g.boneco
+		sd.aliados.append(nu)
+	var k: int = 0
+	for a in sd.aliados:
+		a.x = 500.0 + k * 40.0
+		a.y = 550.0
+		a.vida_max = 9999.0
+		a.vida = 9999.0
+		k += 1
+	var lan: Unidade = _rival(sd, 2, Unidade.Tipo.ATIRADOR, 900.0, 550.0)
+	lan.cd = 0.0
+	sd._atacar(lan, sd.aliados[0])
+	for i in 400:
+		sd._mover_projeteis(0.02)
+	_ok(int(sd.truques_n.get("quica", 0)) == Balanco.DISCO_QUICAS, "Disco quica %d vezes (%d)" % [Balanco.DISCO_QUICAS, int(sd.truques_n.get("quica", 0))])
+	var feridos: int = 0
+	for a in sd.aliados:
+		if a.vida < 9999.0:
+			feridos += 1
+	_ok(feridos == 3, "Disco fere 3 gatos diferentes (%d)" % feridos)
+
+	# Falange: hoplitas juntos reduzem o dano de frente; o flanco fura
+	var sf: Simulacao = _luta(3)
+	var h1: Unidade = _rival(sf, 3, Unidade.Tipo.ESCUDEIRO, 800.0, 550.0)
+	var h2: Unidade = _rival(sf, 3, Unidade.Tipo.ESCUDEIRO, 850.0, 560.0)
+	var h3: Unidade = _rival(sf, 3, Unidade.Tipo.ESCUDEIRO, 1300.0, 560.0)
+	sf.passo(0.05)
+	_ok(h1.falange == 1 and h2.falange == 1 and h3.falange == 0, "Falange: vizinhos %d/%d/%d" % [h1.falange, h2.falange, h3.falange])
+	var atk: Unidade = sf.aliados[0]
+	atk.x = 700.0
+	atk.y = 550.0
+	atk.perfura = false
+	for h in [h1, h3]:
+		h.armadura = 0.0
+		h.reducao = 0.0
+		h.vida = 1000.0
+		h.vida_max = 1000.0
+	sf._dano(atk, h1, 100.0, true)
+	sf._dano(atk, h3, 100.0, true)
+	var com: float = 1000.0 - h1.vida
+	var sem: float = 1000.0 - h3.vida
+	_ok(absf(com / sem - (1.0 - Balanco.FALANGE_POR_VIZINHO)) < 0.01, "Falange: -15%% por vizinho de frente (%.1f x %.1f)" % [com, sem])
+	h1.vida = 1000.0
+	atk.y = 550.0 + Balanco.FALANGE_FLANCO + 20.0
+	sf._dano(atk, h1, 100.0, true)
+	_ok(absf((1000.0 - h1.vida) - sem) < 0.01, "Falange: o flanco fura (%.1f)" % (1000.0 - h1.vida))
+	h1.vida = 1000.0
+	atk.y = 550.0
+	sf._dano_poder(atk, h1, 100.0)
+	_ok(absf((1000.0 - h1.vida) - 100.0) < 0.5, "Falange: poderes furam")
+
+	# Mutação: abaixo de 30% de vida, +30% de dano e de velocidade
+	var sm: Simulacao = _luta(4)
+	var mu: Unidade = _rival(sm, 4, Unidade.Tipo.COMUM, 800.0, 550.0)
+	sm.passo(0.05)
+	_ok(not mu.mutante and absf(mu.bonus_dano - 1.0) < 0.001, "Mutação: sadio não muda")
+	mu.vida = mu.vida_max * 0.2
+	sm.passo(0.05)
+	_ok(mu.mutante and absf(mu.bonus_dano - (1.0 + Balanco.MUTACAO_DANO)) < 0.001 and mu.lento >= 1.0 + Balanco.MUTACAO_VEL - 0.001, "Mutação: +30%% dano e velocidade (%.2f/%.2f)" % [mu.bonus_dano, mu.lento])
+	_ok(IconesEstado.E.MUTANTE in _estados_de(mu), "ícone de mutante")
 
 func _save_antigo() -> void:
 	var e: Estado = _estado()

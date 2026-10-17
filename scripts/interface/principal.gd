@@ -4529,8 +4529,8 @@ func _celula_previa(g: Dictionary, topo_esq: Vector2, larg: float, alt: float, e
 		var cj: int = _fantasia_de(ini["pecas"])
 		rotulo = Pecas.CONJUNTO_NOME[cj] if cj >= 0 else "Fantasiado"
 		cor_r = Pecas.CONJUNTO_COR[cj].lightened(0.35) if cj >= 0 else Desenho.DOURADO
-	elif tp != Unidade.Tipo.COMUM:
-		rotulo = Balanco.TIPO_NOMES[tp]
+	elif tp != Unidade.Tipo.COMUM or (ini.get("rival", false) and Balanco.nome_rival(int(ini.get("gangue", -1)), tp) != Balanco.TIPO_NOMES[tp]):
+		rotulo = Balanco.nome_rival(int(ini.get("gangue", -1)), tp) if ini.get("rival", false) else Balanco.TIPO_NOMES[tp]
 		cor_r = Desenho.COR_TIPO[tp].lightened(0.45)
 	var reserva: float = 0.0
 	var linhas_r: Array[String] = []

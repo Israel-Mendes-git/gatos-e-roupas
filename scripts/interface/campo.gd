@@ -1171,8 +1171,37 @@ func _consumir() -> void:
 				_numero(pd, "+%d blocos" % int(e["n"]), Color(0.6, 1.0, 0.6), 22, 1.4, 160.0)
 				_som("drop", 1.1, -6.0)
 			"fuga":
-				_numero(Vector2(1180, e["y"] - 70 * ESC), "fugiu! -%d bloco%s" % [int(e["n"]), "" if int(e["n"]) == 1 else "s"], Color(1.0, 0.5, 0.4), 22, 1.4, 160.0)
-				_som("negado", 0.9, -6.0)
+				if int(e["n"]) > 0:
+					_numero(Vector2(1180, e["y"] - 70 * ESC), "fugiu! -%d bloco%s" % [int(e["n"]), "" if int(e["n"]) == 1 else "s"], Color(1.0, 0.5, 0.4), 22, 1.4, 160.0)
+					_som("negado", 0.9, -6.0)
+			"oferta":
+				# Mensageiro da Família Gatíssima: o gato leva uma oferta que não pode recusar
+				var pof: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
+				tremor = maxf(tremor, 4.0)
+				_som("negado", 0.7, -2.0, true)
+				_faisca(pof, Color(0.75, 0.2, 0.3), 14, 220.0, 0.5, 3.5)
+				_faisca(Vector2(e["mx"], e["my"] - 30 * ESC), Color(0.2, 0.15, 0.2), 8, 160.0, 0.4, 3.0)
+				_numero(pof + Vector2(0, -30), "Dorme com os peixes!", Color(1.0, 0.55, 0.6), 22, 1.4, 200.0)
+			"acorda":
+				var pac: Vector2 = Vector2(e["x"], e["y"] - 40 * ESC)
+				_faisca(pac, Color(0.85, 0.92, 1.0), 8, 150.0, 0.4, 3.0)
+				_numero(pac, "Acordou!", Color(0.85, 0.95, 1.0), 18, 0.9, 100.0)
+			"atropelo":
+				var pat: Vector2 = Vector2(e["x"], e["y"] - 24 * ESC)
+				_som("golpe_forte", 1.1, -3.0, true)
+				_faisca(pat, Color(1.0, 0.6, 0.2), 10, 240.0, 0.4, 3.5)
+				_poeira(Vector2(e["x"], e["y"]), 1.0, 4, 1.2)
+			"recompila":
+				var prc: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
+				_som("poder_pronto", 1.5, -2.0, true)
+				_faisca(prc, Color(0.3, 0.9, 1.0), 16, 260.0, 0.5, 3.5)
+				_numero(prc + Vector2(0, -26), "Recompilando!", Color(0.4, 0.95, 1.0), 20, 1.2, 160.0)
+			"mutacao":
+				var pmu: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
+				_som("poder_pronto", 0.7, -2.0, true)
+				_faisca(pmu, Color(0.7, 0.3, 1.0), 12, 240.0, 0.5, 3.5)
+				_faisca(pmu, Color(1.0, 0.9, 0.2), 6, 180.0, 0.4, 3.0)
+				_numero(pmu + Vector2(0, -26), "Mutação!", Color(0.85, 0.5, 1.0), 20, 1.2, 140.0)
 			"gemeos":
 				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Desenho.COR_TIPO[Unidade.Tipo.GEMEO], 12, 200.0, 0.5, 3.5)
 			"torre":
@@ -2608,6 +2637,29 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 	var meio: Vector2 = pos + Vector2(0, -CORPO_MEIO * esc_u)
 	if uu.queima_t > 0.0:
 		_chamas(pos, esc_u)
+	if uu.sequestro_t > 0.0:
+		# dormindo com os peixes: sombra vazia no chão, "zzz" e um peixinho de pixel
+		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.05 * esc_u, 8.0 * esc_u, Color(0.1, 0.05, 0.12, 0.6))
+		for k in 3:
+			var wzs: float = fposmod(rel * 0.7 + k * 0.33, 1.0)
+			V.zzz(self, pos + Vector2(8.0 * esc_u + wzs * 16.0, -h - 4.0 - wzs * 30.0), 1.0 + (1.0 if k == 2 else 0.0), Color(0.85, 0.92, 1.0))
+		var pe_x: float = V.sn(pos.x)
+		var pe_y: float = V.sn(pos.y - h - 22.0)
+		V.quadro(self, pe_x - V.Q * 3.0, pe_y - V.Q, V.Q * 6.0, V.Q * 3.0, V.CONT)
+		V.quadro(self, pe_x - V.Q * 2.0, pe_y, V.Q * 3.0, V.Q, Color(0.55, 0.8, 0.95))
+		V.quadro(self, pe_x + V.Q, pe_y - V.Q * 0.0, V.Q * 2.0, V.Q, Color(0.3, 0.5, 0.75))
+	if uu.comboio:
+		for k in 2:
+			var wcb: float = fposmod(rel * 2.2 + k * 0.5, 1.0)
+			V.quadro(self, pos.x + (10.0 + wcb * 18.0) * esc_u, pos.y - h * (0.35 + 0.3 * k), V.Q * 3.0, V.Q, Color(1.0, 0.55, 0.15, 1.0 - wcb))
+	if uu.mutante:
+		V.aro(self, meio, (CORPO_LARG + 4.0) * esc_u, (CORPO_MEIO + 6.0) * esc_u, Color(0.75, 0.35, 1.0), 0.6 + 0.3 * sin(rel * 14.0), 1.5)
+		V.ponto(self, pos + Vector2(cos(rel * 7.0) * 14.0 * esc_u, -h - 6.0), Color(1.0, 0.9, 0.2))
+	if uu.falange > 0:
+		for k in uu.falange:
+			V.quadro(self, pos.x - (CORPO_LARG * 0.9 + 4.0 * k) * esc_u, pos.y - h * 0.8 + 6.0 * k, V.Q, V.Q * 4.0, Color(0.9, 0.55, 0.35))
+	if uu.recompilou and uu.vivo:
+		V.quadro(self, pos.x + CORPO_LARG * 0.5 * esc_u, pos.y - h * 0.5, V.Q, V.Q, Color(0.3, 0.9, 1.0, 0.6 + 0.3 * sin(rel * 20.0)))
 	if uu.sono_t > 0.0 or uu.cochilo_t > 0.0:
 		for k in 3:
 			var wz: float = fposmod(rel * 0.7 + k * 0.33, 1.0)
@@ -3259,6 +3311,12 @@ func _draw() -> void:
 			V.disco_c(self, pp, 4.5, Color(0.79, 0.54, 0.24), Color(0.3, 0.17, 0.07))
 			V.quadro(self, pp.x - 5.0, pp.y - (6.0 if gira else 1.0), 10.0 if gira else 4.0, 4.0 if gira else 10.0, Color(0.48, 0.32, 0.19))
 			V.disco(self, pp + Vector2(-1.5, 1.0), 1.5, Color(0.95, 0.75, 0.45))
+		elif d.get("disco", false):
+			# disco de luz da Tropa do Grid: ciano com miolo claro, piscando como se girasse
+			for tr in 3:
+				V.quadro(self, pp.x - sx * (8.0 + tr * 7.0), pp.y - 1.5, 6.0 - tr * 1.5, 3.0, Color(0.3, 0.9, 1.0))
+			V.disco_c(self, pp, 6.0, Color(0.3, 0.9, 1.0), Color(0.04, 0.2, 0.4))
+			V.quadro(self, pp.x - V.Q, pp.y - V.Q * (1.0 if sin(rel * 30.0) > 0.0 else 3.0), V.Q * 2.0, V.Q * 2.0, Color(0.9, 1.0, 1.0))
 		else:
 			for tr in 3:
 				V.quadro(self, pp.x - sx * (8.0 + tr * 7.0), pp.y - 1.5, 6.0 - tr * 1.5, 3.0, Color(1.0, 0.45, 0.25))
@@ -5918,6 +5976,11 @@ func _montar_preparacao() -> void:
 		b.chefe_tipo = Fases.chefe_base(estado.lugar()) if chefe else -1
 		var nome: String = Balanco.TIPO_NOMES[clampi(b.tipo, 0, Balanco.TIPO_NOMES.size() - 1)]
 		var dica: String = TIPO_DICA[clampi(b.tipo, 0, TIPO_DICA.size() - 1)]
+		if b.rival:
+			nome = Balanco.nome_rival(b.gangue, b.tipo)
+			var dica_g: String = Balanco.dica_rival(b.gangue, b.tipo)
+			if dica_g != "":
+				dica = dica_g
 		if chefe:
 			nome = Fases.nome_do_chefe(estado.lugar())
 			dica = "O chefe do cômodo. Chega por último."
@@ -6257,7 +6320,7 @@ func _nome_unidade(u: Unidade) -> String:
 		return "Sapinho"
 	if u.pequeno:
 		return "Filhote"
-	var n: String = Balanco.TIPO_NOMES[clampi(u.tipo, 0, Balanco.TIPO_NOMES.size() - 1)]
+	var n: String = Balanco.nome_rival(u.gangue, u.tipo) if u.rival else Balanco.TIPO_NOMES[clampi(u.tipo, 0, Balanco.TIPO_NOMES.size() - 1)]
 	if not u.elite:
 		return n
 	return n + (" fantasiada" if u.tipo == Unidade.Tipo.GEMEO else " fantasiado")
@@ -6286,7 +6349,11 @@ func _estados_linhas(u: Unidade) -> Array:
 			IconesEstado.E.ABALADO:
 				nome = "Abalado: -%s de dano e de velocidade" % Simulacao.pct(Balanco.MORAL_DANO)
 			IconesEstado.E.FUGINDO:
-				nome = "Fugindo com %d bloco%s" % [u.carga, "" if u.carga == 1 else "s"]
+				nome = "Fugindo com %d bloco%s" % [u.carga, "" if u.carga == 1 else "s"] if u.carga > 0 else "Fugindo"
+			IconesEstado.E.DORMINDO:
+				nome = "Dormindo com os peixes: fora da luta"
+			IconesEstado.E.MUTANTE:
+				nome = "Mutante: +%s de dano e de velocidade" % Simulacao.pct(Balanco.MUTACAO_DANO)
 		saida.append([id, nome, ("%s s" % Simulacao.num(tp)) if tp < IconesEstado.SEM_TEMPO else "", 13, Color(0.85, 1.0, 0.85)])
 	var extra: Array[String] = []
 	if u.bonus_dano > 1.01:
