@@ -127,8 +127,8 @@ const BITS: Array = [
 	["..rrrr..", ".rrrrrr.", "rwwrrwwr", "rwkrrkwr", "rrrrrrrr", ".rrkkrr.", "..rrrr..", "...RR..."],
 	# CHUTE (Chute giratório): bota marrom com o arco do golpe
 	["....ww..", "..w...w.", ".w.....w", "w..nnn..", "w.nnnnN.", "...nnnNN", "....NNNN", "....kkkk"],
-	# APAGAO (Apagão): lua escura em crescente
-	["..ssss..", ".ss.....", "ss......", "ss......", "ss......", ".ss.....", "..ssSSS.", "....SS.."],
+	# APAGAO (Modo Noir): cara de gato com óculos brancos, metade colorida e metade em preto e branco
+	["oo....gg", "ooooKggg", "owwoKwwg", "owkoKwkg", "ooooKggg", "oooMKGgg", ".oooKggg", "..ooKgg."],
 	# ESPIRITO (Alma Sombria): cabeça da Sombra, preta, com chifres e dois olhos brancos
 	["K..KK..K", "KK.KK.KK", ".KKKKKK.", "KKKKKKKK", "KwwKKwwK", "KKKKKKKK", ".KKKKKK.", "K.K..K.K"],
 	# LACO (Laço de seda): laço de fio vermelho

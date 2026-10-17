@@ -282,7 +282,7 @@ static func sprite(c: CanvasItem, x: float, y: float, linhas: Array, paleta: Dic
 	_retangulos(c, x, y, e[2], e[3], f)
 
 static func _retangulos(c: CanvasItem, x: float, y: float, rs: Array, cs: PackedColorArray, f: float) -> void:
-	if f <= 0.0:
+	if f <= 0.0 and not Desenho.noir:
 		for k in rs.size():
 			var q: Rect2 = rs[k]
 			c.draw_rect(Rect2(x + q.position.x, y + q.position.y, q.size.x, q.size.y), cs[k])

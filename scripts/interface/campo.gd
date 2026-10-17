@@ -2311,11 +2311,14 @@ func _desenhar_fx(f: Dictionary) -> void:
 			for b in alvos:
 				V.estrela(self, b + Vector2(0, -20.0), 12.0 * a + 4.0, Color(1.0, 0.95, 0.7), esc_c)
 		Pecas.Poder.APAGAO:
-			# a noite cai: aro roxo abre até o raio e o bando é coberto
-			var ra_a: float = float(ex.get("raio", 170.0)) * (1.0 - pow(1.0 - u, 3.0))
-			V.aro(self, p + Vector2(0, 20.0), ra_a, ra_a * 0.36, Color(0.5, 0.4, 0.8), a * 1.4, 2.0)
-			for b in alvos:
-				V.estrela(self, b + Vector2(0, -34.0), 8.0 * a + 3.0, Color(0.85, 0.8, 1.0), esc_c)
+			# Modo Noir: flash branco em quadradinhos que some, grão de filme em volta do gato e aro branco
+			var fl_n: float = clampf(1.0 - u / 0.4, 0.0, 1.0)
+			if fl_n > 0.0:
+				V.grao_filme(self, p + Vector2(0, -30.0), 46.0, 44.0, rel, fl_n, 60, V.Q * 1.5)
+				V.estrela(self, p + Vector2(0, -30.0), 10.0 + 22.0 * fl_n, V.BRANCO, Color(0.1, 0.1, 0.12))
+			var ra_a: float = 70.0 * (1.0 - pow(1.0 - u, 3.0))
+			V.aro(self, p + Vector2(0, 20.0), ra_a, ra_a * 0.36, V.BRANCO, a * 1.2, 2.0)
+			V.grao_filme(self, p + Vector2(0, -30.0), 40.0, 40.0, rel, a, 24)
 		Pecas.Poder.ESPIRITO:
 			# a Sombra do Knight viaja pela fileira com rastro escuro e olhos brancos; a menor (herança) é mais fina
 			var o_e := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 26.0 * ESC)
@@ -2532,15 +2535,6 @@ func _desenhar_domos() -> void:
 		var viva: float = clampf(float(z["t"]) / 0.5, 0.0, 1.0) * clampf((float(z["dur"]) - float(z["t"])) / 0.3, 0.0, 1.0)
 		V.domo(self, Vector2(float(z["x"]), float(z["y"]) + 24.0 * ESC), float(z["raio"]), rel, viva, Color(0.55, 0.75, 1.0))
 
-## Zona de escuridão do Apagão.
-func _desenhar_apagoes() -> void:
-	for zz in sim.zonas:
-		var z: Dictionary = zz
-		if z.get("tipo", "") != "apagao":
-			continue
-		var viva: float = clampf(float(z["t"]) / 0.5, 0.0, 1.0) * clampf((float(z["dur"]) - float(z["t"])) / 0.3, 0.0, 1.0)
-		V.escuridao(self, Vector2(float(z["x"]), float(z["y"]) + 24.0 * ESC), float(z["raio"]), rel, viva)
-
 ## Pedra rolante: a rocha em movimento, com poeira atrás.
 func _desenhar_pedras() -> void:
 	for oo in sim.ondas:
@@ -2659,8 +2653,10 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 		var larg_a: float = 24.0
 		V.quadro(self, pos.x - larg_a * 0.5 - V.Q, pos.y - h - 16.0 - V.Q, larg_a + V.Q * 2.0, V.Q * 3.0, V.CONT)
 		V.quadro(self, pos.x - larg_a * 0.5, pos.y - h - 16.0, larg_a * uu.alma / Balanco.ALMA_MAX, V.Q, V.BRANCO)
-	if uu.apagao_t > 0.0:
-		V.aro(self, meio, (CORPO_LARG + 2.0) * esc_u, (CORPO_MEIO + 4.0) * esc_u, Color(0.45, 0.35, 0.7), 0.5, 1.0)
+	if uu.noir_t > 0.0:
+		# Modo Noir: contorno branco leve e grão de filme sobre o gato em preto e branco
+		V.aro(self, meio, (CORPO_LARG + 2.0) * esc_u, (CORPO_MEIO + 4.0) * esc_u, V.BRANCO, 0.35 + 0.15 * sin(rel * 9.0), 1.0)
+		V.grao_filme(self, meio, CORPO_LARG * 0.8 * esc_u, CORPO_MEIO * 0.9 * esc_u, rel, 0.8, 8)
 	if uu.foco_t > 0.0:
 		var pf_m: float = 0.5 + 0.5 * sin(rel * 10.0)
 		V.aro(self, meio, (CORPO_LARG + 6.0) * esc_u, (CORPO_MEIO + 8.0) * esc_u, Color(1.0, 0.3, 0.3), 0.6 + 0.4 * pf_m, 1.5)
@@ -3084,7 +3080,6 @@ func _draw() -> void:
 	_desenhar_manteigas()
 	_desenhar_domos()
 	_desenhar_chamas()
-	_desenhar_apagoes()
 	_desenhar_mudas()
 	_desenhar_pedras()
 	_desenhar_lacos()
@@ -3176,7 +3171,9 @@ func _draw() -> void:
 			# cão de guarda da Casinha: sprite próprio, do tamanho de um bicho comum (a escala da unidade é a do desenho antigo do chefe)
 			CaoGuarda.desenhar(self, pos, ESC * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
+			Desenho.noir = uu2.noir_t > 0.0   # Modo Noir: gato e roupa em preto e branco
 			Desenho.boneco(self, pos, esc_d, dir_d, (1 if uu2.capturado else uu2.equipe), (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
+			Desenho.noir = false
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
 		if uu2.barreira_int > 0.0 and uu2.barreira_cd <= 0.0:

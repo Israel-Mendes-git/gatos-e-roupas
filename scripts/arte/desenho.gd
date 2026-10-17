@@ -41,7 +41,19 @@ const TIJ_COLS := 4
 const TIJ_W := 40.0
 const TIJ_H := 20.0
 
+## Modo Noir (Miau-Noir): enquanto ligado, toda cor que passa por `b` (gato, roupa) sai em escala de cinza de contraste alto.
+## O Campo liga só ao redor do desenho do gato em preto e branco e desliga logo depois.
+static var noir: bool = false
+
+## Luminância com contraste alto (Spider-Noir): escuros afundam no preto, claros estouram no branco.
+static func cinza(cor: Color) -> Color:
+	var l: float = cor.r * 0.299 + cor.g * 0.587 + cor.b * 0.114
+	var v: float = clampf((l - 0.45) * 1.7 + 0.5, 0.0, 1.0)
+	return Color(v, v, v, cor.a)
+
 static func b(cor: Color, f: float) -> Color:
+	if noir:
+		cor = cinza(cor)
 	if f <= 0.0:
 		return cor
 	return cor.lerp(Color.WHITE, clampf(f, 0.0, 1.0))
@@ -1218,6 +1230,21 @@ const MAO_BICHO := 1.0     # escala da peça de mão nos bichos (a 0.6 a espada 
 const GATO_CHAO := 25.0    # y do pé dentro do quadro original
 
 ## Quadro do atlas para o estado do gato.
+static var _tex_pb: Dictionary = {}
+
+## Folha do gato em escala de cinza de contraste alto (sem shader: a Image é convertida uma vez e guardada).
+static func _tex_gato(i: int) -> Texture2D:
+	if not noir:
+		return GATO_TEX[i]
+	if not _tex_pb.has(i):
+		var img: Image = GATO_TEX[i].get_image()
+		if img.is_compressed():
+			img.decompress()
+		img.convert(Image.FORMAT_RGBA8)
+		img.adjust_bcs(1.0, 1.5, 0.0)
+		_tex_pb[i] = ImageTexture.create_from_image(img)
+	return _tex_pb[i]
+
 static func gato_quadro(anim: float, andando: bool, golpe: float, nocaute: bool = false) -> int:
 	if nocaute:
 		return GatoDados.DORMIR + (int(Time.get_ticks_msec() / 700.0) % GatoDados.DORMIR_N)
@@ -1264,7 +1291,13 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 			RoupaGato.desenhar(c, pa.tipo, f, anim)
 			RoupaGato.passo = 0
 		_tr(c, pos, esc, dir)
-	c.draw_texture_rect_region(GATO_TEX[int(pel[0])], dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
+	if noir:
+		# preto e branco: aura branca leve atrás e a folha do gato já convertida (sem pelagem colorida)
+		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+		_aura_px(c, Color.WHITE, alfa * 0.6)
+		_tr(c, pos, esc, dir)
+		tp = Color.WHITE
+	c.draw_texture_rect_region(_tex_gato(int(pel[0])), dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
 	if fantasma_slots:
 		# espaços vazios na grade de pixels do sprite
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)

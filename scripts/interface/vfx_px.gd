@@ -368,16 +368,20 @@ static func faca_brilho(c: CanvasItem, ce: Vector2, u: float, cont: Color, q: fl
 	estrela(c, ce, 8.0 + 12.0 * a, Color(1.0, 1.0, 0.9), cont, q)
 
 # ---------------------------------------------------------------- lote 4 da expansão: apagão, rocha, fio
-## Zona de escuridão do Apagão: disco escuro de quadradinhos, aro roxo e pontos claros que sobem como poeira.
-static func escuridao(c: CanvasItem, ce: Vector2, rx: float, t: float, viva: float, q: float = Q) -> void:
-	var ry: float = rx * 0.36
-	elipse(c, ce, rx * viva, ry * viva, Color(0.04, 0.02, 0.1, 0.5), q)
-	elipse(c, ce, rx * viva * 0.7, ry * viva * 0.7, Color(0.02, 0.01, 0.06, 0.4), q)
-	aro(c, ce, rx * viva, ry * viva, Color(0.45, 0.35, 0.7), viva, 1.0, q)
-	for i in 7:
-		var fx: float = fposmod(i * 0.381 + t * 0.07, 1.0) * 2.0 - 1.0
-		var fy: float = fposmod(i * 0.619 + t * 0.35, 1.0)
-		ponto(c, Vector2(ce.x + fx * rx * 0.8 * viva, ce.y - fy * 46.0), Color(0.7, 0.65, 0.9, 0.7 * viva), q)
+## Grão de filme do Modo Noir: `n` quadradinhos brancos e pretos que mudam de lugar ~14 vezes por segundo
+## dentro de uma elipse de raios (rx, ry) em volta de `ce`.
+static func grao_filme(c: CanvasItem, ce: Vector2, rx: float, ry: float, t: float, viva: float, n: int = 30, q: float = Q) -> void:
+	var fr: float = floorf(t * 14.0)
+	for i in n:
+		var h1: float = fposmod(sin(i * 12.9898 + fr * 78.233) * 43758.5453, 1.0)
+		var h2: float = fposmod(sin(i * 39.346 + fr * 11.135) * 24634.6345, 1.0)
+		var px: float = ce.x + (h1 * 2.0 - 1.0) * rx
+		var py: float = ce.y + (h2 * 2.0 - 1.0) * ry
+		var g: float = q * (2.0 if i % 4 == 0 else 1.0)
+		if i % 3 == 0:
+			quadro(c, px, py, g, g, Color(0.04, 0.04, 0.05, 0.85 * viva), q)
+		else:
+			quadro(c, px, py, g, g, Color(1.0, 1.0, 1.0, 0.9 * viva), q)
 
 ## Sombra do Knight (Alma Sombria): silhueta preta de chifres com dois olhos brancos e fiapos de fumaça escura atrás.
 ## `dir` +1/-1 é o lado para onde olha; `cel` é o tamanho do pixel da silhueta; `t` anima a fumaça.
