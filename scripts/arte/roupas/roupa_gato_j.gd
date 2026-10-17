@@ -159,21 +159,21 @@ static func _asa(cv: Dictionary, sx: int, sy: int, esc: float) -> void:
 	RoupaGatoI._lin(cv, Vector2i(sx, sy), d2, "W")
 	RoupaGatoI._lin(cv, Vector2i(sx, sy), d3, "W")
 
-## Chapéu de caubói preto gasto: aba larga e reta (12 px) com as pontas erguidas, copa baixa vincada no meio, faixa marrom e a sombra da aba.
+## Chapéu de caubói preto gasto: copa alta (5 px) que afina em cima com o vinco em V dos dois lados, faixa marrom e aba larga (14 px) em sela
+## (sobe nos lados, desce na frente e atrás) com a sombra por baixo.
 static func _ar_chapeu() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, 1, -22, [
-		"...cccccc...",
-		"..cccccccc..",
-		"..cccccccc..",
-		"c.MMMMMMMM.c",
-		"cccccccccccc",
-		".SSSSSSSSSS.",
+	RoupaGatoI._txt(cv, 0, -25, [
+		"....cc..cc....",
+		"....ccSScc....",
+		"...cccSSccc...",
+		"...cccSSccc...",
+		"...cccccccc...",
+		"c..MMMMMMMM..c",
+		".cccccccccccc.",
+		"..cccccccccc..",
+		"...SSSSSSSS...",
 	])
-	cv[Vector2i(6, -22)] = "S"
-	cv[Vector2i(7, -22)] = "S"
-	cv[Vector2i(6, -21)] = "S"
-	cv[Vector2i(7, -21)] = "S"
 	RoupaGatoI._luz(cv, "c", "C", "S")
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_ARTHUR)]
