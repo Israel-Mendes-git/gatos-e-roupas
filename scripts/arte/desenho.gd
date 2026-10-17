@@ -1287,7 +1287,6 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 	var tp: Color = pel[1]
 	if gangue_cor.a > 0.0:
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
-		_anel_gangue(c, gangue_cor, alfa)
 		if aura:
 			_aura_px(c, gangue_cor, alfa)
 		_tr(c, pos, esc, dir)
@@ -1309,16 +1308,6 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		_tr(c, pos, esc, dir)
 		tp = Color.WHITE
 	c.draw_texture_rect_region(_tex_gato(int(pel[0])), dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
-	if gangue_cor.a > 0.0 and not nocaute:
-		# bandana no pescoço, na cor da gangue (a marca que separa o gato rival do gato do time)
-		_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.Onde.PESCOCO, q) * GATO_K, 0.0, GATO_K)
-		var cb := Color(gangue_cor.r, gangue_cor.g, gangue_cor.b, alfa)
-		var esc_b := Color(gangue_cor.r * 0.4, gangue_cor.g * 0.4, gangue_cor.b * 0.4, alfa)
-		c.draw_rect(Rect2(-4, -2, 8, 4), esc_b)
-		c.draw_rect(Rect2(-3, -1, 6, 2), cb)
-		c.draw_rect(Rect2(-5, 1, 3, 3), esc_b)
-		c.draw_rect(Rect2(-4, 1, 1, 2), cb)
-		_tr(c, pos, esc, dir)
 	if fantasma_slots:
 		# espaços vazios na grade de pixels do sprite
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
@@ -1353,6 +1342,17 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 			var tw: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * 5.0 + s)
 			var cr: Color = Pecas.cor_rar(p.raridade)
 			c.draw_rect(Rect2(-6.0, -9.0 - roundf(tw), 1.0, 1.0), Color(cr.r, cr.g, cr.b, 0.5 + 0.5 * tw))
+	if gangue_cor.a > 0.0:
+		# marca da gangue por cima da roupa (a fantasia de corpo inteiro cobriria a bandana): bandana grande no pescoço e anel no chão
+		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+		_anel_gangue(c, gangue_cor, alfa)
+		_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.Onde.PESCOCO, q) * GATO_K, 0.0, GATO_K)
+		var cb := Color(gangue_cor.r, gangue_cor.g, gangue_cor.b, alfa)
+		var esc_b := Color(gangue_cor.r * 0.35, gangue_cor.g * 0.35, gangue_cor.b * 0.35, alfa)
+		c.draw_rect(Rect2(-5, -3, 10, 6), esc_b)
+		c.draw_rect(Rect2(-4, -2, 8, 4), cb)
+		c.draw_rect(Rect2(-7, 1, 4, 5), esc_b)
+		c.draw_rect(Rect2(-6, 2, 2, 3), cb)
 	resetar(c)
 
 ## Sombra, aura e fantasma em pixel: valem para a grade de pixels do sprite do gato/bicho (transform com GATO_K).
@@ -1372,7 +1372,7 @@ const SOMBRA_FAIXAS: Array[int] = [5, 8, 8, 5]
 
 ## Anel de 1 pixel no chão, na cor da gangue: marca o gato rival mesmo parado e de longe.
 static func _anel_gangue(c: CanvasItem, cor: Color, alfa: float) -> void:
-	var cc := Color(cor.r, cor.g, cor.b, 0.75 * alfa)
+	var cc := Color(cor.r, cor.g, cor.b, 0.95 * alfa)
 	var n: int = SOMBRA_FAIXAS.size()
 	for i in n:
 		var h: int = SOMBRA_FAIXAS[i]

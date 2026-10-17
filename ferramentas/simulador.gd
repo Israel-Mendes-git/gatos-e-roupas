@@ -75,7 +75,7 @@ func _init() -> void:
 		var marcas_fim: float = 0.0
 		var raras: float = 0.0
 		var lendarias: float = 0.0
-		for g in n_jogos:
+		for g in range(int(opcoes.get("g0", 0)), int(opcoes.get("g0", 0)) + n_jogos):   # g0=N: começa a numerar as campanhas em N (para rodar em partes, em paralelo)
 			var e := Estado.new(1000 + g * 7)
 			e.novo_jogo()
 			var travou: bool = false
