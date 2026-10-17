@@ -52,6 +52,7 @@ const FICH_BT_MAPA := Rect2(866, 12, 164, 48)
 const FICH_BT_GUARDA := Rect2(20, 666, 160, 36)
 const ATELIE_BT_MAPA := Rect2(692, 12, 164, 48)   # só aparece com o fichário completo
 const ATELIE_BT_GUARDA := Rect2(20, 624, 160, 36)
+const ROTULO_ATELIE := "Ateliê"
 const MOD_SLOT_Y := 484.0          # fileira dos módulos montados, junto da torre desenhada
 const MOD_SLOT := 26.0
 const MOD_SLOT_X0 := 20.0
@@ -385,6 +386,7 @@ func _ready() -> void:
 	atelie_tela.iniciar(self)
 	btn_atelie = _botao("Ateliê", ATELIE_BT_GUARDA, Color(0.95, 0.62, 0.85), 17)
 	btn_atelie.pintar = _pintar_botao_atelie
+	btn_atelie.text = ""   # o rótulo é desenhado por _pintar_botao_atelie (com o texto do botão ele saía em dobro: "Ateliêlié")
 	btn_atelie.pressed.connect(abrir_atelie)
 	btn_atelie.visible = false
 	move_child(btn_atelie, menus.get_index())
@@ -2657,8 +2659,8 @@ func _pintar_botao_atelie(bt: BotaoArte) -> void:
 	var fonte: Font = UIComum.FONTE
 	var tam: int = bt.tam_fonte
 	var y: float = (bt.size.y - fonte.get_height(UIComum.tam(tam))) * 0.5 + fonte.get_ascent(UIComum.tam(tam)) - 3.0 + dy
-	bt.draw_string_outline(fonte, Vector2(40, y), "Ateliê", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 6, Color(0.16, 0.07, 0.05, 0.95))
-	bt.draw_string(fonte, Vector2(40, y), "Ateliê", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color.WHITE)
+	bt.draw_string_outline(fonte, Vector2(40, y), ROTULO_ATELIE, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 6, Color(0.16, 0.07, 0.05, 0.95))
+	bt.draw_string(fonte, Vector2(40, y), ROTULO_ATELIE, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color.WHITE)
 
 ## Abre a oficina da torre (só no mapa e no guarda-roupa, sem menu nem cortina por cima).
 func abrir_oficina() -> void:

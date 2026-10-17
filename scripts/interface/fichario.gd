@@ -190,7 +190,7 @@ func abrir(fantasia: int = -1) -> void:
 ## Página de fantasia completa: o carimbo "COMPLETA" bate com som.
 func _checa_carimbo() -> void:
 	carimbo_t = 9.0
-	if aberta and not em_metas and not em_bichos and pagina > 0 and estado != null and estado.pecas_da_fantasia(fantasia_da_pagina(pagina)) >= Pecas.SLOTS:
+	if aberta and not em_metas and not em_bichos and pagina > 0 and not pagina_do_atelie() and estado != null and estado.pecas_da_fantasia(fantasia_da_pagina(pagina)) >= Pecas.SLOTS:
 		carimbo_t = -0.25   # um instante de espera antes da batida
 
 func fechar() -> void:
@@ -208,7 +208,11 @@ func fechar() -> void:
 func total_paginas() -> int:
 	if em_bichos:
 		return entradas().size() + BICHOS_PAG_INDICE
-	return _ordem.size() + 1
+	return _ordem.size() + 2   # índice, uma página por fantasia e a última, a da fantasia do Ateliê
+
+## A última página das fantasias é a da fantasia criada no Ateliê (não conta como fantasia do fichário).
+func pagina_do_atelie() -> bool:
+	return not em_metas and not em_bichos and pagina == _ordem.size() + 1
 
 func fantasia_da_pagina(p: int) -> int:
 	return _ordem[p - 1] if p >= 1 and p <= _ordem.size() else -1
@@ -544,6 +548,8 @@ func _montar() -> void:
 			var cabf: int = Pecas.CONJUNTO_PECAS[fo[k]][0]
 			if not estado.ja_teve(cabf):
 				_jobs.append({"k": "icone", "tipo": cabf, "centro": rf.position + Vector2(TILE_W * 0.5, TILE_ICO_Y), "tam": 50.0})
+	elif pagina_do_atelie():
+		return
 	else:
 		var c2: int = fantasia_da_pagina(pagina)
 		var faltam: Array = []
@@ -1016,6 +1022,8 @@ func _draw() -> void:
 		_pagina_bichos(e)
 	elif pagina == 0:
 		_pagina_indice(e)
+	elif pagina_do_atelie():
+		_pagina_atelie(e)
 	else:
 		_pagina_fantasia(e, fantasia_da_pagina(pagina))
 	# virada de página: uma folha de papel varrendo a página nova
@@ -1091,9 +1099,9 @@ func _botoes() -> void:
 		UIComum.botao(self, it["r"], txt, cor, o, t)
 		if id != "fechar":
 			_seta_nav(it["r"], -1.0 if id == "ant" else 1.0, it["on"], float(o["h"]), float(o["p"]))
-	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bestiário: gangues" if pagina == 1 else "Bicho %d de %d" % [pagina - 1, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
+	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bestiário: gangues" if pagina == 1 else "Bicho %d de %d" % [pagina - 1, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Ateliê  ·  a sua fantasia" if pagina_do_atelie() else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
 	_txt(marca, Vector2(250.0, 672.0), 15 if marca.length() < 26 else 13, Color(1, 0.94, 0.8), 240.0, 4)
-	_txt("Setas, A/D ou PgUp/PgDn  |  Esc fecha", Vector2(700.0, 672.0), 13, Color(1, 0.94, 0.8, 0.7), 230.0, 3)
+	_txt("Setas ou A/D  |  PgUp/PgDn  |  Esc fecha", Vector2(696.0, 672.0), 12, Color(1, 0.94, 0.8, 0.7), 240.0, 3)
 
 ## Seta em pixel dentro do botão Voltar/Avançar, junto da borda; acompanha o crescer e o afundar do botão.
 func _seta_nav(r: Rect2, dir: float, on: bool, h: float, pr: float) -> void:
@@ -1288,6 +1296,85 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	for s in Pecas.SLOTS:
 		_linha_peca(e, c, s)
 	_bonus(c)
+
+## Última página: a fantasia criada no Ateliê (nome, gato vestido, peças, poder e bônus) ou o convite para abrir o Ateliê.
+func _pagina_atelie(e: Estado) -> void:
+	var C = Pecas.Conjunto
+	var cor: Color = Pecas.CONJUNTO_COR[C.ATELIE]
+	var criada: bool = not e.atelie.is_empty()
+	var nome: String = str(e.atelie.get("nome", "Ateliê")) if criada else "Ateliê"
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), nome, [30, 28, 26, 24, 22, 20, 18], cor)
+	var cb: Rect2 = _cabine_gato()
+	draw_rect(Rect2(cb.position.x + 3, cb.position.y + 4, cb.size.x, cb.size.y), Color(0, 0, 0, 0.16))
+	draw_rect(cb, cor.lerp(PAPEL, 0.78))
+	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, 63.0), cor.lerp(PAPEL, 0.55))
+	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, Q), cor.darkened(0.2).lerp(PAPEL, 0.4))
+	_moldura_px(cb, PAPEL_BORDA)
+	_cantoneiras(cb, Color(0.3, 0.17, 0.15))
+	_txt("Ficha secreta", Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
+	var pr := Rect2(COL_D_X, 122.0, COL_W, 508.0)
+	var pb := Rect2(COL_E_X, 392.0, COL_W, 238.0)
+	draw_rect(pb, PAPEL_ESC)
+	draw_rect(pb, PAPEL_BORDA, false, 2.0)
+	if not criada:
+		_estrela(cb.get_center() + Vector2(0.0, -20.0), COR_OURO if Atelie.liberado(e) else Color(0.6, 0.55, 0.5))
+		_txt("?", Vector2(cb.position.x, cb.get_center().y + 50.0), 40, TINTA2, cb.size.x)
+		var msg: String = "Fichário completo! Abra o Ateliê (botão no mapa ou no guarda-roupa) e crie a sua fantasia." if Atelie.liberado(e) else "Complete o fichário para abrir o Ateliê"
+		_txt("Fantasia do Ateliê", Vector2(pb.position.x + 12.0, pb.position.y + 24.0), 16, TINTA)
+		_bloco(msg, Vector2(pb.position.x + 12.0, pb.position.y + 54.0), pb.size.x - 24.0, [20, 18, 16], 3, Color(0.62, 0.34, 0.02), 4.0)
+		_bloco("Lá você escolhe as formas, as cores, a estampa, um poder, um bônus e o nome, dentro de um orçamento de pontos.", Vector2(pb.position.x + 12.0, pb.position.y + 140.0), pb.size.x - 24.0, [14, 13, 12], 3, TINTA2, 3.0)
+		_txt("Completas: %d de %d" % [e.fantasias_completas(), Pecas.n_ativas()], Vector2(pb.position.x + 12.0, pb.end.y - 12.0), 14, TINTA2)
+		draw_rect(pr, PAPEL_ESC)
+		draw_rect(pr, PAPEL_BORDA, false, 2.0)
+		_txt("Peças", Vector2(pr.position.x + 12.0, pr.position.y + 24.0), 16, TINTA)
+		_txt("Ainda não existem", Vector2(pr.position.x + 12.0, pr.position.y + 54.0), 16, TINTA2)
+		return
+	# gato vestindo a fantasia criada
+	var pecas: Array = []
+	for s in Pecas.SLOTS:
+		pecas.append(Peca.new(Pecas.Tipo.ATELIE_CABECA + s, 5, Pecas.Raridade.RARA))
+	Desenho.boneco(self, _pos_gato(), 3.0, 1.0, 0, pecas, 0.0, t, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, true, 0, false)
+	_txt("4/4 peças", Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, TINTA)
+	var cp: int = Pecas.conj_do_poder(C.ATELIE)
+	_txt("Poder da fantasia completa", Vector2(pb.position.x + 12.0, pb.position.y + 19.0), 13, TINTA2)
+	_txt(Pecas.PODER_NOME[cp], Vector2(pb.position.x + 12.0, pb.position.y + 44.0), tam_cabe(Pecas.PODER_NOME[cp], [22, 20, 18], pb.size.x - 24.0), Color(0.62, 0.34, 0.02))
+	_bloco(_maiuscula(Pecas.PODER_DICA[cp]), Vector2(pb.position.x + 12.0, pb.position.y + 66.0), pb.size.x - 24.0, [14, 13, 12], 3, TINTA, 2.0)
+	var recarga: int = int(round(Balanco.PODER_INTERVALO * float(Balanco.PODER_KIT_INTERVALO.get(cp, 1.0)) * Atelie.PODER_RECARGA_FATOR))
+	_bloco("Solta a cada %d s, com %d%% da força da fantasia de origem (%s)." % [recarga, int(round(Atelie.PODER_FORCA_FATOR * 100.0)), Pecas.CONJUNTO_NOME[cp]], Vector2(pb.position.x + 12.0, pb.position.y + 134.0), pb.size.x - 24.0, [13, 12, 11], 3, TINTA2, 2.0)
+	_txt("Estampa: %s" % Atelie.ESTAMPA_NOME[clampi(int(e.atelie.get("estampa", 0)), 0, Atelie.ESTAMPA_NOME.size() - 1)], Vector2(pb.position.x + 12.0, pb.end.y - 12.0), 14, TINTA2)
+	# página da direita: as quatro peças e o bônus
+	var ms: Array = e.atelie.get("matizes", [])
+	for s in Pecas.SLOTS:
+		var r: Rect2 = rect_linha_peca(s)
+		var tp: int = Pecas.Tipo.ATELIE_CABECA + s
+		var forma: int = Atelie.forma(tp)
+		draw_rect(Rect2(r.position.x + 2, r.position.y + 3, r.size.x, r.size.y), Color(0, 0, 0, 0.14))
+		draw_rect(r, PAPEL_ESC.lightened(0.2))
+		draw_rect(r, cor.darkened(0.25), false, 2.0)
+		draw_rect(Rect2(r.position.x, r.position.y, 6.0, r.size.y), cor)
+		var cx: Rect2 = _caixa_icone(r)
+		draw_rect(cx, Color(0.9, 0.85, 0.72))
+		draw_rect(cx, PAPEL_BORDA, false, 2.0)
+		Desenho.icone(self, tp, cx.get_center(), 56.0)
+		var x: float = r.position.x + 88.0
+		var larg: float = r.size.x - 88.0 - 10.0
+		var tag: String = Pecas.SLOT_NOME[s]
+		var wtag: float = largura(tag, 12)
+		_txt(tag, Vector2(r.end.x - 10.0 - wtag, r.position.y + 20.0), 12, TINTA2)
+		_txt(cortar(Pecas.NOME[forma], 19, larg - wtag - 10.0), Vector2(x, r.position.y + 24.0), 19, TINTA)
+		_bloco(_maiuscula(Pecas.dica(forma)), Vector2(x, r.position.y + 43.0), larg, [13, 12, 11], 2, TINTA2, 2.0)
+		var mz: int = int(ms[s]) if s < ms.size() else 0
+		_txt("Cor: %s" % Atelie.MATIZ_NOME[clampi(mz, 0, Atelie.MATIZ_NOME.size() - 1)], Vector2(x, r.end.y - 8.0), 13, COR_TEM)
+	var bx := Rect2(COL_D_X, 474.0, COL_W, 156.0)
+	draw_rect(bx, PAPEL_ESC)
+	draw_rect(bx, PAPEL_BORDA, false, 2.0)
+	draw_rect(Rect2(bx.position.x, bx.position.y, bx.size.x, 5.0), cor.darkened(0.15))
+	var cbn: int = Pecas.conj_do_bonus(C.ATELIE)
+	_txt("Bônus: %s" % Pecas.CONJUNTO_NOME[cbn], Vector2(bx.position.x + 12.0, bx.position.y + 24.0), 16, TINTA)
+	var y: float = bx.position.y + 44.0
+	for g in [["2 ou 3 peças", 1], ["4 peças", 2]]:
+		_txt(g[0] + ":", Vector2(bx.position.x + 12.0, y), 14, Color(0.62, 0.34, 0.02))
+		y = _bloco(_maiuscula(Pecas.conjunto_bonus(C.ATELIE, g[1])), Vector2(bx.position.x + 24.0, y + 17.0), bx.size.x - 36.0, [14, 13, 12, 11], 2, TINTA, 2.0) + 4.0
 
 func _carimbo(centro: Vector2) -> void:
 	var f: Font = UIComum.FONTE
