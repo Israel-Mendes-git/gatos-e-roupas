@@ -512,21 +512,19 @@ func _efeitos_lote3() -> void:
 
 
 func _efeitos_lote4() -> void:
-	# Miau-Noir: emboscada no kit; Apagão marca quem está dentro e faz errar
+	# Miau-Noir: emboscada no kit e pistola (tiro de longe); o Modo Noir é pessoal: os bichos erram os golpes nele
 	var sim := _cena(Pecas.Conjunto.MIAU_NOIR, 41)
 	var ng: Unidade = _gato_do_poder(sim, Pecas.Conjunto.MIAU_NOIR)
 	_ok(ng != null, "Miau-Noir sem poder")
 	_ok(ng.emboscada == Balanco.conj_valor(Pecas.Conjunto.MIAU_NOIR, 1), "Miau-Noir sem emboscada")
+	_ok(ng.distancia, "a pistola do Miau-Noir devia atirar de longe")
 	ng.poder_cd = 0.0
 	var vn: Unidade = _inimigo_perto(sim, ng, 80.0)
 	if vn != null:
-		_ok(sim.disparar_poder(ng), "Apagão não disparou")
-		var achou_zona: bool = false
-		for z in sim.zonas:
-			if z.get("tipo", "") == "apagao":
-				achou_zona = true
-				z["erra"] = 1.0
-		_ok(achou_zona, "Apagão sem zona")
+		ng.noir_t = 0.0
+		_ok(sim.disparar_poder(ng), "Modo Noir não disparou")
+		_ok(ng.noir_t > 0.0 and ng.noir_t <= Balanco.PODER_NOIR_T * 1.5, "Modo Noir sem tempo")
+		_ok(sim.zonas.is_empty() or not sim.zonas.any(func(z: Dictionary) -> bool: return z.get("tipo", "") == "apagao"), "o Modo Noir não é de área")
 		vn.x = ng.x + 40.0
 		vn.y = ng.y
 		sim.passo(Balanco.DT)

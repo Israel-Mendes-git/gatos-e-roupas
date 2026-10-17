@@ -144,8 +144,9 @@ var execucao: float = 0.0       # kit do Super Miaujin: dano a mais em quem est�
 var alcance_kit: float = 0.0    # kit do Hollowmiau: alcance a mais
 var alma: float = 0.0           # Hollowmiau: Alma acumulada (0 a Balanco.ALMA_MAX)
 var assombrado_t: float = 0.0   # Alma Sombria: a Sombra o atravessou; fica lento
-var apagao_t: float = 0.0       # dentro do Apagão: erra golpes e tiros (renovado a cada passo)
-var apagao_erra: float = 0.0
+var noir_t: float = 0.0         # Modo Noir (Miau-Noir): em preto e branco, os bichos erram os golpes nele
+var noir_erra: float = 0.0      # chance de o golpe/tiro errar este gato
+var noir_dano: float = 1.0      # multiplicador do dano dos tiros dele
 var laco: Dictionary = {}       # Laço de seda: o laço a que pertence (vazio = solto)
 var carga_t: float = 0.0        # Camehamiau!: segundos que faltam para soltar o feixe (parado, vulnerável)
 var carga_dur: float = 0.0

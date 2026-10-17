@@ -242,7 +242,7 @@ const MOLDE: Array[int] = [
 	Tipo.MASCARA, Tipo.CASACO, Tipo.SABRE, Tipo.GANCHO,
 	Tipo.CAPACETE, Tipo.PONCHO, Tipo.ESTILINGUE, Tipo.JOELHEIRAS,   # Meon: a mão é a Pistola do Agente (tiro de longe)
 	# lote 4 (Telhado, Toca): Miau-Noir, Hollowmiau, Silkmiau, Super Miaujin, O Arqueólogo, Treinador de Miaumons
-	Tipo.CARTOLA, Tipo.CASACO, Tipo.VARINHA, Tipo.NARIZ,
+	Tipo.CARTOLA, Tipo.CASACO, Tipo.ESTILINGUE, Tipo.NARIZ,   # Miau-Noir: a mão é a pistola (tiro de longe, como o Meon)
 	Tipo.CAPACETE, Tipo.MANTO, Tipo.LANCA, Tipo.AMULETO,
 	Tipo.PONTUDO, Tipo.CAPA, Tipo.SABRE, Tipo.GANCHO,
 	Tipo.COROA, Tipo.COLETE, Tipo.CETRO, Tipo.COLAR,
@@ -548,7 +548,7 @@ const PODER_NOME: Array[String] = [
 	"Salvamento", "Flecha ricochete", "Olhar da Penitência", "Objeção!", "Imitar", "Mão de pôquer",
 	"Torre de ervilha", "Manteiga escorregadia", "Reviver", "Colheita", "Construir", "Cochilo",
 	"Plano de ataque", "Domo refletor", "Lobo solitário", "Turbo", "Esforço máximo", "Chute giratório",
-	"Apagão", "Alma Sombria", "Laço de seda", "Camehamiau!", "Pedra rolante", "Eu escolho você!",
+	"Modo Noir", "Alma Sombria", "Laço de seda", "Camehamiau!", "Pedra rolante", "Eu escolho você!",
 	"Megazord", "Sopro radioativo", "Bater no peito", "Recompensa", "Rifle de estase", "Loucura",
 ]
 const PODER_DICA: Array[String] = [
@@ -595,7 +595,7 @@ const PODER_DICA: Array[String] = [
 	"atropela em linha, protegido, e deixa um rastro de chamas azuis",
 	"regenera e bate mais forte por uns segundos; se cair, levanta e explode",
 	"chuta em volta: empurra e atordoa; quem já estava atordoado apanha muito",
-	"escuridão no maior bando: os bichos erram golpes e tiros e trocam de alvo",
+	"preto e branco: os bichos erram golpes nele e os tiros dele ferem mais",
 	"a Alma vira a Sombra: perfura a fileira, fere muito, deixa lento e cura",
 	"liga os 4 bichos mais fortes: o dano de um se espalha pelos outros",
 	"carrega parado e solta um feixe que cruza o campo todo",

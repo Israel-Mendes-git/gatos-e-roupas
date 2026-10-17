@@ -1011,7 +1011,7 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.foco_t = maxf(0.0, u.foco_t - dt)
 	u.domo_t = maxf(0.0, u.domo_t - dt)
 	u.forcado_t = maxf(0.0, u.forcado_t - dt)
-	u.apagao_t = maxf(0.0, u.apagao_t - dt)
+	u.noir_t = maxf(0.0, u.noir_t - dt)
 	u.assombrado_t = maxf(0.0, u.assombrado_t - dt)
 	u.resist_t = maxf(0.0, u.resist_t - dt)
 	u.rec_t = maxf(0.0, u.rec_t - dt)
@@ -1189,7 +1189,9 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 			dm *= u.emboscada   # Miau-Noir: emboscada no 1º golpe em cada inimigo
 	if u.louco_t > 0.0:
 		dm *= 1.0 + u.louco_dano   # Loucura
-	var erra: bool = u.apagao_t > 0.0 and rng.randf() < u.apagao_erra   # dentro do Apagão
+	if u.noir_t > 0.0 and u.distancia:
+		dm *= u.noir_dano   # Modo Noir: tiro de emboscada
+	var erra: bool = a.noir_t > 0.0 and rng.randf() < a.noir_erra * (Balanco.PODER_NOIR_ERRA_CHEFE / Balanco.PODER_NOIR_ERRA if u.chefe else 1.0)   # o Noir some nas sombras
 	if u.distancia:
 		projeteis.append({"x": u.x, "y": u.y, "alvo": a, "dono": u, "dano": dm, "erra": erra})
 		if u.tiro_duplo > 0.0 and rng.randf() < u.tiro_duplo:
@@ -1283,7 +1285,7 @@ func _mover_projeteis(dt: float) -> void:
 			if a == null:
 				_bater_torre(p["dono"])
 			elif p.get("erra", false):
-				_ev({"t": "esquiva", "x": a.x, "y": a.y})   # tiro errado no Apagão
+				_ev({"t": "esquiva", "x": a.x, "y": a.y})   # tiro errado no Modo Noir
 			elif p.has("poder"):
 				_acerta_ervilha(p, a)
 			else:
@@ -1829,13 +1831,7 @@ func _forma_aviso(u: Unidade) -> Dictionary:
 			if alvos.is_empty():
 				return {}
 		Pecas.Poder.APAGAO:
-			var cs_a: Array = _aglomerados(gatos, 110.0, 1)
-			if cs_a.is_empty():
-				return {}
-			circ.append(Vector3(cs_a[0].x, cs_a[0].y, Balanco.PODER_APAGAO_RAIO * sqrt(_fi)))
-			for v in gatos:
-				if _dentro(v, cs_a[0].x, cs_a[0].y, Balanco.PODER_APAGAO_RAIO * sqrt(_fi)):
-					alvos.append(Vector2(v.x, v.y))
+			alvos.append(Vector2(ux, uy))
 		Pecas.Poder.PEDRA:
 			var cs_p2: Array = _aglomerados(gatos, 110.0, 1)
 			if cs_p2.is_empty():
@@ -3189,55 +3185,17 @@ func _apara_faca(alvo: Unidade, atk: Unidade) -> void:
 	_eq_tele = e0
 	_ev({"t": "apara", "x": alvo.x, "y": alvo.y, "eq": alvo.equipe, "ax": atk.x, "ay": atk.y})
 
-## Apagão (Miau-Noir): zona de escuridão sobre o maior bando; quem está dentro erra golpes e tiros e troca de alvo.
+## Modo Noir (Miau-Noir): o gato fica em preto e branco e some nas sombras; os bichos erram os golpes nele e os
+## tiros dele fazem dano de emboscada. Efeito pessoal (não de área). Mantém o valor de enum APAGAO (saves).
 func _poder_apagao(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
-	var cs: Array = _aglomerados(outros, 110.0, 1)
-	if cs.is_empty():
+	if outros.is_empty() or u.noir_t > 0.0:
 		return false
-	var raio: float = (Balanco.PODER_APAGAO_HER_RAIO if em_heranca else Balanco.PODER_APAGAO_RAIO) * sqrt(_fi)
-	var dur: float = (Balanco.PODER_APAGAO_HER_T if em_heranca else Balanco.PODER_APAGAO_T) * _fi
-	var erra: float = Balanco.PODER_APAGAO_HER_ERRA if em_heranca else Balanco.PODER_APAGAO_ERRA
-	if u.equipe == 1:
-		erra = Balanco.PODER_APAGAO_BICHO_ERRA
-	for z in zonas:
-		if z.get("tipo", "") == "apagao" and z["dono"] == u:
-			z["t"] = 0.0
-	zonas.append({"tipo": "apagao", "x": cs[0].x, "y": cs[0].y, "t": dur, "dur": dur, "raio": raio, "dono": u, "eq": u.equipe,
-		"conj": u.poder_conj, "erra": erra, "troca": Balanco.PODER_APAGAO_TROCA})
-	pontos.append(Vector2(cs[0].x, cs[0].y))
-	extra["raio"] = raio
-	extra["dur"] = dur
+	u.noir_t = Balanco.PODER_NOIR_HER_T if em_heranca else Balanco.PODER_NOIR_T
+	u.noir_erra = Balanco.PODER_NOIR_HER_ERRA if em_heranca else Balanco.PODER_NOIR_ERRA
+	u.noir_dano = Balanco.PODER_NOIR_HER_DANO if em_heranca else Balanco.PODER_NOIR_DANO
+	pontos.append(Vector2(u.x, u.y))
+	extra["dur"] = u.noir_t
 	return true
-
-func _zona_apagao(z: Dictionary, dt: float) -> void:
-	var eq: int = int(z["eq"])
-	var vitimas: Array[Unidade] = inimigos if eq == 0 else aliados
-	var opostos: Array[Unidade] = aliados if eq == 0 else inimigos
-	z["troca"] = float(z["troca"]) - dt
-	var troca: bool = float(z["troca"]) <= 0.0
-	if troca:
-		z["troca"] = Balanco.PODER_APAGAO_TROCA
-	var raio: float = float(z["raio"])
-	for v in vitimas:
-		if not v.vivo or v.estrutura:
-			continue
-		var dx: float = v.x - float(z["x"])
-		var dy: float = (v.y - float(z["y"])) / 0.6
-		if dx * dx + dy * dy > raio * raio:
-			continue
-		var erra: float = float(z["erra"])
-		if v.chefe:
-			erra *= Balanco.PODER_APAGAO_ERRA_CHEFE / Balanco.PODER_APAGAO_ERRA
-		v.apagao_t = 0.1
-		v.apagao_erra = erra
-		if troca:
-			var cand: Array[Unidade] = []
-			for o in opostos:
-				if o.vivo and not o.estrutura and o.x <= Balanco.VISIVEL_X and o != v.alvo:
-					cand.append(o)
-			if not cand.is_empty():
-				v.alvo = cand[rng.randi_range(0, cand.size() - 1)]
-				v.retarget = Balanco.PODER_APAGAO_TROCA
 
 ## Alma Sombria (Hollowmiau): gasta a Alma e dispara a própria Sombra, que atravessa a fileira ferindo
 ## todos no caminho (a herança é menor: perfura só os primeiros) e os deixa assombrados (lentos).
@@ -3987,9 +3945,6 @@ func _zonas(dt: float) -> void:
 			continue
 		if z.get("tipo", "") == "domo":
 			_zona_domo(z)
-			continue
-		if z.get("tipo", "") == "apagao":
-			_zona_apagao(z, dt)
 			continue
 		if z.get("tipo", "") == "chama":
 			_zona_chama(z, dt)
