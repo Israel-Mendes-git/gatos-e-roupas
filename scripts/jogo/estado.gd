@@ -14,8 +14,10 @@ var tijolos: int = Balanco.TIJOLOS_INICIAIS
 # fichário: tipos de peça que o jogador já teve alguma vez (índice = Pecas.Tipo)
 var colecao: Array[bool] = []
 # bestiário (aba "Bichos" do fichário): chaves dos bichos já vistos numa prévia de onda.
-# "f0".."f4" famílias da casa, "b0".."b4" bandos de fora, "t0".."t8" tipos (Unidade.Tipo), "t9" fantasiado, "c0".."c9" chefes
-const BICHOS_TOTAL := 30
+# "f0".."f4" famílias da casa, "b0".."b4" bandos de fora, "t0".."t8" tipos (Unidade.Tipo), "t9" fantasiado, "c0".."c9" chefes,
+# "g0".."g4" gangues do 3º ato. Chaves auxiliares das gangues (não contam no total): "g<G>t<T>" tipo T de rival da gangue G
+# e "h<G>" chefe da gangue G. Gravação antiga simplesmente não as tem.
+const BICHOS_TOTAL := 35
 var bichos_vistos: Dictionary = {}
 # torre: troféus (moeda permanente), melhorias compradas e módulos montados
 var trofeus: int = 0
@@ -234,15 +236,34 @@ func _ver_onda() -> void:
 			bichos_vistos["f%d" % lg] = true
 		elif lg < Fases.TOTAL * 2:
 			bichos_vistos["b%d" % (lg - Fases.TOTAL)] = true
-		# 3º ato (lg >= 10): os rivais ainda não entram no bestiário (decisão da próxima etapa: por gangue + tipo)
-	if not chefe.is_empty() and lg < Fases.TOTAL * 2:
-		bichos_vistos["c%d" % lg] = true
+		if d.get("rival", false) and int(d.get("gangue", -1)) >= 0:
+			var g: int = int(d["gangue"])
+			bichos_vistos["g%d" % g] = true
+			bichos_vistos["g%dt%d" % [g, int(d.get("tipo", 0))]] = true
+	if not chefe.is_empty():
+		if lg < Fases.TOTAL * 2:
+			bichos_vistos["c%d" % lg] = true
+		else:
+			bichos_vistos["h%d" % (lg - Fases.TOTAL * 2)] = true
 
 func viu_bicho(chave: String) -> bool:
 	return bichos_vistos.has(chave)
 
+## Quantos bichos do bestiário já foram vistos (as chaves auxiliares das gangues, "g1t2" e "h1", não entram na conta).
 func bichos_vistos_total() -> int:
-	return bichos_vistos.size()
+	var n: int = 0
+	for k in bichos_vistos:
+		if String(k).length() == 2 and not String(k).begins_with("h"):
+			n += 1
+	return n
+
+## Chefe da gangue `g` (0..4) já visto na prévia da última onda?
+func viu_chefe_gangue(g: int) -> bool:
+	return bichos_vistos.has("h%d" % g)
+
+## Tipo de rival `tipo` (Unidade.Tipo) da gangue `g` já visto numa prévia?
+func viu_rival(g: int, tipo: int) -> bool:
+	return bichos_vistos.has("g%dt%d" % [g, tipo])
 
 ## Gravação de antes do bestiário: deduz o que o jogador já deve ter visto pelo andamento da campanha.
 func _inferir_bichos() -> void:
@@ -266,6 +287,13 @@ func _inferir_bichos() -> void:
 		if vencido[i] >= 2:
 			bichos_vistos["c%d" % (i + Fases.TOTAL)] = true
 			bichos_vistos["b%d" % i] = true
+		if vencido[i] >= 3:
+			# 3º ato vencido neste lugar: a gangue, o chefe e os tipos de rival que ela tem
+			bichos_vistos["g%d" % i] = true
+			bichos_vistos["h%d" % i] = true
+			bichos_vistos["g%dt0" % i] = true
+			for par in Balanco.GANGUE_TIPOS[i]:
+				bichos_vistos["g%dt%d" % [i, int(par[0])]] = true
 
 func progresso() -> int:
 	if ato > 1:

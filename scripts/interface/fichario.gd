@@ -25,6 +25,9 @@ const N_ABAS := 9
 const ABA_BICHOS := 8  # "Bichos": o bestiário (famílias, tipos e chefes)
 const ABA_FORA := 6    # "De fora": as fantasias que só caem fora da casa
 const ABA_METAS := 7
+## Bestiário: página 0 = índice da casa e de fora, 1 = índice das gangues do 3º ato, 2.. = uma ficha por entrada.
+const BICHOS_PAG_INDICE := 2
+const BICHOS_CASA := 30   # entradas 0..29 são dos dois primeiros atos; 30..34 são as gangues
 
 const GUI_TEX: Texture2D = preload("res://assets/terceiros/gui/gui_4x.png")
 const BOT_TEX: Texture2D = preload("res://assets/terceiros/gui/botoes_4x.png")
@@ -204,7 +207,7 @@ func fechar() -> void:
 
 func total_paginas() -> int:
 	if em_bichos:
-		return entradas().size() + 1
+		return entradas().size() + BICHOS_PAG_INDICE
 	return _ordem.size() + 1
 
 func fantasia_da_pagina(p: int) -> int:
@@ -623,7 +626,7 @@ func acionar(id: String) -> void:
 	elif id.begins_with("f"):
 		ir_para_fantasia(int(id.substr(1)))
 	elif _eh_tile(id):
-		ir_para_pagina(int(id.substr(1)) + 1)
+		ir_para_pagina(int(id.substr(1)) + (BICHOS_PAG_INDICE if em_bichos else 1))
 
 func _gui_input(ev: InputEvent) -> void:
 	if not aberta:
@@ -688,7 +691,7 @@ func tecla(kc: int) -> bool:
 	if not aberta:
 		return false
 	var no_tile: bool = _foco_e_tile()
-	if pagina == 0 and not em_metas:
+	if (pagina == 0 or (em_bichos and pagina == 1)) and not em_metas:
 		var dir := Vector2i.ZERO
 		match kc:
 			KEY_LEFT, KEY_A:
@@ -1088,7 +1091,7 @@ func _botoes() -> void:
 		UIComum.botao(self, it["r"], txt, cor, o, t)
 		if id != "fechar":
 			_seta_nav(it["r"], -1.0 if id == "ant" else 1.0, it["on"], float(o["h"]), float(o["p"]))
-	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bicho %d de %d" % [pagina, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
+	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bestiário: gangues" if pagina == 1 else "Bicho %d de %d" % [pagina - 1, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
 	_txt(marca, Vector2(250.0, 672.0), 15 if marca.length() < 26 else 13, Color(1, 0.94, 0.8), 240.0, 4)
 	_txt("Setas, A/D ou PgUp/PgDn  |  Esc fecha", Vector2(700.0, 672.0), 13, Color(1, 0.94, 0.8, 0.7), 230.0, 3)
 
@@ -1109,7 +1112,7 @@ func _seta_nav(r: Rect2, dir: float, on: bool, h: float, pr: float) -> void:
 
 ## Dica do mouse (ou do foco do teclado) sobre uma miniatura do índice.
 func _dica_tile() -> void:
-	if em_bichos and pagina == 0 and _foco_e_tile():
+	if em_bichos and pagina <= 1 and _foco_e_tile():
 		var en: Dictionary = entradas()[int(String(itens[foco]["id"]).substr(1))]
 		var rb: Rect2 = itens[foco]["r"]
 		var vis: bool = estado.viu_bicho(en["chave"])
@@ -1170,6 +1173,7 @@ func _pagina_indice(e: Estado) -> void:
 	draw_rect(pr, PAPEL_ESC)
 	draw_rect(pr, PAPEL_BORDA, false, 2.0)
 	_txt("Seu progresso", Vector2(pr.position.x + 14.0, pr.position.y + 24.0), 16, TINTA)
+	_txt("Gangues do 3º ato: na próxima página", Vector2(pr.position.x + 120.0, pr.position.y + 24.0), 12, TINTA2, pr.size.x - 134.0)
 	var comp: int = e.fantasias_completas()
 	var nf: int = Pecas.n_ativas()
 	var po: int = pecas_obtidas(e)
@@ -1573,8 +1577,47 @@ static func entradas() -> Array:
 			"oque": Fases.CHEFE_ATAQUE[i] + ". Solta o poder com aviso de %d s: atordoe o chefe para cancelar." % int(Balanco.PODER_AVISO_T), "dica": Fases.CHEFE_FRAQUEZA[i],
 			"ficha": ["Larga uma peça Rara ou Lendária e dá %d troféus" % Torre.TROFEU_CHEFE, "Veste: " + ", ".join(vest)],
 			"onde": "Última onda %s%s." % [_do(i), "" if i < Fases.TOTAL else " (segundo ato)"]})
+	for g in Fases.GANGUE_NOME.size():
+		var lg3: int = g + Fases.TOTAL * 2
+		l.append({"k": "gangue", "i": g, "chave": "g%d" % g, "nome": Fases.GANGUE_NOME[g], "cor": Fases.GANGUE_COR[g].lerp(Color(0.6, 0.5, 0.45), 0.25),
+			"oque": texto_truque(g), "dica": GANGUE_ENFRENTAR[g], "ficha": [],
+			"onde": "Só no terceiro ato: %s." % _em(lg3)})
 	_entradas_c = l
 	return l
+
+const GANGUE_TRUQUE_NOME: Array[String] = ["A oferta", "Comboio", "Recompilação e discos", "Falange", "Mutação"]
+const GANGUE_ENFRENTAR: Array[String] = [
+	"Marque o Mensageiro como alvo e derrube-o antes que toque a torre. Gatos na frente seguram os Capangas.",
+	"Derrube o Guitarrista primeiro: sem ele o comboio perde a velocidade. Gatos de longe acertam os Suicidas antes que cheguem.",
+	"O Programa volta uma vez: guarde dano para o segundo round. Derrube os Lançadores antes que os discos quiquem entre os gatos.",
+	"Ataque os hoplitas pelos flancos ou com poderes que atravessam, e derrube o líder para abalar a gangue inteira.",
+	"Termine os mutantes feridos de uma vez: abaixo de 30% de vida eles ficam mais fortes. Dano concentrado vence.",
+]
+
+## Texto do truque da gangue `g`, com os números do Balanco.
+static func texto_truque(g: int) -> String:
+	match g:
+		0:
+			return "O Mensageiro não rouba bloco: ao tocar a torre, leva um gato para dormir com os peixes por %d s. Matá-lo antes cancela." % int(Balanco.OFERTA_T)
+		1:
+			return "O Guitarrista dá +%d%% de velocidade aos rivais em volta (o comboio), e o Suicida pintado corre ao primeiro gato ou à torre e explode." % int(round(Balanco.COMBOIO_VEL * 100.0))
+		2:
+			return "O Programa volta uma vez com %d%% de vida ao ser derrotado, e o disco do Lançador quica em até %d gatos." % [int(round(Balanco.RECOMPILA_VIDA * 100.0)), Balanco.DISCO_QUICAS + 1]
+		3:
+			return "Hoplitas lado a lado levam menos dano de frente (%d%% por vizinho, até %d). Golpes pelos flancos e poderes que atravessam furam a falange." % [int(round(Balanco.FALANGE_POR_VIZINHO * 100.0)), Balanco.FALANGE_MAX]
+	return "Abaixo de %d%% de vida, o mutante ganha +%d%% de dano e de velocidade. O Telepata atira de longe nos gatos e na torre." % [int(round(Balanco.MUTACAO_LIMIAR * 100.0)), int(round(Balanco.MUTACAO_DANO * 100.0))]
+
+## Tipos de rival da gangue `g` na ordem da ficha: o comum primeiro, depois os da tabela da gangue.
+static func tipos_da_gangue(g: int) -> Array[int]:
+	var l: Array[int] = [0]
+	for par in Balanco.GANGUE_TIPOS[g]:
+		l.append(int(par[0]))
+	return l
+
+## Peças do lugar que o rival do retrato veste (cabeça, corpo e mão da primeira fantasia do lugar).
+static func _pecas_rival(g: int) -> Array:
+	var c: int = Fases.CONJUNTOS[g + Fases.TOTAL * 2][0]
+	return [Peca.new(Pecas.CONJUNTO_PECAS[c][0]), Peca.new(Pecas.CONJUNTO_PECAS[c][1]), null, null]
 
 static func _n(v: float) -> String:
 	return ("%.2f" % v).rstrip("0").rstrip(".")
@@ -1593,6 +1636,8 @@ static func _onde_tipo(t: int) -> String:
 	return "A partir de %s, onda %d." % [Fases.NOME[fase - 1], p - (fase - 1) * Balanco.PROG_POR_FASE]
 
 static func _derrotado(e: Estado, en: Dictionary) -> bool:
+	if en["k"] == "gangue":
+		return e.vencido[int(en["i"])] >= 3   # chefe da gangue vencido (3º ato do lugar)
 	if en["k"] != "chefe":
 		return false
 	var i: int = int(en["i"])
@@ -1602,7 +1647,10 @@ static func _derrotado(e: Estado, en: Dictionary) -> bool:
 static func rect_tile_bicho(k: int) -> Rect2:
 	var x0: float = 0.0
 	var y0: float = 0.0
-	if k < 5:          # famílias: fileira de cima, página esquerda
+	if k >= BICHOS_CASA:   # gangues do 3º ato: fileira de cima da segunda página de índice
+		x0 = COL_E_X + (k - BICHOS_CASA) * (TILE_W + TILE_GAP)
+		y0 = IDX_Y0 + 24.0
+	elif k < 5:          # famílias: fileira de cima, página esquerda
 		x0 = COL_E_X + k * (TILE_W + TILE_GAP)
 		y0 = IDX_Y0 + 24.0
 	elif k < 10:       # bandos de fora: fileira de baixo, página direita
@@ -1624,6 +1672,8 @@ func _bicho(alvo: CanvasItem, en: Dictionary, pe: Vector2, esc: float, _sil_: bo
 	var an: float = t * 2.0 + int(en["i"])
 	var i: int = int(en["i"])
 	match String(en["k"]):
+		"gangue":
+			Desenho.boneco(alvo, pe, esc, -1.0, 1, _pecas_rival(i), 0.0, an, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, i + Fases.TOTAL * 2, false, -1, false, false, 0, false, i)
 		"fam":
 			Desenho.boneco(alvo, pe, esc, -1.0, 1, vazio, 0.0, an, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, i, false, -1)
 		"bando":
@@ -1651,14 +1701,14 @@ static func _esc_mini(en: Dictionary) -> float:
 
 func _montar_bichos() -> void:
 	var lista: Array = entradas()
-	if pagina == 0:
-		for k in lista.size():
+	if pagina <= 1:
+		for k in range(0 if pagina == 0 else BICHOS_CASA, BICHOS_CASA if pagina == 0 else lista.size()):
 			var r: Rect2 = rect_tile_bicho(k)
 			itens.append({"id": "b%d" % k, "r": r, "on": true})
 			if not estado.viu_bicho(lista[k]["chave"]):
 				_jobs.append({"k": "bicho", "i": k, "pos": r.position + Vector2(TILE_W * 0.5, TILE_H - 40.0), "esc": _esc_mini(lista[k])})
 	else:
-		var k2: int = pagina - 1
+		var k2: int = pagina - BICHOS_PAG_INDICE
 		if not estado.viu_bicho(lista[k2]["chave"]):
 			var cb: Rect2 = _cabine_gato()
 			_jobs.append({"k": "bicho", "i": k2, "pos": Vector2(cb.get_center().x, cb.end.y - 44.0), "esc": BICHO_RETRATO_ESC * (0.85 if lista[k2]["k"] == "chefe" else 1.0)})
@@ -1699,15 +1749,63 @@ func _tile_bicho(e: Estado, k: int) -> void:
 func _pagina_bichos(e: Estado) -> void:
 	if pagina == 0:
 		_indice_bichos(e)
+	elif pagina == 1:
+		_indice_gangues(e)
 	else:
-		_ficha_bicho(e, pagina - 1)
+		_ficha_bicho(e, pagina - BICHOS_PAG_INDICE)
+
+## Segunda página do índice do bestiário: as cinco gangues do 3º ato e o que já se viu de cada uma.
+func _indice_gangues(e: Estado) -> void:
+	var lista: Array = entradas()
+	var vistas: int = 0
+	var chefes_der: int = 0
+	for g in Fases.GANGUE_NOME.size():
+		if e.viu_bicho("g%d" % g):
+			vistas += 1
+		if e.vencido[g] >= 3:
+			chefes_der += 1
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), "Gangues das ruas", [30, 26], COR_OURO)
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), "Gangues vistas: %d de 5  ·  Chefes derrotados: %d de 5" % [vistas, chefes_der], [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
+	_rotulo_bichos("Gangues do 3º ato", rect_tile_bicho(BICHOS_CASA), COR_ABA[ABA_BICHOS], "tipos, truque e chefe")
+	for k in range(BICHOS_CASA, lista.size()):
+		_tile_bicho(e, k)
+	var cx := Rect2(COL_E_X, 276.0, COL_W, 354.0)
+	_caixa(cx, "Como são os rivais", COR_ABA[ABA_BICHOS])
+	var yy: float = cx.position.y + 46.0
+	var par: Array[String] = [
+		"No terceiro ato todo inimigo é um gato rival de uma gangue: veste peças do lugar e briga com o seu time antes de ir à torre.",
+		"Cada gangue tem os seus tipos de rival, um truque e um chefe.",
+		"Derrube o líder (o de coroa) e os outros ficam abalados por %d s: %d%% menos dano e %d%% menos velocidade." % [int(Balanco.MORAL_T), int(round(Balanco.MORAL_DANO * 100.0)), int(round(Balanco.MORAL_VEL * 100.0))],
+		"Cada ficha se revela quando o rival aparece na prévia da onda. O chefe só aparece na prévia da última onda.",
+	]
+	for tx in par:
+		yy = _bloco(tx, Vector2(cx.position.x + 18.0, yy), cx.size.x - 36.0, [17, 16, 15, 14], 4, TINTA, 4.0) + 12.0
+	var y0: float = 124.0
+	for g in Fases.GANGUE_NOME.size():
+		var r := Rect2(COL_D_X, y0 + g * 100.0, COL_W, 92.0)
+		var viu: bool = e.viu_bicho("g%d" % g)
+		var cor: Color = lista[BICHOS_CASA + g]["cor"]
+		draw_rect(r, PAPEL_ESC)
+		draw_rect(r, PAPEL_BORDA, false, 2.0)
+		draw_rect(Rect2(r.position.x, r.position.y, 8.0, r.size.y), cor.darkened(0.05) if viu else Color(0.5, 0.45, 0.42))
+		_txt(Fases.GANGUE_NOME[g] if viu else "???", Vector2(r.position.x + 20.0, r.position.y + 25.0), 20, TINTA if viu else TINTA2)
+		var tipos: Array[int] = tipos_da_gangue(g)
+		var n_v: int = 0
+		for tp in tipos:
+			if e.viu_rival(g, tp):
+				n_v += 1
+		_txt("Tipos de rival vistos: %d de %d" % [n_v, tipos.size()], Vector2(r.position.x + 20.0, r.position.y + 50.0), 15, TINTA2)
+		var vc: bool = e.viu_chefe_gangue(g)
+		_txt(("Chefe: " + Fases.nome_do_chefe(Fases.TOTAL * 2 + g)) if vc else "Chefe: ainda não visto", Vector2(r.position.x + 20.0, r.position.y + 74.0), 15, TINTA if vc else TINTA2)
+		if e.vencido[g] >= 3:
+			_estrela(r.position + Vector2(r.size.x - 22.0, 22.0), COR_OURO)
 
 func _indice_bichos(e: Estado) -> void:
 	var lista: Array = entradas()
 	var vistos: int = e.bichos_vistos_total()
 	var chefes_der: int = 0
 	for en in lista:
-		if _derrotado(e, en):
+		if en["k"] == "chefe" and _derrotado(e, en):
 			chefes_der += 1
 	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), "Bestiário", [30, 26], COR_OURO)
 	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), "Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d" % [vistos, lista.size(), chefes_der, Fases.CHEFE_NOME.size()], [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
@@ -1716,7 +1814,7 @@ func _indice_bichos(e: Estado) -> void:
 	_rotulo_bichos("Chefes da casa", rect_tile_bicho(20), COR_ABA[3])
 	_rotulo_bichos("Chefes de fora", rect_tile_bicho(25), COR_ABA[ABA_FORA])
 	_rotulo_bichos("Bandos de fora", rect_tile_bicho(5), COR_ABA[ABA_FORA], "todas as famílias juntas")
-	for k in lista.size():
+	for k in BICHOS_CASA:
 		_tile_bicho(e, k)
 	var pl := Rect2(COL_E_X, 538.0, COL_W, 92.0)
 	draw_rect(pl, PAPEL_ESC)
@@ -1737,19 +1835,9 @@ func _indice_bichos(e: Estado) -> void:
 	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(vistos) / lista.size(), "Vistos: %d de %d" % [vistos, lista.size()], Color(0.4, 0.7, 0.45))
 	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(chefes_der) / Fases.CHEFE_NOME.size(), "Chefes derrotados: %d de %d" % [chefes_der, Fases.CHEFE_NOME.size()], Color(0.95, 0.72, 0.15))
 
-func _caixa(r: Rect2, titulo: String, cor: Color) -> void:
-	draw_rect(r, PAPEL_ESC)
-	draw_rect(r, PAPEL_BORDA, false, 2.0)
-	draw_rect(Rect2(r.position.x, r.position.y, 8.0, r.size.y), cor.darkened(0.05))
-	_txt(titulo, Vector2(r.position.x + 18.0, r.position.y + 19.0), 13, TINTA2)
-
-func _ficha_bicho(e: Estado, k: int) -> void:
-	var en: Dictionary = entradas()[k]
-	var viu: bool = e.viu_bicho(en["chave"])
+## Cabine do retrato (página da esquerda da ficha): o bicho, o estado "visto/derrotado" e o carimbo.
+func _cabine_ficha(e: Estado, en: Dictionary, viu: bool, cor: Color) -> void:
 	var der: bool = _derrotado(e, en)
-	var cor: Color = en["cor"]
-	# ---------------- página da esquerda
-	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else "Bicho desconhecido", [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
 	var cb: Rect2 = _cabine_gato()
 	draw_rect(Rect2(cb.position.x + 3, cb.position.y + 4, cb.size.x, cb.size.y), Color(0, 0, 0, 0.16))
 	draw_rect(cb, cor.lerp(PAPEL, 0.78) if viu else PAPEL_ESC)
@@ -1757,16 +1845,39 @@ func _ficha_bicho(e: Estado, k: int) -> void:
 	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, Q), cor.darkened(0.2).lerp(PAPEL, 0.4))
 	_moldura_px(cb, PAPEL_BORDA)
 	_cantoneiras(cb, Color(0.3, 0.17, 0.15))
-	_txt("Ficha nº %02d" % pagina, Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
-	var grupo: String = {"fam": "Família", "bando": "Bando de fora", "tipo": "Tipo de bicho", "chefe": "Chefe"}[en["k"]]
+	_txt("Ficha nº %02d" % (pagina - 1), Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
+	var grupo: String = {"fam": "Família", "bando": "Bando de fora", "tipo": "Tipo de bicho", "chefe": "Chefe", "gangue": "Gangue"}[en["k"]]
 	_txt(grupo, Vector2(cb.end.x - 160.0, cb.position.y + 18.0), 13, TINTA2, 130.0)
 	if viu:
-		_bicho(self, en, Vector2(cb.get_center().x, cb.end.y - 44.0), BICHO_RETRATO_ESC * (0.85 if en["k"] == "chefe" else 1.0), false)
+		var px: float = cb.get_center().x
+		if en["k"] == "gangue":
+			px -= 95.0
+			_retrato_chefe_gangue(e, int(en["i"]), Vector2(cb.get_center().x + 105.0, cb.end.y - 44.0))
+			_txt(Fases.nome_do_lugar(Fases.TOTAL * 2 + int(en["i"])), Vector2(cb.position.x + 34.0, cb.position.y + 38.0), 13, TINTA2)
+		_bicho(self, en, Vector2(px, cb.end.y - 44.0), BICHO_RETRATO_ESC * (0.85 if en["k"] == "chefe" else 1.0), false)
 		_txt("Derrotado" if der else "Visto", Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, COR_TEM if der else TINTA)
 	else:
 		_txt("???", Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, COR_FALTA)
 	if der:
 		_carimbo_bicho(Vector2(cb.end.x - 110.0, cb.position.y + 62.0))
+
+func _caixa(r: Rect2, titulo: String, cor: Color) -> void:
+	draw_rect(r, PAPEL_ESC)
+	draw_rect(r, PAPEL_BORDA, false, 2.0)
+	draw_rect(Rect2(r.position.x, r.position.y, 8.0, r.size.y), cor.darkened(0.05))
+	_txt(titulo, Vector2(r.position.x + 18.0, r.position.y + 19.0), 13, TINTA2)
+
+func _ficha_bicho(e: Estado, k: int) -> void:
+	if entradas()[k]["k"] == "gangue":
+		_ficha_gangue(e, k)
+		return
+	var en: Dictionary = entradas()[k]
+	var viu: bool = e.viu_bicho(en["chave"])
+	var der: bool = _derrotado(e, en)
+	var cor: Color = en["cor"]
+	# ---------------- página da esquerda
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else "Bicho desconhecido", [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
+	_cabine_ficha(e, en, viu, cor)
 	var pb := Rect2(COL_E_X, 392.0, COL_W, 100.0)
 	_caixa(pb, "O que faz", cor)
 	var ob := Rect2(COL_E_X, 500.0, COL_W, 130.0)
@@ -1800,6 +1911,17 @@ func _ficha_bicho(e: Estado, k: int) -> void:
 	else:
 		_bloco("O jogo ainda não conta quantos você derrotou.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [14, 13, 12], 2, TINTA2, 3.0)
 
+## O chefe da gangue (como no painel do mapa), só depois de visto na prévia.
+func _retrato_chefe_gangue(e: Estado, g: int, pe: Vector2) -> void:
+	if not e.viu_chefe_gangue(g):
+		return
+	var li: int = Fases.TOTAL * 2 + g
+	var base: int = Fases.chefe_base(li)
+	var vest: Array = []
+	for sl in Pecas.SLOTS:
+		vest.append(Peca.new(Pecas.CONJUNTO_PECAS[Fases.CONJUNTOS[li][0]][sl]))
+	Desenho.boneco(self, pe, 0.6 * Balanco.CHEFE_ESCALA_TIPO[base], -1.0, 1, vest, 0.0, t * 2.0 + g, false, 0.0, 1.0, false, -1, 0.0, 0, false, true, base, false, base)
+
 func _carimbo_bicho(centro: Vector2) -> void:
 	var f: Font = UIComum.FONTE
 	var pul: float = 1.0 + 0.03 * sin(t * 3.0)
@@ -1812,3 +1934,47 @@ func _carimbo_bicho(centro: Vector2) -> void:
 	draw_rect(r.grow(-6.0), tinta, false, 1.5)
 	draw_string(f, Vector2(-w * 0.5 + 11.0, 8.0), "DERROTADO", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(26), tinta)
 	UIComum.trans_fim(self)
+
+## Ficha de uma gangue do 3º ato: truque e como enfrentar à esquerda; tipos de rival e chefe à direita.
+func _ficha_gangue(e: Estado, k: int) -> void:
+	var en: Dictionary = entradas()[k]
+	var g: int = int(en["i"])
+	var viu: bool = e.viu_bicho(en["chave"])
+	var cor: Color = en["cor"]
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else "Gangue desconhecida", [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
+	_cabine_ficha(e, en, viu, cor)
+	var pb := Rect2(COL_E_X, 392.0, COL_W, 118.0)
+	_caixa(pb, ("O truque: " + GANGUE_TRUQUE_NOME[g]) if viu else "O truque", cor)
+	var ob := Rect2(COL_E_X, 518.0, COL_W, 112.0)
+	_caixa(ob, "Como enfrentar", cor)
+	var rd1 := Rect2(COL_D_X, 78.0, COL_W, 372.0)
+	var rd2 := Rect2(COL_D_X, 460.0, COL_W, 170.0)
+	_caixa(rd1, "Tipos de rival", cor)
+	_caixa(rd2, "O chefe", cor)
+	if not viu:
+		_bloco("Esta gangue ainda não apareceu numa luta. Chegue ao terceiro ato e veja a prévia da onda.", Vector2(pb.position.x + 18.0, pb.position.y + 44.0), pb.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_bloco("Quando ela aparecer, a dica fica anotada aqui.", Vector2(ob.position.x + 18.0, ob.position.y + 44.0), ob.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_txt("???", Vector2(rd1.position.x + 18.0, rd1.position.y + 48.0), 20, TINTA2)
+		_txt("???", Vector2(rd2.position.x + 18.0, rd2.position.y + 48.0), 20, TINTA2)
+		return
+	_bloco(en["oque"], Vector2(pb.position.x + 18.0, pb.position.y + 42.0), pb.size.x - 30.0, [16, 15, 14], 4, TINTA, 3.0)
+	_bloco(en["dica"], Vector2(ob.position.x + 18.0, ob.position.y + 42.0), ob.size.x - 30.0, [16, 15, 14, 13], 4, Color(0.5, 0.28, 0.02), 3.0)
+	var yy: float = rd1.position.y + 40.0
+	for tp in tipos_da_gangue(g):
+		var visto: bool = e.viu_rival(g, tp)
+		_bolinha(Vector2(rd1.position.x + 18.0, yy - 4.0), COR_TEM if visto else COR_FALTA, visto)
+		_txt(Balanco.nome_rival(g, tp) if visto else "???", Vector2(rd1.position.x + 42.0, yy + 8.0), 16, TINTA if visto else TINTA2)
+		var dica: String = Balanco.dica_rival(g, tp)
+		if dica == "":
+			dica = Campo.TIPO_DICA[tp]
+		_bloco(dica if visto else "Ainda não apareceu.", Vector2(rd1.position.x + 42.0, yy + 23.0), rd1.size.x - 60.0, [13, 12, 11], 2, TINTA2, 2.0)
+		yy += 46.0
+	var li: int = Fases.TOTAL * 2 + g
+	if not e.viu_chefe_gangue(g):
+		_bloco("O chefe aparece na prévia da última onda do lugar.", Vector2(rd2.position.x + 18.0, rd2.position.y + 44.0), rd2.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		return
+	_txt(Fases.nome_do_chefe(li), Vector2(rd2.position.x + 18.0, rd2.position.y + 44.0), 20, Color(0.5, 0.28, 0.02))
+	if e.vencido[g] >= 3:
+		_txt("Derrotado", Vector2(rd2.end.x - 80.0, rd2.position.y + 44.0), 14, COR_TEM)
+	var y2: float = _bloco(Fases.ataque_do_chefe(li), Vector2(rd2.position.x + 18.0, rd2.position.y + 68.0), rd2.size.x - 30.0, [14, 13, 12], 3, TINTA, 3.0) + 4.0
+	_bloco("Fraqueza: " + Fases.fraqueza_do_chefe(li), Vector2(rd2.position.x + 18.0, y2), rd2.size.x - 30.0, [14, 13, 12], 2, COR_TEM, 3.0)
