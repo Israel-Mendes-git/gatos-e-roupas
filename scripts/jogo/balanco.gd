@@ -177,7 +177,15 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.SUPER_MIAUJIN: [0.3, 0.6],         # execução: dano a mais em quem está abaixo de EXECUCAO_LIMIAR
 	Pecas.Conjunto.ARQUEOLOGO: [0.1, 0.25],           # esquiva
 	Pecas.Conjunto.TREINADOR: [0.04, 0.1],            # cura por abate (fração da vida máxima)
+	# lote 5
+	Pecas.Conjunto.RANGER_MIAU: [0.1, 0.25],          # ataca mais rápido (molde do Caubói)
+	Pecas.Conjunto.MIAUZILLA: [4.0, 10.0],            # espinho: dano devolvido a quem bate de perto
+	Pecas.Conjunto.KING_MIAU: [0.15, 0.4],            # dano a mais (molde do Viking)
+	Pecas.Conjunto.ARTHUR_MIAURGON: [0.25, 0.5],      # cantil: fração da vida curada uma vez
+	Pecas.Conjunto.SUBMIAUTICA: [0.2, 0.4],           # segundo fôlego: levanta uma vez com esta fração da vida
+	Pecas.Conjunto.CATCHULLU: [0.08, 0.18],           # chance de o golpe assustar o alvo
 }
+const SUSTO_KIT_T := 0.8        # Catchullu: segundos de medo de um golpe que assusta
 const EXECUCAO_LIMIAR := 0.25   # Super Miaujin: vida abaixo da qual o golpe fere mais
 const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
 
@@ -831,6 +839,63 @@ const PODER_CAPTURA_LENTO_T := 2.0
 const PODER_CAPTURA_BOLA := 0.5        # x dano base quando a bola balança
 const PODER_CAPTURA_CHEFE := 1.0       # chefe e Gigante: "não é muito eficaz"
 const PODER_CAPTURA_HER_T := 5.0
+# ---- Lote 5 da expansão
+# Megazord (Ranger Miau), versão enxuta: os aliados perto ficam "ligados" (escudo) e só o Ranger cresce
+const PODER_MEGAZORD_RAIO := 240.0
+const PODER_MEGAZORD_N := 2
+const PODER_MEGAZORD_T := 7.0
+const PODER_MEGAZORD_ESC := 1.7          # escala visual do Ranger gigante
+const PODER_MEGAZORD_ALCANCE := 30.0
+const PODER_MEGAZORD_DANO := 1.5         # dano x (isto + POR_LIGADO por aliado ligado)
+const PODER_MEGAZORD_POR_LIGADO := 0.4
+const PODER_MEGAZORD_ESCUDO_LIGADO := 0.25   # fração da vida máxima de cada aliado ligado
+const PODER_MEGAZORD_ESCUDO_RANGER := 0.5    # fração da vida máxima do próprio Ranger
+const PODER_MEGAZORD_SOLO_DANO := 1.4
+const PODER_MEGAZORD_HER_T := 4.0
+const PODER_MEGAZORD_HER_ESCUDO := 0.3
+# Sopro radioativo (Miauzilla): cone que contamina; o contaminado explode ao cair
+const PODER_SOPRO_ALCANCE := 260.0
+const PODER_SOPRO_ANGULO := 60.0         # graus, abertura total
+const PODER_SOPRO_DANO := 1.0
+const PODER_SOPRO_T := 6.0
+const PODER_SOPRO_HER_T := 4.0
+const PODER_SOPRO_EXPL_RAIO := 75.0
+const PODER_SOPRO_EXPL_DANO := 0.9
+const PODER_SOPRO_GER_FATOR := 0.85      # a cada geração a explosão fere isto do anterior
+const PODER_SOPRO_GER_MAX := 3
+# Bater no peito (King-Miau): medo em volta; o King-Miau fica mais forte e mais duro
+const PODER_BRADO_RAIO := 230.0
+const PODER_BRADO_MEDO := 2.5
+const PODER_BRADO_MEDO_ELITE := 1.5
+const PODER_BRADO_DANO := 0.5
+const PODER_BRADO_REDUZ := 0.2
+const PODER_BRADO_T := 4.0
+const PODER_BRADO_HER_MEDO := 1.5
+const MEDO_VEL := 1.2                    # velocidade de fuga x velocidade normal
+# Recompensa (Arthur Miaurgon): marca o bicho mais forte; se cair no prazo, o time é pago
+const PODER_RECOMPENSA_T := 8.0
+const PODER_RECOMPENSA_BONUS := 0.15     # dano a mais no marcado
+const PODER_RECOMPENSA_CURA := 0.15
+const PODER_RECOMPENSA_DANO := 0.2
+const PODER_RECOMPENSA_DANO_T := 4.0
+const PODER_RECOMPENSA_RECARGA := 3.0
+const PODER_RECOMPENSA_HER_T := 6.0
+const PODER_RECOMPENSA_HER_CURA := 0.08
+# Rifle de estase (Submiautica): bolha que congela o tempo do bando e guarda o dano
+const PODER_ESTASE_RAIO := 110.0
+const PODER_ESTASE_T := 4.0
+const PODER_ESTASE_LIBERA := 0.7         # fração do dano retido solta no fim
+const PODER_ESTASE_EXTRA := 0.5          # x dano base a mais, em cada congelado
+const PODER_ESTASE_CHEFE_T := 1.5
+const PODER_ESTASE_HER_T := 2.0
+const PODER_ESTASE_HER_LIBERA := 0.5
+# Loucura (Catchullu): os mais fortes atacam o inimigo mais perto deles
+const PODER_LOUCURA_N := 3
+const PODER_LOUCURA_T := 4.0
+const PODER_LOUCURA_DANO := 0.5          # dano a mais dos enlouquecidos
+const PODER_LOUCURA_CHEFE := 1.0         # x dano base do tentáculo no chefe
+const PODER_LOUCURA_HER_N := 2
+const PODER_LOUCURA_HER_T := 3.0
 # Poderes dos bichos (fantasiado com fantasia completa e chefe): avisam antes, recarga longa, intensidade menor
 const PODER_INIMIGO_FATOR := 0.9       # dano, duração e quantidade, sobre o poder do gato
 const PODER_INIMIGO_FATOR_ATO := 0.08   # soma por ato depois do primeiro

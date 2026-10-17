@@ -151,6 +151,36 @@ var carga_t: float = 0.0        # Camehamiau!: segundos que faltam para soltar o
 var carga_dur: float = 0.0
 var carga_dano: float = 0.0
 var capturado: bool = false     # aliado vindo de uma captura do Treinador: desenha como bicho
+# lote 5 da expansão
+var gigante_t: float = 0.0      # Megazord (Ranger Miau): cresce, alcança mais e não é atordoado
+var escudo: float = 0.0         # escudo temporário: absorve dano antes da vida
+var escudo_t: float = 0.0
+var medo_t: float = 0.0         # King-Miau / Catchullu: foge para o fundo e não ataca
+var radio_t: float = 0.0        # Sopro radioativo (Miauzilla): explode ao cair
+var radio_dano: float = 0.0     # dano da explosão deste radioativo
+var radio_gen: int = 1
+var radio_cadeia: bool = true   # false na herança: só a primeira explosão
+var radio_dono: Unidade = null
+var radio_conj: int = -1
+var resist_t: float = 0.0       # Bater no peito: recebe menos dano
+var resist_k: float = 0.0
+var rec_t: float = 0.0          # Recompensa (Arthur Miaurgon): este bicho tem a cabeça a prêmio
+var rec_bonus: float = 0.0
+var rec_cura: float = 0.0
+var rec_dano: float = 0.0
+var rec_recarga: float = 0.0
+var rec_conj: int = -1
+var estase_t: float = 0.0       # Rifle de estase (Submiautica): congelado no tempo, o dano fica retido
+var estase_ret: float = 0.0
+var estase_dono: Unidade = null
+var estase_libera: float = 0.0
+var estase_extra: float = 0.0
+var estase_conj: int = -1
+var louco_t: float = 0.0        # Loucura (Catchullu): ataca o inimigo mais perto, da própria equipe
+var louco_dano: float = 0.0
+var folego: float = 0.0         # kit da Submiautica: fração da vida com que levanta uma vez (0 = sem kit)
+var folego_usado: bool = false
+var susto: float = 0.0          # kit do Catchullu: chance de o golpe assustar o alvo
 # aviso do poder de bicho (fantasiado e chefe): o bicho para e carrega; a tela desenha a forma
 var aviso_t: float = 0.0        # segundos que faltam para soltar (0 = sem aviso)
 var aviso_dur: float = 0.0
@@ -193,4 +223,4 @@ func escala() -> float:
 		return Balanco.MASSINHA_PARTE_ESCALA
 	if pequeno:
 		return Balanco.GEMEO_ESCALA
-	return Balanco.TIPO_ESCALA[tipo] * (Balanco.ELITE_ESCALA if elite else 1.0)
+	return Balanco.TIPO_ESCALA[tipo] * (Balanco.ELITE_ESCALA if elite else 1.0) * (Balanco.PODER_MEGAZORD_ESC if gigante_t > 0.0 else 1.0)

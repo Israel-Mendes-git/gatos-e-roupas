@@ -204,6 +204,8 @@ func calcular(u: Unidade) -> void:
 	var alc_kit: float = 0.0
 	u.emboscada = 0.0
 	u.execucao = 0.0
+	u.folego = 0.0
+	u.susto = 0.0
 	var gelo_kit: float = 0.0
 	u.molha = false
 	u.perfura = false
@@ -410,6 +412,12 @@ func calcular(u: Unidade) -> void:
 				u.esquiva += kv
 			Pecas.BONUS_CURA_ABATE:
 				u.cura_abate += kv
+			Pecas.BONUS_ESPINHO:
+				u.espinho += kv
+			Pecas.BONUS_FOLEGO:
+				u.folego = maxf(u.folego, kv)
+			Pecas.BONUS_SUSTO:
+				u.susto += kv
 			Pecas.BONUS_APARA:
 				u.apara += kv
 				u.tiro_atordoa += Balanco.MEON_TIRO_ATORDOA[g]
@@ -752,7 +760,7 @@ func _aura_dano(donos: Array[Unidade], alvos: Array[Unidade], dt: float) -> void
 				continue
 			var dx: float = v.x - u.x
 			var dy: float = v.y - u.y
-			if dx * dx + dy * dy <= r2:
+			if dx * dx + dy * dy <= r2 and v.estase_t <= 0.0:
 				v.vida -= u.aura_dano * dt * _vul(v)
 				if v.vida <= 0.0:
 					_matar(v, u, Pecas.Marca.CICATRIZ)
@@ -908,9 +916,11 @@ func _enxerga_oculto(u: Unidade, v: Unidade) -> bool:
 
 ## Multiplicador de dano recebido: fraqueza do chefe x marca do Alvo travado.
 func _vul(v: Unidade) -> float:
-	return v.vulneravel * ((1.0 + v.marcado_bonus) if v.marcado_t > 0.0 else 1.0) * ((1.0 + v.foco_bonus) if v.foco_t > 0.0 else 1.0)
+	return v.vulneravel * ((1.0 + v.marcado_bonus) if v.marcado_t > 0.0 else 1.0) * ((1.0 + v.foco_bonus) if v.foco_t > 0.0 else 1.0) * ((1.0 + v.rec_bonus) if v.rec_t > 0.0 else 1.0)
 
 func _escolher(u: Unidade) -> Unidade:
+	if u.equipe == 1 and u.louco_t > 0.0:
+		return _alvo_louco(u)   # Loucura: só enxerga o bicho mais perto
 	# saltador e ladrão ignoram os bonecos e vão direto à torre
 	if u.equipe == 1 and (u.tipo == Unidade.Tipo.SALTADOR or u.tipo == Unidade.Tipo.LADRAO):
 		return null
@@ -970,6 +980,13 @@ func _agir(u: Unidade, dt: float) -> void:
 				_estrutura_cai(u)
 			_ev({"t": "clone_fim", "x": u.x, "y": u.y, "eq": u.equipe, "tempo": true})
 			return
+	if u.estase_t > 0.0:
+		# Rifle de estase: congelado no tempo; o dano que leva fica retido e sai no fim
+		u.estase_t -= dt
+		u.andando = false
+		if u.estase_t <= 0.0:
+			_estase_solta(u)
+		return
 	u.flash = maxf(0.0, u.flash - dt * 5.0)
 	u.golpe = maxf(0.0, u.golpe - dt)
 	u.cd -= dt * u.lento * (2.0 if u.frenesi_t > 0.0 else 1.0)
@@ -996,7 +1013,16 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.forcado_t = maxf(0.0, u.forcado_t - dt)
 	u.apagao_t = maxf(0.0, u.apagao_t - dt)
 	u.assombrado_t = maxf(0.0, u.assombrado_t - dt)
-	if u.bola_t > 0.0:
+	u.resist_t = maxf(0.0, u.resist_t - dt)
+	u.rec_t = maxf(0.0, u.rec_t - dt)
+	u.louco_t = maxf(0.0, u.louco_t - dt)
+	u.radio_t = maxf(0.0, u.radio_t - dt)
+	u.gigante_t = maxf(0.0, u.gigante_t - dt)
+	if u.escudo_t > 0.0:
+		u.escudo_t -= dt
+		if u.escudo_t <= 0.0:
+			u.escudo = 0.0
+	if u.bola_t > 0.0 or u.gigante_t > 0.0:
 		u.atordoado_t = 0.0   # Bola de espinhos: ninguém atordoa
 	u.barreira_cd = maxf(0.0, u.barreira_cd - dt)
 	if u.queima_t > 0.0:
@@ -1057,6 +1083,19 @@ func _agir(u: Unidade, dt: float) -> void:
 			u.poder_cd = maxf(u.poder_cd, Balanco.PODER_INIMIGO_INTERROMPIDO)
 			_ev({"t": "aviso_cortado", "x": u.x, "y": u.y})
 		return
+	if u.medo_t > 0.0:
+		# medo: foge para o fundo, sem atacar e sem sair da onda
+		u.medo_t -= dt
+		u.alvo = null
+		u.retarget = 0.0
+		u.andando = true
+		var sd_m: float = 1.0 if u.equipe == 1 else -1.0
+		u.x = clampf(u.x + sd_m * u.vel * Balanco.MEDO_VEL * u.lento * dt, Balanco.TORRE_X + 10.0, Balanco.INIMIGO_X0)
+		if u.aviso_t > 0.0:
+			u.aviso_t = 0.0
+			u.aviso_forma = {}
+			u.poder_cd = maxf(u.poder_cd, Balanco.PODER_INIMIGO_INTERROMPIDO)
+		return
 	if u.chefe and not _chefe_age(u, dt):
 		return
 	if u.equipe == 1 and u.poder >= 0:
@@ -1090,11 +1129,12 @@ func _agir(u: Unidade, dt: float) -> void:
 		var dx: float = a.x - u.x
 		var dy: float = a.y - u.y
 		var d: float = sqrt(dx * dx + dy * dy)
-		if d <= u.alcance:
+		var alc_ef: float = u.alcance + (Balanco.PODER_MEGAZORD_ALCANCE if u.gigante_t > 0.0 else 0.0)
+		if d <= alc_ef:
 			if u.cd <= 0.0:
 				_atacar(u, a)
 		else:
-			var passo: float = minf(mvel * u.lento * dt, d - u.alcance * 0.85)
+			var passo: float = minf(mvel * u.lento * dt, d - alc_ef * 0.85)
 			if passo > 0.0:
 				u.x += dx / d * passo
 				u.y += dy / d * passo
@@ -1109,6 +1149,8 @@ func _agir(u: Unidade, dt: float) -> void:
 			u.x += cx / cd2 * pv
 			u.y += cy / cd2 * pv
 			u.andando = true
+	elif u.equipe == 1 and u.louco_t > 0.0:
+		u.andando = false   # enlouquecido sem ninguém por perto: fica onde está
 	elif u.equipe == 1:
 		if u.x - Balanco.TORRE_X <= u.alcance:
 			if u.cd <= 0.0:
@@ -1145,6 +1187,8 @@ func _atacar(u: Unidade, a: Unidade) -> void:
 		if not u.emboscou.has(ida):
 			u.emboscou[ida] = true
 			dm *= u.emboscada   # Miau-Noir: emboscada no 1º golpe em cada inimigo
+	if u.louco_t > 0.0:
+		dm *= 1.0 + u.louco_dano   # Loucura
 	var erra: bool = u.apagao_t > 0.0 and rng.randf() < u.apagao_erra   # dentro do Apagão
 	if u.distancia:
 		projeteis.append({"x": u.x, "y": u.y, "alvo": a, "dono": u, "dano": dm, "erra": erra})
@@ -1312,10 +1356,20 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 		d *= Balanco.PODER_COCHILO_DANO
 	if alvo.lobo_t > 0.0 and alvo.lobo_prov:
 		d *= 1.0 - Balanco.PODER_LOBO_REDUCAO
+	if alvo.resist_t > 0.0:
+		d *= 1.0 - alvo.resist_k
+	if alvo.estase_t > 0.0:
+		alvo.estase_ret += d   # Rifle de estase: o golpe fica retido
+		_tele(alvo.estase_conj, "retido", d)
+		_ev({"t": "estase_bate", "x": alvo.x, "y": alvo.y})
+		return
+	d = _absorve(alvo, d)
 	_tele_marca(alvo, d)
 	alvo.vida -= d
 	alvo.sono_t = 0.0
 	alvo.flash = 1.0
+	if atk != null and atk.susto > 0.0 and not em_area and atk.equipe == 0 and alvo.vida > 0.0 and rng.randf() < atk.susto:
+		_assustar(alvo, Balanco.SUSTO_KIT_T)   # Catchullu: o golpe assusta
 	if atk != null and not em_area and atk.equipe == 0 and (atk.poder == Pecas.Poder.ESPIRITO or Pecas.Conjunto.HOLLOWMIAU in atk.herancas):
 		atk.alma = minf(Balanco.ALMA_MAX, atk.alma + Balanco.ALMA_GOLPE)   # Hollowmiau: a Alma cresce a cada golpe
 	if not alvo.laco.is_empty():
@@ -1379,9 +1433,20 @@ func _matar(u: Unidade, killer: Unidade, base: int = Pecas.Marca.CICATRIZ) -> vo
 	if u.esforco_t > 0.0 and not u.esforco_usado:
 		_esforco_levanta(u)   # Esforço máximo (Deadmiau): "ainda não!"
 		return
+	if u.folego > 0.0 and not u.folego_usado:
+		# segundo fôlego (kit da Submiautica): levanta uma vez
+		u.folego_usado = true
+		u.vida = u.vida_max * u.folego
+		u.protegido_t = maxf(u.protegido_t, 1.0)
+		_ev({"t": "folego", "x": u.x, "y": u.y})
+		return
 	u.vivo = false
 	if not u.laco.is_empty():
 		_laco_passa(u)
+	if u.rec_t > 0.0:
+		_recompensa_paga(u)
+	if u.radio_t > 0.0 and not u.chefe:
+		_radio_explode(u)
 	if u.foco_t > 0.0 and u.foco_dono != null and u.foco_dono.vivo and u.foco_recarga > 0.0:
 		u.foco_dono.poder_cd -= u.foco_recarga   # Plano de ataque: o alvo caiu, o poder volta mais cedo
 	var causa: int = _causa_da_morte(u, base)
@@ -3246,7 +3311,7 @@ func _laco_replica(alvo: Unidade, d: float) -> void:
 	var dono: Unidade = l["dono"]
 	for m in (l["membros"] as Array).duplicate():
 		var mu: Unidade = m
-		if mu == alvo or not mu.vivo:
+		if mu == alvo or not mu.vivo or mu.estase_t > 0.0:
 			continue
 		var dd: float = d * float(l["compart"]) * (Balanco.PODER_LACO_CHEFE if mu.chefe else 1.0)
 		_tele(int(l["conj"]), "dano", dd)
@@ -3436,6 +3501,285 @@ func _capturar(u: Unidade, t: Unidade) -> void:
 	nascidos_aliados.append(f)
 	_ev({"t": "captura", "x": t.x, "y": t.y, "ox": u.x, "oy": u.y})
 
+## ---------- Lote 5 da expansão ----------
+## Escudo temporário: absorve o dano antes da vida. Devolve o que sobrou.
+func _absorve(v: Unidade, d: float) -> float:
+	if v.escudo <= 0.0:
+		return d
+	var a: float = minf(v.escudo, d)
+	v.escudo -= a
+	if v.escudo <= 0.0:
+		_ev({"t": "escudo_quebra", "x": v.x, "y": v.y})
+	return d - a
+
+## Medo: o bicho foge para o fundo por `t` segundos. Chefe, Gigante, estruturas e quem já foge de carga são imunes.
+func _assustar(v: Unidade, t: float) -> bool:
+	if t <= 0.0 or not v.vivo or v.chefe or v.tipo == Unidade.Tipo.GIGANTE or v.estrutura or v.clone or v.fugindo or v.estase_t > 0.0:
+		return false
+	v.medo_t = maxf(v.medo_t, t)
+	_ev({"t": "medo", "x": v.x, "y": v.y})
+	return true
+
+## Megazord (Ranger Miau), versão enxuta: os aliados perto ficam "ligados" (escudo) e só o Ranger cresce.
+func _poder_megazord(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	if outros.is_empty():
+		return false
+	var lig: Array[Unidade] = []
+	if not em_heranca:
+		var cand: Array[Unidade] = []
+		for v in meus:
+			if v != u and v.vivo and not v.estrutura and not v.clone and _dentro(v, u.x, u.y, Balanco.PODER_MEGAZORD_RAIO):
+				cand.append(v)
+		cand.sort_custom(func(a: Unidade, b: Unidade) -> bool: return (a.x - u.x) * (a.x - u.x) + (a.y - u.y) * (a.y - u.y) < (b.x - u.x) * (b.x - u.x) + (b.y - u.y) * (b.y - u.y))
+		for k in mini(Balanco.PODER_MEGAZORD_N, cand.size()):
+			lig.append(cand[k])
+	var dur: float = (Balanco.PODER_MEGAZORD_HER_T if em_heranca else Balanco.PODER_MEGAZORD_T) * _fi
+	var frac_r: float = Balanco.PODER_MEGAZORD_HER_ESCUDO
+	var buff: float = 0.0
+	if not em_heranca:
+		if lig.is_empty():
+			frac_r = Balanco.PODER_MEGAZORD_ESCUDO_RANGER
+			buff = Balanco.PODER_MEGAZORD_SOLO_DANO - 1.0
+		else:
+			frac_r = Balanco.PODER_MEGAZORD_ESCUDO_RANGER
+			buff = Balanco.PODER_MEGAZORD_DANO + Balanco.PODER_MEGAZORD_POR_LIGADO * lig.size() - 1.0
+	u.gigante_t = dur
+	u.escudo = maxf(u.escudo, u.vida_max * frac_r)
+	u.escudo_t = dur
+	var dado: float = u.vida_max * frac_r
+	if buff > 0.0:
+		u.buff_dano_t = maxf(u.buff_dano_t, dur)
+		u.buff_dano = maxf(u.buff_dano, buff)
+	pontos.append(Vector2(u.x, u.y))
+	for g in lig:
+		g.escudo = maxf(g.escudo, g.vida_max * Balanco.PODER_MEGAZORD_ESCUDO_LIGADO)
+		g.escudo_t = dur
+		dado += g.vida_max * Balanco.PODER_MEGAZORD_ESCUDO_LIGADO
+		pontos.append(Vector2(g.x, g.y))
+	_tele(u.poder_conj, "escudo", dado)
+	_tele(u.poder_conj, "ligados", float(lig.size()))
+	extra["dur"] = dur
+	extra["n"] = lig.size()
+	return true
+
+## Sopro radioativo (Miauzilla): cone no inimigo mais perto; quem leva fica radioativo e explode ao cair.
+func _poder_sopro(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var alvo: Unidade = _mais_perto(u, outros, Balanco.PODER_SOPRO_ALCANCE)
+	if alvo == null:
+		return false
+	var ang: float = atan2(alvo.y - u.y, alvo.x - u.x)
+	var meia: float = deg_to_rad(Balanco.PODER_SOPRO_ANGULO) * 0.5
+	var dur: float = (Balanco.PODER_SOPRO_HER_T if em_heranca else Balanco.PODER_SOPRO_T) * _fi
+	for v in outros.duplicate():
+		if v.estrutura or not v.vivo:
+			continue
+		var dx: float = v.x - u.x
+		var dy: float = v.y - u.y
+		var d: float = sqrt(dx * dx + dy * dy)
+		if d > Balanco.PODER_SOPRO_ALCANCE:
+			continue
+		if d > 1.0 and absf(angle_difference(ang, atan2(dy, dx))) > meia:
+			continue
+		pontos.append(Vector2(v.x, v.y))
+		_dano_poder(u, v, base * Balanco.PODER_SOPRO_DANO)
+		if v.vivo:
+			v.radio_t = maxf(v.radio_t, dur)
+			v.radio_dano = base * Balanco.PODER_SOPRO_EXPL_DANO
+			v.radio_gen = 1
+			v.radio_cadeia = not em_heranca
+			v.radio_dono = u
+			v.radio_conj = u.poder_conj
+	extra["ang"] = ang
+	extra["alc"] = Balanco.PODER_SOPRO_ALCANCE
+	extra["abre"] = Balanco.PODER_SOPRO_ANGULO
+	return true
+
+## Quem morre radioativo explode e contamina os vizinhos (cada geração fere menos).
+func _radio_explode(u: Unidade) -> void:
+	var lista: Array[Unidade] = inimigos if u.equipe == 1 else aliados
+	var dono: Unidade = u.radio_dono if u.radio_dono != null else u
+	var c0: int = _conj_tele
+	var e0: int = _eq_tele
+	_conj_tele = u.radio_conj
+	_eq_tele = 0
+	_tele(u.radio_conj, "explosoes", 1.0)
+	_ev({"t": "radio_explode", "x": u.x, "y": u.y, "raio": Balanco.PODER_SOPRO_EXPL_RAIO})
+	var dano: float = u.radio_dano
+	for v in lista.duplicate():
+		if v == u or not v.vivo or v.estrutura or v.clone or not _dentro(v, u.x, u.y, Balanco.PODER_SOPRO_EXPL_RAIO):
+			continue
+		if u.radio_cadeia and u.radio_gen < Balanco.PODER_SOPRO_GER_MAX:
+			v.radio_t = maxf(v.radio_t, Balanco.PODER_SOPRO_T)
+			v.radio_dano = dano * Balanco.PODER_SOPRO_GER_FATOR
+			v.radio_gen = u.radio_gen + 1
+			v.radio_cadeia = true
+			v.radio_dono = u.radio_dono
+			v.radio_conj = u.radio_conj
+		_dano_poder(dono, v, dano)
+	_conj_tele = c0
+	_eq_tele = e0
+
+## Bater no peito (King-Miau): medo em volta; ele bate mais forte e apanha menos.
+func _poder_brado(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var perto: int = 0
+	for v in outros:
+		if v.estrutura or v.clone or not _dentro(v, u.x, u.y, Balanco.PODER_BRADO_RAIO):
+			continue
+		perto += 1
+		var t: float = Balanco.PODER_BRADO_HER_MEDO if em_heranca else (Balanco.PODER_BRADO_MEDO_ELITE if v.elite else Balanco.PODER_BRADO_MEDO)
+		if _assustar(v, t):
+			pontos.append(Vector2(v.x, v.y))
+			_tele(u.poder_conj, "assustados", 1.0)
+	if perto == 0:
+		return false
+	if not em_heranca:
+		var dur: float = Balanco.PODER_BRADO_T * _fi
+		u.buff_dano_t = maxf(u.buff_dano_t, dur)
+		u.buff_dano = maxf(u.buff_dano, Balanco.PODER_BRADO_DANO)
+		u.resist_t = dur
+		u.resist_k = Balanco.PODER_BRADO_REDUZ
+	extra["raio"] = Balanco.PODER_BRADO_RAIO
+	return true
+
+## Recompensa (Arthur Miaurgon): cabeça a prêmio no bicho de maior vida (de preferência não chefe).
+func _poder_recompensa(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var alvo: Unidade = null
+	for v in outros:
+		if v.estrutura or v.clone:
+			continue
+		if alvo == null or (alvo.chefe and not v.chefe) or (alvo.chefe == v.chefe and v.vida > alvo.vida):
+			alvo = v
+	if alvo == null:
+		return false
+	var dur: float = Balanco.PODER_RECOMPENSA_HER_T if em_heranca else Balanco.PODER_RECOMPENSA_T
+	alvo.rec_t = dur * _fi
+	alvo.rec_bonus = Balanco.PODER_RECOMPENSA_BONUS
+	alvo.rec_cura = Balanco.PODER_RECOMPENSA_HER_CURA if em_heranca else Balanco.PODER_RECOMPENSA_CURA
+	alvo.rec_dano = 0.0 if em_heranca else Balanco.PODER_RECOMPENSA_DANO
+	alvo.rec_recarga = 0.0 if em_heranca else Balanco.PODER_RECOMPENSA_RECARGA
+	alvo.rec_conj = u.poder_conj
+	pontos.append(Vector2(alvo.x, alvo.y))
+	extra["dur"] = alvo.rec_t
+	return true
+
+## O bicho com a cabeça a prêmio caiu no prazo: o time é pago.
+func _recompensa_paga(u: Unidade) -> void:
+	if u.equipe != 1:
+		return
+	var c0: int = _conj_tele
+	var e0: int = _eq_tele
+	_conj_tele = u.rec_conj
+	_eq_tele = 0
+	for g in aliados:
+		if not g.vivo or g.estrutura or g.clone:
+			continue
+		var antes: float = g.vida
+		g.vida = minf(g.vida_max, g.vida + g.vida_max * u.rec_cura)
+		_tele(u.rec_conj, "cura", g.vida - antes)
+		if u.rec_dano > 0.0:
+			g.buff_dano_t = maxf(g.buff_dano_t, Balanco.PODER_RECOMPENSA_DANO_T)
+			g.buff_dano = maxf(g.buff_dano, u.rec_dano)
+		if u.rec_recarga > 0.0 and g.poder >= 0:
+			g.poder_cd -= u.rec_recarga
+	_tele(u.rec_conj, "pagos", 1.0)
+	_ev({"t": "recompensa_paga", "x": u.x, "y": u.y})
+	_conj_tele = c0
+	_eq_tele = e0
+
+## Rifle de estase (Submiautica): bolha no maior bando; quem está dentro congela e o dano fica retido.
+func _poder_estase(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var cs: Array = _aglomerados(outros, Balanco.PODER_ESTASE_RAIO, 1)
+	if cs.is_empty():
+		return false
+	var dur: float = (Balanco.PODER_ESTASE_HER_T if em_heranca else Balanco.PODER_ESTASE_T) * _fi
+	for v in outros:
+		if v.estrutura or v.clone or v.estase_t > 0.0 or not _dentro(v, cs[0].x, cs[0].y, Balanco.PODER_ESTASE_RAIO):
+			continue
+		v.estase_t = minf(dur, Balanco.PODER_ESTASE_CHEFE_T) if v.chefe else dur
+		v.estase_ret = 0.0
+		v.estase_dono = u
+		v.estase_libera = Balanco.PODER_ESTASE_HER_LIBERA if em_heranca else Balanco.PODER_ESTASE_LIBERA
+		v.estase_extra = 0.0 if em_heranca else base * Balanco.PODER_ESTASE_EXTRA
+		v.estase_conj = u.poder_conj
+		if v.aviso_t > 0.0:
+			v.aviso_t = 0.0
+			v.aviso_forma = {}
+		pontos.append(Vector2(v.x, v.y))
+	if pontos.is_empty():
+		return false
+	extra["x"] = cs[0].x
+	extra["y"] = cs[0].y
+	extra["raio"] = Balanco.PODER_ESTASE_RAIO
+	extra["dur"] = dur
+	return true
+
+## Fim da estase: o dano retido sai de uma vez.
+func _estase_solta(u: Unidade) -> void:
+	var dono: Unidade = u.estase_dono
+	var dmg: float = u.estase_ret * u.estase_libera + u.estase_extra
+	u.estase_ret = 0.0
+	_tele(u.estase_conj, "liberado", dmg)
+	_tele(u.estase_conj, "dano", dmg)
+	_ev({"t": "estase_fim", "x": u.x, "y": u.y})
+	if dmg <= 0.0:
+		return
+	u.vida -= dmg
+	u.sono_t = 0.0
+	u.flash = 1.0
+	_ev({"t": "golpe", "x": u.x, "y": u.y, "dano": dmg, "eq": u.equipe})
+	if u.vida <= 0.0:
+		_tele(u.estase_conj, "abates", 1.0)
+		_matar(u, dono if dono != null and dono.vivo else null, Pecas.Marca.CICATRIZ)
+
+## Loucura (Catchullu): os bichos mais fortes (não chefe) atacam o inimigo mais perto deles; o chefe leva um tentáculo.
+func _poder_loucura(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
+	var cand: Array[Unidade] = []
+	var chefes: Array[Unidade] = []
+	for v in outros:
+		if v.estrutura or v.clone:
+			continue
+		if v.chefe:
+			chefes.append(v)
+		elif v.tipo != Unidade.Tipo.BOMBA and not v.fugindo:
+			cand.append(v)
+	if outros.size() < 2 and chefes.is_empty():
+		return false
+	if cand.is_empty() and chefes.is_empty():
+		return false
+	cand.sort_custom(func(a: Unidade, b: Unidade) -> bool: return a.vida > b.vida)
+	var dur: float = (Balanco.PODER_LOUCURA_HER_T if em_heranca else Balanco.PODER_LOUCURA_T) * _fi
+	for k in mini(Balanco.PODER_LOUCURA_HER_N if em_heranca else Balanco.PODER_LOUCURA_N, cand.size()):
+		var v: Unidade = cand[k]
+		v.louco_t = dur
+		v.louco_dano = Balanco.PODER_LOUCURA_DANO
+		v.alvo = null
+		v.retarget = 0.0
+		if v.aviso_t > 0.0:
+			v.aviso_t = 0.0
+			v.aviso_forma = {}
+		pontos.append(Vector2(v.x, v.y))
+		_tele(u.poder_conj, "loucos", 1.0)
+	for c in chefes:
+		pontos.append(Vector2(c.x, c.y))
+		_dano_poder(u, c, base * Balanco.PODER_LOUCURA_CHEFE)
+	extra["dur"] = dur
+	return true
+
+## O inimigo vivo mais perto de um enlouquecido (da própria equipe dele).
+func _alvo_louco(u: Unidade) -> Unidade:
+	var melhor: Unidade = null
+	var md: float = 1e12
+	for v in inimigos:
+		if v == u or not v.vivo or v.estrutura or v.clone:
+			continue
+		var dx: float = v.x - u.x
+		var dy: float = v.y - u.y
+		var d2: float = dx * dx + dy * dy
+		if d2 < md:
+			md = d2
+			melhor = v
+	return melhor
+
 func _usar_poder_i(u: Unidade) -> bool:
 	var meus: Array[Unidade] = aliados if u.equipe == 0 else inimigos
 	var outros: Array[Unidade] = []
@@ -3600,6 +3944,24 @@ func _usar_poder_i(u: Unidade) -> bool:
 		Pecas.Poder.CAPTURA:
 			if not _poder_captura(u, meus, outros, base, pontos, extra):
 				return false
+		Pecas.Poder.MEGAZORD:
+			if not _poder_megazord(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.SOPRO:
+			if not _poder_sopro(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.BRADO:
+			if not _poder_brado(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.RECOMPENSA:
+			if not _poder_recompensa(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.ESTASE:
+			if not _poder_estase(u, meus, outros, base, pontos, extra):
+				return false
+		Pecas.Poder.LOUCURA:
+			if not _poder_loucura(u, meus, outros, base, pontos, extra):
+				return false
 		Pecas.Poder.ATORDOA, Pecas.Poder.EMPURRA, Pecas.Poder.GIRO:
 			if not _poder_atordoa_empurra_giro(u, meus, outros, base, pontos, extra):
 				return false
@@ -3654,7 +4016,7 @@ func _zonas(dt: float) -> void:
 				z["x"] = float(z["x"]) + para.x / d * m
 				z["y"] = float(z["y"]) + para.y / d * m
 		for v in alvos:
-			if not v.vivo or not _dentro(v, float(z["x"]), float(z["y"]), raio):
+			if not v.vivo or v.estase_t > 0.0 or not _dentro(v, float(z["x"]), float(z["y"]), raio):
 				continue
 			v.vida -= float(z["dps"]) * dt * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0)
 			v.flash = maxf(v.flash, 0.4)
@@ -3666,6 +4028,14 @@ func _dano_poder(u: Unidade, v: Unidade, dano: float) -> float:
 	if not v.vivo:
 		return 0.0
 	var d: float = dano * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0) * (Balanco.PODER_COCHILO_DANO if v.cochilo_t > 0.0 else 1.0) * ((1.0 - Balanco.PODER_LOBO_REDUCAO) if v.lobo_t > 0.0 and v.lobo_prov else 1.0)
+	if v.resist_t > 0.0:
+		d *= 1.0 - v.resist_k
+	if v.estase_t > 0.0:
+		v.estase_ret += d
+		_tele(v.estase_conj, "retido", d)
+		_ev({"t": "estase_bate", "x": v.x, "y": v.y})
+		return 0.0
+	d = _absorve(v, d)
 	_tele_marca(v, d)
 	_tele(_conj_tele, "dano", d)
 	v.vida -= d

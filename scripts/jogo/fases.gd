@@ -98,7 +98,9 @@ const CONJUNTOS: Array = [
 		Pecas.Conjunto.FENIX_MIAUSSIMO, Pecas.Conjunto.LEONARMIAU, Pecas.Conjunto.RAFAMIAU],
 	[Pecas.Conjunto.REI, Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.VIKING, Pecas.Conjunto.GELO, Pecas.Conjunto.MIMIAU, Pecas.Conjunto.MIAUCRAFT, Pecas.Conjunto.MEON,
 		Pecas.Conjunto.HOLLOWMIAU, Pecas.Conjunto.SILKMIAU,
-		Pecas.Conjunto.SUPER_MIAUJIN, Pecas.Conjunto.ARQUEOLOGO, Pecas.Conjunto.TREINADOR],   # as três últimas são do 3º ato: caem aqui até ele existir
+		Pecas.Conjunto.SUPER_MIAUJIN, Pecas.Conjunto.ARQUEOLOGO, Pecas.Conjunto.TREINADOR,   # as três últimas são do 3º ato: caem aqui até ele existir
+		Pecas.Conjunto.RANGER_MIAU, Pecas.Conjunto.MIAUZILLA, Pecas.Conjunto.KING_MIAU, Pecas.Conjunto.ARTHUR_MIAURGON,
+		Pecas.Conjunto.SUBMIAUTICA, Pecas.Conjunto.CATCHULLU],   # lote 5, também do 3º ato
 ]
 
 ## Tipos de peça que os inimigos comuns da fase podem vestir, por espaço:
