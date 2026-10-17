@@ -294,13 +294,13 @@ static func _manto_hollow() -> Array:
 ## Máscara da Hornet (13x17, bitmap da referência): casco largo no alto que afina até o queixo pontudo, dois chifres grossos em U (diapasão gordo)
 ## e dois olhos pretos triangulares grandes. W osso, L sombra fria do osso, K olho; cobre a cabeça inteira (ancorada no queixo, em x 8).
 const _MASCARA_SILK := [
-	".oo.......oo.",
+	"..oo.....oo..",
+	".oWWo...oWLo.",
+	"oWWo.....oWLo",
 	"oWWo.....oWLo",
 	"oWWo.....oWLo",
 	"oWWLo...oWWLo",
-	".oWWo...oWLo.",
-	".oWWLo.oWWLo.",
-	"..oWWoooWWLo.",
+	".oWWLoooWWLo.",
 	"..oWWWWWWWo..",
 	".oWWWWWWWWWo.",
 	".oWKKWWWKKWo.",

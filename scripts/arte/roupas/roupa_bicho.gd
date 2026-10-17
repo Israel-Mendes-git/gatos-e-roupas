@@ -501,10 +501,10 @@ const _CHAPEU: Array = [
 		".oddddddo.."]},
 	# 45 silkmiau: máscara da Hornet (diapasão gordo: chifres grossos em U, casco que afina até o queixo, olhos triangulares)
 	{"cheio": true, "l": [
-		".oo.....oo.",
-		"owwo...owWo",
+		"..oo...oo..",
 		".owwo.owWo.",
-		"..owwowWo..",
+		"owwo...owWo",
+		"owwwo.owwWo",
 		".owwwwwwwo.",
 		"owkkkwkkkwo",
 		".owkkwkkwo.",
