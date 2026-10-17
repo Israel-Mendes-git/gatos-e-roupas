@@ -839,6 +839,8 @@ func _escolher_invasao(f: int) -> void:
 func _escolher_fase(f: int, invasao: bool = false, rejogo_casa: bool = false) -> void:
 	if f < 1 or f > estado.fase_liberada:
 		return
+	if mapa_casa != null and mapa_casa.vista_ruas() and not estado.lugar_aberto(3, f):
+		return   # Arena e Telhados ainda fechados
 	if invasao:
 		if not estado.campanha_vencida():
 			return

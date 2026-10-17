@@ -63,6 +63,22 @@ const VIZINHOS_FORA: Array = [
 	[[], [], [1, 2], []],
 	[[], [3], [], [1]],
 ]
+# Terceiro ato: o bairro em corte, de cima. Mesma ordem das tabelas de Fases (10..14):
+# Mercadão do Peixe, Ferro-velho, Beco do Fliperama, Arena da Praça, Telhados e Antenas.
+const RUAS: Array[Rect2] = [
+	Rect2(28, 300, 224, 176),    # Mercadão: à esquerda
+	Rect2(596, 240, 240, 140),   # Ferro-velho: ao fundo, à direita
+	Rect2(300, 444, 236, 136),   # Beco: no meio, embaixo
+	Rect2(300, 240, 236, 148),   # Arena: na praça central
+	Rect2(300, 108, 236, 96),    # Telhados: no alto
+]
+const VIZINHOS_RUAS: Array = [
+	[[], [4, 3], [], []],
+	[[4, 3], [], [], []],
+	[[1], [2], [4], []],
+	[[1], [2], [5], [3]],
+	[[], [], [], [4]],
+]
 const FORA_CX := 444.0         # eixo da casa vista de fora; corpo de x = 288 a 600, chão em y = 520
 const FORA_TOPO := 140.0       # ponta do telhado
 const FORA_BASE := 284.0       # base do telhado
@@ -122,6 +138,7 @@ const LAMPADA_X: Array[float] = [112.0, 100.0, 216.0, 72.0, 232.0]
 ## `_fora` = mostra o lado de fora (segundo ato); `_ato` = ato em curso quando o mapa foi aberto.
 static var _fora: bool = false
 static var _ato: int = 1
+static var _ruas: bool = false   # terceiro ato: a vista das ruas (sempre junto com `_fora`)
 
 var p                       # o `principal` (Control); sem tipo para não depender da ordem de carga
 var cv: CanvasItem
@@ -184,6 +201,7 @@ func reiniciar() -> void:
 	_ult = 0
 	_ato = p.estado.ato_atual() if p != null and p.estado != null else 1
 	_fora = _ato > 1      # a vista começa no lugar onde o jogador joga agora
+	_ruas = _ato >= 3
 
 static func _ruido(n: float) -> float:
 	return fposmod(sin(n * 12.9898) * 43758.5453, 1.0)
@@ -194,14 +212,24 @@ func _sincronizar() -> void:
 	_ato = p.estado.ato_atual()
 	if _ato <= 1:
 		_fora = false
+	if _ato < 3:
+		_ruas = false
 
 ## A vista de fora está na tela? (a invasão sem fim e o atalho I só valem para a casa)
 func vista_fora() -> bool:
 	return _fora
 
+## A vista das ruas (3º ato) está na tela?
+func vista_ruas() -> bool:
+	return _ruas
+
+## Ato que a vista mostra: 1 a casa, 2 o lado de fora, 3 as ruas.
+static func _av() -> int:
+	return 3 if _ruas else (2 if _fora else 1)
+
 ## Áreas clicáveis da vista em uso.
 static func lugares() -> Array[Rect2]:
-	return FORA if _fora else COMODOS
+	return RUAS if _ruas else (FORA if _fora else COMODOS)
 
 ## Casa vista no segundo ato: dá para passar o mouse e ver os cômodos, mas não para iniciar um.
 static func _casa_so_para_ver() -> bool:
@@ -236,7 +264,17 @@ func casa_rejogo() -> bool:
 func alternar_vista() -> void:
 	if _ato <= 1:
 		return
-	_fora = not _fora
+	if _ato >= 3:
+		# casa -> lado de fora -> ruas -> casa
+		if _ruas:
+			_ruas = false
+			_fora = false
+		elif _fora:
+			_ruas = true
+		else:
+			_fora = true
+	else:
+		_fora = not _fora
 	foco = 0
 	escolhido = 0
 	_ult = 0
@@ -261,7 +299,7 @@ func botao_troca_vista(bt: int) -> bool:
 
 ## Lugar de fora (1..5) que já foi vencido no 2º ato e por isso oferece a invasão sem fim.
 func invasao_fora_liberada(f: int) -> bool:
-	return f >= 1 and f <= Fases.TOTAL and p.estado.vencido[f - 1] >= 2
+	return not _ruas and f >= 1 and f <= Fases.TOTAL and p.estado.vencido[f - 1] >= 2
 
 ## Qual botão do mapa está sob o ponto (só existem com a campanha vencida).
 static func botao_em(pos: Vector2, vencida: bool) -> int:
@@ -283,7 +321,7 @@ static func proximo(liberada: int) -> int:
 ## Cômodo liberado para onde a seta `d` leva a partir de `atual` (tabela VIZINHOS); 0 se não houver.
 static func vizinho(atual: int, d: Vector2i, liberada: int) -> int:
 	var di: int = 0 if d.x < 0 else (1 if d.x > 0 else (2 if d.y < 0 else 3))
-	var tabela: Array = VIZINHOS_FORA if _fora else VIZINHOS
+	var tabela: Array = VIZINHOS_RUAS if _ruas else (VIZINHOS_FORA if _fora else VIZINHOS)
 	for f in tabela[atual - 1][di]:
 		if f <= liberada:
 			return f
@@ -312,7 +350,7 @@ func destaque() -> int:
 	if _fora:
 		# sem ordem: sugere o primeiro lugar de fora que ainda falta no ato atual
 		for i in Fases.TOTAL:
-			if est.vencido[i] < _ato:
+			if est.vencido[i] < _av() and est.lugar_aberto(_av(), i + 1):
 				return i + 1
 		return 1
 	return proximo(est.fase_liberada)
@@ -336,7 +374,7 @@ func tecla(k: int) -> int:
 		KEY_DOWN, KEY_S:
 			d = Vector2i(0, 1)
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			return cur if cur <= est.fase_liberada else 0
+			return cur if cur <= est.fase_liberada and (not _ruas or est.lugar_aberto(3, cur)) else 0
 		_:
 			return 0
 	var n: int = vizinho(cur, d, est.fase_liberada)
@@ -396,7 +434,9 @@ func desenhar() -> void:
 		if so and not _anim.get("so" + str(id), false):
 			Som.tocar("hover", 1.0, 0.05, -10.0)
 		_anim["so" + str(id)] = so
-	if _fora:
+	if _ruas:
+		_cena_ruas(t, est, d)
+	elif _fora:
 		_cena_fora(t, est, d)
 	else:
 		_cena_casa(t, est, d)
@@ -474,10 +514,15 @@ func _entrada_comodo(d: int) -> void:
 	_moldura(r, 4.0, Color(1.0, 0.95, 0.7, k))
 func _cabecalho() -> void:
 	var est: Estado = p.estado
-	Desenho.texto(cv, "Lado de fora da casa" if _fora else "Mapa da casa", Vector2(0, 48), 32, Color(1, 0.92, 0.75), 800.0, 6)
+	Desenho.texto(cv, "As ruas do bairro" if _ruas else ("Lado de fora da casa" if _fora else "Mapa da casa"), Vector2(0, 48), 32, Color(1, 0.92, 0.75), 800.0, 6)
 	var sub: String = "Escolha um cômodo: cada um tem %d ondas e um chefe." % Balanco.ONDAS_TOTAIS
 	var cor: Color = Color(1, 1, 1, 0.8)
-	if _fora:
+	if _ruas:
+		sub = "Terceiro ato: siga a trilha dourada, do Mercadão aos Telhados. Cada lugar tem %d ondas e um chefe." % Balanco.ONDAS_TOTAIS
+		if est.tudo_vencido():
+			sub = "Tudo vencido! Clique num lugar e escolha: Jogar de novo."
+			cor = Desenho.DOURADO
+	elif _fora:
 		sub = "Segundo ato: escolha um lugar, na ordem que quiser. Cada um tem %d ondas e um chefe." % Balanco.ONDAS_TOTAIS
 		if est.tudo_vencido():
 			sub = "Tudo vencido! Clique num lugar e escolha: Jogar de novo ou Invasão sem fim."
@@ -929,7 +974,7 @@ func _cena_fora(t: float, est: Estado, d: int) -> void:
 func _lugar_fora(f: int, t: float, est: Estado, d: int) -> void:
 	var fi: int = f - 1
 	var r: Rect2 = FORA[fi]
-	var feito: bool = est.vencido[fi] >= _ato
+	var feito: bool = est.vencido[fi] >= _av()
 	var hov: bool = d == f
 	_o = r.position + Vector2(4, 4)
 	_iw = r.size.x - 8.0
@@ -942,7 +987,7 @@ func _lugar_fora(f: int, t: float, est: Estado, d: int) -> void:
 			_rr(r, Color(1.0, 0.88, 0.5, 0.12 + 0.04 * sin(t * 6.0)))
 	var b: Vector3 = BICHO_FORA[fi]
 	var pulo: float = absf(sin(t * 7.0)) * 8.0 if hov else 0.0
-	Desenho.boneco(cv, Vector2(b.x, b.y - pulo), b.z, -1.0, 1, VAZIO, 0.0, t * 2.0 + f, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, fi + Fases.TOTAL, false, -1, false, false, 0, false, fi if _ato >= 3 else -1)
+	Desenho.boneco(cv, Vector2(b.x, b.y - pulo), b.z, -1.0, 1, VAZIO, 0.0, t * 2.0 + f, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, fi + Fases.TOTAL, false, -1, false, false, 0, false, -1)
 	_placa_fora(fi, feito, t)
 	if feito:
 		_selo()
@@ -951,7 +996,7 @@ func _lugar_fora(f: int, t: float, est: Estado, d: int) -> void:
 
 ## Plaquinha de madeira com o nome e, logo abaixo, o estado: "falta" (dourado, pulsando) ou "feito" (verde).
 func _placa_fora(fi: int, feito: bool, t: float) -> void:
-	var nome: String = Fases.nome_do_lugar(fi + Fases.TOTAL * (_ato - 1))
+	var nome: String = Fases.nome_do_lugar(fi + Fases.TOTAL * (_av() - 1))
 	var off: Vector2 = PLACA_FORA[fi]
 	var w: float = ceilf((_largura(nome, 14) + 16.0) / 4.0) * 4.0
 	var x: float = FORA[fi].position.x + off.x
@@ -1225,13 +1270,231 @@ func _rua_fora() -> void:
 	_r(280, 428, 16, 8, Color(1.0, 0.94, 0.65))
 	_r(236, 540, 100, 4, Color(1.0, 0.9, 0.5, 0.1))
 
+# ------------------------------------------------------------------ as ruas (terceiro ato)
+## O bairro em corte: cinco lugares ligados por ruas; a trilha dourada vai do 1º ao 5º lugar.
+func _cena_ruas(t: float, est: Estado, d: int) -> void:
+	_ceu(t)
+	_r(0, 96, 1280, 508, Color(0.10, 0.11, 0.17))
+	_r(0, 96, 1280, 4, Color(0.2, 0.22, 0.32))
+	for ix in range(0, 1280, 8):
+		for iy in range(104, 600, 12):
+			var n: float = _ruido(ix * 0.61 + iy * 1.27)
+			if n > 0.86:
+				_r(ix, iy, 4, 4, Color(0.15, 0.16, 0.24))
+			elif n < 0.05:
+				_r(ix, iy, 8, 4, Color(0.07, 0.08, 0.13))
+	_ruas_asfalto()
+	_trilha(t)
+	for f in range(1, Fases.TOTAL + 1):
+		_lugar_ruas(f, t, est, d)
+	if d >= 1:
+		_moldura(RUAS[d - 1].grow(4.0), 4.0, Color(0.97, 0.97, 1.0))
+	_marca_escolhido(RUAS, t)
+
+func _ruas_asfalto() -> void:
+	var asf := Color(0.17, 0.17, 0.23)
+	var meio := Color(0.46, 0.46, 0.52)
+	# meio-fios primeiro e asfalto depois, para os cruzamentos se unirem
+	_r(0, 392, 1280, 40, meio)
+	_r(396, 200, 44, 48, meio)
+	_r(396, 424, 44, 24, meio)
+	_r(694, 376, 44, 24, meio)
+	_r(0, 396, 1280, 32, asf)
+	_r(402, 200, 32, 48, asf)
+	_r(402, 428, 32, 20, asf)
+	_r(700, 376, 32, 24, asf)
+	for x in range(0, 1280, 56):
+		_r(x, 396, 4, 4, Color(0.22, 0.22, 0.29))
+		_r(x + 24, 424, 4, 4, Color(0.22, 0.22, 0.29))
+	# faixa de pedestres no cruzamento da Arena
+	for k in 4:
+		_r(406 + k * 8, 388, 4, 8, Color(0.8, 0.8, 0.85, 0.55))
+	# postes de luz nos cantos
+	for px in [276.0, 660.0]:
+		_disco(px, 384.0, 20.0, Color(1.0, 0.9, 0.5, 0.06))
+		_r(px - 2, 384, 4, 12, C_CONTORNO)
+		_r(px - 4, 380, 8, 4, Color(1.0, 0.94, 0.65))
+
+## Trilha dourada pontilhada: do Mercadão ao Ferro-velho, daí ao Beco, à Arena e aos Telhados.
+func _trilha(t: float) -> void:
+	var trechos: Array = [[252.0, 412.0, 716.0, 412.0], [716.0, 380.0, 716.0, 412.0], [418.0, 204.0, 418.0, 240.0], [418.0, 388.0, 418.0, 444.0]]
+	var kk: int = 0
+	for s in trechos:
+		var comp: float = maxf(absf(s[2] - s[0]), absf(s[3] - s[1]))
+		var n: int = int(comp / 16.0)
+		for k in range(0, n + 1):
+			var u: float = float(k) / maxf(float(n), 1.0)
+			var px: float = snappedf(lerpf(s[0], s[2], u), 4.0)
+			var py: float = snappedf(lerpf(s[1], s[3], u), 4.0)
+			var br: float = 0.5 + 0.5 * sin(t * 5.0 - float(kk) * 0.5)
+			_r(px - 4, py - 4, 8, 8, C_CONTORNO)
+			_r(px - 2, py - 2, 4, 4, C_OURO.lerp(Color(1.0, 0.97, 0.7), br))
+			kk += 1
+
+## Cada lugar: quadro com o tema, véu se falta ou se está fechado, bicho da gangue, plaquinha, número e selo.
+func _lugar_ruas(f: int, t: float, est: Estado, d: int) -> void:
+	var fi: int = f - 1
+	var r: Rect2 = RUAS[fi]
+	var aberto: bool = est.lugar_aberto(3, f)
+	var feito: bool = est.vencido[fi] >= 3
+	var hov: bool = d == f
+	_o = r.position + Vector2(4, 4)
+	_iw = r.size.x - 8.0
+	_ih = r.size.y - 8.0
+	_rr(r.grow(4.0), C_CONTORNO)
+	_tema_ruas(fi, r, t)
+	_moldura(r, 4.0, Fases.GANGUE_COR[fi].darkened(0.1))
+	if feito:
+		_rr(r, Color(1.0, 0.86, 0.45, 0.07))
+	elif not aberto:
+		_rr(r, Color(0.02, 0.02, 0.08, 0.6))
+	else:
+		_rr(r, Color(0.02, 0.02, 0.08, 0.15))
+		if hov:
+			_rr(r, Color(1.0, 0.88, 0.5, 0.12 + 0.04 * sin(t * 6.0)))
+	var pulo: float = absf(sin(t * 7.0)) * 8.0 if hov and aberto else 0.0
+	var esc: float = 0.7 if r.size.y > 120.0 else 0.5
+	Desenho.boneco(cv, Vector2(r.end.x - 40.0, r.end.y - 10.0 - pulo), esc, -1.0, 1, VAZIO, 0.0, t * 2.0 + f, false, 0.0, 1.0 if aberto else 0.5, false, -1, 0.0, 0, false, false, fi + Fases.TOTAL * 2, false, -1, false, false, 0, false, fi)
+	_placa_ruas(fi, feito, aberto, t)
+	# número da ordem do caminho
+	var bx: float = r.position.x + 8.0
+	var by: float = r.end.y - 36.0
+	_r(bx, by, 28, 28, C_CONTORNO)
+	_r(bx + 4, by + 4, 20, 20, C_OURO)
+	_r(bx + 4, by + 4, 20, 4, Color(1.0, 0.94, 0.6))
+	Desenho.texto(cv, str(f), Vector2(bx + 8, by + 21), 16, Color(0.22, 0.12, 0.06))
+	if feito:
+		_selo()
+	elif not aberto:
+		_cadeado()
+	if hov and aberto:
+		_rr(r, Color(1, 1, 1, 0.07))
+
+func _placa_ruas(fi: int, feito: bool, aberto: bool, t: float) -> void:
+	var nome: String = Fases.nome_do_lugar(fi + Fases.TOTAL * 2)
+	var w: float = ceilf((_largura(nome, 14) + 16.0) / 4.0) * 4.0
+	var x: float = RUAS[fi].position.x + 4.0
+	var y: float = RUAS[fi].position.y + 4.0
+	_r(x, y, w, 28, C_CONTORNO)
+	_r(x + 4, y + 4, w - 8, 20, Color(0.42, 0.28, 0.17))
+	_r(x + 4, y + 4, w - 8, 4, Color(0.58, 0.4, 0.24))
+	Desenho.texto(cv, nome, Vector2(x + 8, y + 19), 14, Color(1, 0.94, 0.8, 1.0 if aberto else 0.7))
+	var txt: String = "feito" if feito else ("falta" if aberto else "fechado")
+	var cw: float = ceilf((_largura(txt, 13) + 20.0) / 4.0) * 4.0
+	var cor: Color = Color(0.4, 0.82, 0.45) if feito else (C_OURO.lerp(Color(1.0, 0.97, 0.7), 0.5 + 0.5 * sin(t * 4.0)) if aberto else Color(0.55, 0.55, 0.62))
+	_r(x, y + 26, cw, 24, C_CONTORNO)
+	_r(x + 4, y + 30, cw - 8, 16, cor)
+	_r(x + 4, y + 30, cw - 8, 4, cor.lightened(0.3))
+	Desenho.texto(cv, txt, Vector2(x + 10, y + 43), 13, Color(0.14, 0.09, 0.05))
+
+## Miniatura de cada lugar, só com quadrados da grade de 4 px: o tema e a gangue à primeira vista.
+func _tema_ruas(fi: int, r: Rect2, t: float) -> void:
+	var x: float = r.position.x
+	var y: float = r.position.y
+	var w: float = r.size.x
+	var h: float = r.size.y
+	match fi:
+		0:
+			# Mercadão do Peixe: madrugada, barracas de toldo listrado, caixotes de gelo
+			_r(x, y, w, h, Color(0.07, 0.15, 0.2))
+			_r(x, y + h - 52, w, 52, Color(0.22, 0.3, 0.33))
+			_r(x, y + 56, w, 4, Color(0.1, 0.2, 0.28))
+			_disco(x + w - 36, y + 36, 12.0, Color(0.92, 0.96, 0.88))
+			for b in 2:
+				var bx: float = x + 12.0 + b * 104.0
+				for s in 6:
+					_r(bx + s * 16.0, y + 72, 16, 16, Color(0.62, 0.12, 0.22) if s % 2 == 0 else Color(0.93, 0.88, 0.75))
+				_r(bx, y + 88, 96, 4, C_CONTORNO)
+				_r(bx + 4, y + 92, 4, 28, C_MADEIRA_ESC)
+				_r(bx + 88, y + 92, 4, 28, C_MADEIRA_ESC)
+				_r(bx + 8, y + 108, 80, 16, C_MADEIRA)
+				_r(bx + 8, y + 104, 80, 4, Color(0.66, 0.86, 0.94))
+				_r(bx + 20, y + 100, 16, 4, Color(0.9, 0.5, 0.42))
+				_r(bx + 52, y + 100, 20, 4, Color(0.62, 0.72, 0.82))
+			_r(x + 188, y + 124, 20, 16, Color(0.66, 0.86, 0.94))
+		1:
+			# Ferro-velho: pôr do sol, pilha de carros, pneus, barril laranja
+			_r(x, y, w, 40, Color(0.28, 0.12, 0.26))
+			_r(x, y + 40, w, 36, Color(0.7, 0.34, 0.2))
+			_disco(x + 52, y + 76, 20.0, Color(1.0, 0.78, 0.4))
+			_r(x, y + 76, w, h - 76, Color(0.4, 0.28, 0.2))
+			var cc: Array = [Color(0.55, 0.22, 0.17), Color(0.26, 0.36, 0.46), Color(0.62, 0.5, 0.2)]
+			for c in 3:
+				var cy: float = y + 108.0 - c * 20.0
+				_r(x + 96 - c * 6, cy, 72, 20, cc[c])
+				_r(x + 112 - c * 6, cy - 8, 36, 8, cc[c])
+				_r(x + 104 - c * 6, cy + 16, 8, 8, C_CONTORNO)
+				_r(x + 152 - c * 6, cy + 16, 8, 8, C_CONTORNO)
+			for k in 4:
+				_r(x + 16, y + 112 - k * 8, 40, 8, Color(0.06, 0.06, 0.08))
+				_r(x + 24, y + 112 - k * 8, 24, 4, Color(0.18, 0.18, 0.2))
+			_r(x + 184, y + 84, 28, 32, Color(0.8, 0.36, 0.1))
+			_r(x + 184, y + 92, 28, 4, Color(0.4, 0.15, 0.05))
+			_r(x + 196, y + 68, 8, 16, Color(1.0, 0.6, 0.2) if int(t * 6.0) % 2 == 0 else Color(1.0, 0.85, 0.3))
+			_r(x + 220, y + 20, 4, 96, Color(0.42, 0.22, 0.13))
+		2:
+			# Beco do Fliperama: tijolo, letreiro de néon, fileira de fliperamas
+			_r(x, y, w, h, Color(0.14, 0.1, 0.26))
+			for by in range(int(y) + 8, int(y + h), 16):
+				_r(x, by, w, 4, Color(0.08, 0.06, 0.17))
+			_r(x + 28, y + 16, 180, 20, Color(0.03, 0.02, 0.08))
+			_r(x + 36, y + 24, 164, 4, Color(0.2, 0.85, 0.95) if int(t * 3.0) % 5 != 0 else Color(0.1, 0.4, 0.45))
+			var cores: Array = [Color(0.2, 0.85, 0.95), Color(0.9, 0.25, 0.65), Color(1.0, 0.55, 0.15)]
+			for k in 5:
+				var fx: float = x + 16.0 + k * 40.0
+				_r(fx, y + 56, 32, 64, Color(0.07, 0.06, 0.15))
+				_r(fx + 4, y + 64, 24, 20, cores[k % 3])
+				_r(fx + 12, y + 72, 8, 4, Color(1, 1, 1, 0.8))
+				_r(fx + 4, y + 92, 24, 4, Color(0.2, 0.18, 0.34))
+			_r(x, y + h - 16, w, 16, Color(0.14, 0.2, 0.3))
+			for k in range(0, int(w), 24):
+				_r(x + k, y + h - 16, 4, 16, Color(0.2, 0.85, 0.95, 0.35))
+		3:
+			# Arena da Praça: praça de pedra, colunas, estandartes vermelhos, estátua
+			_r(x, y, w, 56, Color(0.2, 0.15, 0.22))
+			_r(x, y + 56, w, h - 56, Color(0.42, 0.37, 0.34))
+			for k in 6:
+				_r(x + 12 + k * 36, y + 40, 16, 16, Color(0.06, 0.04, 0.08))
+				_r(x + 16 + k * 36, y + 32, 8, 8, Color(0.06, 0.04, 0.08))
+			for cx in [x + 20.0, x + w - 40.0]:
+				_r(cx, y + 24, 20, 8, Color(0.62, 0.58, 0.55))
+				_r(cx + 4, y + 32, 12, 76, Color(0.55, 0.5, 0.48))
+				_r(cx, y + 108, 20, 8, Color(0.62, 0.58, 0.55))
+				_r(cx + 4, y + 36, 12, 28, Color(0.72, 0.14, 0.1))
+			_r(x + w * 0.5 - 12, y + 84, 24, 32, Color(0.62, 0.58, 0.55))
+			_r(x + w * 0.5 - 8, y + 52, 16, 32, Color(0.7, 0.66, 0.62))
+			_r(x + w * 0.5 - 4, y + 44, 8, 8, Color(0.7, 0.66, 0.62))
+			_r(x + w * 0.5 + 12, y + 40, 4, 44, Color(0.6, 0.6, 0.66))
+			for k in 8:
+				_r(x + 40 + k * 20, y + h - 20 + (k % 2) * 4, 12, 4, Color(0.32, 0.28, 0.27))
+		_:
+			# Telhados e Antenas: noite roxa, arranha-céus, torre de rádio com raio, caixa d'água
+			_r(x, y, w, h, Color(0.12, 0.07, 0.24))
+			for k in 7:
+				var bh: float = 24.0 + float((k * 5) % 4) * 10.0
+				_r(x + k * 34.0, y + h - bh, 30, bh, Color(0.09, 0.05, 0.19))
+				for wy in range(int(y + h - bh + 6), int(y + h - 6), 12):
+					if _ruido(k * 7.0 + wy) > 0.5:
+						_r(x + k * 34.0 + 8, wy, 4, 4, Color(1.0, 0.82, 0.45))
+			var tx: float = x + w - 60.0
+			for k in 8:
+				_r(tx - 12 + k * 1.5, y + 8 + k * 10, 24 - k * 3, 4, Color(0.4, 0.36, 0.55))
+			_r(tx - 2, y + 8, 4, h - 8, Color(0.4, 0.36, 0.55))
+			_r(tx - 2, y + 4, 4, 4, Color(1.0, 0.25, 0.2) if int(t * 2.0) % 2 == 0 else Color(0.4, 0.1, 0.1))
+			_r(x + 140, y + h - 56, 36, 28, Color(0.17, 0.13, 0.3))
+			_r(x + 144, y + h - 28, 4, 24, Color(0.3, 0.26, 0.4))
+			_r(x + 168, y + h - 28, 4, 24, Color(0.3, 0.26, 0.4))
+			if int(t * 2.5) % 6 == 0:
+				for k in 5:
+					_r(x + 180 - (k % 2) * 8 + k * 2, y + 4 + k * 12, 8, 8, Color(0.95, 0.9, 1.0))
+
 # ------------------------------------------------------------------ painel lateral
 func _painel_lateral(f: int) -> void:
 	var est: Estado = p.estado
 	var fi: int = f - 1
-	var ato_m: int = _ato if _fora else 1                          # ato que o painel descreve
+	var ato_m: int = _av()                          # ato que o painel descreve
 	var li: int = fi + (Fases.TOTAL * (ato_m - 1) if _fora else 0)   # índice nas tabelas: fora da casa (2º ato) ou nas ruas (3º)
-	var bloq: bool = f > est.fase_liberada
+	var bloq: bool = f > est.fase_liberada or (_ruas and not est.lugar_aberto(3, f))
 	var venc: bool = est.vencido[fi] >= ato_m if _fora else f <= est.fases_vencidas
 	var prox: bool = not bloq and not venc and f == est.fase_liberada and not _fora
 	var al: float = 0.55 if bloq else 1.0
@@ -1371,7 +1634,12 @@ static func _rect_botao(id: int) -> Rect2:
 
 ## Botão pequeno e discreto do canto: alterna entre a casa e o lado de fora (segundo ato).
 func _botao_vista() -> void:
-	_botao_painel(BT_VISTA, "Ver a casa" if _fora else "Ver lá fora", UIComum.B_AZUL)
+	var txt: String = "Ver lá fora"
+	if _ato >= 3:
+		txt = "Ver a casa" if _ruas else ("Ver as ruas" if _fora else "Ver lá fora")
+	elif _fora:
+		txt = "Ver a casa"
+	_botao_painel(BT_VISTA, txt, UIComum.B_AZUL)
 
 ## Separador em pixel: pontilhado de quadradinhos de 4 px na grade do mapa (um a cada dois).
 func _sep(x0: float, larg: float, y: float) -> void:
@@ -1386,7 +1654,7 @@ func _dica_casa(f: int) -> void:
 	var est: Estado = p.estado
 	if f > est.fase_liberada:
 		return
-	var conjs: Array = Fases.lista_do_lugar(f - 1 + (Fases.TOTAL if _fora else 0))
+	var conjs: Array = Fases.lista_do_lugar(f - 1 + (Fases.TOTAL * (_av() - 1) if _fora else 0))
 	for k in conjs.size():
 		if p.mouse.distance_to(centro_fantasia(k)) < 18.0:
 			var c: int = conjs[k]

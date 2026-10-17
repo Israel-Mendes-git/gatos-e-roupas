@@ -117,6 +117,14 @@ func degrau_ato() -> int:
 func lugar() -> int:
 	return clampi(fase, 1, Fases.TOTAL) - 1 + Fases.TOTAL * (clampi(ato, 1, 3) - 1)
 
+## Lugar aberto no mapa do ato `a`: no 3º ato a Arena pede os três primeiros vencidos e os Telhados pedem a Arena.
+func lugar_aberto(a: int, f: int) -> bool:
+	if a < 3 or f <= 3:
+		return true
+	if f == 4:
+		return vencido[0] >= a and vencido[1] >= a and vencido[2] >= a
+	return vencido[3] >= a
+
 ## Todos os cômodos vencidos em todos os atos.
 func tudo_vencido() -> bool:
 	return vencidos_no_ato(Balanco.ATOS) >= Fases.TOTAL
