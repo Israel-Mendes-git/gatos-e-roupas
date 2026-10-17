@@ -1448,7 +1448,9 @@ func _cena_final() -> void:
 	# título
 	var rt := Rect2(300, 30, 680, 82)
 	_painel_gato(rt)
-	_t("A casa é dos gatos!", Vector2(rt.position.x, rt.position.y + 56.0), 46, C_TEXTO, rt.size.x)
+	# 3º ato vencido (Magnetomiau): o bairro também é dos gatos; antes disso, só a casa e o quintal
+	var bairro: bool = e.tudo_vencido()
+	_t("As ruas também são dos gatos!" if bairro else "A casa é dos gatos!", Vector2(rt.position.x, rt.position.y + 56.0), 40 if bairro else 46, C_TEXTO, rt.size.x)
 	# ficha com os números da campanha
 	var rf := Rect2(290, 140, 350, 350)
 	_painel_gato(rf, false)
@@ -1490,10 +1492,13 @@ func _cena_final() -> void:
 	var ro := Rect2(660, 345, 330, 145)
 	_painel_gato(ro, false)
 	_t("O que foi liberado", Vector2(ro.position.x, ro.position.y + 40.0), 20, C_NOME, ro.size.x)
-	var yo: float = ro.position.y + 76.0
-	for txt in ["Invasão sem fim liberada no mapa", "Metas no fichário"]:
+	var liberados: Array = ["Invasão sem fim liberada no mapa", "Metas no fichário"]
+	if bairro:
+		liberados = ["Torre: quarta vaga de módulo", "Nível 40: quarta herança", "Invasão sem fim e metas"]
+	var yo: float = ro.position.y + (68.0 if bairro else 76.0)
+	for txt in liberados:
 		_pata(0, Vector2(ro.position.x + 26.0, yo - 20.0), 1)
 		for l in _quebra(txt, 17, ro.size.x - 90.0):
 			_t(l, Vector2(ro.position.x + 52.0, yo), 17, C_TEXTO)
 			yo += 21.0
-		yo += 10.0
+		yo += 3.0 if bairro else 10.0
