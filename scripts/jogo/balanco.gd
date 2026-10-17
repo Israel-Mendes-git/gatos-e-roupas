@@ -466,7 +466,7 @@ const PODER_KIT_FORCA: Dictionary = {
 	Pecas.Conjunto.STARDEW_MIAULLEY: 2.2, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
 	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7, Pecas.Conjunto.MIMIAU: 0.6,
 	Pecas.Conjunto.SUPER_MIAUJIN: 0.7, Pecas.Conjunto.TREINADOR: 1.6,
-	Pecas.Conjunto.MIAUZILLA: 1.2, Pecas.Conjunto.ARTHUR_MIAURGON: 2.6, Pecas.Conjunto.CATCHULLU: 0.7,
+	Pecas.Conjunto.MIAUZILLA: 1.45, Pecas.Conjunto.ARTHUR_MIAURGON: 2.6, Pecas.Conjunto.CATCHULLU: 0.7,
 }
 # Acerto da recarga por fantasia (x PODER_INTERVALO), medido com o simulador (kits=todos): >1 recarrega mais devagar.
 const PODER_KIT_INTERVALO: Dictionary = {

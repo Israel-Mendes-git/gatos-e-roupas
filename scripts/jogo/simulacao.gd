@@ -3611,9 +3611,9 @@ func _poder_recompensa(u: Unidade, meus: Array[Unidade], outros: Array[Unidade],
 		return false
 	var dur: float = Balanco.PODER_RECOMPENSA_HER_T if em_heranca else Balanco.PODER_RECOMPENSA_T
 	alvo.rec_t = dur * _fi
-	alvo.rec_bonus = Balanco.PODER_RECOMPENSA_BONUS
-	alvo.rec_cura = Balanco.PODER_RECOMPENSA_HER_CURA if em_heranca else Balanco.PODER_RECOMPENSA_CURA
-	alvo.rec_dano = 0.0 if em_heranca else Balanco.PODER_RECOMPENSA_DANO
+	alvo.rec_bonus = Balanco.PODER_RECOMPENSA_BONUS * _fi
+	alvo.rec_cura = (Balanco.PODER_RECOMPENSA_HER_CURA if em_heranca else Balanco.PODER_RECOMPENSA_CURA) * _fi
+	alvo.rec_dano = 0.0 if em_heranca else Balanco.PODER_RECOMPENSA_DANO * _fi
 	alvo.rec_recarga = 0.0 if em_heranca else Balanco.PODER_RECOMPENSA_RECARGA
 	alvo.rec_conj = u.poder_conj
 	pontos.append(Vector2(alvo.x, alvo.y))
