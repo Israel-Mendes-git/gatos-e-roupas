@@ -1526,7 +1526,7 @@ func _painel_lateral(f: int) -> void:
 	else:
 		p._botao_arte(chip, Color(1.0, 0.82 + 0.1 * sin(p.t * 4.0), 0.35) if prox else Color(0.75, 0.85, 1.0))
 	var rotulo: String = String(p.VENCIDO_GENERO[fi]).capitalize() if venc else ("Bloqueado" if bloq else ("Próximo" if prox else "Liberado"))
-	var falta_ato: bool = _fora and not venc
+	var falta_ato: bool = _fora and not venc and not bloq
 	if falta_ato:
 		p._botao_arte(chip, Color(1.0, 0.82 + 0.1 * sin(p.t * 4.0), 0.35))
 		rotulo = "%dº ato: falta" % ato_m
@@ -1561,7 +1561,9 @@ func _painel_lateral(f: int) -> void:
 			if invasao_fora_liberada(f):
 				_botao_painel(BT_INVASAO, "Invasão sem fim", UIComum.B_LARANJA)
 			else:
-				var lv: Array[String] = p._quebrar("Vença no 2º ato para liberar a invasão", 12, lr)
+				# nas ruas não existe invasão sem fim (por enquanto); no lado de fora ela abre ao vencer o lugar no 2º ato
+				var aviso: String = "Nas ruas ainda não há invasão sem fim." if _ruas else "Vença no 2º ato para liberar a invasão"
+				var lv: Array[String] = p._quebrar(aviso, 12, lr)
 				for k in mini(lv.size(), 2):
 					Desenho.texto(cv, lv[k], Vector2(xr, 348.0 + 14.0 * k), 12, Color(1, 1, 1, 0.5))
 		elif _ato > 1:
@@ -1573,7 +1575,9 @@ func _painel_lateral(f: int) -> void:
 			_botao_painel(BT_JOGAR, "Jogar de novo", UIComum.B_VERDE)
 			_botao_painel(BT_INVASAO, "Invasão sem fim", UIComum.B_LARANJA)
 	else:
-		var dica: String = "Vença antes: %s" % Fases.NOME[fi - 1] if bloq else "Clique ou Enter para entrar"
+		var dica: String = "Clique ou Enter para entrar"
+		if bloq:
+			dica = _texto_bloqueio_ruas(f) if _ruas else "Vença antes: %s" % Fases.NOME[fi - 1]
 		var lh: Array[String] = p._quebrar(dica, 13, lr)
 		for k in mini(lh.size(), 3):
 			Desenho.texto(cv, lh[k], Vector2(xr, 314.0 + 16.0 * k), 13, Color(1, 0.95, 0.7, 0.9) if not bloq else Color(1, 1, 1, 0.5))
@@ -1611,6 +1615,12 @@ func _painel_lateral(f: int) -> void:
 		cv.draw_rect(chip_r, Color(0.3, 0.22, 0.08, 0.9) if rec > 0 else Color(0.15, 0.1, 0.12, 0.9))
 		cv.draw_rect(chip_r, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.2), false, 2.0)
 		Desenho.texto(cv, "Invasão sem fim  ·  " + txt_rec, Vector2(x0, 582), 15, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.6), larg, 3)
+
+## O que falta vencer no 3º ato para abrir o lugar `f` (4 = Arena da Praça, 5 = Telhados e Antenas).
+static func _texto_bloqueio_ruas(f: int) -> String:
+	if f == 4:
+		return "Vença antes: %s, %s e %s" % [Fases.NOME_ATO3[0], Fases.NOME_ATO3[1], Fases.NOME_ATO3[2]]
+	return "Vença antes: %s" % Fases.NOME_ATO3[3]
 
 ## Botão do painel lateral: moldura de papel com realce quando o mouse está em cima.
 func _botao_painel(r: Rect2, txt: String, cor: Color) -> void:
