@@ -483,6 +483,55 @@ const MORAL_T := 6.0                # 3º ato, Moral simples: segundos que os ri
 const MORAL_DANO := 0.30            # abalado: -30% de dano
 const MORAL_VEL := 0.30             # abalado: -30% de velocidade (anda e ataca mais devagar)
 const AGGRO_RIVAL := 100000.0       # Disputa: o rival escolhe alvo entre todos os gatos de pé, sem o limite do AGGRO
+# ---- Tipos de rival e truque de cada gangue (3º ato, etapa 4; notas/ato3_proposta.md, 1.2)
+# Índices de Unidade.Tipo: 0 comum, 1 saltador, 2 ladrão, 3 grandalhão, 4 ninhada, 5 atirador, 6 curandeiro, 7 escudeiro, 8 bomba.
+## Tipos especiais permitidos em cada gangue: [tipo, peso]. No 3º ato isto substitui o sorteio global de _sortear_tipos.
+const GANGUE_TIPOS: Array = [
+	[[1, 2], [2, 3], [3, 2], [4, 2]],                          # Família Gatíssima: Entregador, Mensageiro, Capanga, gata e gatinhos
+	[[1, 3], [2, 1], [3, 1], [4, 1], [5, 2], [8, 2]],          # Estrada Furiosa: Motoqueiro, Saqueador, Brutamontes, motinhas, Guitarrista, Suicida
+	[[1, 1], [2, 1], [3, 1], [4, 2], [5, 3]],                  # Tropa do Grid: Piloto, Programa-ladrão, Programa pesado, Pixels, Lançador de Discos
+	[[1, 1], [2, 1], [4, 1], [7, 6]],                          # Legião Miauparta: Chutador, Batedor, novatos, Hoplita (a falange precisa de vários)
+	[[1, 2], [2, 1], [3, 2], [4, 2], [5, 2]],                  # Irmandade Mutante: Garra-Fera, ladrão, Mutante Pesado, Ninhada, Telepata
+]
+const GANGUE_ESPECIAL_FRACAO: Array[float] = [0.4, 0.45, 0.4, 0.55, 0.4]   # fração da onda que é de tipo especial, por gangue
+## Nome de cada tipo em cada gangue ("" = o nome de TIPO_NOMES), na ordem de Unidade.Tipo.
+const GANGUE_TIPO_NOME: Array = [
+	["Vira-lata de gangue", "Entregador de moto", "Mensageiro", "Capanga de sobretudo", "Gata e gatinhos", "", "", "", ""],
+	["Vira-lata de gangue", "Motoqueiro", "Saqueador", "Brutamontes", "Ninhada de motinhas", "Guitarrista", "", "", "Suicida pintado"],
+	["Programa", "Piloto de moto de luz", "Programa-ladrão", "Programa pesado", "Pixels", "Lançador de discos", "", "", ""],
+	["Recruta da Legião", "Chutador", "Batedor", "", "Escudeiros novatos", "", "", "Hoplita", ""],
+	["Mutante", "Garra-fera", "Ladrão mutante", "Mutante pesado", "Ninhada mutante", "Telepata", "", "", ""],
+]
+## Dica de cada tipo em cada gangue (menos de 80 caracteres; "" = a dica de sempre do tipo).
+const GANGUE_TIPO_DICA: Array = [
+	["", "Corre de moto direto à torre.", "Ao tocar a torre, leva um gato para dormir 6 s. Mate antes!", "Lento, muita vida; derruba 2 blocos por golpe.", "", "", "", "", ""],
+	["", "Passa batido e acerta o gato de trás antes de ir à torre.", "Rouba blocos da torre e foge com eles.", "", "Ao cair, vira dois filhotes.", "Dá velocidade ao comboio em volta; atira de longe.", "", "", "Corre ao primeiro gato ou à torre e explode."],
+	["Volta uma vez com 40% de vida ao ser derrotado.", "Corre direto à torre.", "Rouba blocos da torre e foge com eles.", "Lento, muita vida; derruba 2 blocos por golpe.", "", "Atira discos que quicam em até 3 gatos.", "", "", ""],
+	["", "Corre direto à torre.", "Rouba blocos da torre e foge com eles.", "", "Ao cair, vira dois filhotes.", "", "", "Em falange, leva menos dano de frente. Ataque pelos flancos!", ""],
+	["Abaixo de 30% de vida, fica mais forte e mais rápido.", "Corre direto à torre.", "Rouba blocos da torre e foge com eles.", "Lento, muita vida; derruba 2 blocos por golpe.", "Ao cair, vira dois filhotes.", "Atira de longe nos gatos e na torre.", "", "", ""],
+]
+# Oferta (Família Gatíssima): o Mensageiro, ao tocar a torre, leva um gato para dormir com os peixes
+const OFERTA_T := 6.0               # segundos que o gato sequestrado fica fora da luta
+# Comboio (Estrada Furiosa): o Guitarrista acelera os rivais da gangue em volta
+const COMBOIO_RAIO := 200.0
+const COMBOIO_VEL := 0.35           # +35% de velocidade (anda e ataca)
+# Disco (Tropa do Grid): o projétil do Lançador quica em mais alvos
+const DISCO_QUICAS := 2             # quicadas depois do primeiro alvo (3 alvos no total)
+const DISCO_RAIO := 200.0           # distância máxima de um alvo ao seguinte
+const DISCO_FATOR := 0.8            # dano de cada quicada sobre o anterior
+# Recompilação (Tropa do Grid): o Programa volta uma vez
+const RECOMPILA_VIDA := 0.4         # fração da vida máxima com que volta
+const RECOMPILA_PROTEGE := 1.0      # segundos protegido ao voltar
+# Falange (Legião Miauparta): hoplitas juntos levam menos dano de frente
+const FALANGE_POR_VIZINHO := 0.15   # redução a mais por hoplita vizinho
+const FALANGE_MAX := 3
+const FALANGE_RAIO := 110.0         # distância (x) em que um hoplita conta como vizinho
+const FALANGE_RAIO_Y := 70.0
+const FALANGE_FLANCO := 60.0        # golpe vindo de mais de |dy| = isto é de flanco e fura a falange
+# Mutação (Irmandade Mutante): abaixo do limiar de vida, mais dano e velocidade
+const MUTACAO_LIMIAR := 0.30
+const MUTACAO_DANO := 0.30
+const MUTACAO_VEL := 0.30
 const ATO_FAMILIA_DA_CASA := 0.4    # fração dos bichos que ainda é da família do cômodo; o resto vem misturado
 const XP_ONDA_NOCAUTE := 1          # por onda vencida tendo caído
 const XP_RECUPERA_POR_NIVEL := 0.25  # XP de recuperação: +esta fração da XP da onda por nível que o gato está abaixo da média dos outros
@@ -1021,7 +1070,10 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 		elif ato > 1 and rng.randf() >= ATO_FAMILIA_DA_CASA:
 			item["fam"] = rng.randi_range(0, Fases.TOTAL - 1)
 		plano.append(item)
-	_sortear_tipos(plano, p, rng)
+	if ato >= 3:
+		_sortear_tipos_gangue(plano, fase - 1, rng)
+	else:
+		_sortear_tipos(plano, p, rng)
 	_sortear_elites(plano, lugar, onda, nivel, rng, pesos_fantasia)
 	if ato >= 3:
 		_marcar_lider(plano)
@@ -1076,6 +1128,46 @@ static func _sortear_tipos(plano: Array, prog: int, rng: RandomNumberGenerator) 
 		if rng.randf() < ESPECIAL_CHANCE:
 			plano[vagas[usados]]["tipo"] = disponiveis[rng.randi_range(0, disponiveis.size() - 1)]
 		usados += 1
+
+## 3º ato: tipos especiais da onda sorteados só entre os da gangue (GANGUE_TIPOS), com peso; teto GANGUE_ESPECIAL_FRACAO.
+static func _sortear_tipos_gangue(plano: Array, gangue: int, rng: RandomNumberGenerator) -> void:
+	var g: int = clampi(gangue, 0, GANGUE_TIPOS.size() - 1)
+	var lista: Array = GANGUE_TIPOS[g]
+	var teto: int = int(floor(plano.size() * GANGUE_ESPECIAL_FRACAO[g]))
+	var total: float = 0.0
+	for par in lista:
+		total += float(par[1])
+	if teto <= 0 or total <= 0.0:
+		return
+	var vagas: Array = range(plano.size())
+	_embaralhar(vagas, rng)
+	for k in mini(teto, vagas.size()):
+		if rng.randf() >= ESPECIAL_CHANCE:
+			continue
+		var r: float = rng.randf() * total
+		var tipo: int = int(lista[lista.size() - 1][0])
+		for par in lista:
+			r -= float(par[1])
+			if r < 0.0:
+				tipo = int(par[0])
+				break
+		plano[vagas[k]]["tipo"] = tipo
+
+## Nome do tipo `tipo` de rival da gangue `gangue` (ou o nome de sempre do tipo).
+static func nome_rival(gangue: int, tipo: int) -> String:
+	var t: int = clampi(tipo, 0, TIPO_NOMES.size() - 1)
+	if gangue >= 0 and gangue < GANGUE_TIPO_NOME.size():
+		var n: String = GANGUE_TIPO_NOME[gangue][t]
+		if n != "":
+			return n
+	return TIPO_NOMES[t]
+
+## Dica do tipo de rival (texto da prévia): a da gangue, ou "" para usar a dica de sempre do tipo.
+static func dica_rival(gangue: int, tipo: int) -> String:
+	var t: int = clampi(tipo, 0, TIPO_NOMES.size() - 1)
+	if gangue >= 0 and gangue < GANGUE_TIPO_DICA.size():
+		return GANGUE_TIPO_DICA[gangue][t]
+	return ""
 
 ## Inimigos fantasiados: comuns que vestem uma fantasia da fase (e largam uma peça dela).
 static func _sortear_elites(plano: Array, fase: int, onda: int, nivel: int, rng: RandomNumberGenerator, pesos_fantasia: Dictionary = {}) -> void:
