@@ -53,11 +53,13 @@ func _init() -> void:
 		var de_primeira: Array[int] = []   # campanhas que venceram a fase na 1ª tentativa
 		var tentativas: Array[int] = []    # soma das tentativas até vencer
 		var venceram: Array[int] = []      # campanhas que venceram a fase (em até TENTATIVAS_MAX)
+		var jogaram: Array[int] = []       # campanhas que chegaram a jogar a fase
 		var onda_derrota: Array = []       # por fase: {onda: vezes} na 1ª tentativa
 		for f in Fases.TOTAL * Balanco.ATOS:
 			de_primeira.append(0)
 			tentativas.append(0)
 			venceram.append(0)
+			jogaram.append(0)
 			onda_derrota.append({})
 		var inv_casa: Array[int] = []      # ondas vencidas na invasão sem fim de um cômodo, por campanha que zerou tudo
 		var inv_fora: Array[int] = []      # idem, num lugar de fora
@@ -83,6 +85,7 @@ func _init() -> void:
 				var f: int = ((fa - 1) + (g if ato_sim > 0 else 0)) % Fases.TOTAL + 1   # cada campanha começa o ato por um cômodo diferente
 				var ia: int = ato_sim * Fases.TOTAL + f - 1   # as contas ficam por cômodo, não pela ordem
 				var venceu: bool = false
+				jogaram[ia] += 1
 				for t in TENTATIVAS_MAX:
 					e.iniciar_fase(f)
 					var r: Dictionary = _jogar_fase(pol, e, 1000 + g * 7 + f * 101 + t * 977)
@@ -136,7 +139,7 @@ func _init() -> void:
 			var dist: String = ""
 			for k in ks:
 				dist += "onda%d:%d " % [k, onda_derrota[fa][k]]
-			print("   ato %d fase %d %-8s de primeira %2d | venceram %2d | tentativas medias %.2f | derrotas (1a tentativa): %s" % [fa / Fases.TOTAL + 1, f + 1, Fases.NOME[f + (Fases.TOTAL if fa >= Fases.TOTAL else 0)], de_primeira[fa], venceram[fa], float(tentativas[fa]) / maxf(1.0, venceram[fa]), dist])
+			print("   ato %d fase %d %-8s de primeira %2d/%2d (%3d%%) | venceram %2d | tentativas medias %.2f | derrotas (1a tentativa): %s" % [fa / Fases.TOTAL + 1, f + 1, Fases.nome_do_lugar(fa), de_primeira[fa], jogaram[fa], int(round(100.0 * de_primeira[fa] / maxf(1.0, jogaram[fa]))), venceram[fa], float(tentativas[fa]) / maxf(1.0, venceram[fa]), dist])
 			if f == Fases.TOTAL - 1:
 				print("      nivel medio dos gatos ao fim do ato %d: %.1f (entre as campanhas que chegaram)" % [fa / Fases.TOTAL + 1, nivel_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos)])
 				print("      torre ao fim do ato %d: soma dos niveis das melhorias %.1f (de %d), modulos liberados %.1f" % [fa / Fases.TOTAL + 1, torre_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos), 4 * Torre.MELHORIA_NIVEL_MAX, mods_fim[fa / Fases.TOTAL] / maxf(1.0, completas if fa / Fases.TOTAL == Balanco.ATOS - 1 else n_jogos)])
