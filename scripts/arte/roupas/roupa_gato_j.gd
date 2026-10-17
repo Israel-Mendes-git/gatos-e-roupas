@@ -143,11 +143,28 @@ static func _topo_col(cv: Dictionary, x: int) -> int:
 			b = y
 	return b
 
-## Mandíbula em foice: pontos [x, y] com 2 px de espessura (cor de cima `ch`, de baixo `ch2`).
-static func _mand(cv: Dictionary, pts: Array, ch: String, ch2: String) -> void:
-	for p in pts:
-		cv[Vector2i(p[0], p[1])] = ch
-		cv[Vector2i(p[0], p[1] + 1)] = ch2
+## Mandíbula em foice, preenchida: o contorno `q` (pontos x, y) com a base grossa (3 px) que afina até a ponta curva de 1 px; luz ferrugem em cima e
+## sombra embaixo. `k` 0 e 1 = par da frente e de trás em cima; 2 e 3 = o espelho embaixo (a de trás embaixo é menor); `s` = abertura.
+static func _mand(cv: Dictionary, k: int, s: float) -> void:
+	var ps: Array = [
+		[11, -16, 13, -18, 15, -19.5, 17.5, -19.5, 19.5, -17, 19, -15.5, 17, -17.5, 15, -17, 13, -14.5, 11, -13],
+		[8, -17, 8, -20, 9.5, -22.5, 12, -24, 14.5, -24, 16.5, -22, 16.5, -20, 14.5, -22, 12, -21.5, 10.5, -19.5, 11, -16],
+	]
+	var q: Array = ps[k % 2]
+	var f: float = 1.0 if k % 2 == 0 else 0.8
+	var pts: Array = []
+	for n in range(0, q.size(), 2):
+		var x: float = 11.0 + (float(q[n]) - 11.0) * s
+		var y: float = -12.5 + (float(q[n + 1]) + 12.5) * s * (f if k >= 2 else 1.0)
+		if k >= 2:
+			y = -12.5 - (y + 12.5)
+		pts.append(x)
+		pts.append(y)
+	var m: Dictionary = {}
+	RoupaGatoI._poli(m, pts, "r")
+	RoupaGatoI._luz(m, "r", "R", "D")
+	for kk in m.keys():
+		cv[kk] = m[kk]
 
 ## Asa de morcego: do ombro (sx, sy), três dedos claros abertos para cima e para trás com a membrana escura entre eles (`esc` = tamanho).
 static func _asa(cv: Dictionary, sx: int, sy: int, esc: float) -> void:
@@ -252,13 +269,13 @@ static func _ar_diario() -> Array:
 ## w barriga clara; s/S/e/h aço azul do rifle de estase e brilho ciano da câmara (halo, núcleo, miolo).
 const _PAL_SUB := {
 	"o": Color("0c1822"), "a": Color("7a9eb2"), "A": Color("b0cdd8"), "d": Color("46687e"),
-	"r": Color("b0502c"), "R": Color("e08a52"), "D": Color("6e2a18"),
+	"r": Color("b0502c"), "R": Color("e8946a"), "D": Color("6e2a18"),
 	"k": Color("0c1018"), "E": Color("d6e6ea"), "w": Color("dfe9e4"),
 	"s": Color("96a6b6"), "S": Color("2a78b0"), "e": Color("4cc8f0"), "h": Color("eafbff"), "u": Color("2e3a48"),
 }
 
-## Cabeça do Reaper: crânio azul-acinzentado alongado para a frente com o olho pequeno e a boca de dentes, crista fina varrida para trás e as
-## quatro mandíbulas ferrugem em foice abertas em volta da boca (duas em cima, duas embaixo).
+## Cabeça do Reaper: crânio azul-acinzentado alongado para a frente com o olho pequeno e a boca de dentes, crista curta varrida para trás e as quatro
+## mandíbulas ferrugem em foice grossa, abertas em pinça em volta da boca (duas em cima, duas embaixo).
 static func _sub_capuz() -> Array:
 	var cv: Dictionary = {}
 	RoupaGatoI._poli(cv, [2, -19, 8, -18, 13, -15, 15, -12, 14, -10, 9, -10, 3, -10], "a")
@@ -271,13 +288,11 @@ static func _sub_capuz() -> Array:
 		cv[Vector2i(x, -12)] = "k"
 	cv[Vector2i(12, -11)] = "w"
 	cv[Vector2i(14, -11)] = "w"
-	RoupaGatoI._lin(cv, Vector2i(5, -19), Vector2i(-4, -25), "r")
-	RoupaGatoI._lin(cv, Vector2i(6, -19), Vector2i(-3, -25), "R")
-	RoupaGatoI._lin(cv, Vector2i(6, -18), Vector2i(0, -22), "r")
-	_mand(cv, [[12, -14], [13, -15], [14, -16], [15, -17], [16, -17], [17, -17], [18, -16]], "r", "D")
-	_mand(cv, [[9, -17], [10, -18], [11, -19], [12, -20], [13, -20], [14, -20], [15, -19]], "R", "r")
-	_mand(cv, [[12, -10], [13, -9], [14, -8], [15, -8], [16, -8], [17, -9]], "r", "D")
-	_mand(cv, [[9, -9], [10, -8], [11, -7], [12, -6], [13, -6], [14, -7]], "R", "r")
+	RoupaGatoI._lin(cv, Vector2i(5, -19), Vector2i(0, -23), "r")
+	RoupaGatoI._lin(cv, Vector2i(6, -19), Vector2i(1, -23), "R")
+	RoupaGatoI._lin(cv, Vector2i(6, -18), Vector2i(2, -21), "r")
+	for k in 4:
+		_mand(cv, k, 1.2)
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_SUB)]
 
