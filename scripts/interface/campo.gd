@@ -406,7 +406,7 @@ func iniciar(e: Estado) -> void:
 	fim_tratado = false
 	# faixa de entrada da onda (o som toca quando ela começa a andar, depois da cortina)
 	var onda_n: int = estado.onda_invasao if estado.invasao else estado.onda
-	var nome_fase: String = Fases.NOME[estado.lugar()]
+	var nome_fase: String = Fases.nome_do_lugar(estado.lugar())
 	_faixa("Onda %d" % onda_n, nome_fase, Color(1.0, 0.9, 0.5), 1.7, 0.35, "onda")
 
 func _process(delta: float) -> void:
@@ -986,7 +986,7 @@ func _consumir() -> void:
 				tremor = maxf(tremor, 6.0)
 			"chefe":
 				chefe_t = 2.2
-				var nome_ch: String = Fases.CHEFE_NOME[estado.lugar()]
+				var nome_ch: String = Fases.nome_do_chefe(estado.lugar())
 				_faixa(nome_ch, "CHEFE!", Color(1.0, 0.35, 0.3), 2.0, 0.0, "chefe")
 				tfx.append({"k": "chefe_chega", "p": Vector2(1120.0, 520.0), "t": 0.0, "dur": 1.0})
 				tremor = maxf(tremor, 8.0)
@@ -3125,7 +3125,7 @@ func _draw() -> void:
 		var pf: Vector2 = Vector2(float(fan["x"]), float(fan["y"]) - sin(uf * PI) * 26.0)
 		var esc_f: float = ESC * ug.escala() * (1.0 + 0.1 * sin(uf * PI))
 		var tp_f: int = Unidade.Tipo.GEMEO if ug.pequeno else ug.tipo
-		Desenho.boneco(self, pf, esc_f, -1.0 * (1.0 + 0.2 * (1.0 - uf)), 1, ug.pecas, 1.0 - uf * 0.5, 0.0, false, 0.0, 1.0 - uf * uf, false, -1, 0.0, tp_f, false, ug.chefe, ug.familia, ug.elite, ug.chefe_tipo, ug.parte, false, 0)
+		Desenho.boneco(self, pf, esc_f, -1.0 * (1.0 + 0.2 * (1.0 - uf)), 1, ug.pecas, 1.0 - uf * 0.5, 0.0, false, 0.0, 1.0 - uf * uf, false, -1, 0.0, tp_f, false, ug.chefe, ug.familia, ug.elite, ug.chefe_tipo, ug.parte, false, 0, false, ug.gangue)
 	var ico_max: int = 3 if todos.size() > 24 else 4   # luta pesada: menos ícones por unidade
 	for u in todos:
 		var uu2: Unidade = u
@@ -3172,7 +3172,7 @@ func _draw() -> void:
 			CaoGuarda.desenhar(self, pos, ESC * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
 			Desenho.noir = uu2.noir_t > 0.0   # Modo Noir: gato e roupa em preto e branco
-			Desenho.boneco(self, pos, esc_d, dir_d, (1 if uu2.capturado else uu2.equipe), (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
+			Desenho.boneco(self, pos, esc_d, dir_d, (1 if uu2.capturado else uu2.equipe), (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0), false, uu2.gangue)
 			Desenho.noir = false
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
@@ -3415,8 +3415,14 @@ class Pixel extends Node2D:
 class Fundo extends Pixel:
 	const YS: Array[float] = [447.0, 466.0, 490.0, 520.0, 556.0, 600.0, 652.0, 712.0]
 	var fase: int = 1
+	var tinta: Color = Color(0, 0, 0, 0)   # 3º ato: véu na cor da gangue sobre o fundo provisório
 
 	func _draw() -> void:
+		_cena_base()
+		if tinta.a > 0.0:
+			draw_rect(Rect2(0, 0, 1280, 740), tinta)
+
+	func _cena_base() -> void:
 		match fase:
 			2:
 				_sala()
@@ -5259,8 +5265,15 @@ func _cenario() -> void:
 		vp_anim.add_child(anim)
 		_nova_tela(vp_anim, true)
 	var cena: int = _cena()
-	if fundo.fase != cena or not fundo_ok:
+	# 3º ato (cenas 11..15): fundo PROVISÓRIO, o de um lugar de fora tingido com a cor da gangue (cenários definitivos: etapa 6 do ato 3)
+	var tinta: Color = Color(0, 0, 0, 0)
+	if cena > 10:
+		var gc: Color = Fases.GANGUE_COR[clampi(cena - 11, 0, 4)]
+		tinta = Color(gc.r, gc.g, gc.b, 0.22)
+		cena -= 5
+	if fundo.fase != cena or fundo.tinta != tinta or not fundo_ok:
 		fundo.fase = cena
+		fundo.tinta = tinta
 		fundo.queue_redraw()
 		fundo_ok = true
 		fundo_rep = 3
@@ -5794,7 +5807,7 @@ func _dica_poder(i: int) -> void:
 	Desenho.texto(self, d, Vector2(pl.position.x + 11.0, pl.position.y + 43.0), 14, Color(1, 0.96, 0.88), -1.0, 3)
 
 func _hud() -> void:
-	var nome_fase: String = Fases.NOME[estado.lugar()]
+	var nome_fase: String = Fases.nome_do_lugar(estado.lugar())
 	if estado.invasao:
 		Desenho.texto(self, "Invasão · %s · Onda %d" % [nome_fase, estado.onda_invasao], Vector2(20, 40), 30, Color(1, 1, 1), -1.0, 4)
 		var rec_h: int = estado.recordes[estado.lugar()]
@@ -5814,7 +5827,7 @@ func _hud() -> void:
 		var ub: Unidade = u
 		if ub.chefe and ub.vida_max > 0.0:
 			var fr_b: float = clampf(ub.vida / ub.vida_max, 0.0, 1.0)
-			var nome_b: String = Fases.CHEFE_NOME[estado.lugar()]
+			var nome_b: String = Fases.nome_do_chefe(estado.lugar())
 			Desenho.texto(self, nome_b, Vector2(632, 42), 22, Color(1.0, 0.85, 0.8), 424.0, 4)
 			# barra de pixel: 140 quadradinhos x 3, contorno escuro, brilho em cima e sombra embaixo
 			var q: float = V.Q
@@ -5886,11 +5899,13 @@ func _montar_preparacao() -> void:
 		b.chefe = chefe
 		b.elite = elite
 		b.familia = clampi(int(item.get("fam", estado.fase - 1)), 0, Fases.TOTAL - 1)
-		b.chefe_tipo = estado.lugar() if chefe else -1
+		b.rival = item.get("rival", false)
+		b.gangue = int(item.get("gangue", -1)) if b.rival else -1
+		b.chefe_tipo = Fases.chefe_base(estado.lugar()) if chefe else -1
 		var nome: String = Balanco.TIPO_NOMES[clampi(b.tipo, 0, Balanco.TIPO_NOMES.size() - 1)]
 		var dica: String = TIPO_DICA[clampi(b.tipo, 0, TIPO_DICA.size() - 1)]
 		if chefe:
-			nome = Fases.CHEFE_NOME[estado.lugar()]
+			nome = Fases.nome_do_chefe(estado.lugar())
 			dica = "O chefe do cômodo. Chega por último."
 		elif elite:
 			nome = "Fantasiado"
@@ -6223,7 +6238,7 @@ func _nome_unidade(u: Unidade) -> String:
 	if u.equipe == 0:
 		return u.boneco.nome if u.boneco != null else "Gato"
 	if u.chefe:
-		return Fases.CHEFE_NOME[estado.lugar()]
+		return Fases.nome_do_chefe(estado.lugar())
 	if u.parte:
 		return "Sapinho"
 	if u.pequeno:
@@ -6420,7 +6435,7 @@ func _desenhar_prep() -> void:
 		var marcado: bool = sim.prioridade == int(g["prio"])
 		V.elipse(self, pos, 32.0 * e, 32.0 * e * 0.3, Color(0, 0, 0, 0.22))
 		var resp: float = 1.0 + sin(rel * 2.6 + pos.x) * 0.016
-		Desenho.boneco(self, pos, e * resp, -1.0 / resp, 1, b.pecas, 0.0, 0.0, false, 0.0, 1.0, false, -1, 0.0, b.tipo, false, b.chefe, b.familia, b.elite, b.chefe_tipo, false, false, 0)
+		Desenho.boneco(self, pos, e * resp, -1.0 / resp, 1, b.pecas, 0.0, 0.0, false, 0.0, 1.0, false, -1, 0.0, b.tipo, false, b.chefe, b.familia, b.elite, b.chefe_tipo, false, false, 0, false, b.gangue)
 		if marcado:
 			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * e), 10.0, 1.0)
 		if not b.chefe:

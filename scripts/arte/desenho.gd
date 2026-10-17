@@ -1029,9 +1029,14 @@ static func _bicho(c: CanvasItem, fam: int, tipo: int, ct: int, parte: bool, par
 			for dx in [-1.7, 1.7]:
 				_bola(c, kn + Vector2(dx, 0), 2.4, osso, ctn)
 
-static func boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, equipe: int, pecas: Array, f: float = 0.0, anim: float = 0.0, andando: bool = false, golpe: float = 0.0, alfa: float = 1.0, fantasma_slots: bool = false, destaque_slot: int = -1, furia: float = 0.0, tipo: int = 0, carregando: bool = false, chefe: bool = false, familia: int = 0, elite: bool = false, chefe_tipo: int = -1, parte: bool = false, parado: bool = false, variante: int = 0, nocaute: bool = false) -> void:
+static func boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, equipe: int, pecas: Array, f: float = 0.0, anim: float = 0.0, andando: bool = false, golpe: float = 0.0, alfa: float = 1.0, fantasma_slots: bool = false, destaque_slot: int = -1, furia: float = 0.0, tipo: int = 0, carregando: bool = false, chefe: bool = false, familia: int = 0, elite: bool = false, chefe_tipo: int = -1, parte: bool = false, parado: bool = false, variante: int = 0, nocaute: bool = false, gangue: int = -1) -> void:
 	if equipe == 0:
 		_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, fantasma_slots, destaque_slot, furia, variante, nocaute)
+		return
+	if gangue >= 0 and not chefe and not parte:
+		# gato rival (3º ato): o mesmo desenho do gato, virado para a esquerda, com a pelagem e a bandana da gangue
+		var g: int = clampi(gangue, 0, Fases.GANGUE_COR.size() - 1)
+		_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, false, -1, furia, 0, false, Fases.GANGUE_PELAGEM[g], Fases.GANGUE_COR[g], elite)
 		return
 	_bicho_px(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, tipo, carregando, chefe, familia, elite, chefe_tipo, parte, parado)
 	return
@@ -1265,7 +1270,7 @@ static func ponto_gato(s: int, quadro: int = -1, tipo: int = -1) -> Vector2:
 	var ajuste: Vector2 = [Vector2(0, -2), Vector2.ZERO, Vector2(3, 0), Vector2(0, -1)][s] if tipo < 0 else Vector2.ZERO
 	return (RoupaGato.origem(onde, q) + ajuste) * GATO_K
 
-static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, fantasma_slots: bool, destaque_slot: int, furia: float, variante: int, nocaute: bool) -> void:
+static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, fantasma_slots: bool, destaque_slot: int, furia: float, variante: int, nocaute: bool, pelagem: Array = [], gangue_cor: Color = Color(0, 0, 0, 0), aura: bool = false) -> void:
 	var q: int = gato_quadro(anim, andando, golpe, nocaute)
 	var lado: float = GatoDados.FONTE * GATO_K
 	var cel: float = GatoDados.CELULA
@@ -1278,8 +1283,14 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
 		_sombra_px(c, alfa)
 	_tr(c, pos, esc, dir)
-	var pel: Array = PELAGENS[posmod(variante, PELAGENS.size())]
+	var pel: Array = pelagem if not pelagem.is_empty() else PELAGENS[posmod(variante, PELAGENS.size())]
 	var tp: Color = pel[1]
+	if gangue_cor.a > 0.0:
+		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+		_anel_gangue(c, gangue_cor, alfa)
+		if aura:
+			_aura_px(c, gangue_cor, alfa)
+		_tr(c, pos, esc, dir)
 	if not nocaute:
 		# camadas que ficam ATRÁS do corpo (capa, aljava, roda): desenhadas antes do gato, só aparece o que sai da silhueta
 		for s in [1, 3, 0, 2]:
@@ -1298,6 +1309,16 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		_tr(c, pos, esc, dir)
 		tp = Color.WHITE
 	c.draw_texture_rect_region(_tex_gato(int(pel[0])), dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
+	if gangue_cor.a > 0.0 and not nocaute:
+		# bandana no pescoço, na cor da gangue (a marca que separa o gato rival do gato do time)
+		_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.Onde.PESCOCO, q) * GATO_K, 0.0, GATO_K)
+		var cb := Color(gangue_cor.r, gangue_cor.g, gangue_cor.b, alfa)
+		var esc_b := Color(gangue_cor.r * 0.4, gangue_cor.g * 0.4, gangue_cor.b * 0.4, alfa)
+		c.draw_rect(Rect2(-4, -2, 8, 4), esc_b)
+		c.draw_rect(Rect2(-3, -1, 6, 2), cb)
+		c.draw_rect(Rect2(-5, 1, 3, 3), esc_b)
+		c.draw_rect(Rect2(-4, 1, 1, 2), cb)
+		_tr(c, pos, esc, dir)
 	if fantasma_slots:
 		# espaços vazios na grade de pixels do sprite
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
@@ -1348,6 +1369,18 @@ static func _com_sombra(c: CanvasItem, nocaute: bool) -> bool:
 ## Meias-larguras da sombra (em pixels do sprite), de cima para baixo, centrada no pé (x = 0 é a divisa
 ## entre dois pixels, então espelhar o boneco não tira a sombra da grade).
 const SOMBRA_FAIXAS: Array[int] = [5, 8, 8, 5]
+
+## Anel de 1 pixel no chão, na cor da gangue: marca o gato rival mesmo parado e de longe.
+static func _anel_gangue(c: CanvasItem, cor: Color, alfa: float) -> void:
+	var cc := Color(cor.r, cor.g, cor.b, 0.75 * alfa)
+	var n: int = SOMBRA_FAIXAS.size()
+	for i in n:
+		var h: int = SOMBRA_FAIXAS[i]
+		if i == 0 or i == n - 1:
+			c.draw_rect(Rect2(-h, i - 2, h * 2, 1), cc)
+		else:
+			c.draw_rect(Rect2(-h, i - 2, 1, 1), cc)
+			c.draw_rect(Rect2(h - 1, i - 2, 1, 1), cc)
 
 static func _sombra_px(c: CanvasItem, alfa: float) -> void:
 	var cor := Color(0, 0, 0, 0.22 * alfa)

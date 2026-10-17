@@ -420,13 +420,13 @@ func _resumo_save() -> String:
 	if dono.suspenso >= 0:
 		# há um cômodo em curso nesta sessão: o botão diz onde o jogador vai voltar
 		if e.invasao:
-			return "Invasão · %s · Onda %d%s" % [Fases.NOME[e.lugar()], e.onda_invasao, " · na luta" if dono.suspenso == dono.Modo.COMBATE else ""]
-		return "%s · Onda %d de %d%s" % [Fases.NOME[e.lugar()], mini(e.onda, Balanco.ONDAS_TOTAIS), Balanco.ONDAS_TOTAIS, " · na luta" if dono.suspenso == dono.Modo.COMBATE else ""]
+			return "Invasão · %s · Onda %d%s" % [Fases.nome_do_lugar(e.lugar()), e.onda_invasao, " · na luta" if dono.suspenso == dono.Modo.COMBATE else ""]
+		return "%s · Onda %d de %d%s" % [Fases.nome_do_lugar(e.lugar()), mini(e.onda, Balanco.ONDAS_TOTAIS), Balanco.ONDAS_TOTAIS, " · na luta" if dono.suspenso == dono.Modo.COMBATE else ""]
 	if e.campanha_vencida():
 		var rec: int = e.melhor_invasao()
 		if e.tudo_vencido():
 			return "Tudo vencido · recorde: onda %d" % rec if rec > 0 else "Tudo vencido · %d gatos" % e.bonecos.size()
-		return "2º ato · %d de %d lugares" % [e.vencidos_no_ato(2), Fases.TOTAL]
+		return "%dº ato · %d de %d lugares" % [e.ato_atual(), e.vencidos_no_ato(e.ato_atual()), Fases.TOTAL]
 	return "Cômodo %d de %d · %d gatos" % [clampi(e.fase_liberada, 1, Fases.TOTAL), Fases.TOTAL, e.bonecos.size()]
 
 func confirmar(titulo: String, texto: String, ok: String, nao: String, acao: Callable) -> void:

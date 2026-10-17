@@ -942,7 +942,7 @@ func _lugar_fora(f: int, t: float, est: Estado, d: int) -> void:
 			_rr(r, Color(1.0, 0.88, 0.5, 0.12 + 0.04 * sin(t * 6.0)))
 	var b: Vector3 = BICHO_FORA[fi]
 	var pulo: float = absf(sin(t * 7.0)) * 8.0 if hov else 0.0
-	Desenho.boneco(cv, Vector2(b.x, b.y - pulo), b.z, -1.0, 1, VAZIO, 0.0, t * 2.0 + f, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, fi + Fases.TOTAL, false, -1)
+	Desenho.boneco(cv, Vector2(b.x, b.y - pulo), b.z, -1.0, 1, VAZIO, 0.0, t * 2.0 + f, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, fi + Fases.TOTAL, false, -1, false, false, 0, false, fi if _ato >= 3 else -1)
 	_placa_fora(fi, feito, t)
 	if feito:
 		_selo()
@@ -951,7 +951,7 @@ func _lugar_fora(f: int, t: float, est: Estado, d: int) -> void:
 
 ## Plaquinha de madeira com o nome e, logo abaixo, o estado: "falta" (dourado, pulsando) ou "feito" (verde).
 func _placa_fora(fi: int, feito: bool, t: float) -> void:
-	var nome: String = Fases.NOME[fi + Fases.TOTAL]
+	var nome: String = Fases.nome_do_lugar(fi + Fases.TOTAL * (_ato - 1))
 	var off: Vector2 = PLACA_FORA[fi]
 	var w: float = ceilf((_largura(nome, 14) + 16.0) / 4.0) * 4.0
 	var x: float = FORA[fi].position.x + off.x
@@ -1230,7 +1230,7 @@ func _painel_lateral(f: int) -> void:
 	var est: Estado = p.estado
 	var fi: int = f - 1
 	var ato_m: int = _ato if _fora else 1                          # ato que o painel descreve
-	var li: int = fi + (Fases.TOTAL if _fora else 0)               # índice nas tabelas: de fora da casa no segundo ato
+	var li: int = fi + (Fases.TOTAL * (ato_m - 1) if _fora else 0)   # índice nas tabelas: fora da casa (2º ato) ou nas ruas (3º)
 	var bloq: bool = f > est.fase_liberada
 	var venc: bool = est.vencido[fi] >= ato_m if _fora else f <= est.fases_vencidas
 	var prox: bool = not bloq and not venc and f == est.fase_liberada and not _fora
@@ -1245,14 +1245,14 @@ func _painel_lateral(f: int) -> void:
 	var chefes: Array = p._chefes_mapa
 	var fundo_p := Color(0.1, 0.06, 0.1, 1.0)
 	cv.draw_rect(RETRATO, Color(0.16, 0.1, 0.17))
-	Desenho.boneco(cv, Vector2(RETRATO.position.x + 100.0, RETRATO.end.y - 6.0), RETRATO_ESCALA * Balanco.CHEFE_ESCALA_TIPO[li], -1.0, 1, chefes[fi], 0.0, anim, false, 0.0, al, false, -1, 0.0, 0, false, true, li, false, li)
-	Desenho.boneco(cv, Vector2(RETRATO.position.x + 30.0, RETRATO.end.y - 6.0), 0.6, -1.0, 1, VAZIO, 0.0, anim + 1.0, false, 0.0, al, false, -1, 0.0, 0, false, false, li, false, -1)
+	Desenho.boneco(cv, Vector2(RETRATO.position.x + 100.0, RETRATO.end.y - 6.0), RETRATO_ESCALA * Balanco.CHEFE_ESCALA_TIPO[Fases.chefe_base(li)], -1.0, 1, chefes[li], 0.0, anim, false, 0.0, al, false, -1, 0.0, 0, false, true, Fases.chefe_base(li), false, Fases.chefe_base(li))
+	Desenho.boneco(cv, Vector2(RETRATO.position.x + 30.0, RETRATO.end.y - 6.0), 0.6, -1.0, 1, VAZIO, 0.0, anim + 1.0, false, 0.0, al, false, -1, 0.0, 0, false, false, li, false, -1, false, false, 0, false, (li - Fases.TOTAL * 2) if li >= Fases.TOTAL * 2 else -1)
 	cv.draw_rect(Rect2(PAINEL.position.x + 8.0, PAINEL.position.y + 8.0, PAINEL.size.x - 16.0, RETRATO.position.y - PAINEL.position.y - 8.0), fundo_p)
 	cv.draw_rect(Rect2(RETRATO.end.x, RETRATO.position.y - 2.0, PAINEL.end.x - 8.0 - RETRATO.end.x, RETRATO.size.y + 4.0), fundo_p)
 	cv.draw_rect(Rect2(PAINEL.position.x + 8.0, RETRATO.end.y, PAINEL.size.x - 16.0, 366.0 - RETRATO.end.y), fundo_p)
 	cv.draw_rect(RETRATO, Color(1, 1, 1, 0.18), false, 1.0)
 	# nome e situação
-	var nome: String = Fases.NOME[li]
+	var nome: String = Fases.nome_do_lugar(li)
 	var tn: int = p._tam_cabe(nome, [28, 26, 24], 200.0)
 	Desenho.texto(cv, nome, Vector2(x0, 156), tn, p._com_alfa(Color(1, 0.95, 0.8), al), -1.0, 5)
 	var chip := Rect2(x0 + larg - 120.0, 132.0, 120.0, 28.0)
@@ -1275,8 +1275,8 @@ func _painel_lateral(f: int) -> void:
 	var fam_dica: String = Fases.FAMILIA_DICA[fi]
 	if _fora:
 		var dg: int = mini(est.vencidos_no_ato(ato_m), Fases.TOTAL - 1)
-		fam_txt = "%s · %s" % [Balanco.ATO_NOME[ato_m - 1], Fases.FAMILIA_NOME[li]]
-		fam_dica = "%s. Lugar deixado para depois chega mais forte (agora: +%d%% de vida)." % [Fases.FAMILIA_DICA[li], int(round(Balanco.ATO_VIDA_DEGRAU * dg * 100.0))]
+		fam_txt = "%s · %s" % [Balanco.ATO_NOME[ato_m - 1], Fases.grupo_nome(li)]
+		fam_dica = "%s. Lugar deixado para depois chega mais forte (agora: +%d%% de vida)." % [Fases.grupo_dica(li), int(round(Balanco.ATO_VIDA_DEGRAU * dg * 100.0))]
 	Desenho.texto(cv, fam_txt, Vector2(x0, 182), 16, p._com_alfa(tom.lightened(0.4), al))
 	var tam_d: int = 12 if _fora else 13     # lá fora a dica é mais longa (leva o aviso de vida extra)
 	var ld: Array[String] = p._quebrar(fam_dica, tam_d, larg)
@@ -1287,7 +1287,7 @@ func _painel_lateral(f: int) -> void:
 	var xr: float = 1044.0
 	var lr: float = PAINEL.end.x - 24.0 - xr      # 180
 	Desenho.texto(cv, "Chefe", Vector2(xr, 262), 13, Color(1, 1, 1, 0.65 * al))
-	var cn: String = Fases.CHEFE_NOME[li]
+	var cn: String = Fases.nome_do_chefe(li)
 	var tc: int = p._tam_cabe(cn, [22, 20, 18, 16], lr)
 	Desenho.texto(cv, cn, Vector2(xr, 288), tc, p._com_alfa(Desenho.DOURADO, al), -1.0, 4)
 	var oferta: bool = est.campanha_vencida() and not bloq
@@ -1317,11 +1317,11 @@ func _painel_lateral(f: int) -> void:
 	_sep(x0, larg, 366.0)
 	# ataque e fraqueza do chefe
 	Desenho.texto(cv, "Ataque do chefe", Vector2(x0, 386), 13, p._com_alfa(Color(1.0, 0.72, 0.55), al))
-	var la: Array[String] = p._quebrar(Fases.CHEFE_ATAQUE[li], 13, larg)
+	var la: Array[String] = p._quebrar(Fases.ataque_do_chefe(li), 13, larg)
 	for k in mini(la.size(), 3):
 		Desenho.texto(cv, la[k], Vector2(x0, 402.0 + 15.0 * k), 13, Color(1, 1, 1, 0.9 * al))
 	Desenho.texto(cv, "Fraqueza", Vector2(x0, 449), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
-	var lf: Array[String] = p._quebrar(Fases.CHEFE_FRAQUEZA[li], 13, larg)
+	var lf: Array[String] = p._quebrar(Fases.fraqueza_do_chefe(li), 13, larg)
 	for k in mini(lf.size(), 2):
 		Desenho.texto(cv, lf[k], Vector2(x0, 465.0 + 15.0 * k), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
 	_sep(x0, larg, 492.0)

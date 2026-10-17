@@ -125,7 +125,7 @@ func tudo_vencido() -> bool:
 func mult_vida() -> float:
 	if ato <= 1:
 		return Balanco.FASE_VIDA[fase - 1] * _facil()
-	return Balanco.ATO_VIDA[ato - 1] * Balanco.ATO_COMODO_VIDA[fase - 1] * (1.0 + Balanco.ATO_VIDA_DEGRAU * degrau_ato())
+	return Balanco.ATO_VIDA[ato - 1] * Balanco.ATO_COMODO_VIDA[ato - 1][fase - 1] * (1.0 + Balanco.ATO_VIDA_DEGRAU * degrau_ato())
 
 ## Só com o tutorial ativo e só na primeira onda do cômodo; fora disso é 1 (o balanço normal não muda).
 func _facil() -> float:
@@ -134,7 +134,7 @@ func _facil() -> float:
 func mult_dano() -> float:
 	if ato <= 1:
 		return Balanco.FASE_DANO[fase - 1] * _facil()
-	return Balanco.ATO_DANO[ato - 1] * Balanco.ATO_COMODO_DANO[fase - 1] * (1.0 + Balanco.ATO_DANO_DEGRAU * degrau_ato())
+	return Balanco.ATO_DANO[ato - 1] * Balanco.ATO_COMODO_DANO[ato - 1][fase - 1] * (1.0 + Balanco.ATO_DANO_DEGRAU * degrau_ato())
 
 ## "Fase" que conta para a vida extra do chefe.
 func degrau_chefe() -> float:
@@ -224,9 +224,10 @@ func _ver_onda() -> void:
 			bichos_vistos["f%d" % int(d["fam"])] = true
 		elif lg < Fases.TOTAL:
 			bichos_vistos["f%d" % lg] = true
-		else:
+		elif lg < Fases.TOTAL * 2:
 			bichos_vistos["b%d" % (lg - Fases.TOTAL)] = true
-	if not chefe.is_empty():
+		# 3º ato (lg >= 10): os rivais ainda não entram no bestiário (decisão da próxima etapa: por gangue + tipo)
+	if not chefe.is_empty() and lg < Fases.TOTAL * 2:
 		bichos_vistos["c%d" % lg] = true
 
 func viu_bicho(chave: String) -> bool:

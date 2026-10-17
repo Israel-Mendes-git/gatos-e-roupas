@@ -42,7 +42,7 @@ func _dados() -> void:
 		for i in range(a * Fases.TOTAL, (a + 1) * Fases.TOTAL):
 			n += (Fases.CONJUNTOS[i] as Array).size()
 		_ok(n == 18, "ato %d com %d fantasias, esperado 18" % [a + 1, n])
-	_ok(Balanco.ATOS < 3, "o 3º ato não devia estar ligado nesta entrega")
+	_ok(Balanco.ATOS == 3, "o 3º ato está ligado")
 	_ok(Balanco.degrau_drop(1, 3, false, 0) == 10.0 and Balanco.degrau_drop(5, 3, false, 0) == 14.0, "degrau_drop do 3º ato")
 	_ok(Fases.nome_do_lugar(10) == "Mercadão do Peixe" and Fases.nome_do_chefe(14) == "Magnetomiau", "nomes do 3º ato")
 
@@ -51,7 +51,7 @@ func _provisorio() -> void:
 	var vistos: Dictionary = {}
 	for i in Fases.CONJUNTOS.size():
 		var l: Array = Fases.lista_do_lugar(i)
-		if i < Fases.TOTAL or i >= Fases.TOTAL * 2:
+		if i < Fases.TOTAL or i >= Fases.TOTAL * 2 or Balanco.ATOS >= 3:   # com o 3º ato ligado o provisório deixa de valer
 			_ok(l == Fases.CONJUNTOS[i], "lugar %d não devia ter provisório" % i)
 		else:
 			_ok(l.size() <= 8, "lugar %d provisório com %d (máximo 8)" % [i, l.size()])
@@ -60,7 +60,7 @@ func _provisorio() -> void:
 				_ok(Fases.casa_final(c) >= Fases.TOTAL * 2, "provisória %s não é do 3º ato" % Pecas.CONJUNTO_NOME[c])
 				_ok(not vistos.has(c), "provisória %s repetida" % Pecas.CONJUNTO_NOME[c])
 				vistos[c] = true
-	_ok(vistos.size() == 18, "provisórias cobrem %d fantasias do 3º ato, esperado 18" % vistos.size())
+	_ok(vistos.size() == (0 if Balanco.ATOS >= 3 else 18), "provisórias cobrem %d fantasias do 3º ato, esperado 18" % vistos.size())
 	for c in Pecas.Conjunto.size():
 		if not Pecas.retirada(c):
 			_ok(Fases.lugar_atual(c) >= 0, "%s não cai em lugar nenhum" % Pecas.CONJUNTO_NOME[c])
@@ -170,7 +170,7 @@ func _fichario() -> void:
 	_ok(tv != "" and tv.find("assinatura") < 0, "Vikingato não é assinatura: " + tv)
 	_ok(Fichario.texto_provisorio(c) == "", "casa final não tem aviso")
 	var tp: String = Fichario.texto_provisorio(Pecas.Conjunto.SUBMIAUTICA)
-	_ok(tp == "por enquanto cai no Quintal", "aviso provisório: " + tp)
+	_ok(tp == ("" if Balanco.ATOS >= 3 else "por enquanto cai no Quintal"), "aviso provisório: " + tp)
 	var to: String = Fichario.texto_onde(Pecas.Conjunto.MIAUZILLA)
 	_ok(to.begins_with("Cai na Arena da Praça"), to)
 	_ok(Fichario.lugar_de_fora(Pecas.Conjunto.HOLLOWMIAU) == 9 and Fichario.comodo_da_fantasia(Pecas.Conjunto.HOLLOWMIAU) == -1, "Hollowmiau")

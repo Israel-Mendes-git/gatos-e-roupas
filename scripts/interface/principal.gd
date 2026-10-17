@@ -40,9 +40,9 @@ const FS_OUTRO := 2   # vestida por outro gato
 const FS_NAO := 3     # o jogador ainda não tem
 const ABA_NOMES: Array[String] = ["Cabeça", "Corpo", "Mão", "Acessório"]
 const COR_SLOT: Array[Color] = [Color(0.3, 0.38, 0.55), Color(0.28, 0.5, 0.36), Color(0.55, 0.4, 0.28), Color(0.48, 0.32, 0.5)]
-const COR_COMODO: Array[Color] = [Color(0.35, 0.5, 0.78), Color(0.72, 0.45, 0.3), Color(0.8, 0.7, 0.25), Color(0.55, 0.4, 0.7), Color(0.25, 0.55, 0.5), Color(0.4, 0.68, 0.32), Color(0.6, 0.6, 0.66), Color(0.3, 0.36, 0.7), Color(0.85, 0.6, 0.3), Color(0.6, 0.42, 0.3)]
-const VENCIDO_GENERO: Array[String] = ["vencido", "vencida", "vencida", "vencido", "vencido", "vencido", "vencida", "vencido", "vencida", "vencida"]
-const ARTIGO: Array[String] = ["o", "a", "a", "o", "o", "o", "a", "o", "a", "a"]
+const COR_COMODO: Array[Color] = [Color(0.35, 0.5, 0.78), Color(0.72, 0.45, 0.3), Color(0.8, 0.7, 0.25), Color(0.55, 0.4, 0.7), Color(0.25, 0.55, 0.5), Color(0.4, 0.68, 0.32), Color(0.6, 0.6, 0.66), Color(0.3, 0.36, 0.7), Color(0.85, 0.6, 0.3), Color(0.6, 0.42, 0.3), Color(0.62, 0.12, 0.22), Color(0.95, 0.5, 0.15), Color(0.2, 0.7, 0.8), Color(0.85, 0.2, 0.12), Color(0.55, 0.3, 0.8)]
+const VENCIDO_GENERO: Array[String] = ["vencido", "vencida", "vencida", "vencido", "vencido", "vencido", "vencida", "vencido", "vencida", "vencida", "vencido", "vencido", "vencido", "vencida", "vencidos"]
+const ARTIGO: Array[String] = ["o", "a", "a", "o", "o", "o", "a", "o", "a", "a", "o", "o", "o", "a", "os"]
 const CARTAO_W := 224.0
 const CARTAO_H := 470.0
 # Botão da oficina da torre: um lugar no mapa e outro no guarda-roupa (abaixo dos módulos montados)
@@ -294,7 +294,7 @@ func _ready() -> void:
 	else:
 		# sem gravação: o time de começo aparece no título, mas nada é gravado até "Nova campanha"
 		estado.novo_jogo()
-	for f in range(1, Fases.NOME.size() + 1):
+	for f in range(1, Fases.TOTAL * 3 + 1):
 		_chefes_mapa.append(Balanco.assinatura(f, 0))
 	mapa_casa = MapaCasa.new(self)
 	_preparar_fundo()
@@ -415,8 +415,8 @@ func _aquecer_mapa() -> void:
 	var vazio: Array = [null, null, null, null]
 	for fam in 5:
 		aquecedor.adicionar_bicho(vazio, Unidade.Tipo.COMUM, fam, false, false, -1, false)
-	for li in mini(_chefes_mapa.size(), Fases.NOME.size()):
-		aquecedor.adicionar_bicho(_chefes_mapa[li], Unidade.Tipo.COMUM, 0, true, false, li, false)
+	for li in mini(_chefes_mapa.size(), Fases.TOTAL * 3):
+		aquecedor.adicionar_bicho(_chefes_mapa[li], Unidade.Tipo.COMUM, 0, true, false, Fases.chefe_base(li), false)
 	for i in estado.bonecos.size():
 		aquecedor.adicionar_gato(estado.bonecos[i].pecas, i)
 
@@ -1014,15 +1014,15 @@ func _causa_derrota(sim: Simulacao) -> Dictionary:
 				cont[kk] = int(cont.get(kk, 0)) + 1
 				if u.chefe:
 					cont[kk] = 99
-					derrota_chefe = u.chefe_tipo
+					derrota_chefe = estado.lugar()
 		for k in cont:
 			if int(cont[k]) > blocos:
 				blocos = int(cont[k])
 				chave = k
 		blocos = 0   # sem contagem exata de blocos: a frase fica sem número
 	if chave is String and chave == "chefe":
-		var ct: int = clampi(derrota_chefe if derrota_chefe >= 0 else estado.lugar(), 0, Fases.CHEFE_NOME.size() - 1)
-		return {"causa": "O chefe %s acabou com a torre." % Fases.CHEFE_NOME[ct], "dica": Fases.CHEFE_FRAQUEZA[ct] + "." + ((" " + dica_poder) if sim.gatos_por_poder_bicho > 0 else "")}
+		var ct: int = clampi(derrota_chefe if derrota_chefe >= 0 else estado.lugar(), 0, Fases.TOTAL * 3 - 1)
+		return {"causa": "O chefe %s acabou com a torre." % Fases.nome_do_chefe(ct), "dica": Fases.fraqueza_do_chefe(ct) + "." + ((" " + dica_poder) if sim.gatos_por_poder_bicho > 0 else "")}
 	var q: String = " (%d bloco%s)" % [blocos, "" if blocos == 1 else "s"] if blocos > 0 else ""
 	match chave:
 		Unidade.Tipo.LADRAO:
@@ -1056,7 +1056,7 @@ func _dicas_do_gato() -> void:
 		elif bb.incorporacoes() < Balanco.BONECO_NIVEL_MAX / passo and bb.nivel % passo >= passo - 2:
 			menus.dica("her_aviso_%d" % (bb.incorporacoes() + 1), "No nível %d o gato guarda o poder da fantasia vestida (a mesma de novo sobe o grau)." % ((bb.incorporacoes() + 1) * passo))
 	if estado.ato > 1:
-		menus.dica("ato_%d" % estado.ato, "%s: bichos misturados e com truques novos." % Balanco.ATO_NOME[estado.ato - 1])
+		menus.dica("ato_%d" % estado.ato, ("%s: gatos rivais de gangue, que brigam com o seu time antes de ir à torre." if estado.ato >= 3 else "%s: bichos misturados e com truques novos.") % Balanco.ATO_NOME[estado.ato - 1])
 	if estado.fases_vencidas >= 1:
 		menus.dica("ficha", "Mouse no nome do gato: vida, dano e números.")
 
@@ -1092,7 +1092,7 @@ func _fim_fase(vitoria: bool) -> void:
 	_fechar_janelas()
 	fim_painel.visible = true
 	var fi: int = estado.lugar()
-	var nome: String = Fases.NOME[fi]
+	var nome: String = Fases.nome_do_lugar(fi)
 	var linhas_time: Array[String] = []
 	fim_vitoria = vitoria
 	if not vitoria and fim_invasao:
@@ -1116,7 +1116,9 @@ func _fim_fase(vitoria: bool) -> void:
 		elif estado.campanha_vencida():
 			var a_at: int = estado.ato_atual()
 			var faltam: int = Fases.TOTAL - estado.vencidos_no_ato(a_at)
-			if faltam >= Fases.TOTAL:
+			if faltam >= Fases.TOTAL and a_at >= 3:
+				sub = "%s vencido! Mas as ruas são de gangues de gatos rivais, que vestem as fantasias do lugar. O %s está no mapa: Mercadão, Ferro-velho, Beco, Arena e Telhados." % [Balanco.ATO_NOME[a_at - 2], Balanco.ATO_NOME[a_at - 1].to_lower()]
+			elif faltam >= Fases.TOTAL:
 				sub = "%s vencido! A casa é sua, mas os bichos fugiram para fora. O %s está no mapa: quintal, garagem, telhado, rua e toca, na ordem que quiser." % [Balanco.ATO_NOME[a_at - 2], Balanco.ATO_NOME[a_at - 1].to_lower()]
 			else:
 				sub = "%s: falta%s %d lugar%s. Os que ficam para depois chegam mais fortes." % [Balanco.ATO_NOME[a_at - 1], "" if faltam == 1 else "m", faltam, "" if faltam == 1 else "es"]
@@ -3223,13 +3225,13 @@ func _draw() -> void:
 	var fi: int = estado.lugar()
 	if estado.invasao:
 		# a coluna da esquerda é estreita (o palco dos gatos começa em x = 200): o título vai em três linhas curtas
-		var t_inv: String = "Invasão · %s" % Fases.NOME[fi]
+		var t_inv: String = "Invasão · %s" % Fases.nome_do_lugar(fi)
 		Desenho.texto(self, t_inv, Vector2(24, 36), _tam_cabe(t_inv, [24, 22, 20, 18], 170.0), Color(1, 1, 1), -1.0, 5)
 		Desenho.texto(self, "Onda %d" % estado.onda_invasao, Vector2(24, 62), 24, Color(1, 0.95, 0.75), -1.0, 5)
 		var r_inv: int = estado.recordes[fi]
 		Desenho.texto(self, "Recorde: onda %d" % r_inv if r_inv > 0 else "Sem recorde ainda", Vector2(26, 78), 14, Desenho.DOURADO, -1.0, 3)
 	else:
-		Desenho.texto(self, Fases.NOME[fi], Vector2(24, 50), 34, Color(1, 1, 1), -1.0, 6)
+		Desenho.texto(self, Fases.nome_do_lugar(fi), Vector2(24, 50), 34, Color(1, 1, 1), -1.0, 6)
 		Desenho.texto(self, "Onda %d de %d" % [mini(estado.onda, Balanco.ONDAS_TOTAIS), Balanco.ONDAS_TOTAIS], Vector2(26, 76), 16, Color(1, 0.9, 0.7), -1.0, 4)
 	_bonecos()
 	_painel_guarda()
@@ -4540,7 +4542,7 @@ func _celula_previa(g: Dictionary, topo_esq: Vector2, larg: float, alt: float, e
 	var cx_b: float = clampf(topo_esq.x + larg * 0.5 + 8.0, PREVIA.position.x + 18.0 + 70.0 * esc, PREVIA.end.x - 16.0 - 44.0 * esc)
 	var pe: Vector2 = Vector2(cx_b, topo_esq.y + alt - reserva - 3.0)
 	_ellipse_sombra(pe + Vector2(0, 2), 30.0 * esc, 5.0 * esc, Color(0, 0, 0, 0.35))
-	Desenho.boneco(self, pe, esc, -1.0, 1, ini["pecas"], 0.0, t * 2.0 + idx, false, 0.0, 1.0, false, -1, 0.0, tp, false, false, fi, eli)
+	Desenho.boneco(self, pe, esc, -1.0, 1, ini["pecas"], 0.0, t * 2.0 + idx, false, 0.0, 1.0, false, -1, 0.0, tp, false, false, fi, eli, -1, false, false, 0, false, int(ini.get("gangue", -1)) if ini.get("rival", false) else -1)
 	var y: float = pe.y + 17.0
 	for l in linhas_r:
 		Desenho.texto(self, l, Vector2(topo_esq.x, y), 13, cor_r, larg, 3)
@@ -4570,7 +4572,7 @@ func _previa() -> void:
 		var cx: float = PREVIA.position.x + PREVIA.size.x * 0.5
 		var pe: Vector2 = Vector2(cx, PREVIA.position.y + 124.0)
 		_ellipse_sombra(pe + Vector2(0, 3), 46.0, 8.0, Color(0, 0, 0, 0.4))
-		Desenho.boneco(self, pe, 1.2, -1.0, 1, estado.chefe, 0.0, t * 2.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, true, fi, false, fi)
+		Desenho.boneco(self, pe, 1.2, -1.0, 1, estado.chefe, 0.0, t * 2.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, true, Fases.chefe_base(fi), false, Fases.chefe_base(fi))
 		var linhas_e: int = int(ceil(grupos.size() / float(cols)))
 		var alt_e: float = 52.0 if linhas_e <= 1 else 44.0
 		for i in grupos.size():
@@ -4580,9 +4582,9 @@ func _previa() -> void:
 			var x0: float = xi + (li - n_linha * larg_c) * 0.5 + c * larg_c
 			_celula_previa(grupos[i], Vector2(x0, PREVIA.position.y + 132.0 + l * alt_e), larg_c, alt_e, 0.5 if linhas_e <= 1 else 0.4, fi, i)
 		yt = PREVIA.position.y + 132.0 + linhas_e * alt_e + (22.0 if linhas_e <= 1 else 14.0)
-		Desenho.texto(self, Fases.CHEFE_NOME[fi], Vector2(xi, yt), 16, Desenho.DOURADO, -1.0, 3)
-		yt = _paragrafo("Ataque: " + Fases.CHEFE_ATAQUE[fi], Vector2(xi, yt + 17), 13, Color(1, 0.88, 0.82), li, 15.0)
-		_paragrafo("Fraqueza: " + Fases.CHEFE_FRAQUEZA[fi], Vector2(xi, yt + 1), 13, Color(0.7, 1.0, 0.75), li, 15.0)
+		Desenho.texto(self, Fases.nome_do_chefe(fi), Vector2(xi, yt), 16, Desenho.DOURADO, -1.0, 3)
+		yt = _paragrafo("Ataque: " + Fases.ataque_do_chefe(fi), Vector2(xi, yt + 17), 13, Color(1, 0.88, 0.82), li, 15.0)
+		_paragrafo("Fraqueza: " + Fases.fraqueza_do_chefe(fi), Vector2(xi, yt + 1), 13, Color(0.7, 1.0, 0.75), li, 15.0)
 	else:
 		var linhas: int = int(ceil(grupos.size() / float(cols)))
 		var area_h: float = 196.0
@@ -4596,7 +4598,7 @@ func _previa() -> void:
 			var x0: float = xi + (li - n_linha * larg_c) * 0.5 + c * larg_c
 			_celula_previa(grupos[i], Vector2(x0, topo + desloc + l * alt_c), larg_c, alt_c, esc_b, fi, i)
 		yt = PREVIA.position.y + 272.0
-		Desenho.texto(self, Fases.FAMILIA_NOME[fi], Vector2(xi, yt), 16, Color(1, 0.88, 0.8), -1.0, 3)
+		Desenho.texto(self, Fases.grupo_nome(fi), Vector2(xi, yt), 16, Color(1, 0.88, 0.8), -1.0, 3)
 		# a frase da família vive na dica do mouse do painel
 
 func _bigorna() -> void:
@@ -5188,7 +5190,7 @@ func _dica() -> void:
 		_caixa_dica([["t", "Promover", 22, Desenho.DOURADO], ["t", "Arraste uma peça: carretel sobe o nível (blocos), estrela sobe a raridade (troféus).", 13, Color(1, 1, 1)], ["t", "Peça sobre peça igual: funde, de graça.", 13, Color(0.7, 1.0, 0.7)]], 300.0, Desenho.DOURADO, Desenho.DOURADO, mouse, Vector2(-320, 10))
 		return
 	if arrasto.is_empty() and PREVIA.has_point(mouse) and estado.chefe.is_empty():
-		_caixa_dica([["t", Fases.FAMILIA_NOME[estado.lugar()], 22, Color(1, 0.88, 0.8)], ["t", Fases.FAMILIA_DICA[estado.lugar()], 13, Color(1, 1, 1)]], 300.0, Desenho.COR_INIMIGO, Desenho.DOURADO, mouse, Vector2(-320, 10))
+		_caixa_dica([["t", Fases.grupo_nome(estado.lugar()), 22, Color(1, 0.88, 0.8)], ["t", Fases.grupo_dica(estado.lugar()), 13, Color(1, 1, 1)]], 300.0, Desenho.COR_INIMIGO, Desenho.DOURADO, mouse, Vector2(-320, 10))
 		return
 	if arrasto.is_empty():
 		for fr in _rect_fant:
@@ -5391,7 +5393,7 @@ func _cartao(f: int) -> void:
 	_painel(r, _com_alfa(fundo, 0.97), 0.5, moldura)
 	draw_rect(Rect2(r.position.x + 12, r.position.y + 12, r.size.x - 24, 50), _com_alfa(tom.darkened(0.15), al))
 	draw_rect(Rect2(r.position.x + 12, r.position.y + 12, r.size.x - 24, 4), _com_alfa(tom.lightened(0.3), al))
-	Desenho.texto(self, Fases.NOME[fi], Vector2(r.position.x, r.position.y + 49), 34, _com_alfa(Color(1, 1, 1), al), r.size.x, 6)
+	Desenho.texto(self, Fases.nome_do_lugar(fi), Vector2(r.position.x, r.position.y + 49), 34, _com_alfa(Color(1, 1, 1), al), r.size.x, 6)
 	Desenho.texto(self, str(f), Vector2(r.position.x + 20, r.position.y + 32), 16, _com_alfa(Color(1, 1, 1), 0.7 * al), -1.0, 3)
 	# estado
 	var rc := Rect2(r.position.x + 36, r.position.y + 74, r.size.x - 72, 28)
@@ -5420,12 +5422,12 @@ func _cartao(f: int) -> void:
 	var xb: float = cx - 50.0
 	_ellipse_sombra(Vector2(xc, yc + 3), 40.0, 7.0, Color(0, 0, 0, 0.35 * al))
 	_ellipse_sombra(Vector2(xb, yb + 3), 28.0, 6.0, Color(0, 0, 0, 0.35 * al))
-	Desenho.boneco(self, Vector2(xc, yc), 1.2, -1.0, 1, _chefes_mapa[fi], 0.0, t * 2.0 + f * 2.0, false, 0.0, al, false, -1, 0.0, 0, false, true, fi, false, fi)
+	Desenho.boneco(self, Vector2(xc, yc), 1.2, -1.0, 1, _chefes_mapa[fi], 0.0, t * 2.0 + f * 2.0, false, 0.0, al, false, -1, 0.0, 0, false, true, Fases.chefe_base(fi), false, Fases.chefe_base(fi))
 	Desenho.boneco(self, Vector2(xb, yb), 0.85, -1.0, 1, vazio, 0.0, t * 2.0 + f, false, 0.0, al, false, -1, 0.0, 0, false, false, fi, false, -1)
-	Desenho.texto(self, Fases.FAMILIA_NOME[fi], Vector2(xb - 45, yb + 17), 13, _com_alfa(Color(1, 0.88, 0.8), 0.85 * al), 90.0, 3)
+	Desenho.texto(self, Fases.grupo_nome(fi), Vector2(xb - 45, yb + 17), 13, _com_alfa(Color(1, 0.88, 0.8), 0.85 * al), 90.0, 3)
 	Desenho.texto(self, "Chefe", Vector2(xc + 5, yc + 17), 13, _com_alfa(Color(1, 0.88, 0.8), 0.85 * al), 60.0, 3)
-	Desenho.texto(self, Fases.CHEFE_NOME[fi], Vector2(r.position.x, r.position.y + 296), 22, _com_alfa(Desenho.DOURADO, al), r.size.x, 4)
-	var lf: Array[String] = _quebrar("Fraqueza: " + Fases.CHEFE_FRAQUEZA[fi], 13, r.size.x - 36.0)
+	Desenho.texto(self, Fases.nome_do_chefe(fi), Vector2(r.position.x, r.position.y + 296), 22, _com_alfa(Desenho.DOURADO, al), r.size.x, 4)
+	var lf: Array[String] = _quebrar("Fraqueza: " + Fases.fraqueza_do_chefe(fi), 13, r.size.x - 36.0)
 	for k in mini(lf.size(), 2):
 		Desenho.texto(self, lf[k], Vector2(r.position.x, r.position.y + 318 + k * 16.0), 13, _com_alfa(Color(0.75, 1.0, 0.8), al), r.size.x)
 	# fantasias que caem aqui, só os ícones das cabeças (o nome vai na dica do mouse)

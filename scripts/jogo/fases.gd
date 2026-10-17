@@ -121,9 +121,62 @@ const CHEFE_ASSINATURA: Array[int] = [
 	Pecas.Conjunto.SUBMIAUTICA, Pecas.Conjunto.ARTHUR_MIAURGON, Pecas.Conjunto.TREINADOR, Pecas.Conjunto.MIAUZILLA, Pecas.Conjunto.KING_MIAU,
 ]
 
-## Lugares e chefes do 3º ato (só os nomes; o ato ainda não existe, então ficam fora de NOME e CHEFE_NOME).
+## Lugares e chefes do 3º ato (índices globais 10..14; ficam fora de NOME e CHEFE_NOME, que têm só 2 atos).
 const NOME_ATO3: Array[String] = ["Mercadão do Peixe", "Ferro-velho", "Beco do Fliperama", "Arena da Praça", "Telhados e Antenas"]
-const CHEFE_NOME_ATO3: Array[String] = ["Dom Gatleone", "Imortal Miau", "Programa Mestre", "Rei Leomiau", "Magnetomiau"]
+const CHEFE_NOME_ATO3: Array[String] = ["Dom Gatleone", "Imortal Miau", "Programa Mestre", "Rei Miaunidas", "Magnetomiau"]
+## As gangues de gatos rivais (uma por lugar do 3º ato), a cor da bandana e a pelagem (índice de Desenho.PELAGENS não usado pelo time).
+const GANGUE_NOME: Array[String] = ["Família Gatíssima", "Estrada Furiosa", "Tropa do Grid", "Legião Miauparta", "Irmandade Mutante"]
+const GANGUE_DICA: Array[String] = [
+	"Gatos de gangue do Mercadão: enfrentam o time antes de ir à torre",
+	"Gatos de gangue do Ferro-velho: enfrentam o time antes de ir à torre",
+	"Gatos de gangue do Beco: enfrentam o time antes de ir à torre",
+	"Gatos de gangue da Arena: enfrentam o time antes de ir à torre",
+	"Gatos de gangue dos Telhados: enfrentam o time antes de ir à torre",
+]
+const GANGUE_COR: Array[Color] = [
+	Color(0.62, 0.12, 0.22), Color(0.95, 0.5, 0.15), Color(0.2, 0.85, 0.95), Color(0.85, 0.2, 0.12), Color(0.62, 0.3, 0.9),
+]
+## Pelagem de cada gangue: [textura, tinta] (todas fora das 5 do time).
+const GANGUE_PELAGEM: Array = [
+	[0, Color(0.55, 0.5, 0.55)], [1, Color(0.7, 0.55, 0.4)], [2, Color(0.5, 0.58, 0.62)], [1, Color(0.6, 0.45, 0.4)], [0, Color(0.7, 0.62, 0.8)],
+]
+# multiplicadores da gangue sobre o rival comum (partem de 1,0; calibrar por truque nas próximas etapas)
+const GANGUE_VIDA: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0]
+const GANGUE_VEL: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0]
+const GANGUE_DANO: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0]
+## Por enquanto os chefes do 3º ato reaproveitam o desenho e a mecânica de um chefe existente (vestindo a fantasia-assinatura).
+const CHEFE_BASE_ATO3: Array[int] = [Chefe.URSO, Chefe.ROBO, Chefe.BONECA, Chefe.TEXUGO, Chefe.CORUJA]
+const CHEFE_ATAQUE_ATO3: Array[String] = [
+	"Cada patada fere todos em volta (provisório: golpes do Guaxinim Glutão). Poder: Pisão no gato mais forte",
+	"Dispara em direção à torre (provisório: Carga da Raposa Ligeira)",
+	"Atira de longe em quem está atrás (provisório: penas do Corvo Velho). Poder: Trovoada",
+	"Couro grosso: golpe fraco não fere (provisório: Texugo-Rei). Poder: Bola de espinhos",
+	"Arremessa bolotas de longe e dá saltos que ferem a fileira inteira (provisório: Esquilo Acrobata)",
+]
+const CHEFE_FRAQUEZA_ATO3: Array[String] = [
+	"Pelo seco: fogo fere em dobro",
+	"Quando perde o fôlego, fica parado e frágil",
+	"Ossos ocos: golpes de perto ferem mais",
+	"Varinha, poderes e fogo passam pelo couro",
+	"Explosões o derrubam no meio do salto: ferem em dobro",
+]
+
+## Chefe (Fases.Chefe) cujo desenho e mecânica o chefe do lugar global `i` usa.
+static func chefe_base(i: int) -> int:
+	return i if i < TOTAL * 2 else CHEFE_BASE_ATO3[clampi(i - TOTAL * 2, 0, 4)]
+
+static func ataque_do_chefe(i: int) -> String:
+	return CHEFE_ATAQUE[i] if i < CHEFE_ATAQUE.size() else CHEFE_ATAQUE_ATO3[clampi(i - CHEFE_ATAQUE.size(), 0, 4)]
+
+static func fraqueza_do_chefe(i: int) -> String:
+	return CHEFE_FRAQUEZA[i] if i < CHEFE_FRAQUEZA.size() else CHEFE_FRAQUEZA_ATO3[clampi(i - CHEFE_FRAQUEZA.size(), 0, 4)]
+
+## Nome do grupo de bichos do lugar global `i` (família, bando ou gangue).
+static func grupo_nome(i: int) -> String:
+	return FAMILIA_NOME[i] if i < FAMILIA_NOME.size() else GANGUE_NOME[clampi(i - TOTAL * 2, 0, 4)]
+
+static func grupo_dica(i: int) -> String:
+	return FAMILIA_DICA[i] if i < FAMILIA_DICA.size() else GANGUE_DICA[clampi(i - TOTAL * 2, 0, 4)]
 
 static func nome_do_lugar(i: int) -> String:
 	return NOME[i] if i < NOME.size() else NOME_ATO3[clampi(i - NOME.size(), 0, NOME_ATO3.size() - 1)]
@@ -164,14 +217,14 @@ static func pool_anterior(ato: int) -> Array:
 ## Tipo de peça que um inimigo comum do lugar global `lugar` (0..14) veste no espaço `slot`.
 ## Ato 1: as fantasias dos cômodos até o atual. Atos 2 e 3: com chance FRACAO_COMUM_DO_LUGAR sai da lista do lugar,
 ## senão de uma fantasia dos atos anteriores (as velhas continuam caindo, para fundir e subir raridade).
-static func pecas_do_slot(lugar: int, slot: int, ato: int, rng: RandomNumberGenerator) -> int:
+static func pecas_do_slot(lugar: int, slot: int, ato: int, rng: RandomNumberGenerator, fracao: float = -1.0) -> int:
 	var conj: Array = []
 	if ato <= 1:
 		for f in range(0, clampi(lugar + 1, 1, TOTAL)):
 			for c in CONJUNTOS[f]:
 				if not conj.has(c):
 					conj.append(c)
-	elif rng.randf() < Balanco.FRACAO_COMUM_DO_LUGAR:
+	elif rng.randf() < (Balanco.FRACAO_COMUM_DO_LUGAR if fracao < 0.0 else fracao):
 		conj = lista_do_lugar(clampi(lugar, 0, CONJUNTOS.size() - 1))
 	else:
 		conj = pool_anterior(ato)

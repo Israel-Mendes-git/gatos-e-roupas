@@ -101,7 +101,7 @@ func iniciar(e: Estado, semente: int = 0) -> void:
 	var t: float = Balanco.SPAWN_INICIO
 	for spec in e.plano:
 		t += rng.randf_range(Balanco.SPAWN_MIN, Balanco.SPAWN_MAX)
-		fila.append({"t": t, "pecas": spec["pecas"], "tipo": spec["tipo"], "elite": spec.get("elite", false)})
+		fila.append({"t": t, "pecas": spec["pecas"], "tipo": spec["tipo"], "elite": spec.get("elite", false), "rival": spec.get("rival", false), "gangue": spec.get("gangue", -1)})
 	if not e.chefe.is_empty():
 		fila.append({"t": t + Balanco.CHEFE_ATRASO, "pecas": e.chefe, "tipo": Unidade.Tipo.COMUM, "chefe": true})
 
@@ -465,10 +465,16 @@ func calcular(u: Unidade) -> void:
 				u.provoca = true
 			Unidade.Tipo.BOMBA:
 				u.barril_dano += Balanco.BOMBA_DANO * u.esc_dano
-		vida *= Fases.FAMILIA_VIDA[u.familia]
-		vel *= Fases.FAMILIA_VEL[u.familia]
-		dano *= Fases.FAMILIA_DANO[u.familia]
-		u.regen += Fases.FAMILIA_REGEN[u.familia]
+		if u.rival:
+			var gg: int = clampi(u.gangue, 0, Fases.GANGUE_VIDA.size() - 1)
+			vida *= Fases.GANGUE_VIDA[gg]
+			vel *= Fases.GANGUE_VEL[gg]
+			dano *= Fases.GANGUE_DANO[gg]
+		else:
+			vida *= Fases.FAMILIA_VIDA[u.familia]
+			vel *= Fases.FAMILIA_VEL[u.familia]
+			dano *= Fases.FAMILIA_DANO[u.familia]
+			u.regen += Fases.FAMILIA_REGEN[u.familia]
 	if u.chefe:
 		vel *= Balanco.CHEFE_VEL
 		match u.chefe_tipo:
@@ -518,11 +524,13 @@ func _spawnar(item: Dictionary) -> void:
 	u.chefe = chefe
 	u.elite = item.get("elite", false)
 	u.familia = clampi(int(item.get("fam", estado.fase - 1)), 0, Fases.TOTAL - 1)
+	u.rival = item.get("rival", false)
+	u.gangue = int(item.get("gangue", -1)) if u.rival else -1
 	var p: int = estado.progresso()
 	u.esc_vida = Balanco.INIMIGO_VIDA_MULT * (1.0 + Balanco.INIMIGO_VIDA_ONDA * (p - 1)) * estado.mult_vida() * estado.forca_vida()
 	u.esc_dano = (1.0 + Balanco.INIMIGO_DANO_ONDA * (p - 1)) * estado.mult_dano() * estado.forca_dano()
 	if chefe:
-		u.chefe_tipo = estado.lugar()
+		u.chefe_tipo = Fases.chefe_base(estado.lugar())
 		u.truque_cd = Balanco.TOUPEIRA_FORA_T if u.chefe_tipo == Fases.Chefe.TOUPEIRA else 5.0
 		u.esc_vida *= Balanco.CHEFE_VIDA_MULT * (1.0 + Balanco.CHEFE_VIDA_FASE * estado.degrau_chefe())
 		u.esc_dano *= Balanco.CHEFE_DANO_MULT
@@ -937,6 +945,8 @@ func _escolher(u: Unidade) -> Unidade:
 	var lista: Array[Unidade] = inimigos if u.equipe == 0 else aliados
 	var melhor: Unidade = null
 	var melhor_s: float = 1e9
+	# Disputa (parcial): o rival enxerga todos os gatos de pé; o Suicida (BOMBA) mantém o alcance de sempre (corre à torre)
+	var aggro: float = Balanco.AGGRO_RIVAL if (u.rival and u.tipo != Unidade.Tipo.BOMBA) else Balanco.AGGRO
 	for v in lista:
 		if not v.vivo:
 			continue
@@ -951,7 +961,7 @@ func _escolher(u: Unidade) -> Unidade:
 		var prio: bool = u.equipe == 0 and prioritario(v)
 		if u.equipe == 0 and d > _visao(u) * (Balanco.PRIORIDADE_VISAO if prio else 1.0):
 			continue
-		if u.equipe == 1 and d > Balanco.AGGRO + u.alcance * 0.5 and not provocado:
+		if u.equipe == 1 and d > aggro + u.alcance * 0.5 and not provocado:
 			continue
 		var s: float = d
 		if provocado:
@@ -1533,38 +1543,13 @@ func _sortear_peca_vestida(vestidas: Array, ponderado: bool) -> int:
 
 func _raridade_do_drop(u: Unidade) -> int:
 	var g: float = Balanco.degrau_drop(estado.fase, estado.ato, estado.invasao, estado.onda_invasao)
+	var c: Array[float] = Balanco.chances_raridade(g, u.chefe, u.elite)   # já com o teto DEGRAU_RARIDADE_MAX
 	var r: float = rng.randf()
-	var mitica: float
-	var lend: float
-	var epica: float
-	var rara: float
-	if u.chefe:
-		# o chefe larga no mínimo rara
-		mitica = maxf(0.0, g - Balanco.CHEFE_MITICA_DESDE) * Balanco.CHEFE_MITICA_FASE
-		lend = maxf(0.0, g - Balanco.DROP_LENDARIA_DESDE) * Balanco.CHEFE_LENDARIA_FASE
-		epica = Balanco.CHEFE_EPICA + minf(g, Balanco.CHEFE_EPICA_TETO) * Balanco.CHEFE_EPICA_FASE
-		rara = 1.0
-	elif u.elite:
-		mitica = maxf(0.0, g - Balanco.DROP_MITICA_DESDE) * Balanco.ELITE_MITICA_FASE
-		lend = maxf(0.0, g - Balanco.DROP_LENDARIA_DESDE) * Balanco.ELITE_LENDARIA_FASE
-		epica = Balanco.ELITE_EPICA + g * Balanco.ELITE_EPICA_FASE
-		rara = Balanco.ELITE_RARA
-	else:
-		mitica = maxf(0.0, g - Balanco.DROP_MITICA_DESDE) * Balanco.DROP_MITICA_FASE
-		lend = maxf(0.0, g - Balanco.DROP_LENDARIA_DESDE) * Balanco.DROP_LENDARIA_FASE
-		epica = g * Balanco.DROP_EPICA_FASE
-		rara = Balanco.DROP_RARA + minf(g, Balanco.DROP_RARA_TETO) * Balanco.DROP_RARA_FASE
-	if r < mitica:
-		return Pecas.Raridade.MITICA
-	r -= mitica
-	if r < lend:
-		return Pecas.Raridade.LENDARIA
-	r -= lend
-	if r < epica:
-		return Pecas.Raridade.EPICA
-	r -= epica
-	if r < rara:
-		return Pecas.Raridade.RARA
+	var ordem: Array[int] = [Pecas.Raridade.MITICA, Pecas.Raridade.LENDARIA, Pecas.Raridade.EPICA, Pecas.Raridade.RARA]
+	for i in 4:
+		if r < c[i]:
+			return ordem[i]
+		r -= c[i]
 	return Pecas.Raridade.COMUM
 
 ## O jogador manda o gato usar o poder da fantasia. Devolve false se não está carregado
