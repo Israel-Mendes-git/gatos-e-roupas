@@ -580,7 +580,7 @@ func _efeitos_lote4() -> void:
 	# Super Miaujin: carga interrompida por atordoamento; sem interrupção, o feixe sai
 	sim = _cena(Pecas.Conjunto.SUPER_MIAUJIN, 44)
 	var mg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.SUPER_MIAUJIN)
-	_ok(mg != null and mg.execucao > 1.0, "Super Miaujin sem execução")
+	_ok(mg != null and mg.execucao >= Balanco.conj_valor(Pecas.Conjunto.SUPER_MIAUJIN, 1), "Super Miaujin sem execução")
 	var vm: Unidade = _inimigo_perto(sim, mg, 200.0)
 	if vm != null:
 		mg.carga_t = 0.0
