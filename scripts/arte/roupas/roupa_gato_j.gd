@@ -32,7 +32,7 @@ static func onde(tipo: int) -> int:
 
 ## Peças com camada atrás do corpo do gato (asas do manto do Catchullu).
 static func tem_atras(tipo: int) -> bool:
-	return tipo == Pecas.Tipo.CAUDA_RADIOATIVA or tipo == Pecas.Tipo.MANTO_ABISSAL
+	return tipo == Pecas.Tipo.CAUDA_RADIOATIVA or tipo == Pecas.Tipo.MANTO_ABISSAL or tipo == Pecas.Tipo.TANQUE_PEIXINHO
 
 # ------------------------------------------------------------------ ferramentas (usam as de RoupaGatoF e RoupaGatoG)
 static func _ret(cv: Dictionary, x0: int, y0: int, x1: int, y1: int, ch: String) -> void:
@@ -87,7 +87,7 @@ static func _montar(tipo: int) -> Array:
 		Pecas.Tipo.RIFLE_ESTASE:
 			return _sub_rifle()
 		Pecas.Tipo.TANQUE_PEIXINHO:
-			return _sub_barbatana()
+			return _sub_cauda()
 		Pecas.Tipo.CABECA_POLVO:
 			return _cth_cabeca()
 		Pecas.Tipo.MANTO_ABISSAL:
@@ -296,7 +296,7 @@ const _PAL_SUB := {
 }
 
 ## Cabeça do Reaper: crânio azul-acinzentado alongado para a frente com o olho pequeno e a boca de dentes, crista curta varrida para trás e as quatro
-## mandíbulas ferrugem em foice grossa, abertas em pinça em volta da boca (duas em cima, duas embaixo).
+## mandíbulas ferrugem em foice grossa (abertura de 80%), em pinça em volta da boca (duas em cima, duas embaixo).
 static func _sub_capuz() -> Array:
 	var cv: Dictionary = {}
 	RoupaGatoI._poli(cv, [2, -19, 8, -18, 13, -15, 15, -12, 14, -10, 9, -10, 3, -10], "a")
@@ -313,7 +313,7 @@ static func _sub_capuz() -> Array:
 	RoupaGatoI._lin(cv, Vector2i(6, -19), Vector2i(1, -23), "R")
 	RoupaGatoI._lin(cv, Vector2i(6, -18), Vector2i(2, -21), "r")
 	for k in 4:
-		_mand(cv, k, 1.2)
+		_mand(cv, k, 0.8)
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_SUB)]
 
@@ -347,16 +347,22 @@ static func _sub_rifle() -> Array:
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.BOCA, _PAL_SUB)]
 
-## Barbatana dorsal: franja fina de espinhos ferrugem varridos para trás.
-static func _sub_barbatana() -> Array:
+## Cauda do Reaper, atrás do corpo: nasce na garupa, cai para trás afinando, com faixas ferrugem diagonais e o leque final de três nadadeiras finas.
+static func _sub_cauda() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, -10, -17, [
-		"R..R..R.R",
-		"rR.rR.rrR",
-		".rrrrrrr.",
-	])
+	RoupaGatoI._poli(cv, [-8, -12, -12, -12.5, -16, -11, -20, -9.5, -23, -8.5, -23, -7.5, -20, -7, -16, -6.5, -12, -5.5, -8, -6], "a")
+	RoupaGatoI._luz(cv, "a", "A", "d")
+	for k in cv.keys():
+		var q: Vector2i = k
+		if posmod(q.x - q.y, 6) < 2 and cv[q] != "A":
+			cv[q] = "r"
+	RoupaGatoI._lin(cv, Vector2i(-23, -8), Vector2i(-28, -12), "r")
+	RoupaGatoI._lin(cv, Vector2i(-23, -8), Vector2i(-28, -4), "r")
+	RoupaGatoI._lin(cv, Vector2i(-22, -8), Vector2i(-27, -10), "R")
+	RoupaGatoI._lin(cv, Vector2i(-22, -8), Vector2i(-27, -6), "R")
+	RoupaGatoI._lin(cv, Vector2i(-24, -8), Vector2i(-29, -8), "r")
 	RoupaGatoI._cont(cv, "o")
-	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB)]
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB, true)]
 
 # ------------------------------------------------------------------ Catchullu (Cthulhu): verde-acinzentado escuro, roxo e olhos amarelos
 ## a/A/d pele verde-acinzentada (média, luz, sombra); m/M/D manto verde-azulado; w/W asa de morcego (membrana escura, luz); y/Y olho amarelo (e brilho);
