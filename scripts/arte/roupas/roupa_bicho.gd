@@ -71,7 +71,7 @@ const _PAL: Array = [
 	{"a": Color("4a3a30"), "A": Color("7a6252"), "d": Color("2a2018"), "b": Color("b08a62"), "B": Color("d8b88c"), "e": Color("f2c230")},   # king-miau
 	{"a": Color("2a2630"), "A": Color("5a5666"), "d": Color("14121a"), "b": Color("8a5a3a"), "B": Color("b88a60"), "e": Color("d8323a")},   # arthur miaurgon
 	{"a": Color("7a9eb2"), "A": Color("b0cdd8"), "d": Color("46687e"), "b": Color("b0502c"), "B": Color("dc7c4c"), "e": Color("0c1018")},   # submiautica (Reaper Leviathan)
-	{"a": Color("3a8a70"), "A": Color("6ac0a0"), "d": Color("1e5040"), "b": Color("5a3a7a"), "B": Color("8a6aa8"), "e": Color("e8d048")},   # catchullu
+	{"a": Color("3c7c68"), "A": Color("70b49c"), "d": Color("22483e"), "b": Color("5a3a7a"), "B": Color("8a6aa8"), "e": Color("f0d848")},   # catchullu
 ]
 
 ## Cores da roupa de corpo que diferem das do chapéu (o barril do circo é de madeira, o avental do jardineiro é verde).
@@ -576,13 +576,14 @@ const _CHAPEU: Array = [
 		"oaaaaaeeaao",
 		"oaaaaAaaaao",
 		".odd...odd."]},
-	# 54 catchullu: cabeça de polvo verde com tentáculos na barba
+	# 54 catchullu: cabeça de polvo verde com olhos amarelos e a barba de tentáculos roxos
 	{"cheio": true, "l": [
 		"..ooooooo..",
 		".oAaaaaaao.",
-		"oaakkaakkao",
+		"oaaeaaaeaao",
 		"oaaaaaaaaao",
-		"o.o.o.o.o.o"]},
+		"bBb.bBb.bBb",
+		"b.b.b.b.b.b"]},
 ]
 ## Quantos pixels a última linha do chapéu fica abaixo do topo do crânio.
 const _DESCE := 1

@@ -20,6 +20,8 @@ const _MOLDE_FALLBACK: Array = [
 ## Lugar do acessório no gato (RoupaGato.Onde); -1 = padrão (cabeça, corpo, boca e traseira).
 static func onde(tipo: int) -> int:
 	match tipo:
+		Pecas.Tipo.TENTACULO_FOFO:
+			return RoupaGato.Onde.CORPO
 		Pecas.Tipo.TANQUE_PEIXINHO:
 			return RoupaGato.Onde.CORPO
 		Pecas.Tipo.CADERNINHO:
@@ -28,7 +30,7 @@ static func onde(tipo: int) -> int:
 
 ## Peças com camada atrás do corpo do gato (asas do manto do Catchullu).
 static func tem_atras(tipo: int) -> bool:
-	return false
+	return tipo == Pecas.Tipo.MANTO_ABISSAL
 
 # ------------------------------------------------------------------ ferramentas (usam as de RoupaGatoF e RoupaGatoG)
 static func _ret(cv: Dictionary, x0: int, y0: int, x1: int, y1: int, ch: String) -> void:
@@ -84,6 +86,14 @@ static func _montar(tipo: int) -> Array:
 			return _sub_rifle()
 		Pecas.Tipo.TANQUE_PEIXINHO:
 			return _sub_barbatana()
+		Pecas.Tipo.CABECA_POLVO:
+			return _cth_cabeca()
+		Pecas.Tipo.MANTO_ABISSAL:
+			return _cth_manto()
+		Pecas.Tipo.NECRONOMIAU:
+			return _cth_livro()
+		Pecas.Tipo.TENTACULO_FOFO:
+			return _cth_tentaculo()
 		_:
 			pass
 	return []
@@ -254,6 +264,114 @@ static func _sub_barbatana() -> Array:
 	])
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB)]
+
+# ------------------------------------------------------------------ Catchullu (Cthulhu): verde-acinzentado escuro, roxo e olhos amarelos
+## a/A/d pele verde-acinzentada (média, luz, sombra); m/M/D manto verde-azulado; w/W asa de morcego (membrana escura, luz); y/Y olho amarelo (e brilho);
+## p/P/q tentáculos roxos (médio, luz, sombra); b/B/Q capa do livro (média, luz, lombo); F metal dourado; i gota d'água.
+const _PAL_CTHU := {
+	"o": Color("08141a"), "a": Color("3c7c68"), "A": Color("70b49c"), "d": Color("22483e"),
+	"m": Color("245c6a"), "M": Color("3e8896"), "D": Color("143642"),
+	"w": Color("3c3a5e"), "W": Color("6a66a0"),
+	"y": Color("f0d848"), "Y": Color("fff6b0"),
+	"p": Color("8a5aa8"), "P": Color("b88ad0"), "q": Color("5a3a7a"),
+	"b": Color("6a3f7a"), "B": Color("9a66aa"), "Q": Color("3e2248"), "F": Color("c8a458"), "i": Color("cfeaf4"),
+}
+
+## Cabeça de polvo: domo bulboso verde-acinzentado com a sobrancelha pesada e os olhos amarelos brilhantes; sob o focinho, quatro tentáculos
+## de 2 px (comprimentos 5, 7, 6 e 4, pontas roxas e enroladas).
+static func _cth_cabeca() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._txt(cv, 1, -23, [
+		"...aaaaaaaa...",
+		"..aaaaaaaaaa..",
+		".aaaaaaaaaaaa.",
+		".aaaaaaaaaaaa.",
+		".aaaaaaaaaaaaa",
+		".dddddddddddda",
+		".aayYaaaayYaaa",
+		".aayyaaaayyaaa",
+		"..aaaaaaaaaaa.",
+	])
+	RoupaGatoI._luz(cv, "a", "A", "d")
+	# tentáculos da barba, a partir do queixo
+	var ts: Array = [[5, 5], [7, 7], [9, 6], [11, 4]]
+	for t in ts:
+		var x0: int = int(t[0])
+		var n: int = int(t[1])
+		for k in n:
+			var y: int = -14 + k
+			var sx: int = 1 if (k >= n - 2 and x0 > 8) else 0
+			cv[Vector2i(x0 + sx, y)] = "a" if k < n - 2 else "p"
+			cv[Vector2i(x0 + sx + 1, y)] = "A" if k < n - 2 else "P"
+		cv[Vector2i(x0 + (2 if x0 > 8 else 1), -14 + n - 1)] = "q"
+	RoupaGatoI._cont(cv, "o")
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_CTHU)]
+
+## Asa de morcego atrás do corpo: ossos finos saindo do ombro, membrana escura de borda recortada em arcos e o gancho na ponta.
+static func _cth_asa() -> Dictionary:
+	var cv: Dictionary = {}
+	RoupaGatoI._poli(cv, [-1, -12, -4, -23, -6, -19, -10, -21, -9, -17, -13, -17, -10, -14, -9, -12], "w")
+	RoupaGatoI._lin(cv, Vector2i(-1, -13), Vector2i(-4, -23), "W")
+	RoupaGatoI._lin(cv, Vector2i(-1, -13), Vector2i(-10, -21), "W")
+	RoupaGatoI._lin(cv, Vector2i(-1, -13), Vector2i(-13, -17), "W")
+	RoupaGatoI._cont(cv, "o", true)
+	return cv
+
+## Manto verde-azulado escamado (arcos de 3 px), gola aberta, barra recortada e três gotas; as asinhas vão atrás do corpo.
+static func _cth_manto() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._corpo_vest(cv, "m", -4, -6, -5)
+	RoupaGatoI._gola(cv, "m", 3)
+	RoupaGatoI._luz(cv, "m", "M", "D")
+	for y in [-10, -7]:
+		for x in range(-8, 8):
+			if posmod(x + (1 if y == -7 else 0), 3) == 0 and cv.get(Vector2i(x, y)) == "m":
+				cv[Vector2i(x, y)] = "D"
+				if cv.get(Vector2i(x + 1, y - 1)) == "m":
+					cv[Vector2i(x + 1, y - 1)] = "M"
+	for g in [Vector2i(-5, -8), Vector2i(1, -10), Vector2i(4, -8)]:
+		cv[g] = "i"
+		cv[g + Vector2i(0, 1)] = "i"
+	for x2 in range(-7, 7):
+		if posmod(x2, 3) == 1:
+			var b: int = -99
+			for y2 in range(-14, 0):
+				if cv.has(Vector2i(x2, y2)):
+					b = y2
+			if b > -99 and b < -4:
+				cv.erase(Vector2i(x2, b))
+	RoupaGatoI._cont(cv, "o", false)
+	return [RoupaGatoI._lay(_cth_asa(), RoupaGato.Onde.CORPO, _PAL_CTHU, true), RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_CTHU)]
+
+## Necronomiau: livro de capa roxa com cantos dourados e um olho amarelo aberto no meio.
+static func _cth_livro() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._txt(cv, 12, -17, [
+		"FbbbbbbF",
+		"QBbbbbbb",
+		"QbbbbbbB",
+		"QbbooobB",
+		"QbyyooYb",
+		"QbbooobB",
+		"QbbbbbbB",
+		"QbbbbbbB",
+		"FbbbbbbF",
+	])
+	RoupaGatoI._cont(cv, "o")
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.BOCA, _PAL_CTHU)]
+
+## Tentáculo de pelúcia roxo-claro com ventosas, enrolado na garupa.
+static func _cth_tentaculo() -> Array:
+	var cv: Dictionary = {}
+	var pts: Array = [[-11, -6], [-11, -8], [-11, -10], [-10, -12], [-8, -13], [-6, -13], [-5, -12], [-5, -11], [-6, -10]]
+	for i in pts.size():
+		var q: Array = pts[i]
+		cv[Vector2i(q[0], q[1])] = "P"
+		cv[Vector2i(q[0] + 1, q[1])] = "p"
+		if i % 3 == 1:
+			cv[Vector2i(q[0], q[1])] = "i"
+	RoupaGatoI._cont(cv, "o")
+	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_CTHU)]
 
 static func _fallback(tipo: int) -> Array:
 	var col: int = ((tipo - PRIMEIRO) / Pecas.SLOTS) % 4
