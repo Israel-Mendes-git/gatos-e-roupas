@@ -5376,7 +5376,7 @@ func _rodape_mapa() -> void:
 		_icone_gui(ICO_RAIO, r.position + Vector2(24, 18), 0.5)
 		Desenho.texto(self, "%d ponto%s de treino por gastar" % [pt, "" if pt == 1 else "s"], Vector2(r.position.x + 40, r.position.y + 24), 16, COR_TINTA_ESC, r.size.x - 48.0)
 	elif estado.bonecos.size() < Balanco.MAX_BONECOS:
-		_texto_dir("Cada cômodo vencido traz um gato novo", 1236.0, 690.0, 13, Color(0.75, 0.9, 1.0), 3)
+		_texto_dir("Cada lugar vencido na casa traz um gato novo" if estado.ato_atual() <= 1 else "O time chega a %d gatos vencendo lugares da casa" % Balanco.MAX_BONECOS, 1236.0, 690.0, 13, Color(0.75, 0.9, 1.0), 3)
 	var rod: Array[String] = ["Esc ou II: menu de pausa", "T: oficina da torre"]
 	if estado.campanha_vencida() and mapa_casa != null:
 		var dst: int = mapa_casa.destaque()
@@ -5384,7 +5384,7 @@ func _rodape_mapa() -> void:
 		if inv_ok:
 			rod.append("I: invasão sem fim")
 		if estado.ato_atual() > 1:
-			rod.append("V: casa ou lado de fora")
+			rod.append("V: casa, lá fora ou ruas" if estado.ato_atual() > 2 else "V: casa ou lado de fora")
 	for k in rod.size():
 		Desenho.texto(self, rod[k], Vector2(48, 662.0 + 18.0 * k), 19, Color(1, 1, 1, 0.5), -1.0, 3)
 	if confirma_nova > 0.0:

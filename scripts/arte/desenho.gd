@@ -1655,6 +1655,11 @@ static func _slot_fantasma(c: CanvasItem, pos: Vector2, s: int, destaque: bool) 
 const ICONE_PIXEL := true
 
 # ------------------------------------------------------------------ ícone (guarda-roupa / voando)
+## Caixa da peça em pixels do sprite, em torno da origem dela (a mesma conta do ícone).
+static func caixa_peca(tipo: int) -> Rect2:
+	var tv: int = Atelie.forma(tipo)
+	return IconeDados.CAIXA[tv] if tv < IconeDados.CAIXA.size() else (RoupaGatoJ.caixa(tv) if tv >= RoupaGatoJ.PRIMEIRO else RoupaGatoI.caixa(tv) if tv >= RoupaGatoI.PRIMEIRO else RoupaGatoH.caixa(tv) if tv >= RoupaGatoH.PRIMEIRO else RoupaGatoG.caixa(tv) if tv >= RoupaGatoG.PRIMEIRO else (RoupaGatoF.caixa(tv) if tv >= RoupaGatoF.PRIMEIRO else RoupaGatoE.caixa(tv)))
+
 static func icone(c: CanvasItem, tipo: int, centro: Vector2, tam: float, nivel: int = 0, f: float = 0.0, anim: float = 0.0, marcas: Array = [], raridade: int = 0) -> void:
 	if ICONE_PIXEL:
 		# o ícone é a própria roupa em pixel art que o gato veste (RoupaGato), ampliada para caber

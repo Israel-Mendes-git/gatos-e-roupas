@@ -1382,7 +1382,26 @@ func _gato(alvo: CanvasItem, c: int, so_faltam: bool) -> void:
 		pecas.append(Peca.new(tp) if teve != so_faltam else null)
 	var ciclo: float = fmod(t, PATADA_CADA)
 	var golpe: float = ciclo if ciclo < PATADA_DUR else 0.0
-	Desenho.boneco(alvo, _pos_gato(), GATO_ESC, 1.0, 0, pecas, 0.0, t, golpe <= 0.0, golpe, 0.0 if so_faltam else 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, posmod(c, Desenho.PELAGENS.size()))
+	Desenho.boneco(alvo, _pos_gato(), _esc_gato(c), 1.0, 0, pecas, 0.0, t, golpe <= 0.0, golpe, 0.0 if so_faltam else 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, posmod(c, Desenho.PELAGENS.size()))
+
+## Escala do gato da página: as fantasias de monstro (cauda, mandíbulas, asas) passam da moldura no tamanho de sempre; encolhe só o bastante
+## para o conjunto das 4 peças caber na foto (largura e altura), sem mexer nas fantasias que já cabem.
+func _esc_gato(c: int) -> float:
+	var cb: Rect2 = _cabine_gato()
+	var meia: float = 12.0   # o corpo do gato
+	var alto: float = 24.0
+	for s in Pecas.SLOTS:
+		var tp: int = Pecas.CONJUNTO_PECAS[c][s]
+		var o: Vector2 = RoupaGato.origem(RoupaGato.onde(tp), 0)
+		var bx: Rect2 = Desenho.caixa_peca(tp)
+		var ini: Vector2 = o + bx.position
+		var fim: Vector2 = o + bx.end
+		meia = maxf(meia, maxf(absf(ini.x), absf(fim.x)))
+		alto = maxf(alto, -ini.y)
+	var k: float = Desenho.GATO_K
+	var por_larg: float = (cb.size.x - 24.0) * 0.5 / (meia * k)
+	var por_alt: float = (cb.size.y - 44.0 - 34.0) / (alto * k)
+	return clampf(minf(GATO_ESC, minf(por_larg, por_alt)), 1.6, GATO_ESC)
 
 func _desenhar_silhuetas() -> void:
 	if not aberta or estado == null:
