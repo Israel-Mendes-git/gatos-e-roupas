@@ -30,6 +30,10 @@ var catapulta_cd: float = Torre.CATAPULTA_INTERVALO
 var caldeirao_cd: float = Torre.CALDEIRAO_INTERVALO
 var sirene_usada: bool = false
 var fosso_cd: float = Torre.FOSSO_INTERVALO
+var recusa_usada: bool = false   # Oferta recusada: o ladrão desta onda já foi dispensado
+var sucata_usada: bool = false   # Sucata: a bomba desta onda já explodiu na sucata
+var firewall_usado: bool = false # Firewall: já congelou nesta onda
+var muralha_golpes: int = 0      # golpes de rival na torre com a Muralha (um em cada MURALHA_BARRA é barrado)
 var reforco_usados: int = 0   # golpes na torre já absorvidos pelo Reforço nesta onda
 ## Alvo prioritário do time, escolhido na preparação: -1 nenhum, 0..4 um Unidade.Tipo, ou PRIO_ELITE / PRIO_CHEFE.
 const PRIO_ELITE := 10
@@ -855,6 +859,17 @@ func _modulos_da_torre(dt: float) -> void:
 			if v.vivo:
 				v.atordoado_t = maxf(v.atordoado_t, Torre.SIRENE_T * (Torre.SIRENE_CHEFE if v.chefe else 1.0))
 		_ev({"t": "sirene"})
+	if estado.tem_modulo(Torre.Modulo.FIREWALL) and not firewall_usado:
+		var perto_n: int = 0
+		for v in inimigos:
+			if v.vivo and not v.fugindo and v.x - Balanco.TORRE_X <= Torre.FIREWALL_RAIO:
+				perto_n += 3 if v.chefe else 1
+		if perto_n >= Torre.FIREWALL_MIN:
+			firewall_usado = true   # Firewall: congela quem se juntou perto da torre
+			for v in inimigos:
+				if v.vivo and v.x - Balanco.TORRE_X <= Torre.FIREWALL_RAIO:
+					v.atordoado_t = maxf(v.atordoado_t, Torre.FIREWALL_T * (Torre.SIRENE_CHEFE if v.chefe else 1.0))
+			_ev({"t": "sirene"})
 	if estado.tem_modulo(Torre.Modulo.CALDEIRAO):
 		caldeirao_cd -= dt
 		if caldeirao_cd <= 0.0:
@@ -1574,8 +1589,18 @@ func _bater_torre(u: Unidade) -> void:
 		n = Balanco.GIGANTE_TORRE_DANO
 	elif u.tipo == Unidade.Tipo.BOMBA:
 		n = Balanco.BOMBA_TORRE
+		if estado.tem_modulo(Torre.Modulo.SUCATA) and not sucata_usada:
+			sucata_usada = true
+			n = 0   # Sucata: explode na sucata, sem tirar bloco
+			_ev({"t": "reforco", "x": u.x, "y": u.y})
 	elif u.tipo == Unidade.Tipo.LADRAO:
 		if not u.vivo or u.fugindo:
+			return
+		if estado.tem_modulo(Torre.Modulo.RECUSA) and not recusa_usada and not u.chefe:
+			recusa_usada = true   # Oferta recusada: o 1º ladrão da onda desiste e vai embora de mãos vazias
+			u.vivo = false
+			_ev({"t": "reforco", "x": u.x, "y": u.y})
+			_ev({"t": "fuga", "x": u.x, "y": u.y, "n": 0})
 			return
 		if u.rival and u.gangue == 0 and _oferta(u):
 			return   # Mensageiro: leva um gato a dormir em vez de blocos
@@ -1590,6 +1615,13 @@ func _bater_torre(u: Unidade) -> void:
 			_ev({"t": "reforco", "x": u.x, "y": u.y})
 		elif u.chefe:
 			n = mini(n, Torre.REFORCO_CHEFE_MAX)
+	if estado.tem_modulo(Torre.Modulo.MURALHA) and u.rival and not u.distancia and n > 0:
+		muralha_golpes += 1
+		if muralha_golpes % Torre.MURALHA_BARRA == 0:
+			n = 0   # Muralha: um golpe em cada três é barrado
+			_ev({"t": "reforco", "x": u.x, "y": u.y})
+		else:
+			n = mini(n, Torre.MURALHA_MAX)
 	n = mini(n, estado.tijolos)
 	if u.tipo == Unidade.Tipo.LADRAO and not u.chefe:
 		u.carga = n
@@ -1648,6 +1680,8 @@ func _mover_projeteis(dt: float) -> void:
 				var dn: Unidade = p["dono"]
 				if dn != null and dn.tiro_atordoa > 0.0 and a.vivo and not a.chefe and not a.bola_t > 0.0 and rng.randf() < dn.tiro_atordoa:
 					a.atordoado_t = maxf(a.atordoado_t, Balanco.TIRO_ATORDOA_T)   # tiro na perna (Meon)
+				if p.has("torre") and estado.tem_modulo(Torre.Modulo.IMA) and a.vivo:
+					a.x = minf(a.x + Torre.IMA_PUXA * (Torre.IMA_CHEFE if a.chefe else 1.0), Balanco.VISIVEL_X)   # Ímã: empurra o alvo para trás
 				if p.has("torre") and estado.tem_modulo(Torre.Modulo.BALISTA):
 					_balista(a, p["dano"] * Torre.BALISTA_DANO)
 		else:

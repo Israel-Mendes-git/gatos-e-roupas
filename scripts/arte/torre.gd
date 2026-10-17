@@ -23,10 +23,11 @@ const TROFEU_CHEFE_ATO: Array[int] = [5, 6, 8]   # por chefe derrotado, por ato
 const TROFEU_CHEFE := 5              # (o do primeiro ato; para textos)
 
 ## Módulos: o índice é o do chefe que o libera (Fases.Chefe): vencer o chefe da fase N libera o módulo N-1.
-## Os 5 primeiros vêm dos chefes da casa; os 5 últimos, dos chefes de fora (Toupeira, Gambá, Esquilo, Vira-Lata, Texugo).
-enum Modulo { RATOEIRA, CATAPULTA, SIRENE, BALISTA, CALDEIRAO, FOSSO, REPELENTE, LUNETA, CASINHA, REFORCO }
+## Os 5 primeiros vêm dos chefes da casa; os 5 do meio, dos de fora (Toupeira, Gambá, Esquilo, Vira-Lata, Texugo);
+## os 5 últimos, dos chefes de gangue das ruas (Dom Gatleone, Imortal Miau, Programa Mestre, Rei Miaunidas, Magnetomiau).
+enum Modulo { RATOEIRA, CATAPULTA, SIRENE, BALISTA, CALDEIRAO, FOSSO, REPELENTE, LUNETA, CASINHA, REFORCO, RECUSA, SUCATA, FIREWALL, MURALHA, IMA }
 const MODULOS_POR_ABA := 5
-const MODULO_NOME: Array[String] = ["Ratoeira", "Catapulta de ração", "Sirene", "Balista de penas", "Caldeirão", "Fosso", "Repelente", "Luneta", "Casinha", "Reforço"]
+const MODULO_NOME: Array[String] = ["Ratoeira", "Catapulta de ração", "Sirene", "Balista de penas", "Caldeirão", "Fosso", "Repelente", "Luneta", "Casinha", "Reforço", "Oferta recusada", "Sucata", "Firewall", "Muralha", "Ímã"]
 const MODULO_DICA: Array[String] = [
 	"Quem bate na torre de perto leva o troco",
 	"De tempos em tempos lança um saco de ração que fere em área",
@@ -38,6 +39,11 @@ const MODULO_DICA: Array[String] = [
 	"O tiro mira o alvo prioritário, às vezes acerta em cheio e deixa o alvo mais frágil",
 	"Um cão de guarda luta ao lado da torre a cada onda",
 	"Os primeiros golpes de cada onda na torre não derrubam bloco; o chefe derruba no máximo um",
+	"O 1º ladrão de cada onda desiste da oferta e vai embora de mãos vazias",
+	"A 1ª bomba de cada onda explode na sucata, sem tirar bloco da torre",
+	"Uma vez por onda, congela os bichos que se juntam perto da torre",
+	"Rivais tiram só um bloco por golpe, e um golpe em cada três é barrado",
+	"O tiro da torre empurra o alvo para trás, para longe da torre",
 ]
 ## Vagas de módulo por ato vencido (todos os lugares do ato): 2 no começo, 3 ao vencer o 2º ato, 4 ao vencer o 3º.
 const VAGAS_POR_ATO: Array[int] = [2, 2, 3, 4]
@@ -67,6 +73,13 @@ const CASINHA_INTERVALO := 1.0
 const CASINHA_VEL := 100.0
 const REFORCO_GOLPES := 3            # golpes por onda que não tiram bloco
 const REFORCO_CHEFE_MAX := 1         # blocos por golpe do chefe
+const FIREWALL_RAIO := 140.0         # a que distância da torre o Firewall enxerga
+const FIREWALL_MIN := 2              # quantos bichos juntos (ou um chefe) disparam o Firewall
+const FIREWALL_T := 3.0              # segundos congelados (o chefe, SIRENE_CHEFE disso)
+const MURALHA_MAX := 1               # blocos por golpe de rival
+const MURALHA_BARRA := 3             # um golpe de rival em cada tantos é barrado de vez
+const IMA_PUXA := 60.0               # pixels que o tiro da torre empurra o alvo para trás
+const IMA_CHEFE := 0.25              # fração disso que vale para chefes
 
 
 ## Texto do que o próximo nível da melhoria dá.

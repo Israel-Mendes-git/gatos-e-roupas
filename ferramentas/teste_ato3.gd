@@ -21,6 +21,7 @@ func _init() -> void:
 	_chefes()
 	_save_antigo()
 	_torre_niveis()
+	_modulos_ruas()
 	print("FALHAS: %d" % falhas)
 	quit(1 if falhas > 0 else 0)
 
@@ -497,3 +498,67 @@ func _torre_niveis() -> void:
 	var b := Boneco.new()
 	b.nivel = 40
 	_ok(b.herancas_pendentes() == 4, "4ª herança no nível 40 (%d pendentes)" % b.herancas_pendentes())
+
+## Módulos das ruas (etapa 7): liberados por chefe de gangue (vencido >= 3) e efeitos na luta.
+func _modulos_ruas() -> void:
+	_ok(Torre.MODULO_NOME.size() == 15 and Torre.MODULO_DICA.size() == 15, "15 módulos com nome e dica")
+	var e: Estado = _estado()
+	e.fases_vencidas = Fases.TOTAL
+	e.vencido = [2, 2, 2, 2, 2]
+	for m in range(10, 15):
+		_ok(not e.modulo_liberado(m), "módulo %d fechado antes do chefe de gangue" % m)
+	e.vencido = [3, 2, 2, 2, 3]
+	_ok(e.modulo_liberado(Torre.Modulo.RECUSA) and e.modulo_liberado(Torre.Modulo.IMA) and not e.modulo_liberado(Torre.Modulo.SUCATA), "Dom Gatleone e Magnetomiau liberam os seus")
+	_ok(e.modulo_liberado(Torre.Modulo.REFORCO) and e.modulo_liberado(0), "módulos antigos intactos")
+	_ok(e.alternar_modulo(Torre.Modulo.IMA) and e.tem_modulo(Torre.Modulo.IMA), "monta o Ímã")
+	_ok(Oficina.requisito_modulo(Torre.Modulo.MURALHA).contains("Rei Miaunidas") and Oficina.requisito_modulo(Torre.Modulo.MURALHA).contains("3º ato"), "requisito: " + Oficina.requisito_modulo(Torre.Modulo.MURALHA))
+	for m in range(10, 15):
+		_ok(Oficina.ICO_MODULO_RUAS[m - 10].size() == 12, "ícone %d com 12 linhas" % m)
+		_ok(Torre.MODULO_DICA[m].length() < 80, "dica %d curta" % m)
+	# Oferta recusada: o 1º ladrão desiste, o 2º rouba
+	var s1: Simulacao = _luta(1)
+	s1.estado.modulos = [Torre.Modulo.RECUSA]
+	var l1: Unidade = _rival(s1, 1, Unidade.Tipo.LADRAO, Balanco.TORRE_X + 10.0, 550.0)
+	var t1: int = s1.estado.tijolos
+	s1._bater_torre(l1)
+	_ok(not l1.vivo and s1.estado.tijolos == t1, "Oferta recusada: o 1º ladrão vai embora sem roubar")
+	var l2: Unidade = _rival(s1, 1, Unidade.Tipo.LADRAO, Balanco.TORRE_X + 10.0, 550.0)
+	s1._bater_torre(l2)
+	_ok(s1.estado.tijolos < t1, "Oferta recusada: só o primeiro da onda")
+	# Sucata: a 1ª bomba explode sem tirar bloco, a 2ª tira
+	var s2: Simulacao = _luta(1)
+	s2.estado.modulos = [Torre.Modulo.SUCATA]
+	var t2: int = s2.estado.tijolos
+	s2._bater_torre(_rival(s2, 1, Unidade.Tipo.BOMBA, Balanco.TORRE_X + 10.0, 550.0))
+	_ok(s2.estado.tijolos == t2, "Sucata: a 1ª bomba não tira bloco")
+	s2._bater_torre(_rival(s2, 1, Unidade.Tipo.BOMBA, Balanco.TORRE_X + 10.0, 550.0))
+	_ok(s2.estado.tijolos == t2 - Balanco.BOMBA_TORRE, "Sucata: a 2ª bomba tira %d" % Balanco.BOMBA_TORRE)
+	# Muralha: o gigante rival tira só 1 e um golpe em cada três é barrado
+	var s3: Simulacao = _luta(3)
+	s3.estado.modulos = [Torre.Modulo.MURALHA]
+	var t3: int = s3.estado.tijolos
+	var gg: Unidade = _rival(s3, 3, Unidade.Tipo.GIGANTE, Balanco.TORRE_X + 10.0, 550.0)
+	s3._bater_torre(gg)
+	s3._bater_torre(gg)
+	_ok(s3.estado.tijolos == t3 - 2, "Muralha: dois golpes de gigante tiram 1 cada (%d)" % (t3 - s3.estado.tijolos))
+	s3._bater_torre(gg)
+	_ok(s3.estado.tijolos == t3 - 2, "Muralha: o 3º golpe é barrado")
+	# Firewall: dois bichos perto da torre congelam, uma vez só
+	var s4: Simulacao = _luta(2)
+	s4.estado.modulos = [Torre.Modulo.FIREWALL]
+	var f1: Unidade = _rival(s4, 2, Unidade.Tipo.COMUM, Balanco.TORRE_X + 60.0, 550.0)
+	var f2: Unidade = _rival(s4, 2, Unidade.Tipo.COMUM, Balanco.TORRE_X + 100.0, 560.0)
+	var longe: Unidade = _rival(s4, 2, Unidade.Tipo.COMUM, Balanco.TORRE_X + 600.0, 560.0)
+	s4._modulos_da_torre(0.1)
+	_ok(f1.atordoado_t >= Torre.FIREWALL_T - 0.01 and f2.atordoado_t >= Torre.FIREWALL_T - 0.01 and longe.atordoado_t <= 0.0, "Firewall congela quem está perto")
+	f1.atordoado_t = 0.0
+	s4._modulos_da_torre(0.1)
+	_ok(f1.atordoado_t <= 0.0, "Firewall: uma vez por onda")
+	# Ímã: o tiro da torre empurra o alvo; o chefe, só um pouco
+	var s5: Simulacao = _luta(4)
+	s5.estado.modulos = [Torre.Modulo.IMA]
+	var al: Unidade = _rival(s5, 4, Unidade.Tipo.COMUM, 700.0, 550.0)
+	al.vida = 9999.0
+	s5.projeteis.append({"x": al.x, "y": al.y, "alvo": al, "dono": null, "dano": 1.0, "torre": true})
+	s5._mover_projeteis(0.05)
+	_ok(al.x - 700.0 >= Torre.IMA_PUXA - 0.5, "Ímã: o alvo recua %.0f px" % (al.x - 700.0))

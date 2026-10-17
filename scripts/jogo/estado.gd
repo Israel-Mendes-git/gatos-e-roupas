@@ -376,7 +376,7 @@ func melhorar(m: int) -> bool:
 ## O módulo existe para montar? (O chefe que o guarda já foi vencido.)
 func modulo_liberado(m: int) -> bool:
 	if m >= Torre.MODULOS_POR_ABA:
-		return m < Torre.MODULO_NOME.size() and vencido[m - Torre.MODULOS_POR_ABA] >= 2   # o chefe do lugar de fora (2º ato)
+		return m < Torre.MODULO_NOME.size() and vencido[m % Torre.MODULOS_POR_ABA] >= m / Torre.MODULOS_POR_ABA + 1   # chefe de fora (2º ato) ou de gangue (3º)
 	return fases_vencidas > m
 
 ## Atos em que todos os lugares já foram vencidos (0 a ATOS).

@@ -35,6 +35,7 @@ const BTN_X := Rect2(1124.0, 38.0, 42.0, 42.0)
 const BTN_MELHORAR_W := 136.0
 const TEXTO_DESLOC := 84.0        # x do texto numa linha de melhoria, a partir da borda dela
 const QUADRADOS_DESLOC := 214.0   # x dos oito quadradinhos de nível, a partir da borda da linha
+const ABAS_NOME: Array[String] = ["Da casa", "De fora", "Das ruas"]
 const COR_NIVEL_ALTO := Color(1.0, 0.58, 0.22)   # níveis 6 a 8 (custam mais)
 const COR_NIVEL_TOPO := Color(0.95, 0.4, 0.75)   # níveis 9 e 10 (3º ato)
 
@@ -112,6 +113,29 @@ const ICO_MODULO_FORA: Array = [
 	],
 ]
 
+const ICO_MODULO_RUAS: Array = [
+	[ # oferta recusada: placa de pare
+		"...oooooo...", "..orrrrrro..", ".orrrrrrrro.", "orrrrrrrrrro", "orwwwwwwwwro", "orwwwwwwwwro",
+		"orrrrrrrrrro", "orrrrrrrrrro", ".orrrrrrrro.", "..orrrrrro..", "...oooooo...", "............",
+	],
+	[ # sucata: pneu velho
+		"............", "...oooooo...", "..okkkkkko..", ".okksssskko.", "okksSooSskko", "oksSo..oSsko",
+		"oksSo..oSsko", "okksSooSskko", ".okksssskko.", "..okkkkkko..", "...oooooo...", "............",
+	],
+	[ # firewall: muro em chamas
+		"....o.o.....", "...ococo....", "..occyoco...", "..ocyyyco...", "...occco....", "oooooooooooo",
+		"obbbobbbbbbo", "oooooooooooo", "obbbbbobbbbo", "oooooooooooo", "obbbobbbbbbo", "oooooooooooo",
+	],
+	[ # muralha: muro de pedra
+		"ooo..ooo..oo", "oss..oss..so", "osssssssssso", "oooooooooooo", "osssSsssSsso", "osssSsssSsso",
+		"oooooooooooo", "osSsssSsssso", "osSsssSsssso", "oooooooooooo", "oSSSSSSSSSSo", "oooooooooooo",
+	],
+	[ # ímã em ferradura
+		"............", "owwo....owwo", "orro....obbo", "orro....obbo", "orro....obbo", "orro....obbo",
+		"orrro..obbbo", "orrrrooobbbo", "orrrrrrbbbbo", ".orrrrrbbbo.", "..oorrbboo..", "....oooo....",
+	],
+]
+
 const ICO_TROFEU: Array = [
 	".oooooooo.", "ooghggggoo", "o.gggggg.o", "o.oggggo.o", ".ooggggoo.",
 	"...oggo...", "....gg....", "....GG....", "..oGGGGo..", "..oooooo..",
@@ -136,7 +160,7 @@ var faiscas := UIComum.Faiscas.new()
 var tr_exib: float = 0.0                  # troféus mostrados (contam até o valor real)
 var pulso_tr: float = 0.0
 var centro_cont: Vector2 = Vector2(640, 108)
-var aba: int = 0                          # módulos mostrados: 0 = da casa, 1 = de fora
+var aba: int = 0                          # módulos mostrados: 0 = da casa, 1 = de fora, 2 = das ruas
 var compra_t: Array[float] = [9.0, 9.0, 9.0, 9.0]   # < 0: troféus ainda voando; 0..0.7: valores contando
 var compra_ant: Array = [[], [], [], []]            # textos de antes da compra
 var mont_t: Dictionary = {}               # módulo -> segundos desde que foi montado/desmontado
@@ -174,7 +198,7 @@ static func rect_card(i: int) -> Rect2:
 	return Rect2(COL_D_X, CARDS_Y + (i % Torre.MODULOS_POR_ABA) * (CARD_H + CARD_GAP), COL_D_W, CARD_H)
 
 static func rect_aba(a: int) -> Rect2:
-	return Rect2(COL_D_X + a * 260.0, ABA_Y, 248.0, ABA_H)
+	return Rect2(COL_D_X + a * 172.0, ABA_Y, 164.0, ABA_H)
 
 static func rect_btn_modulo(i: int) -> Rect2:
 	var c: Rect2 = rect_card(i)
@@ -224,7 +248,12 @@ static func motivo_melhoria(e: Estado, m: int) -> String:
 	return ""
 
 static func requisito_modulo(m: int) -> String:
-	return "Vença o chefe %s, %s%s" % [Fases.CHEFE_NOME[m], ("na " if m in [1, 2, 6, 8, 9] else "no ") + Fases.NOME[m], " (2º ato)" if m >= Torre.MODULOS_POR_ABA else ""]
+	var pre: String = "no "
+	if m in [1, 2, 6, 8, 9, 13]:
+		pre = "na "
+	elif m == 14:
+		pre = "nos "
+	return "Vença o chefe %s, %s%s" % [Fases.nome_do_chefe(m), pre + Fases.nome_do_lugar(m), "" if m < Torre.MODULOS_POR_ABA else (" (2º ato)" if m < 2 * Torre.MODULOS_POR_ABA else " (3º ato)")]
 
 # ------------------------------------------------------------------ ícones em pixel
 ## Desenha uma arte de letras: cada letra é uma célula `cel` x `cel`; runs da mesma cor viram um retângulo só.
@@ -252,7 +281,8 @@ static func icone_melhoria(c: CanvasItem, m: int, pos: Vector2, cel: float, cinz
 	arte(c, ICO_MELHORIA[m], pos, cel, cinza)
 
 static func icone_modulo(c: CanvasItem, m: int, pos: Vector2, cel: float, cinza: bool = false, alfa: float = 1.0) -> void:
-	arte(c, ICO_MODULO[m] if m < ICO_MODULO.size() else ICO_MODULO_FORA[m - ICO_MODULO.size()], pos, cel, cinza, alfa)
+	var lista: Array = ICO_MODULO if m < 5 else (ICO_MODULO_FORA if m < 10 else ICO_MODULO_RUAS)
+	arte(c, lista[m % 5], pos, cel, cinza, alfa)
 
 ## Troféu de 10 x 10 células (com cel = 2, mede 20 x 20).
 static func trofeu(c: CanvasItem, pos: Vector2, cel: float, alfa: float = 1.0) -> void:
@@ -340,7 +370,7 @@ func abrir() -> void:
 		if not casa_livre:
 			for m in range(Torre.MODULOS_POR_ABA, Torre.MODULO_NOME.size()):
 				if e0.modulo_liberado(m) and not e0.tem_modulo(m):
-					aba = 1
+					aba = m / Torre.MODULOS_POR_ABA   # a última aba com módulo livre
 	_montar()
 	foco = _foco_inicial()
 	_foco_som = foco
@@ -378,8 +408,8 @@ func _montar() -> void:
 		var maximo: bool = e.melhorias[m] >= e.nivel_max_melhoria()
 		itens.append({"id": "m%d" % m, "r": rect_melhorar(m), "on": e.pode_melhorar(m), "txt": "Máximo" if maximo else "Melhorar (%d)" % Torre.custo_melhoria(e.melhorias[m]),
 			"cor": Color(1.0, 0.82, 0.4), "tam": 16, "custo": not maximo})
-	for a in 2:
-		itens.append({"id": "a%d" % a, "r": rect_aba(a), "on": true, "txt": ("Da casa" if a == 0 else "De fora") + "  (%d/%d)" % [_montados_na_aba(e, a), Torre.MODULOS_POR_ABA],
+	for a in ABAS_NOME.size():
+		itens.append({"id": "a%d" % a, "r": rect_aba(a), "on": true, "txt": ABAS_NOME[a] + "  (%d/%d)" % [_montados_na_aba(e, a), Torre.MODULOS_POR_ABA],
 			"cor": Color(1.0, 0.82, 0.4) if a == aba else Color(0.55, 0.5, 0.5), "tam": 15, "custo": false})
 	for m in range(aba * Torre.MODULOS_POR_ABA, (aba + 1) * Torre.MODULOS_POR_ABA):
 		if not e.modulo_liberado(m):

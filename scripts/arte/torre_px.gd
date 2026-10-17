@@ -279,6 +279,76 @@ const SPR_CASINHA: Array[String] = [
 	"kMMkPPPPkMMk",
 	"kkkkkkkkkkkk",
 ]
+const SPR_RECUSA: Array[String] = [
+	"...kkkkkk...",
+	"..krrrrrrk..",
+	".krrrrrrrrk.",
+	"krrrrrrrrrrk",
+	"krwwwwwwwwrk",
+	"krwwwwwwwwrk",
+	"krrrrrrrrrrk",
+	"krrrrrrrrrrk",
+	".krrrrrrrrk.",
+	"..krrrrrrk..",
+	"...kkkkkk...",
+	"............",
+]
+const SPR_SUCATA: Array[String] = [
+	"............",
+	"...kkkkkk...",
+	"..kPPPPPPk..",
+	".kPPaaaaPPk.",
+	"kPPaAkkAaPPk",
+	"kPaAk..kAaPk",
+	"kPaAk..kAaPk",
+	"kPPaAkkAaPPk",
+	".kPPaaaaPPk.",
+	"..kPPPPPPk..",
+	"...kkkkkk...",
+	"............",
+]
+const SPR_FIREWALL: Array[String] = [
+	"....k.k.....",
+	"...kokok....",
+	"..kooykok...",
+	"..koyyyok...",
+	"...koook....",
+	"kkkkkkkkkkkk",
+	"kAAAkAAAAAAk",
+	"kkkkkkkkkkkk",
+	"kAAAAAkAAAAk",
+	"kkkkkkkkkkkk",
+	"kAAAkAAAAAAk",
+	"kkkkkkkkkkkk",
+]
+const SPR_MURALHA: Array[String] = [
+	"kkk..kkk..kk",
+	"kaa..kaa..ak",
+	"kaaaaaaaaaak",
+	"kkkkkkkkkkkk",
+	"kaaaAaaaAaak",
+	"kaaaAaaaAaak",
+	"kkkkkkkkkkkk",
+	"kaAaaaAaaaak",
+	"kaAaaaAaaaak",
+	"kkkkkkkkkkkk",
+	"kAAAAAAAAAAk",
+	"kkkkkkkkkkkk",
+]
+const SPR_IMA: Array[String] = [
+	"............",
+	"kwwk....kwwk",
+	"krrk....kAAk",
+	"krrk....kAAk",
+	"krrk....kAAk",
+	"krrk....kAAk",
+	"krrrk..kAAAk",
+	"krrrrkkkAAAk",
+	"krrrrrrAAAAk",
+	".krrrrrAAAk.",
+	"..kkrrAAkk..",
+	"....kkkk....",
+]
 const SPR_REFORCO: Array[String] = [
 	"............",
 	"kkkkkkkkkkkk",
@@ -831,6 +901,20 @@ static func _modulo(c: CanvasItem, m: int, r: Rect2, t: float, op: Dictionary) -
 			spr(c, x, y, SPR_CASINHA, pal)
 			if fposmod(t, 3.0) > 2.6:
 				_r(c, x + 20.0, y + 28.0, 4.0, 4.0, pal["y"])
+		Torre.Modulo.RECUSA:
+			spr(c, x, y, SPR_RECUSA, pal)
+		Torre.Modulo.SUCATA:
+			spr(c, x, y, SPR_SUCATA, pal)
+		Torre.Modulo.FIREWALL:
+			spr(c, x, y, SPR_FIREWALL, pal)
+			var fw: float = fposmod(t * 2.0, 1.0)
+			_r(c, x + 4.0 * G, floorf((y + 2.0 * G - fw * 2.0 * G) / G) * G, G, G, Color(1.0, 0.85, 0.3, 1.0 - fw))
+		Torre.Modulo.MURALHA:
+			spr(c, x, y, SPR_MURALHA, pal)
+		Torre.Modulo.IMA:
+			spr(c, x, y, SPR_IMA, pal)
+			var im: float = fposmod(t * 1.2, 1.0)
+			_r(c, x + 5.0 * G, floorf((y + 1.0 * G - im * 2.0 * G) / G) * G, G, G, Color(0.7, 0.85, 1.0, 1.0 - im))
 		Torre.Modulo.REFORCO:
 			spr(c, x, y, SPR_REFORCO, pal)
 			var rf: float = float(op.get("reforco", 0.0))
@@ -839,7 +923,7 @@ static func _modulo(c: CanvasItem, m: int, r: Rect2, t: float, op: Dictionary) -
 
 ## Os mesmos módulos em 36x36 (4 montados): bitmaps de 12x12 com pixels de 3 px, sem os efeitos animados.
 static func _modulo_pequeno(c: CanvasItem, m: int, r: Rect2, t: float, _op: Dictionary, pal: Dictionary) -> void:
-	var sprs: Array = [SPR_RATOEIRA, SPR_CATAPULTA, SPR_SIRENE, SPR_BALISTA, SPR_CALDEIRAO_A, SPR_FOSSO, SPR_REPELENTE, SPR_LUNETA, SPR_CASINHA, SPR_REFORCO]
+	var sprs: Array = [SPR_RATOEIRA, SPR_CATAPULTA, SPR_SIRENE, SPR_BALISTA, SPR_CALDEIRAO_A, SPR_FOSSO, SPR_REPELENTE, SPR_LUNETA, SPR_CASINHA, SPR_REFORCO, SPR_RECUSA, SPR_SUCATA, SPR_FIREWALL, SPR_MURALHA, SPR_IMA]
 	if m == Torre.Modulo.CALDEIRAO and int(t * 3.0) % 2 == 1:
 		spr(c, r.position.x, r.position.y, SPR_CALDEIRAO_B, pal, 0.0, 3.0)
 		return
