@@ -197,7 +197,7 @@ static func _asa(cv: Dictionary, sh: Vector2, tips: Array, esc: float, osso: boo
 ## (sobe nos lados, desce na frente e atrás) com a sombra por baixo.
 static func _ar_chapeu() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, 0, -25, [
+	RoupaGatoI._txt(cv, 0, -23, [
 		"....cc..cc....",
 		"....ccSScc....",
 		"...cccSSccc...",
@@ -217,7 +217,7 @@ static func _ar_chapeu() -> Array:
 static func _ar_casaco() -> Array:
 	var cv: Dictionary = {}
 	RoupaGatoI._corpo_vest(cv, "c", -6, -8, -6)
-	RoupaGatoI._gola(cv, "c", 3)
+	RoupaGatoI._gola(cv, "c", 2)
 	for y in range(-11, -5):
 		for x in range(5, 8):
 			if cv.has(Vector2i(x, y)):
@@ -271,13 +271,15 @@ static func _ar_revolver() -> Array:
 ## Caderninho pequeno de couro marrom com a tira e o fecho dourado, folhas na borda.
 static func _ar_diario() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, -9, -17, [
+	RoupaGatoI._txt(cv, -7, -16, [
 		"MMMMp",
 		"MmmMp",
 		"mFFmp",
 		"MmmMp",
 		"MMMMp",
 	])
+	for p in [Vector2i(-5, -11), Vector2i(-5, -10), Vector2i(-4, -9), Vector2i(-4, -8)]:
+		cv[p] = "m"
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_ARTHUR)]
 
