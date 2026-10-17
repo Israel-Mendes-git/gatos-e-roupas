@@ -28,11 +28,13 @@ static func onde(tipo: int) -> int:
 			return RoupaGato.Onde.CORPO
 		Pecas.Tipo.PULSEIRA_TRANSFORMAR:
 			return RoupaGato.Onde.CORPO
+		Pecas.Tipo.PULSEIRA_TRANSFORMAR, Pecas.Tipo.CAUDA_RADIOATIVA:
+			return RoupaGato.Onde.CORPO
 	return -1
 
 ## Peças com camada atrás do corpo do gato (asas do manto do Catchullu).
 static func tem_atras(tipo: int) -> bool:
-	return tipo == Pecas.Tipo.MANTO_ABISSAL
+	return tipo == Pecas.Tipo.CAUDA_RADIOATIVA or tipo == Pecas.Tipo.MANTO_ABISSAL
 
 # ------------------------------------------------------------------ ferramentas (usam as de RoupaGatoF e RoupaGatoG)
 static func _ret(cv: Dictionary, x0: int, y0: int, x1: int, y1: int, ch: String) -> void:
@@ -104,6 +106,14 @@ static func _montar(tipo: int) -> Array:
 			return _rg_sabre()
 		Pecas.Tipo.PULSEIRA_TRANSFORMAR:
 			return _rg_pulseira()
+		Pecas.Tipo.CRISTA_PLACAS:
+			return _mz_crista()
+		Pecas.Tipo.PELE_ATOMICA:
+			return _mz_pele()
+		Pecas.Tipo.GARRAS_MONSTRO:
+			return _mz_garras()
+		Pecas.Tipo.CAUDA_RADIOATIVA:
+			return _mz_cauda()
 		_:
 			pass
 	return []
@@ -470,6 +480,110 @@ static func _rg_pulseira() -> Array:
 	_txt(cv, 5, -4, ["gggg", "gYyg", "gyyg"])
 	_cont(cv, "o", false)
 	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_RANGER)]
+
+
+# ------------------------------------------------------------------ Miauzilla (Godzilla do Monstroverso)
+## Miauzilla (Godzilla do Monstroverso): o contorno; a/A/d pele grafite (médio, luz, sombra); b barriga; e/E/f placas azuis (médio, núcleo, base);
+## w/W garras e dentes; y olho; k boca.
+const _PAL_MIAUZILLA := {
+	"o": Color("070b12"), "a": Color("3e4656"), "A": Color("5e6a7e"), "d": Color("232a36"), "b": Color("6a7688"),
+	"e": Color("4cb8f0"), "E": Color("e8faff"), "f": Color("2478c0"), "w": Color("e8e4d4"), "W": Color("a8a498"),
+	"y": Color("e8c838"), "k": Color("0e1118"),
+}
+# ------------------------------------------------------------------ Miauzilla
+## Folha serrilhada azul: base de 3 px em y `by`, afina para cima até a ponta de 1 px.
+static func _mz_placa(cv: Dictionary, cx: int, by: int, h: int) -> void:
+	for i in h:
+		var y: int = by - i
+		var larg: int = 3 if i < h - 2 else 1
+		for x in range(cx - larg / 2, cx + larg / 2 + 1):
+			var ch: String = "e"
+			if i == h - 1:
+				ch = "E"
+			elif i == 0:
+				ch = "f"
+			elif x == cx - larg / 2 and larg == 3:
+				ch = "f" if i < 2 else "e"
+			elif x == cx and larg == 3 and i == 1:
+				ch = "E"
+			cv[Vector2i(x, y)] = ch
+
+static func _mz_crista() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 1, -20, [
+		"..aAAAAAa...",
+		".aaaaAAAAaa.",
+		"aaaaaaaaaaaa",
+		"aaaaaaaaaaaa",
+		"aaaaadddddda",
+		"aaaaadyyaaaa",
+		"aaaaaaaaaaan",
+		".aaaaawawawa",
+		".aaaaaaaaaa.",
+		"..aaaaaaaa..",
+	])
+	_mz_placa(cv, 3, -21, 3)
+	_mz_placa(cv, 6, -21, 4)
+	_mz_placa(cv, 9, -21, 3)
+	_luz(cv, "a", "A", "d")
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_MIAUZILLA)]
+
+static func _mz_pele() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._corpo_vest(cv, "a", -5, -7, -5)
+	_luz(cv, "a", "A", "d")
+	for r in range(0, 3):
+		for k in range(-8, 8, 4):
+			var x: int = k + (2 if r % 2 == 1 else 0)
+			var y: int = -10 + r * 2
+			for p in [Vector2i(x, y), Vector2i(x + 1, y + 1), Vector2i(x + 2, y)]:
+				if cv.has(p) and cv[p] == "a":
+					cv[p] = "d"
+	for x2 in range(-2, 4):
+		for y2 in range(-8, -5):
+			if cv.has(Vector2i(x2, y2)) and cv[Vector2i(x2, y2)] != "d":
+				cv[Vector2i(x2, y2)] = "b"
+	for p2 in [Vector2i(-6, -9), Vector2i(-6, -8), Vector2i(-5, -7), Vector2i(1, -10), Vector2i(1, -9), Vector2i(2, -8), Vector2i(5, -9), Vector2i(5, -8)]:
+		if cv.has(p2):
+			cv[p2] = "e"
+	var tp: Dictionary = RoupaGatoI._TOPO_VEST
+	var pl: Dictionary = {}
+	_mz_placa(pl, -7, int(tp[-7]) - 1, 3)
+	_mz_placa(pl, -4, int(tp[-4]) - 1, 4)
+	_mz_placa(pl, -1, int(tp[-1]) - 1, 5)
+	cv.merge(pl, true)
+	for x3 in range(5, 8):
+		cv[Vector2i(x3, -5)] = "d"
+	for x4 in range(-8, -4):
+		cv[Vector2i(x4, -5)] = "d"
+	_cont(cv, "o", false)
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIAUZILLA)]
+
+static func _mz_garras() -> Array:
+	var cv: Dictionary = {}
+	for k in 3:
+		var y: int = -13 + k * 2
+		_ret(cv, 11, y, 14, y + 2, "a")
+		_ret(cv, 14, y, 16, y + 2, "w")
+		_ret(cv, 16, y, 19, y + 1, "w")
+		_px(cv, 19, y + 1, "w")
+	_luz(cv, "a", "A", "d")
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_MIAUZILLA)]
+
+static func _mz_cauda() -> Array:
+	var cv: Dictionary = {}
+	var pts: Array = [[-9.0, -9.5, 2.6], [-12.0, -8.5, 2.5], [-15.0, -7.0, 2.3], [-18.0, -5.5, 2.0], [-21.0, -4.0, 1.7], [-23.5, -3.0, 1.3], [-25.5, -2.5, 1.0]]
+	for p in pts:
+		RoupaGatoF._disco(cv, p[0], p[1], p[2], "a")
+	_luz(cv, "a", "A", "d")
+	_mz_placa(cv, -11, -11, 3)
+	_mz_placa(cv, -14, -10, 3)
+	_mz_placa(cv, -17, -8, 3)
+	_mz_placa(cv, -20, -6, 3)
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIAUZILLA, true)]
 
 
 static func _fallback(tipo: int) -> Array:

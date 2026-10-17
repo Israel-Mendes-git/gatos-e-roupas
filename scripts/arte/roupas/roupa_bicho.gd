@@ -67,7 +67,7 @@ const _PAL: Array = [
 	{"a": Color("e03a3a"), "A": Color("ff7a70"), "d": Color("8c1a22"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630"), "g": Color("4a9a50")},   # treinador
 	# lote 5 da expansão (49 a 54)
 	{"a": Color("2fa050"), "A": Color("6cd486"), "d": Color("1a6234"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # ranger miau (verde)
-	{"a": Color("3aa898"), "A": Color("78d8c8"), "d": Color("1e6a60"), "b": Color("6a7a8a"), "B": Color("a0b0c0"), "e": Color("5ac8ff")},   # miauzilla (verde-água)
+	{"a": Color("3e4656"), "A": Color("5e6a7e"), "d": Color("232a36"), "b": Color("6a7688"), "B": Color("9ae0ff"), "e": Color("4cb8f0")},   # miauzilla (grafite, placas azuis)
 	{"a": Color("4a3a30"), "A": Color("7a6252"), "d": Color("2a2018"), "b": Color("b08a62"), "B": Color("d8b88c"), "e": Color("f2c230")},   # king-miau
 	{"a": Color("2a2630"), "A": Color("5a5666"), "d": Color("14121a"), "b": Color("8a5a3a"), "B": Color("b88a60"), "e": Color("d8323a")},   # arthur miaurgon
 	{"a": Color("7a9eb2"), "A": Color("b0cdd8"), "d": Color("46687e"), "b": Color("b0502c"), "B": Color("dc7c4c"), "e": Color("0c1018")},   # submiautica (Reaper Leviathan)
@@ -547,12 +547,12 @@ const _CHAPEU: Array = [
 		"oakkkkkkkao",
 		"oakkkkkkkao",
 		".oddwwddo.."]},
-	# 50 miauzilla: fileira de placas dorsais pontudas
+	# 50 miauzilla: placas dorsais azuis brilhantes sobre o crânio grafite
 	{"cheio": false, "l": [
-		"o.o.o.o.o.o",
-		"oAoAoAoAoAo",
-		"oaaaaaaaaao",
-		"oaaaaaaaaao",
+		"..B..B..B..",
+		".oeooeooeo.",
+		"oAaaaaaaaAo",
+		"oaaaaayaaao",
 		"oddddddddoo"]},
 	# 51 king-miau: cabeça de gorila peluda com sobrancelhas grossas
 	{"cheio": false, "l": [
