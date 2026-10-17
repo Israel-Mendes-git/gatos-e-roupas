@@ -371,13 +371,26 @@ static func posse(e: Estado, tipo: int) -> Dictionary:
 	return {"n": n, "melhor": melhor}
 
 static func texto_onde(c: int) -> String:
-	var i: int = comodo_da_fantasia(c)
+	var i: int = Fases.casa_final(c)
 	if i < 0:
-		var lf: int = lugar_de_fora(c)
-		if lf < 0:
-			return "Não cai em nenhum lugar"
-		return "Cai fora da casa, %s: %s e %s" % [_em(lf), Fases.FAMILIA_NOME[lf].to_lower(), Fases.CHEFE_NOME[lf]]
-	return "Cai %s: %s e %s" % [_em(i), Fases.FAMILIA_NOME[i].to_lower(), Fases.CHEFE_NOME[i]]
+		return "Não cai em nenhum lugar"
+	var fam: String = (Fases.FAMILIA_NOME[i].to_lower() + " e ") if i < Fases.FAMILIA_NOME.size() else ""
+	return "Cai %s: %s%s" % [_em(i), fam, Fases.nome_do_chefe(i)]
+
+## "Chefe: Rei dos Ratos (assinatura)" quando o chefe do lugar veste esta fantasia em 60% das lutas; senão só o nome do chefe.
+static func texto_chefe(c: int) -> String:
+	var i: int = Fases.casa_final(c)
+	if i < 0:
+		return ""
+	return "Chefe: %s%s" % [Fases.nome_do_chefe(i), " (assinatura)" if Fases.CHEFE_ASSINATURA[i] == c else ""]
+
+## Aviso das fantasias provisórias (3º ato ainda não existe): "por enquanto cai no Quintal". Vazio se já cai na casa final.
+static func texto_provisorio(c: int) -> String:
+	var fin: int = Fases.casa_final(c)
+	var ag: int = Fases.lugar_atual(c)
+	if fin < 0 or ag < 0 or ag == fin:
+		return ""
+	return "por enquanto cai %s" % _em(ag)
 
 static func comodo_bloqueado(e: Estado, i: int) -> bool:
 	return i + 1 > e.fase_liberada
@@ -387,7 +400,7 @@ static func texto_bloqueio(i: int) -> String:
 
 ## "no Quarto", "na Sala", "na Cozinha", "no Sótão", "no Porão", "no Quintal", "na Garagem", "no Telhado", "na Rua", "na Toca".
 static func _em(i: int) -> String:
-	return ("na " if i in [1, 2, 6, 8, 9] else "no ") + Fases.NOME[i]
+	return ("na " if i in [1, 2, 6, 8, 9, 13] else "nos " if i == 14 else "no ") + Fases.nome_do_lugar(i)
 
 ## Lugares de fora (índices de Fases.NOME, 5 a 9) onde a fantasia cai, em texto: "no Quintal" ou "no Quintal e na Rua".
 static func texto_fora(c: int) -> String:
@@ -1253,11 +1266,11 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	var xo: float = ob.position.x + 18.0
 	var wo: float = ob.size.x - 30.0
 	var yy: float = _bloco(texto_onde(c), Vector2(xo, ob.position.y + 42.0), wo, [18, 16, 15, 14], 2, TINTA, 3.0)
+	yy = _bloco(texto_chefe(c), Vector2(xo, yy), wo, [14, 13, 12], 1, Color(0.28, 0.4, 0.42), 3.0)
+	var tp: String = texto_provisorio(c)
+	if tp != "":
+		yy = _bloco(_maiuscula(tp), Vector2(xo, yy), wo, [13, 12], 1, Color(0.55, 0.36, 0.16), 3.0)
 	if sala >= 0:
-		# as fantasias da casa também caem, redistribuídas, num lugar de fora
-		var tf: String = texto_fora(c)
-		if tf != "":
-			yy = _bloco("Fora da casa, cai " + tf, Vector2(xo, yy), wo, [14, 13, 12], 1, Color(0.28, 0.4, 0.42), 3.0)
 		if comodo_bloqueado(e, sala):
 			_cadeado(Vector2(xo + 8.0, yy + 2.0), Color(0.62, 0.22, 0.2))
 			yy = _bloco(texto_bloqueio(sala), Vector2(xo + 22.0, yy + 6.0), wo - 22.0, [12], 1, COR_FALTA, 2.0)
@@ -1554,7 +1567,7 @@ static func entradas() -> Array:
 		"onde": "Em toda luta a partir da onda %d de cada lugar." % Balanco.ELITE_ONDA_MIN})
 	for i in Fases.CHEFE_NOME.size():
 		var vest: Array = []
-		for c in Fases.CONJUNTOS[i]:
+		for c in Fases.lista_do_lugar(i):
 			vest.append(Pecas.CONJUNTO_NOME[c])
 		l.append({"k": "chefe", "i": i, "chave": "c%d" % i, "nome": Fases.CHEFE_NOME[i], "cor": Desenho.COR_CHEFES[i],
 			"oque": Fases.CHEFE_ATAQUE[i] + ". Solta o poder com aviso de %d s: atordoe o chefe para cancelar." % int(Balanco.PODER_AVISO_T), "dica": Fases.CHEFE_FRAQUEZA[i],
