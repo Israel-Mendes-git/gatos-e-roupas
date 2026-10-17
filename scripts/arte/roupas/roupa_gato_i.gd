@@ -323,20 +323,40 @@ static func _mascara_silk() -> Dictionary:
 				cv[Vector2i(2 + i, -24 + j)] = cor[s[i]]
 	return cv
 
-## Agulha da Hornet (17 px): anel redondo na ponta de trás (o fio passa por ele) e haste de 1 px até a ponta.
+## Agulha da Hornet: agulha de costura gigante. Furo oval de 3x5 (buraco vazio) atrás da pata, haste prateada que afina até a ponta
+## (2 px no terço de trás, 1 px depois) e o fio de seda branco preso no furo, caindo em onda pelo peito.
 static func _agulha_silk() -> Dictionary:
 	var cv: Dictionary = {}
-	for r in [[-13, 12, 14], [-12, 11, 11], [-12, 15, 15], [-11, 11, 11], [-11, 15, 15], [-10, 11, 11], [-10, 15, 15], [-9, 12, 14]]:
+	for r in [[-13, 15, 15], [-12, 14, 16], [-11, 14, 16], [-10, 14, 16], [-9, 15, 15]]:
 		for x in range(int(r[1]), int(r[2]) + 1):
 			cv[Vector2i(x, int(r[0]))] = "s"
-	for x2 in range(16, 28):
-		cv[Vector2i(x2, -11)] = "s"
-	for x3 in range(12, 15):
-		cv[Vector2i(x3, -13)] = "S"
-		cv[Vector2i(x3, -9)] = "z"
-	for t in [Vector2i(12, -12), Vector2i(12, -11), Vector2i(12, -10), Vector2i(12, -9), Vector2i(12, -8), Vector2i(13, -7), Vector2i(13, -6), Vector2i(12, -5), Vector2i(12, -4)]:
-		cv[t] = "n"
+	cv[Vector2i(15, -13)] = "S"
+	cv[Vector2i(14, -12)] = "S"
+	cv[Vector2i(16, -12)] = "S"
+	cv[Vector2i(14, -10)] = "z"
+	cv[Vector2i(16, -10)] = "z"
+	cv[Vector2i(15, -9)] = "z"
+	var buraco: Array = [Vector2i(15, -12), Vector2i(15, -11), Vector2i(15, -10)]
+	for h in buraco:
+		cv.erase(h)
+	for x2 in range(17, 22):
+		cv[Vector2i(x2, -11)] = "S"
+		cv[Vector2i(x2, -10)] = "z"
+	for x3 in range(22, 26):
+		cv[Vector2i(x3, -11)] = "s" if x3 < 24 else "z"
+	cv[Vector2i(26, -11)] = "z"
 	_cont(cv, "o")
+	for h2 in buraco:
+		cv.erase(h2)
+	var fio: Array = [Vector2i(13, -11), Vector2i(13, -10), Vector2i(12, -9), Vector2i(12, -8), Vector2i(13, -7), Vector2i(13, -6), Vector2i(12, -5), Vector2i(12, -4)]
+	var cont_fio: Dictionary = {}
+	for f in fio:
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+			if not cv.has(f + d) and not fio.has(f + d):
+				cont_fio[f + d] = "o"
+	cv.merge(cont_fio, true)
+	for f2 in fio:
+		cv[f2] = "W"
 	return cv
 
 ## Topo do corpo vestido justo (costas rente ao dorso do gato), usado pelas roupas refeitas pela referência (lote 4: Miaujin, Arqueólogo, Treinador).
@@ -700,7 +720,7 @@ static func _montar(tipo: int, fase: int) -> Array:
 			_cont(cv, "o", false)
 			return [_lay(cp, RoupaGato.Onde.CORPO, _PAL_SILK, true), _lay(cv, RoupaGato.Onde.CORPO, _PAL_SILK)]
 		Pecas.Tipo.AGULHA_GIGANTE:
-			# agulha longa e fina: anel na ponta de trás (o fio vermelho passa por ele e cai ondulando) e haste de 1 px
+			# agulha de costura gigante: furo oval atrás da pata, haste fina prateada e o fio branco preso no furo
 			cv = _agulha_silk()
 			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_SILK)]
 		Pecas.Tipo.NOVELO_SEDA:
