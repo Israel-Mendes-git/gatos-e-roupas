@@ -1461,10 +1461,30 @@ func _metas_fora(e: Estado, todas: Array) -> void:
 		if feito:
 			_selo_meta(Vector2(r.end.x - 40.0, yy + 18.0), "FEITO", COR_TEM)
 			var rec: int = e.recordes[li]
-			_txt(("Invasão: onda %d" % rec) if rec > 0 else "Invasão: sem recorde", Vector2(r.end.x - 150.0, yy + 44.0), 13, TINTA2, 140.0)
+			_txt(("Invasão: onda %d" % rec) if rec > 0 else "Invasão: sem recorde", Vector2(r.end.x - 195.0, yy + 44.0), 13, TINTA2, 160.0)
 		else:
 			_txt("falta", Vector2(r.end.x - 60.0, yy + 24.0), 14, TINTA2, 50.0)
 		yy += 62.0
+	# as ruas do 3º ato, em linhas mais baixas por baixo dos lugares de fora
+	yy += 2.0
+	_txt("Ruas do bairro  ·  %d/%d vencidas no 3º ato" % [e.vencidos_no_ato(3), Fases.TOTAL], Vector2(COL_D_X + 6.0, yy + 12.0), 15, TINTA)
+	yy += 20.0
+	for i in Fases.TOTAL:
+		var li3: int = i + Fases.TOTAL * 2
+		var feito3: bool = e.vencido[i] >= 3
+		var r3 := Rect2(COL_D_X, yy, COL_W, 32.0)
+		draw_rect(r3, Color(0.86, 0.95, 0.8) if feito3 else PAPEL_ESC.lightened(0.25))
+		draw_rect(r3, COR_TEM if feito3 else PAPEL_BORDA, false, 1.5 if feito3 else 1.0)
+		draw_rect(Rect2(r3.position.x, r3.position.y, 5.0, r3.size.y), Fases.GANGUE_COR[i])
+		_txt(cortar(Fases.nome_do_lugar(li3), 16, 172.0), Vector2(r3.position.x + 14.0, yy + 21.0), 16, TINTA)
+		_txt(cortar("Chefe: " + Fases.nome_do_chefe(li3), 13, 175.0), Vector2(r3.position.x + 196.0, yy + 20.0), 13, TINTA2)
+		if feito3:
+			_selo_meta(Vector2(r3.end.x - 40.0, yy + 16.0), "FEITO", COR_TEM)
+		elif not e.lugar_aberto(3, i + 1):
+			_txt("fechado", Vector2(r3.end.x - 66.0, yy + 21.0), 13, TINTA2)
+		else:
+			_txt("falta", Vector2(r3.end.x - 50.0, yy + 21.0), 14, TINTA2)
+		yy += 35.0
 
 func _pagina_metas(e: Estado) -> void:
 	var todas: Array = Metas.lista()
