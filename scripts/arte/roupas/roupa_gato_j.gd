@@ -166,15 +166,32 @@ static func _mand(cv: Dictionary, k: int, s: float) -> void:
 	for kk in m.keys():
 		cv[kk] = m[kk]
 
-## Asa de morcego: do ombro (sx, sy), três dedos claros abertos para cima e para trás com a membrana escura entre eles (`esc` = tamanho).
-static func _asa(cv: Dictionary, sx: int, sy: int, esc: float) -> void:
-	var d1 := Vector2i(sx + roundi(-2 * esc), sy - roundi(9 * esc))
-	var d2 := Vector2i(sx + roundi(-7 * esc), sy - roundi(7 * esc))
-	var d3 := Vector2i(sx + roundi(-9 * esc), sy - roundi(2 * esc))
-	RoupaGatoI._poli(cv, [sx, sy, d1.x, d1.y, (d1.x + d2.x) / 2.0 + 1.0, (d1.y + d2.y) / 2.0 + 1.5, d2.x, d2.y, (d2.x + d3.x) / 2.0 + 1.0, (d2.y + d3.y) / 2.0 + 1.5, d3.x, d3.y, sx - 4, sy + 1], "w")
-	RoupaGatoI._lin(cv, Vector2i(sx, sy), d1, "W")
-	RoupaGatoI._lin(cv, Vector2i(sx, sy), d2, "W")
-	RoupaGatoI._lin(cv, Vector2i(sx, sy), d3, "W")
+## Asa de morcego: do ombro `sh` até as pontas `tips` (x, y), a membrana (recortada em arcos entre as pontas) e, se `osso`, os três dedos claros.
+static func _asa(cv: Dictionary, sh: Vector2, tips: Array, esc: float, osso: bool) -> void:
+	var ts: Array = []
+	for t in tips:
+		ts.append(sh + (Vector2(t[0], t[1]) - sh) * esc)
+	var pts: Array = [sh.x, sh.y]
+	for i in ts.size():
+		var t2: Vector2 = ts[i]
+		pts.append(t2.x)
+		pts.append(t2.y)
+		if i < ts.size() - 1:
+			var n: Vector2 = ts[i + 1]
+			var m: Vector2 = (t2 + n) * 0.5
+			m = m + (sh - m) * 0.28
+			pts.append(m.x)
+			pts.append(m.y)
+	var last: Vector2 = ts[ts.size() - 1]
+	pts.append(last.x)
+	pts.append(last.y)
+	pts.append(sh.x - 4)
+	pts.append(sh.y + 1)
+	RoupaGatoI._poli(cv, pts, "w")
+	if osso:
+		for t3 in ts:
+			var q: Vector2 = t3
+			RoupaGatoI._lin(cv, Vector2i(roundi(sh.x), roundi(sh.y)), Vector2i(roundi(q.x), roundi(q.y)), "W")
 
 ## Chapéu de caubói preto gasto: copa alta (5 px) que afina em cima com o vinco em V dos dois lados, faixa marrom e aba larga (14 px) em sela
 ## (sobe nos lados, desce na frente e atrás) com a sombra por baixo.
@@ -343,7 +360,7 @@ static func _sub_barbatana() -> Array:
 const _PAL_CTHU := {
 	"o": Color("08141a"), "a": Color("3c7c68"), "A": Color("70b49c"), "d": Color("22483e"),
 	"m": Color("245c6a"), "M": Color("3e8896"), "D": Color("143642"),
-	"w": Color("40305e"), "W": Color("c4bcdc"),
+	"w": Color("48287a"), "W": Color("d6caf6"), "v": Color("2c1a44"),
 	"y": Color("f0d848"), "Y": Color("fff6b0"),
 	"p": Color("8a5aa8"), "P": Color("b88ad0"), "q": Color("5a3a7a"),
 	"b": Color("6a3f7a"), "B": Color("9a66aa"), "Q": Color("3e2248"), "F": Color("c8a458"), "i": Color("cfeaf4"),
@@ -379,16 +396,19 @@ static func _cth_cabeca() -> Array:
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_CTHU)]
 
-## Duas asas de morcego atrás do corpo: a de perto (dedos claros, contorno) e a de longe, menor e mais escura.
+## Duas asas de morcego atrás do corpo: a da frente maior (dedos lilás-claros, 3 pontas, membrana roxo-escura recortada) e, atrás, só a silhueta escura menor.
 static func _cth_asa() -> Dictionary:
 	var cv: Dictionary = {}
-	_asa(cv, 1, -13, 1.0)
+	var bk: Dictionary = {}
+	_asa(bk, Vector2(5, -13), [[-1, -22], [-8, -20], [-11, -14]], 0.9, false)
+	for k in bk.keys():
+		cv[k] = "v"
 	RoupaGatoI._cont(cv, "o", true)
 	var f: Dictionary = {}
-	_asa(f, 5, -13, 0.8)
-	for k in f.keys():
-		if not cv.has(k) or cv[k] == "o":
-			cv[k] = "q" if f[k] == "W" else "w"
+	_asa(f, Vector2(1, -13), [[-3, -25], [-12, -23], [-15, -15]], 1.0, true)
+	RoupaGatoI._cont(f, "o", true)
+	for k2 in f.keys():
+		cv[k2] = f[k2]
 	return cv
 
 ## Manto verde-azulado liso com um só fio de arcos de escama, gola aberta, duas gotas e a barra recortada; as asas vão atrás do corpo.
