@@ -469,7 +469,7 @@ const PODER_KIT_INTERVALO: Dictionary = {
 	Pecas.Conjunto.ROCKET_MIAUGUE: 0.75, Pecas.Conjunto.STARDEW_MIAULLEY: 0.8, Pecas.Conjunto.SOMBRIO: 0.8,
 	Pecas.Conjunto.GELO: 0.8, Pecas.Conjunto.FENIX_MIAUSSIMO: 0.8, Pecas.Conjunto.MEON: 0.85,
 	Pecas.Conjunto.MAGO: 0.9, Pecas.Conjunto.PIRATA: 1.15,
-	Pecas.Conjunto.SUPER_MIAUJIN: 1.5, Pecas.Conjunto.TREINADOR: 0.6,
+	Pecas.Conjunto.SUPER_MIAUJIN: 1.5, Pecas.Conjunto.TREINADOR: 0.6, Pecas.Conjunto.MIAU_NOIR: 1.3,
 }
 const PODER_PRIMEIRO := 3.5         # segundos até o primeiro uso
 const PODER_DANO := 14.0            # dano de referência (x força média das peças)
@@ -777,12 +777,12 @@ const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 
 # Apagão (Miau-Noir): zona de escuridão; quem está dentro erra golpes e tiros e troca de alvo
 const PODER_APAGAO_RAIO := 170.0
 const PODER_APAGAO_T := 5.0
-const PODER_APAGAO_ERRA := 0.6
-const PODER_APAGAO_ERRA_CHEFE := 0.4
+const PODER_APAGAO_ERRA := 0.45
+const PODER_APAGAO_ERRA_CHEFE := 0.3
 const PODER_APAGAO_TROCA := 1.5        # segundos entre trocas de alvo
 const PODER_APAGAO_HER_RAIO := 120.0
 const PODER_APAGAO_HER_T := 3.0
-const PODER_APAGAO_HER_ERRA := 0.4
+const PODER_APAGAO_HER_ERRA := 0.3
 const PODER_APAGAO_BICHO_ERRA := 0.4   # o bicho apaga os gatos: eles erram menos
 # Espírito vingativo (Hollowmiau): Alma que cresce com golpes e abates
 const ALMA_GOLPE := 6.0
