@@ -79,38 +79,101 @@ const CHEFE_FRAQUEZA: Array[String] = [
 	"Varinha, poderes e fogo passam pelo couro",
 ]
 
-## Fantasias que os inimigos fantasiados e o chefe de cada fase vestem (e largam).
+## Fantasias que os inimigos fantasiados e o chefe de cada lugar vestem (e largam). Cada fantasia ativa tem UMA casa.
+## Índice = lugar global: 0..4 cômodos (1º ato), 5..9 lugares de fora (2º ato), 10..14 ruas das gangues (3º ato).
+## Tabela final em notas/onde_cai_final.md (seção 2). Leia sempre por lista_do_lugar(): ela soma o PROVISORIO.
 const CONJUNTOS: Array = [
-	[Pecas.Conjunto.CAVALEIRO, Pecas.Conjunto.VIKING, Pecas.Conjunto.ENCANADOR, Pecas.Conjunto.BOSQUE],
-	[Pecas.Conjunto.GUARDIAO, Pecas.Conjunto.JARDINEIRO, Pecas.Conjunto.CAUBOI, Pecas.Conjunto.TARTARUGA],
-	[Pecas.Conjunto.CIRCO, Pecas.Conjunto.PIRATA, Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.OURICO],
-	[Pecas.Conjunto.REI, Pecas.Conjunto.MAGO, Pecas.Conjunto.ESTELAR, Pecas.Conjunto.GELO],
-	[Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.FERRO, Pecas.Conjunto.TROVAO, Pecas.Conjunto.PATRULHEIRO],
-	# Expansão (lote 1): Motoqueiro Miausma e Jimiau na Garagem, Super Miau e Arqueiro Miau no Telhado, Fênix Miaussimo na Rua, Mimiau na Toca.
-	# fora da casa caem as mesmas fantasias, redistribuídas, mais 4 kits novos só daqui: Abelha no Quintal, Robô Azul na Garagem, Ninja da Folha no Telhado, Tubarão na Rua
-	[Pecas.Conjunto.CAVALEIRO, Pecas.Conjunto.JARDINEIRO, Pecas.Conjunto.BOSQUE, Pecas.Conjunto.OURICO, Pecas.Conjunto.ABELHA,
-		Pecas.Conjunto.MIAULAX, Pecas.Conjunto.DISPARAMIAU, Pecas.Conjunto.GIRAMIAU, Pecas.Conjunto.STARDEW_MIAULLEY],
-	[Pecas.Conjunto.ENCANADOR, Pecas.Conjunto.FERRO, Pecas.Conjunto.CIRCO, Pecas.Conjunto.TARTARUGA, Pecas.Conjunto.ROBO_AZUL,
-		Pecas.Conjunto.MOTOQUEIRO_MIAUSMA, Pecas.Conjunto.JIMIAU, Pecas.Conjunto.ROCKET_MIAUGUE, Pecas.Conjunto.DONATEMIAU],
-	[Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.MAGO, Pecas.Conjunto.TROVAO, Pecas.Conjunto.NINJA_FOLHA,
-		Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.ARQUEIRO_MIAU, Pecas.Conjunto.DEADMIAU, Pecas.Conjunto.MIAU_NOIR],
-	[Pecas.Conjunto.CAUBOI, Pecas.Conjunto.PIRATA, Pecas.Conjunto.PATRULHEIRO, Pecas.Conjunto.ESTELAR, Pecas.Conjunto.GUARDIAO, Pecas.Conjunto.TUBARAO,
-		Pecas.Conjunto.FENIX_MIAUSSIMO, Pecas.Conjunto.LEONARMIAU, Pecas.Conjunto.RAFAMIAU],
-	[Pecas.Conjunto.REI, Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.VIKING, Pecas.Conjunto.GELO, Pecas.Conjunto.MIMIAU, Pecas.Conjunto.MIAUCRAFT, Pecas.Conjunto.MEON,
-		Pecas.Conjunto.HOLLOWMIAU, Pecas.Conjunto.SILKMIAU,
-		Pecas.Conjunto.SUPER_MIAUJIN, Pecas.Conjunto.ARQUEOLOGO, Pecas.Conjunto.TREINADOR,   # as três últimas são do 3º ato: caem aqui até ele existir
-		Pecas.Conjunto.RANGER_MIAU, Pecas.Conjunto.MIAUZILLA, Pecas.Conjunto.KING_MIAU, Pecas.Conjunto.ARTHUR_MIAURGON,
-		Pecas.Conjunto.SUBMIAUTICA, Pecas.Conjunto.CATCHULLU],   # lote 5, também do 3º ato
+	# 1º ato: a casa
+	[Pecas.Conjunto.ENCANADOR, Pecas.Conjunto.BOSQUE, Pecas.Conjunto.PATRULHEIRO, Pecas.Conjunto.CAVALEIRO],        # Quarto: brinquedos e videogame
+	[Pecas.Conjunto.ESTELAR, Pecas.Conjunto.CAUBOI, Pecas.Conjunto.FENIX_MIAUSSIMO, Pecas.Conjunto.JIMIAU],         # Sala: TV, cinema, mesa de jogo
+	[Pecas.Conjunto.CIRCO, Pecas.Conjunto.MIAULAX, Pecas.Conjunto.ABELHA, Pecas.Conjunto.GUARDIAO],                 # Cozinha: comida, festa, mel
+	[Pecas.Conjunto.MAGO, Pecas.Conjunto.REI, Pecas.Conjunto.MIMIAU],                                               # Sótão: baú, magia, fantasmas
+	[Pecas.Conjunto.FERRO, Pecas.Conjunto.SOMBRIO, Pecas.Conjunto.ROBO_AZUL],                                       # Porão: oficina escura, energia, vilões
+	# 2º ato: o lado de fora
+	[Pecas.Conjunto.JARDINEIRO, Pecas.Conjunto.DISPARAMIAU, Pecas.Conjunto.GIRAMIAU, Pecas.Conjunto.STARDEW_MIAULLEY],   # Quintal: horta e jardim
+	[Pecas.Conjunto.ROCKET_MIAUGUE, Pecas.Conjunto.MOTOQUEIRO_MIAUSMA, Pecas.Conjunto.OURICO],                      # Garagem: carros, motos, velocidade
+	[Pecas.Conjunto.MORCEGO, Pecas.Conjunto.ARANHA, Pecas.Conjunto.TROVAO, Pecas.Conjunto.NINJA_FOLHA],             # Telhado: noite, antenas, tempestade
+	[Pecas.Conjunto.TARTARUGA, Pecas.Conjunto.DONATEMIAU, Pecas.Conjunto.LEONARMIAU, Pecas.Conjunto.RAFAMIAU],      # Rua: as 4 tartarugas juntas
+	[Pecas.Conjunto.HOLLOWMIAU, Pecas.Conjunto.SILKMIAU, Pecas.Conjunto.MIAUCRAFT],                                 # Toca: subterrâneo e masmorra
+	# 3º ato: as ruas e telhados das gangues
+	[Pecas.Conjunto.SUBMIAUTICA, Pecas.Conjunto.CATCHULLU, Pecas.Conjunto.TUBARAO, Pecas.Conjunto.PIRATA],          # Mercadão do Peixe
+	[Pecas.Conjunto.ARTHUR_MIAURGON, Pecas.Conjunto.DEADMIAU, Pecas.Conjunto.ARQUEOLOGO, Pecas.Conjunto.VIKING],    # Ferro-velho
+	[Pecas.Conjunto.TREINADOR, Pecas.Conjunto.MEON, Pecas.Conjunto.MIAU_NOIR],                                      # Beco do Fliperama
+	[Pecas.Conjunto.MIAUZILLA, Pecas.Conjunto.SUPER_MIAUJIN, Pecas.Conjunto.RANGER_MIAU],                           # Arena da Praça
+	[Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.ARQUEIRO_MIAU, Pecas.Conjunto.GELO, Pecas.Conjunto.KING_MIAU],       # Telhados e Antenas
 ]
 
-## Tipos de peça que os inimigos comuns da fase podem vestir, por espaço:
-## as fantasias desta fase e das anteriores.
-static func pecas_do_slot(fase: int, slot: int) -> Array:
-	var conj: Dictionary = {}
-	for f in range(0, clampi(fase, 1, TOTAL)):
-		for c in CONJUNTOS[f]:
-			conj[c] = true
-	var lista: Array = []
-	for c in conj:
-		lista.append(Pecas.CONJUNTO_PECAS[c][slot])
-	return lista
+## Fantasias do 3º ato que caem nos lugares do 2º ato (índices 5..9, uma lista por lugar) enquanto Balanco.ATOS < 3.
+## Por tema: água no Quintal (piscina, grama alta), motores e ferro-velho na Garagem, antenas e super-heróis no Telhado,
+## monstros e lutadores na Rua, escuro e gelo na Toca. Ligar o 3º ato (Balanco.ATOS = 3) apaga o efeito sozinho.
+const PROVISORIO: Array = [
+	[Pecas.Conjunto.TUBARAO, Pecas.Conjunto.PIRATA, Pecas.Conjunto.TREINADOR, Pecas.Conjunto.SUBMIAUTICA],          # Quintal (8)
+	[Pecas.Conjunto.SUPER_MIAUJIN, Pecas.Conjunto.DEADMIAU, Pecas.Conjunto.ARTHUR_MIAURGON, Pecas.Conjunto.RANGER_MIAU],   # Garagem (7)
+	[Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.ARQUEIRO_MIAU, Pecas.Conjunto.KING_MIAU],                            # Telhado (7)
+	[Pecas.Conjunto.MEON, Pecas.Conjunto.MIAU_NOIR, Pecas.Conjunto.MIAUZILLA],                                      # Rua (7)
+	[Pecas.Conjunto.GELO, Pecas.Conjunto.VIKING, Pecas.Conjunto.ARQUEOLOGO, Pecas.Conjunto.CATCHULLU],              # Toca (7)
+]
+
+## Fantasia-assinatura do chefe de cada lugar (índice = lugar global): ele a veste com Balanco.CHEFE_ASSINATURA_CHANCE.
+const CHEFE_ASSINATURA: Array[int] = [
+	Pecas.Conjunto.CAVALEIRO, Pecas.Conjunto.JIMIAU, Pecas.Conjunto.ABELHA, Pecas.Conjunto.MAGO, Pecas.Conjunto.SOMBRIO,
+	Pecas.Conjunto.STARDEW_MIAULLEY, Pecas.Conjunto.MOTOQUEIRO_MIAUSMA, Pecas.Conjunto.ARANHA, Pecas.Conjunto.RAFAMIAU, Pecas.Conjunto.HOLLOWMIAU,
+	Pecas.Conjunto.SUBMIAUTICA, Pecas.Conjunto.ARTHUR_MIAURGON, Pecas.Conjunto.TREINADOR, Pecas.Conjunto.MIAUZILLA, Pecas.Conjunto.KING_MIAU,
+]
+
+## Lugares e chefes do 3º ato (só os nomes; o ato ainda não existe, então ficam fora de NOME e CHEFE_NOME).
+const NOME_ATO3: Array[String] = ["Mercadão do Peixe", "Ferro-velho", "Beco do Fliperama", "Arena da Praça", "Telhados e Antenas"]
+const CHEFE_NOME_ATO3: Array[String] = ["Dom Gatleone", "Imortal Miau", "Programa Mestre", "Rei Leomiau", "Magnetomiau"]
+
+static func nome_do_lugar(i: int) -> String:
+	return NOME[i] if i < NOME.size() else NOME_ATO3[clampi(i - NOME.size(), 0, NOME_ATO3.size() - 1)]
+
+static func nome_do_chefe(i: int) -> String:
+	return CHEFE_NOME[i] if i < CHEFE_NOME.size() else CHEFE_NOME_ATO3[clampi(i - CHEFE_NOME.size(), 0, CHEFE_NOME_ATO3.size() - 1)]
+
+## Fantasias que caem no lugar `i` (0..14): a lista dele e, até o 3º ato existir, as provisórias do 2º ato.
+static func lista_do_lugar(i: int) -> Array:
+	var l: Array = CONJUNTOS[i]
+	if Balanco.ATOS < 3 and i >= TOTAL and i < TOTAL * 2:
+		l = l + (PROVISORIO[i - TOTAL] as Array)
+	return l
+
+## Lugar onde a fantasia está de verdade (a casa final, na tabela CONJUNTOS); -1 se não cai em lugar nenhum.
+static func casa_final(c: int) -> int:
+	for i in CONJUNTOS.size():
+		if (CONJUNTOS[i] as Array).has(c):
+			return i
+	return -1
+
+## Lugar onde ela cai agora (a casa final ou, até o 3º ato existir, o lugar provisório); -1 se não cai.
+static func lugar_atual(c: int) -> int:
+	for i in CONJUNTOS.size():
+		if lista_do_lugar(i).has(c):
+			return i
+	return -1
+
+## Fantasias das casas dos atos anteriores a `ato` (ato 2 = as da casa; ato 3 = casa e fora), sem repetir.
+static func pool_anterior(ato: int) -> Array:
+	var conj: Array = []
+	for i in range(0, clampi(ato - 1, 0, 3) * TOTAL):
+		for c in CONJUNTOS[i]:
+			if not conj.has(c):
+				conj.append(c)
+	return conj
+
+## Tipo de peça que um inimigo comum do lugar global `lugar` (0..14) veste no espaço `slot`.
+## Ato 1: as fantasias dos cômodos até o atual. Atos 2 e 3: com chance FRACAO_COMUM_DO_LUGAR sai da lista do lugar,
+## senão de uma fantasia dos atos anteriores (as velhas continuam caindo, para fundir e subir raridade).
+static func pecas_do_slot(lugar: int, slot: int, ato: int, rng: RandomNumberGenerator) -> int:
+	var conj: Array = []
+	if ato <= 1:
+		for f in range(0, clampi(lugar + 1, 1, TOTAL)):
+			for c in CONJUNTOS[f]:
+				if not conj.has(c):
+					conj.append(c)
+	elif rng.randf() < Balanco.FRACAO_COMUM_DO_LUGAR:
+		conj = lista_do_lugar(clampi(lugar, 0, CONJUNTOS.size() - 1))
+	else:
+		conj = pool_anterior(ato)
+	var c: int = conj[rng.randi_range(0, conj.size() - 1)]
+	return Pecas.CONJUNTO_PECAS[c][slot]

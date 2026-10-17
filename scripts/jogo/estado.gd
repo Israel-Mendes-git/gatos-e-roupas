@@ -113,9 +113,9 @@ func vencidos_no_ato(a: int) -> int:
 func degrau_ato() -> int:
 	return mini(vencidos_no_ato(ato), Fases.TOTAL - 1)
 
-## Índice do lugar em curso nas tabelas de Fases (0..4 cômodos; 5..9 lugares de fora, do segundo ato em diante).
+## Índice do lugar em curso nas tabelas de Fases (0..4 cômodos; 5..9 lugares de fora, do segundo ato; 10..14 ruas do terceiro).
 func lugar() -> int:
-	return clampi(fase, 1, Fases.TOTAL) - 1 + (Fases.TOTAL if ato > 1 else 0)
+	return clampi(fase, 1, Fases.TOTAL) - 1 + Fases.TOTAL * (clampi(ato, 1, 3) - 1)
 
 ## Todos os cômodos vencidos em todos os atos.
 func tudo_vencido() -> bool:
@@ -767,7 +767,7 @@ func _migrar_raridades(dados: Dictionary) -> void:
 ## raridade e nível, e as heranças delas somem. Roda ao carregar o save.
 func _converter_retiradas() -> void:
 	var alvos: Array[int] = []
-	for c in Fases.CONJUNTOS[Fases.TOTAL]:
+	for c in Fases.lista_do_lugar(Fases.TOTAL):
 		if not Pecas.retirada(c):
 			alvos.append(c)
 	if alvos.is_empty():

@@ -294,9 +294,8 @@ func _ready() -> void:
 	else:
 		# sem gravação: o time de começo aparece no título, mas nada é gravado até "Nova campanha"
 		estado.novo_jogo()
-	var rng_m := RandomNumberGenerator.new()
 	for f in range(1, Fases.NOME.size() + 1):
-		_chefes_mapa.append(Balanco.fantasia(f, 0, Pecas.SLOTS, rng_m))
+		_chefes_mapa.append(Balanco.assinatura(f, 0))
 	mapa_casa = MapaCasa.new(self)
 	_preparar_fundo()
 	campo = Campo.new()
@@ -5279,7 +5278,11 @@ func _cartao_em(p: Vector2) -> int:
 ## Centro do ícone da k-ésima fantasia que cai no cômodo f.
 func _centro_fantasia(f: int, k: int) -> Vector2:
 	var r: Rect2 = rect_cartao(f)
-	var n: int = (Fases.CONJUNTOS[f - 1] as Array).size()
+	var n: int = Fases.lista_do_lugar(f - 1).size()
+	if n > 5:   # listas longas (provisório do 2º ato): duas fileiras
+		var por: int = ceili(n / 2.0)
+		var nl: int = por if k / por == 0 else n - por
+		return Vector2(r.get_center().x - (nl - 1) * 20.0 + (k % por) * 40.0, r.position.y + 400.0 + (k / por) * 36.0)
 	return Vector2(r.get_center().x - (n - 1) * 20.0 + k * 40.0, r.position.y + 414.0)
 
 func _fundo_mapa() -> void:
@@ -5428,7 +5431,7 @@ func _cartao(f: int) -> void:
 	# fantasias que caem aqui, só os ícones das cabeças (o nome vai na dica do mouse)
 	draw_line(Vector2(r.position.x + 24, r.position.y + 358), Vector2(r.end.x - 24, r.position.y + 358), Color(1, 1, 1, 0.16 * al), 1.0)
 	Desenho.texto(self, "Fantasias que caem", Vector2(r.position.x, r.position.y + 380), 13, _com_alfa(Color(1, 1, 1, 0.65), al), r.size.x)
-	var conjs: Array = Fases.CONJUNTOS[fi]
+	var conjs: Array = Fases.lista_do_lugar(fi)
 	for k in conjs.size():
 		var c: int = conjs[k]
 		var pc: Vector2 = _centro_fantasia(f, k)
@@ -5446,7 +5449,7 @@ func _cartao(f: int) -> void:
 ## Dica do mapa: nome completo da fantasia sob o mouse.
 func _dica_mapa() -> void:
 	for f in range(1, estado.fase_liberada + 1):
-		var conjs: Array = Fases.CONJUNTOS[f - 1]
+		var conjs: Array = Fases.lista_do_lugar(f - 1)
 		for k in conjs.size():
 			if mouse.distance_to(_centro_fantasia(f, k)) < 18.0:
 				var c: int = conjs[k]

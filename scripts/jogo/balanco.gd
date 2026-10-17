@@ -232,6 +232,12 @@ const CHEFE_MITICA_FASE := 0.03
 const CHEFE_MITICA_DESDE := 5.0
 const INVASAO_DROP_DEGRAU := 0.4   # na invasão, cada onda vencida sobe o degrau de drop...
 const INVASAO_DROP_DEGRAU_MAX := 4.0   # ...até este tanto
+# Onde cai cada fantasia (notas/onde_cai_final.md, seção 5.9)
+const FRACAO_COMUM_DO_LUGAR := 0.25    # 2º e 3º atos: fração das peças dos comuns que vem da lista do lugar (o resto, dos atos anteriores)
+const CHEFE_ASSINATURA_CHANCE := 0.6   # chance de o chefe vestir a fantasia-assinatura do lugar
+const PESO_PECA_FALTA := 3.0           # fantasiado e chefe: peso de largar uma peça que o jogador ainda não teve (as outras pesam 1)
+const PESO_FANTASIA_FALTA := 2.0       # peso, no sorteio de fantasiados e do chefe, da fantasia que o jogador ainda não completou
+const DEGRAU_RARIDADE_MAX := 9.0       # teto do degrau de drop nas curvas de raridade; ainda sem uso: o 3º ato (degraus 10..14) pede medição antes de ligar
 
 ## Blocos para subir a peça do nível `nivel` para o seguinte.
 static func custo_promocao(nivel: int) -> int:
@@ -241,9 +247,9 @@ static func custo_promocao(nivel: int) -> int:
 static func custo_reforco(rar: int) -> int:
 	return REFORCO_CUSTO[clampi(rar, 0, REFORCO_CUSTO.size() - 1)]
 
-## Degrau do lugar para os drops: 0..4 nos cômodos, 5..9 fora da casa, mais o avanço da invasão.
+## Degrau do lugar para os drops: 0..4 nos cômodos, 5..9 fora da casa, 10..14 no 3º ato, mais o avanço da invasão.
 static func degrau_drop(fase: int, ato: int, invasao: bool, onda_invasao: int) -> float:
-	var g: float = float(fase - 1) + (float(Fases.TOTAL) if ato > 1 else 0.0)
+	var g: float = float(fase - 1) + float(Fases.TOTAL * (ato - 1))
 	if invasao:
 		g += minf(INVASAO_DROP_DEGRAU_MAX, INVASAO_DROP_DEGRAU * (onda_invasao - 1))
 	return g

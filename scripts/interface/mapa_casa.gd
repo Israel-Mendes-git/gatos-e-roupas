@@ -1327,7 +1327,7 @@ func _painel_lateral(f: int) -> void:
 	_sep(x0, larg, 492.0)
 	# fantasias que caem (o nome completo sai na dica do mouse)
 	Desenho.texto(cv, "Fantasias que caem", Vector2(x0, 512), 13, Color(1, 1, 1, 0.65 * al))
-	var conjs: Array = Fases.CONJUNTOS[li]
+	var conjs: Array = Fases.lista_do_lugar(li)
 	for k in conjs.size():
 		var c: int = conjs[k]
 		var pc: Vector2 = centro_fantasia(k)
@@ -1386,7 +1386,7 @@ func _dica_casa(f: int) -> void:
 	var est: Estado = p.estado
 	if f > est.fase_liberada:
 		return
-	var conjs: Array = Fases.CONJUNTOS[f - 1 + (Fases.TOTAL if _fora else 0)]
+	var conjs: Array = Fases.lista_do_lugar(f - 1 + (Fases.TOTAL if _fora else 0))
 	for k in conjs.size():
 		if p.mouse.distance_to(centro_fantasia(k)) < 18.0:
 			var c: int = conjs[k]
