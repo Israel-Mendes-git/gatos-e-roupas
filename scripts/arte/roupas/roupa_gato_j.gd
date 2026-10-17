@@ -473,19 +473,18 @@ const _PAL_RANGER := {
 # ------------------------------------------------------------------ Ranger Miau
 static func _rg_capacete() -> Array:
 	var cv: Dictionary = {}
-	_txt(cv, 1, -21, [
-		"..aa....aa..",
-		".appa..appa.",
-		".aaaaYYaaaa.",
-		"aaaAAyyAAaaa",
-		"aaaaaaaaaaad",
-		"aaakkkkkkkkd",
-		"aaakkkkklkkd",
-		"aaaakkklkkkd",
-		".aaakkkkkkd.",
-		".aaadkkkkkd.",
-		"..awwwwdd...",
-		"...wWWd.....",
+	_txt(cv, 0, -21, [
+		".....aaaa....",
+		"...aaAYYAaa..",
+		"..aaaAyyAAaa.",
+		".aaaaaaaaaaaa",
+		"Aaaaaaaaaaaad",
+		"AAaakkkkkkkkd",
+		".Aaakkkkklkkd",
+		"..aaakkklkkd.",
+		"..aaadkkkkkd.",
+		"...awwwwdd...",
+		"....wWWd.....",
 	])
 	_cont(cv, "o")
 	return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_RANGER)]
