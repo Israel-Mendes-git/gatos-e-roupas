@@ -65,6 +65,13 @@ const _PAL: Array = [
 	{"a": Color("f2b01a"), "A": Color("ffe07a"), "d": Color("b0760a"), "b": Color("e87a1a"), "B": Color("ffb060"), "e": Color("3a80e8")},   # super miaujin
 	{"a": Color("8c6a3c"), "A": Color("b8905e"), "d": Color("5a4026"), "b": Color("3a2a1a"), "B": Color("6a5030"), "e": Color("e8c860")},   # o arqueólogo
 	{"a": Color("e03a3a"), "A": Color("ff7a70"), "d": Color("8c1a22"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630"), "g": Color("4a9a50")},   # treinador
+	# lote 5 da expansão (49 a 54)
+	{"a": Color("2fb050"), "A": Color("7ae08a"), "d": Color("1a6a30"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # ranger miau (verde)
+	{"a": Color("3aa898"), "A": Color("78d8c8"), "d": Color("1e6a60"), "b": Color("6a7a8a"), "B": Color("a0b0c0"), "e": Color("5ac8ff")},   # miauzilla (verde-água)
+	{"a": Color("4a3a30"), "A": Color("7a6252"), "d": Color("2a2018"), "b": Color("b08a62"), "B": Color("d8b88c"), "e": Color("f2c230")},   # king-miau
+	{"a": Color("2a2630"), "A": Color("5a5666"), "d": Color("14121a"), "b": Color("8a5a3a"), "B": Color("b88a60"), "e": Color("d8323a")},   # arthur miaurgon
+	{"a": Color("ff8a1c"), "A": Color("ffc060"), "d": Color("b05a0c"), "b": Color("2eb8c8"), "B": Color("7ae8f0"), "e": Color("9ae8ff")},   # submiautica
+	{"a": Color("3a8a70"), "A": Color("6ac0a0"), "d": Color("1e5040"), "b": Color("5a3a7a"), "B": Color("8a6aa8"), "e": Color("e8d048")},   # catchullu
 ]
 
 ## Cores da roupa de corpo que diferem das do chapéu (o barril do circo é de madeira, o avental do jardineiro é verde).
@@ -533,6 +540,48 @@ const _CHAPEU: Array = [
 		"oaaaabgbbo.",
 		"oaaaabggbo.",
 		"oddddddddoo"]},
+	# 49 ranger miau: capacete verde liso com a viseira preta espelhada
+	{"cheio": true, "l": [
+		"..ooooooo..",
+		"oAaaaaaaaAo",
+		"oaakkkkkaao",
+		"oaakkkkkaao",
+		".oddddddo.."]},
+	# 50 miauzilla: fileira de placas dorsais pontudas
+	{"cheio": false, "l": [
+		"o.o.o.o.o.o",
+		"oAoAoAoAoAo",
+		"oaaaaaaaaao",
+		"oaaaaaaaaao",
+		"oddddddddoo"]},
+	# 51 king-miau: cabeça de gorila peluda com sobrancelhas grossas
+	{"cheio": false, "l": [
+		"..ooooooo..",
+		".oaaaaaaao.",
+		"oaaAaaaAaao",
+		"oaabbbbbaao",
+		"oddddddddoo"]},
+	# 52 arthur miaurgon: chapéu preto de aba larga amassada
+	{"cheio": false, "l": [
+		"...ooooo...",
+		"..oaaaaao..",
+		".obbbbbbbo.",
+		"oAaaaaaaaAo",
+		"odddddddddo"]},
+	# 53 submiautica: máscara de mergulho com lentes e o respirador ao lado
+	{"cheio": false, "l": [
+		"..ooooooo.o",
+		".oaaaaaaaoa",
+		"oaBBeeBBaao",
+		"oaBBeeBBaao",
+		".oddddddo.."]},
+	# 54 catchullu: cabeça de polvo verde com tentáculos na barba
+	{"cheio": true, "l": [
+		"..ooooooo..",
+		".oAaaaaaao.",
+		"oaakkaakkao",
+		"oaaaaaaaaao",
+		"o.o.o.o.o.o"]},
 ]
 ## Quantos pixels a última linha do chapéu fica abaixo do topo do crânio.
 const _DESCE := 1
@@ -629,6 +678,7 @@ const _FORMA: Array[String] = [
 	"colete", "colete", "colete", "colete", "colete", "colete",
 	"casco", "casco", "casco", "colete", "colete", "colete",
 	"colete", "capa", "capa", "colete", "colete", "colete",
+	"colete", "colete", "colete", "colete", "colete", "capa",
 ]
 const _MEDIDA: Array = [
 	[0.06, 1.0, 0.80], [0.06, 1.0, 0.78], [0.0, 0.92, 0.85], [0.06, 1.0, 0.80], [0.10, 1.0, 0.58], [0.06, 1.0, 0.80],
@@ -640,6 +690,7 @@ const _MEDIDA: Array = [
 	[0.06, 1.0, 0.82], [0.06, 1.0, 0.84], [0.06, 1.0, 0.84], [0.06, 1.0, 0.82], [0.06, 1.0, 0.84], [0.04, 1.0, 0.92],
 	[0.05, 0.95, 0.62], [0.05, 0.95, 0.62], [0.05, 0.95, 0.62], [0.06, 1.0, 0.84], [0.06, 1.0, 0.82], [0.06, 1.0, 0.84],
 	[0.06, 1.0, 0.82], [0.10, 1.0, 0.58], [0.0, 0.92, 0.85], [0.06, 1.0, 0.80], [0.06, 1.0, 0.82], [0.06, 1.0, 0.82],
+	[0.06, 1.0, 0.82], [0.06, 1.0, 0.82], [0.06, 1.0, 0.80], [0.06, 1.0, 0.82], [0.06, 1.0, 0.82], [0.0, 0.92, 0.85],
 ]
 
 ## Pixels pintados da roupa: {Vector2i: Color}.
@@ -930,6 +981,7 @@ const _EMBLEMA: Array = [
 	[],                                          # super miaujin
 	[],                                          # o arqueólogo
 	[],                                          # treinador
+	[], [], [], [], [], [],                       # lote 5 (sem emblema)
 ]
 ## Fantasias com barra de outra cor na bainha (a letra da barra).
 const _BARRA: Dictionary = {0: "b", 1: "b", 3: "y", 4: "", 6: "b", 7: "B", 11: "b", 13: "b", 16: "", 17: "b", 20: "b", 21: "b", 22: "b", 25: "b", 27: "b", 30: "b"}
