@@ -19,7 +19,7 @@ const NOME_MAX := 16
 const NOME_VAZIO := "Fantasia sem nome"
 const MATIZES := 13
 const ESTAMPA_NOME: Array[String] = ["Sem estampa", "Listras", "Bolinhas", "Xadrez", "Coração", "Estrela", "Camuflagem", "Remendos"]
-const MATIZ_NOME: Array[String] = ["Original", "Vermelho", "Laranja", "Âmbar", "Amarelo", "Lima", "Verde", "Menta", "Ciano", "Azul", "Violeta", "Roxo", "Rosa"]
+const MATIZ_NOME: Array[String] = ["Original", "Vermelho", "Laranja", "Amarelo", "Lima", "Verde", "Menta", "Ciano", "Azul", "Anil", "Violeta", "Magenta", "Rosa"]
 
 ## Moldes de efeito forte (2 pontos); os outros custam 1.
 const MOLDES_FORTES: Array[int] = [

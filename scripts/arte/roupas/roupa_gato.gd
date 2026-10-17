@@ -36,12 +36,15 @@ static func patas(quadro: int) -> Array:
 
 ## Peças de pata que vão numa pata só (a da frente), em vez de em todas.
 static func so_pata_da_frente(tipo: int) -> bool:
+	tipo = Atelie.forma(tipo)
 	return Pecas.MOLDE[tipo] == Pecas.Tipo.GANCHO or tipo == Pecas.Tipo.LUVAS
 
 ## Onde a peça fica presa. Cabeça e corpo têm lugar fixo; a peça de mão vai na boca e o acessório na traseira,
 ## a não ser que o arquivo da peça escolha outro lugar em onde().
 static func onde(tipo: int) -> int:
-	match Pecas.SLOT[tipo]:
+	var slot_peca: int = Pecas.SLOT[tipo]   # (a peça do Ateliê fica onde fica a forma escolhida)
+	tipo = Atelie.forma(tipo)
+	match slot_peca:
 		Pecas.SLOT_CABECA:
 			return Onde.CABECA
 		Pecas.SLOT_CORPO:
@@ -82,8 +85,16 @@ static func _onde_arquivo(tipo: int) -> int:
 	# sem escolha do arquivo da peça: a de mão vai na boca; o acessório, na traseira
 	return Onde.BOCA if Pecas.SLOT[tipo] == Pecas.SLOT_MAO else Onde.TRASEIRA
 
+## A peça tem camadas atrás do corpo (capa, aljava)? A do Ateliê responde pela forma escolhida.
+static func tem_atras(tipo: int) -> bool:
+	tipo = Atelie.forma(tipo)
+	return RoupaGatoF.tem_atras(tipo) or RoupaGatoG.tem_atras(tipo) or RoupaGatoH.tem_atras(tipo) or RoupaGatoI.tem_atras(tipo) or RoupaGatoJ.tem_atras(tipo)
+
 ## Desenha a peça em torno da origem do transform atual (1 unidade = 1 pixel do gato).
 static func desenhar(c: CanvasItem, tipo: int, f: float, anim: float) -> void:
+	if tipo >= Pecas.Tipo.ATELIE_CABECA:
+		AtelieArte.desenhar(c, tipo, f, anim)   # delega à forma escolhida, com a cor e a estampa
+		return
 	_tipo_vez = tipo
 	if tipo >= RoupaGatoJ.PRIMEIRO:
 		RoupaGatoJ.desenhar(c, tipo, f, anim)
@@ -145,6 +156,9 @@ static func r(c: CanvasItem, x: float, y: float, w: float, h: float, cor: Color,
 				oy += esticar_cab.y
 		x += ox
 		y += oy
+	if AtelieArte.ativo:
+		AtelieArte.rect(c, x, y, w, h, cor, f)
+		return
 	c.draw_rect(Rect2(x, y, w + 0.03, h + 0.03), Desenho.b(cor, f))
 
 ## Uma camada da peça de cabeça esticada (ver desenhar_esticada).
@@ -282,7 +296,11 @@ static func sprite(c: CanvasItem, x: float, y: float, linhas: Array, paleta: Dic
 	_retangulos(c, x, y, e[2], e[3], f)
 
 static func _retangulos(c: CanvasItem, x: float, y: float, rs: Array, cs: PackedColorArray, f: float) -> void:
-	if f <= 0.0 and not Desenho.noir:
+	if AtelieArte.ativo:
+		for k in rs.size():
+			var qa: Rect2 = rs[k]
+			AtelieArte.rect(c, x + qa.position.x, y + qa.position.y, qa.size.x, qa.size.y, cs[k], f)
+	elif f <= 0.0 and not Desenho.noir:
 		for k in rs.size():
 			var q: Rect2 = rs[k]
 			c.draw_rect(Rect2(x + q.position.x, y + q.position.y, q.size.x, q.size.y), cs[k])
