@@ -549,6 +549,9 @@ func passo(dt: float) -> void:
 		u.bonus_dano = 1.0
 	_aplicar_auras(aliados, inimigos)
 	_aplicar_auras(inimigos, aliados)
+	for u in aliados + inimigos:
+		if u.assombrado_t > 0.0:
+			u.lento = minf(u.lento, Balanco.PODER_ESPIRITO_ASSOMBRA_LENTO)   # Alma Sombria
 	_frio(aliados, dt)
 	_frio(inimigos, dt)
 	_aura_dano(aliados, inimigos, dt)
@@ -992,6 +995,7 @@ func _agir(u: Unidade, dt: float) -> void:
 	u.domo_t = maxf(0.0, u.domo_t - dt)
 	u.forcado_t = maxf(0.0, u.forcado_t - dt)
 	u.apagao_t = maxf(0.0, u.apagao_t - dt)
+	u.assombrado_t = maxf(0.0, u.assombrado_t - dt)
 	if u.bola_t > 0.0:
 		u.atordoado_t = 0.0   # Bola de espinhos: ninguém atordoa
 	u.barreira_cd = maxf(0.0, u.barreira_cd - dt)
@@ -3170,16 +3174,21 @@ func _zona_apagao(z: Dictionary, dt: float) -> void:
 				v.alvo = cand[rng.randi_range(0, cand.size() - 1)]
 				v.retarget = Balanco.PODER_APAGAO_TROCA
 
-## Espírito vingativo (Hollowmiau): gasta a Alma num espírito em linha que fere e cura.
+## Alma Sombria (Hollowmiau): gasta a Alma e dispara a própria Sombra, que atravessa a fileira ferindo
+## todos no caminho (a herança é menor: perfura só os primeiros) e os deixa assombrados (lentos).
 func _poder_espirito(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
 	var sentido: float = 1.0 if u.equipe == 0 else -1.0
+	var largura: float = Balanco.PODER_ESPIRITO_HER_LARGURA if em_heranca else Balanco.PODER_ESPIRITO_LARGURA
 	var linha: Array[Unidade] = []
 	for v in outros:
 		var dx: float = (v.x - u.x) * sentido
-		if dx >= -20.0 and dx <= Balanco.PODER_ESPIRITO_ALCANCE and absf(v.y - u.y) <= Balanco.PODER_ESPIRITO_LARGURA:
+		if dx >= -20.0 and dx <= Balanco.PODER_ESPIRITO_ALCANCE and absf(v.y - u.y) <= largura:
 			linha.append(v)
 	if linha.is_empty():
 		return false
+	linha.sort_custom(func(a: Unidade, b: Unidade) -> bool: return (a.x - u.x) * sentido < (b.x - u.x) * sentido)
+	if em_heranca and linha.size() > Balanco.PODER_ESPIRITO_HER_PERFURA:
+		linha.resize(Balanco.PODER_ESPIRITO_HER_PERFURA)
 	var gasto: float = u.alma * (Balanco.PODER_ESPIRITO_HER_GASTO if em_heranca else 1.0)
 	u.alma -= gasto
 	var frac: float = gasto / Balanco.ALMA_MAX
@@ -3188,13 +3197,17 @@ func _poder_espirito(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], b
 	u.vida = minf(u.vida_max, u.vida + u.vida_max * Balanco.PODER_ESPIRITO_CURA * frac)
 	_tele(u.poder_conj, "cura", u.vida - antes)
 	_tele(u.poder_conj, "alma", gasto)
+	var fim: float = u.x + sentido * Balanco.PODER_ESPIRITO_ALCANCE
 	for v in linha:
 		pontos.append(Vector2(v.x, v.y))
 		_dano_poder(u, v, base * mult)
+		if v.vivo and not v.estrutura:
+			v.assombrado_t = maxf(v.assombrado_t, Balanco.PODER_ESPIRITO_ASSOMBRA_T)
 	extra["x0"] = u.x
 	extra["y0"] = u.y
-	extra["x1"] = u.x + sentido * Balanco.PODER_ESPIRITO_ALCANCE
+	extra["x1"] = fim
 	extra["raio"] = frac
+	extra["menor"] = 1.0 if em_heranca else 0.0
 	return true
 
 ## Laço de seda (Silkmiau): liga os mais fortes; o dano que um leva se espalha pelos outros.

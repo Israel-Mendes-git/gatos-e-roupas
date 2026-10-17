@@ -900,8 +900,8 @@ func _consumir() -> void:
 						snd_p = "poder"
 						tom_p = 0.5
 					Pecas.Poder.ESPIRITO:
-						snd_p = "poder_cura"
-						tom_p = 1.3
+						snd_p = "poder"
+						tom_p = 0.7
 					Pecas.Poder.LACO:
 						snd_p = "poder_pronto"
 						tom_p = 1.0
@@ -2259,17 +2259,20 @@ func _desenhar_fx(f: Dictionary) -> void:
 			for b in alvos:
 				V.estrela(self, b + Vector2(0, -34.0), 8.0 * a + 3.0, Color(0.85, 0.8, 1.0), esc_c)
 		Pecas.Poder.ESPIRITO:
-			# espírito branco em linha: faixa fantasma com cabeça de estrela; mais larga com mais Alma
+			# a Sombra do Knight viaja pela fileira com rastro escuro e olhos brancos; a menor (herança) é mais fina
 			var o_e := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 26.0 * ESC)
 			var x1_e: float = float(ex.get("x1", p.x + 400.0))
+			var sd_e: float = 1.0 if x1_e >= o_e.x else -1.0
 			var cab: float = lerpf(o_e.x, x1_e, minf(1.0, u * 2.5))
-			var esp_e: float = V.sn(6.0 + 14.0 * float(ex.get("raio", 0.5)))
+			var menor_e: bool = float(ex.get("menor", 0.0)) > 0.5
+			var cel_e: float = V.sn((3.0 if menor_e else 4.0) + (0.0 if menor_e else 2.0) * float(ex.get("raio", 0.5)))
+			var viva_e: float = 1.0 - maxf(0.0, (u - 0.7) / 0.3)
 			if absf(cab - o_e.x) > 2.0:
 				var xa_e: float = minf(o_e.x, cab)
-				V.quadro(self, xa_e, o_e.y - esp_e - q, absf(cab - o_e.x), esp_e * 2.0 + q * 2.0, V.CONT)
-				V.quadro(self, xa_e, o_e.y - esp_e, absf(cab - o_e.x), esp_e * 2.0, Color(0.85, 0.92, 1.0, 0.75 * a + 0.2))
-				V.quadro(self, xa_e, o_e.y - esp_e * 0.4, absf(cab - o_e.x), esp_e * 0.8, V.BRANCO)
-			V.estrela(self, Vector2(cab, o_e.y), 12.0 + esp_e, V.BRANCO, Color(0.3, 0.35, 0.55))
+				var lg_e: float = cel_e * 2.0
+				V.quadro(self, xa_e, o_e.y - lg_e - q, absf(cab - o_e.x), lg_e * 2.0 + q * 2.0, Color(0.42, 0.3, 0.62, 0.35 * viva_e))
+				V.quadro(self, xa_e, o_e.y - lg_e, absf(cab - o_e.x), lg_e * 2.0, Color(0.03, 0.02, 0.08, 0.55 * viva_e))
+			V.sombra(self, Vector2(cab, o_e.y), sd_e, cel_e, t, viva_e, q)
 		Pecas.Poder.LACO:
 			# fios vermelhos partem do gato e atam os bichos ligados (os fios que ficam saem de _desenhar_lacos)
 			for b in alvos:

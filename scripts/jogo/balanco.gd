@@ -784,7 +784,7 @@ const PODER_APAGAO_HER_RAIO := 120.0
 const PODER_APAGAO_HER_T := 3.0
 const PODER_APAGAO_HER_ERRA := 0.3
 const PODER_APAGAO_BICHO_ERRA := 0.4   # o bicho apaga os gatos: eles erram menos
-# Espírito vingativo (Hollowmiau): Alma que cresce com golpes e abates
+# Alma Sombria (Hollowmiau): Alma que cresce com golpes e abates
 const ALMA_GOLPE := 6.0
 const ALMA_ABATE := 20.0
 const ALMA_MAX := 100.0
@@ -793,6 +793,10 @@ const PODER_ESPIRITO_LARGURA := 45.0
 const PODER_ESPIRITO_ALMA := 2.2       # dano = base x (1 + isto x Alma/100)
 const PODER_ESPIRITO_CURA := 0.25      # fração da vida x Alma/100
 const PODER_ESPIRITO_HER_GASTO := 0.5  # a herança gasta metade da Alma
+const PODER_ESPIRITO_HER_LARGURA := 32.0   # a Sombra menor é mais fina
+const PODER_ESPIRITO_HER_PERFURA := 2       # e perfura só os 2 primeiros
+const PODER_ESPIRITO_ASSOMBRA_T := 2.0    # quem a Sombra atravessa fica assombrado (lento)
+const PODER_ESPIRITO_ASSOMBRA_LENTO := 0.6
 # Laço de seda (Silkmiau): os mais fortes dividem o dano
 const PODER_LACO_N := 4
 const PODER_LACO_T := 6.0

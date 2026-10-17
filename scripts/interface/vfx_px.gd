@@ -379,6 +379,42 @@ static func escuridao(c: CanvasItem, ce: Vector2, rx: float, t: float, viva: flo
 		var fy: float = fposmod(i * 0.619 + t * 0.35, 1.0)
 		ponto(c, Vector2(ce.x + fx * rx * 0.8 * viva, ce.y - fy * 46.0), Color(0.7, 0.65, 0.9, 0.7 * viva), q)
 
+## Sombra do Knight (Alma Sombria): silhueta preta de chifres com dois olhos brancos e fiapos de fumaça escura atrás.
+## `dir` +1/-1 é o lado para onde olha; `cel` é o tamanho do pixel da silhueta; `t` anima a fumaça.
+const SOMBRA: Array[String] = [
+	"......k..k..", ".....kk..kk.", "....kkkkkkk.", "...kkkkkkkkk", "..kkkkwwkwwk", "kkkkkkwwkwwk",
+	".kkkkkkkkkkk", "k.kkkkkkkkk.", "..k.kkk.kk..",
+]
+static func sombra(c: CanvasItem, ce: Vector2, dir: float, cel: float, t: float, viva: float = 1.0, q: float = Q) -> void:
+	var w: int = SOMBRA[0].length()
+	var h: int = SOMBRA.size()
+	var cor_c := Color(0.42, 0.3, 0.62, viva)
+	var cor_s := Color(0.02, 0.01, 0.05, viva)
+	for passo in 2:
+		for yy in h:
+			for xx in w:
+				var ch: String = SOMBRA[yy][xx]
+				if ch == ".":
+					continue
+				var gx: float = (xx - w * 0.5) * dir * cel if dir > 0.0 else (xx - w * 0.5) * dir * cel - cel
+				var gy: float = (yy - h * 0.5) * cel
+				var pos := ce + Vector2(gx, gy)
+				if passo == 0:
+					quadro(c, pos.x - q, pos.y - q, cel + q * 2.0, cel + q * 2.0, cor_c, q)
+				elif ch == "w":
+					quadro(c, pos.x, pos.y, cel, cel, Color(1.0, 1.0, 0.95, viva), q)
+				else:
+					quadro(c, pos.x, pos.y, cel, cel, cor_s, q)
+	# fiapos de fumaça escura soltos atrás, sobem e somem
+	for i in 9:
+		var f: float = fposmod(t * 1.6 + i * 0.137, 1.0)
+		var fx: float = -dir * (w * 0.5 * cel + f * cel * 7.0)
+		var fy: float = (fposmod(i * 0.43, 1.0) - 0.5) * h * cel * 0.9 - f * cel * 2.0
+		var al: float = (1.0 - f) * 0.85 * viva
+		var tam: float = cel * (1.0 - f * 0.5)
+		quadro(c, ce.x + fx - q, ce.y + fy - q, tam + q * 2.0, tam + q * 2.0, Color(0.42, 0.3, 0.62, al * 0.6), q)
+		quadro(c, ce.x + fx, ce.y + fy, tam, tam, Color(0.03, 0.02, 0.07, al), q)
+
 ## Pedra rolante: rocha de pixels cinza girando (`rot` em voltas).
 static func rocha(c: CanvasItem, ce: Vector2, r: float, rot: float, q: float = Q) -> void:
 	disco_c(c, ce, r, Color(0.5, 0.48, 0.5), CONT, q)

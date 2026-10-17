@@ -499,7 +499,7 @@ const PODER_NOME: Array[String] = [
 	"Salvamento", "Flecha ricochete", "Olhar da Penitência", "Objeção!", "Imitar", "Mão de pôquer",
 	"Torre de ervilha", "Manteiga escorregadia", "Reviver", "Colheita", "Construir", "Cochilo",
 	"Plano de ataque", "Domo refletor", "Lobo solitário", "Turbo", "Esforço máximo", "Chute giratório",
-	"Apagão", "Espírito vingativo", "Laço de seda", "Camehamiau!", "Pedra rolante", "Eu escolho você!",
+	"Apagão", "Alma Sombria", "Laço de seda", "Camehamiau!", "Pedra rolante", "Eu escolho você!",
 ]
 const PODER_DICA: Array[String] = [
 	"investe pela fileira, fere quem cruza, derruba o primeiro e fica protegido",
@@ -546,7 +546,7 @@ const PODER_DICA: Array[String] = [
 	"regenera e bate mais forte por uns segundos; se cair, levanta e explode",
 	"chuta em volta: empurra e atordoa; quem já estava atordoado apanha muito",
 	"escuridão no maior bando: os bichos erram golpes e tiros e trocam de alvo",
-	"a Alma dos golpes vira um espírito em linha que fere muito e cura",
+	"a Alma vira a Sombra: perfura a fileira, fere muito, deixa lento e cura",
 	"liga os 4 bichos mais fortes: o dano de um se espalha pelos outros",
 	"carrega parado e solta um feixe que cruza o campo todo",
 	"uma pedra rola até a torre e atordoa quem tocar",

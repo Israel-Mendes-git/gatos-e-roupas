@@ -129,8 +129,8 @@ const BITS: Array = [
 	["....ww..", "..w...w.", ".w.....w", "w..nnn..", "w.nnnnN.", "...nnnNN", "....NNNN", "....kkkk"],
 	# APAGAO (Apagão): lua escura em crescente
 	["..ssss..", ".ss.....", "ss......", "ss......", "ss......", ".ss.....", "..ssSSS.", "....SS.."],
-	# ESPIRITO (Espírito vingativo): espírito branco de olhos pretos
-	["..wwww..", ".wwwwww.", "wwkwwkww", "wwkwwkww", "wwwwwwww", "wwwwwwww", "wWwwWwwW", ".W.WW.W."],
+	# ESPIRITO (Alma Sombria): cabeça da Sombra, preta, com chifres e dois olhos brancos
+	["K..KK..K", "KK.KK.KK", ".KKKKKK.", "KKKKKKKK", "KwwKKwwK", "KKKKKKKK", ".KKKKKK.", "K.K..K.K"],
 	# LACO (Laço de seda): laço de fio vermelho
 	["..rrr...", ".r...r..", "r.....r.", ".r.rr.r.", "..rRRr..", ".r...r..", "r.....r.", ".rrrrr.."],
 	# KAMEHA (Camehamiau!): esfera de energia azul

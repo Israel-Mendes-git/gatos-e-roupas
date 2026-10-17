@@ -377,7 +377,8 @@ func _efeitos_lote2() -> void:
 		_ok(perto.sono_t == 0.0 or not perto.vivo, "o dano não acordou o inimigo")
 		for _i in int(3.0 / Balanco.DT):
 			sim.passo(Balanco.DT)
-		_ok(ml.vida > ml.vida_max * 0.8, "o Cochilo não curou o bastante (%.2f)" % (ml.vida / ml.vida_max))
+		# começa com 40% e o Cochilo cura PODER_COCHILO_CURA (35%): sobra ~75%, menos o que o bicho acordado bateu
+		_ok(ml.vida > ml.vida_max * (0.4 + Balanco.PODER_COCHILO_CURA * 0.6), "o Cochilo não curou o bastante (%.2f)" % (ml.vida / ml.vida_max))
 
 ## Primeiro inimigo comum vivo, posto a `dx` do gato (na mesma altura).
 func _inimigo_perto(sim: Simulacao, g: Unidade, dx: float) -> Unidade:
@@ -535,7 +536,7 @@ func _efeitos_lote4() -> void:
 			var v0: float = ng.vida
 			sim._atacar(vn, ng)
 			_ok(ng.vida == v0, "o golpe devia errar no Apagão")
-	# Hollowmiau: Alma sobe com golpe e é gasta no Espírito
+	# Hollowmiau: Alma sobe com golpe e é gasta na Alma Sombria
 	sim = _cena(Pecas.Conjunto.HOLLOWMIAU, 42)
 	var hg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.HOLLOWMIAU)
 	_ok(hg != null, "Hollowmiau sem poder")
@@ -549,9 +550,9 @@ func _efeitos_lote4() -> void:
 		hg.alma = Balanco.ALMA_MAX
 		hg.poder_cd = 0.0
 		var vida_h: float = vh.vida
-		_ok(sim.disparar_poder(hg), "Espírito vingativo não disparou")
+		_ok(sim.disparar_poder(hg), "Alma Sombria não disparou")
 		_ok(hg.alma < Balanco.ALMA_MAX, "a Alma não foi gasta")
-		_ok(vh.vida < vida_h, "o espírito não feriu")
+		_ok(vh.vida < vida_h, "a Sombra não feriu")
 	# Silkmiau: laço liga os mais fortes e o dano se espalha; cerco no kit
 	sim = _cena(Pecas.Conjunto.SILKMIAU, 43)
 	var sg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.SILKMIAU)

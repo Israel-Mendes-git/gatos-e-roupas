@@ -143,6 +143,7 @@ var emboscou: Dictionary = {}   # inimigos que já levaram o 1º golpe (id da in
 var execucao: float = 0.0       # kit do Super Miaujin: dano a mais em quem está abaixo de Balanco.EXECUCAO_LIMIAR
 var alcance_kit: float = 0.0    # kit do Hollowmiau: alcance a mais
 var alma: float = 0.0           # Hollowmiau: Alma acumulada (0 a Balanco.ALMA_MAX)
+var assombrado_t: float = 0.0   # Alma Sombria: a Sombra o atravessou; fica lento
 var apagao_t: float = 0.0       # dentro do Apagão: erra golpes e tiros (renovado a cada passo)
 var apagao_erra: float = 0.0
 var laco: Dictionary = {}       # Laço de seda: o laço a que pertence (vazio = solto)
