@@ -28,7 +28,7 @@ func poder() -> float:
 
 ## Tipo cujo efeito esta peça usa.
 func molde() -> int:
-	return Pecas.MOLDE[tipo]
+	return Pecas.molde_de(tipo)
 
 ## Nível usado pelos efeitos em porcentagem (a raridade conta como nível a mais).
 func nivel_efetivo() -> int:

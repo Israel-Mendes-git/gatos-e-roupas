@@ -62,6 +62,8 @@ enum Tipo {
 	CHAPEU_FORA_LEI, CASACO_LENCO, RIFLE_CACADOR, CADERNINHO,
 	CAPACETE_AQUARIO, MACACAO_PRESSURIZADO, RIFLE_ESTASE, TANQUE_PEIXINHO,
 	CABECA_POLVO, MANTO_ABISSAL, NECRONOMIAU, TENTACULO_FOFO,
+	# Ateliê (índices 220 a 223): a fantasia que o jogador cria; forma, molde e cor vêm de Atelie (desenham como a peça escolhida)
+	ATELIE_CABECA, ATELIE_CORPO, ATELIE_MAO, ATELIE_ACESSORIO,
 }
 const PROPRIAS := 36   # tipos com efeito próprio
 
@@ -105,8 +107,10 @@ const SLOT: Array[int] = [
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
 	0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+	0, 1, 2, 3,
 ]
-const NOME: Array[String] = [
+## (static var: as quatro peças do Ateliê trocam de nome conforme a forma escolhida; ver Atelie.aplicar)
+static var NOME: Array[String] = [
 	"Porrete", "Estilingue", "Escudo", "Colete", "Capa", "Espinhos", "Capacete", "Chapéu de palha", "Máscara", "Lança", "Tocha", "Avental", "Barril", "Coroa", "Chifres",
 	"Cetro", "Regador", "Sabre", "Varinha",
 	"Cartola", "Chapéu de caubói", "Chapéu de pirata", "Chapéu pontudo",
@@ -158,6 +162,7 @@ const NOME: Array[String] = [
 	"Chapéu de Fora-da-Lei Surrado", "Casaco de Couro com Lenço Vermelho", "Rifle de Caçador", "Caderninho de Esboços",
 	"Capuz de Leviatã com Mandíbulas", "Pele de Leviatã de Faixas Ferrugem", "Rifle de Estase", "Cauda de Leviatã com Nadadeiras",
 	"Cabeça de Polvo com Barba de Tentáculos", "Manto Verde com Asinhas de Morcego", "Necronomiau", "Tentáculo Fofo",
+	"Cabeça do Ateliê", "Corpo do Ateliê", "Mão do Ateliê", "Acessório do Ateliê",
 ]
 const DICA: Array[String] = [
 	"Pancada forte de perto",
@@ -199,13 +204,19 @@ const DICA: Array[String] = [
 ]
 ## Texto do efeito de uma peça (as de referência usam o do molde).
 static func dica(tipo: int) -> String:
-	return DICA[MOLDE[tipo]]
+	return DICA[molde_de(tipo)]
+
+## Tipo cujo efeito a peça usa (as do Ateliê usam o molde da forma escolhida).
+static func molde_de(tipo: int) -> int:
+	if tipo >= Tipo.ATELIE_CABECA:
+		return Atelie.molde(tipo)
+	return MOLDE[tipo]
 
 const POR_SLOT: Array = [
-	[6, 7, 8, 13, 14, 19, 20, 21, 22, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200, 204, 208, 212, 216],    # cabeça
-	[3, 4, 5, 11, 12, 23, 24, 25, 26, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97, 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181, 185, 189, 193, 197, 201, 205, 209, 213, 217],    # corpo
-	[0, 1, 2, 9, 10, 15, 16, 17, 18, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 102, 106, 110, 114, 118, 122, 126, 130, 134, 138, 142, 146, 150, 154, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 202, 206, 210, 214, 218],     # mão
-	[27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75, 79, 83, 87, 91, 95, 99, 103, 107, 111, 115, 119, 123, 127, 131, 135, 139, 143, 147, 151, 155, 159, 163, 167, 171, 175, 179, 183, 187, 191, 195, 199, 203, 207, 211, 215, 219], # acessório
+	[6, 7, 8, 13, 14, 19, 20, 21, 22, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200, 204, 208, 212, 216, 220],    # cabeça
+	[3, 4, 5, 11, 12, 23, 24, 25, 26, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97, 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181, 185, 189, 193, 197, 201, 205, 209, 213, 217, 221],    # corpo
+	[0, 1, 2, 9, 10, 15, 16, 17, 18, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 102, 106, 110, 114, 118, 122, 126, 130, 134, 138, 142, 146, 150, 154, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 202, 206, 210, 214, 218, 222],     # mão
+	[27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75, 79, 83, 87, 91, 95, 99, 103, 107, 111, 115, 119, 123, 127, 131, 135, 139, 143, 147, 151, 155, 159, 163, 167, 171, 175, 179, 183, 187, 191, 195, 199, 203, 207, 211, 215, 219, 223], # acessório
 ]
 ## Tipo cujo efeito cada peça usa (as 36 primeiras usam o próprio).
 const MOLDE: Array[int] = [
@@ -255,6 +266,8 @@ const MOLDE: Array[int] = [
 	Tipo.CAUBOI, Tipo.CASACO, Tipo.ESTILINGUE, Tipo.CANTIL,
 	Tipo.CAPACETE, Tipo.COLETE, Tipo.VARINHA, Tipo.CANTIL,
 	Tipo.CHIFRES, Tipo.MANTO, Tipo.VARINHA, Tipo.AMULETO,
+	# Ateliê: valores só de reserva; o molde real vem da forma escolhida (Pecas.molde_de)
+	Tipo.CAPACETE, Tipo.COLETE, Tipo.PORRETE, Tipo.AMULETO,
 ]
 ## Força do efeito em relação ao molde.
 const MOLDE_PODER: Array[float] = [
@@ -299,6 +312,7 @@ const MOLDE_PODER: Array[float] = [
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
 	1.1, 1.1, 1.1, 1.1,
+	1.0, 1.0, 1.0, 1.0,   # Ateliê: força fixa 1,0 (versátil, nunca superior)
 ]
 
 # ---------- Fantasias (conjuntos) ----------
@@ -311,9 +325,10 @@ enum Conjunto {
 	LEONARMIAU, DONATEMIAU, RAFAMIAU, ROCKET_MIAUGUE, DEADMIAU, MEON,   # lote 3 (Garagem, Telhado, Rua e Toca)
 	MIAU_NOIR, HOLLOWMIAU, SILKMIAU, SUPER_MIAUJIN, ARQUEOLOGO, TREINADOR,   # lote 4 (Telhado e Toca)
 	RANGER_MIAU, MIAUZILLA, KING_MIAU, ARTHUR_MIAURGON, SUBMIAUTICA, CATCHULLU,   # lote 5 (Toca, até o 3º ato existir)
+	ATELIE,   # a fantasia secreta criada pelo jogador (escondida do fichário; ver Atelie)
 }
 
-const CONJUNTO_NOME: Array[String] = ["Cavaleiro", "Guardamiau", "Sua Miauestade", "Palhamiau", "Vikingato", "Jardimiau", "Caubói", "Piramiau", "Miauerlin",
+static var CONJUNTO_NOME: Array[String] = ["Cavaleiro", "Guardamiau", "Sua Miauestade", "Palhamiau", "Vikingato", "Jardimiau", "Caubói", "Piramiau", "Miauerlin",
 	"Miaurio", "Batmiau", "Garoto-Aranhiau", "Jedimiau", "Darth Miauder", "Linkmiau", "Miauchelangelo", "Sonimiau", "Iron Miau", "Thormiau", "Elsamiau", "Buzz Lightmiau",
 	"Narutomiau", "Mega Miau", "Gatubarão", "Gatabelha",
 	"Super Miau", "Arqueiro Miau", "Motoqueiro Miausma", "Fênix Miaussimo", "Mimiau", "Jimiau",
@@ -321,12 +336,17 @@ const CONJUNTO_NOME: Array[String] = ["Cavaleiro", "Guardamiau", "Sua Miauestade
 	"Leonarmiau", "Donatemiau", "Rafamiau", "Rocket Miaugue", "Deadmiau", "Meon",
 	"Miau-Noir", "Hollowmiau", "Silkmiau", "Super Miaujin", "O Arqueólogo", "Treinador de Miaumons",
 	"Ranger Miau", "Miauzilla", "King-Miau", "Arthur Miaurgon", "Submiautica", "Catchullu",
+	"Ateliê",
 ]
 ## Fantasias retiradas do jogo: os ids ficam nos enums (o save grava índices), mas não caem, não aparecem no fichário nem contam em metas.
-const RETIRADAS: Array[int] = [Conjunto.MILHAU]
+const RETIRADAS: Array[int] = [Conjunto.MILHAU, Conjunto.ATELIE]   # o Ateliê não entra nas contas do fichário (tem tela própria)
 
 static func retirada(c: int) -> bool:
 	return c in RETIRADAS
+
+## Retirada de verdade (peças viram de outra fantasia ao carregar o save); o Ateliê só fica escondido.
+static func fora_do_jogo(c: int) -> bool:
+	return c in RETIRADAS and c != Conjunto.ATELIE
 
 ## Quantas fantasias o jogador pode ver e juntar.
 static func n_ativas() -> int:
@@ -411,6 +431,7 @@ const CONJUNTO_PECAS: Array = [
 	[Tipo.CHAPEU_FORA_LEI, Tipo.CASACO_LENCO, Tipo.RIFLE_CACADOR, Tipo.CADERNINHO],
 	[Tipo.CAPACETE_AQUARIO, Tipo.MACACAO_PRESSURIZADO, Tipo.RIFLE_ESTASE, Tipo.TANQUE_PEIXINHO],
 	[Tipo.CABECA_POLVO, Tipo.MANTO_ABISSAL, Tipo.NECRONOMIAU, Tipo.TENTACULO_FOFO],
+	[Tipo.ATELIE_CABECA, Tipo.ATELIE_CORPO, Tipo.ATELIE_MAO, Tipo.ATELIE_ACESSORIO],
 ]
 ## Fantasia de cada tipo de peça.
 const CONJUNTO_DE: Array[int] = [
@@ -428,8 +449,9 @@ const CONJUNTO_DE: Array[int] = [
 	37, 37, 37, 37, 38, 38, 38, 38, 39, 39, 39, 39, 40, 40, 40, 40, 41, 41, 41, 41, 42, 42, 42, 42,
 	43, 43, 43, 43, 44, 44, 44, 44, 45, 45, 45, 45, 46, 46, 46, 46, 47, 47, 47, 47, 48, 48, 48, 48,
 	49, 49, 49, 49, 50, 50, 50, 50, 51, 51, 51, 51, 52, 52, 52, 52, 53, 53, 53, 53, 54, 54, 54, 54,
+	55, 55, 55, 55,
 ]
-const CONJUNTO_COR: Array[Color] = [
+static var CONJUNTO_COR: Array[Color] = [
 	Color(0.72, 0.78, 0.86),  # cavaleiro
 	Color(0.35, 0.72, 0.55),  # guardião
 	Color(1.0, 0.82, 0.25),   # rei
@@ -485,6 +507,7 @@ const CONJUNTO_COR: Array[Color] = [
 	Color(0.45, 0.3, 0.25),  # arthur miaurgon
 	Color(0.2, 0.75, 0.8),  # submiautica
 	Color(0.25, 0.5, 0.45),  # catchullu
+	Color(0.95, 0.55, 0.85),  # ateliê (muda com as cores escolhidas)
 ]
 ## Tipo do bônus numérico de cada fantasia (os 9 primeiros valores são os de Conjunto.CAVALEIRO..MAGO; as novas fantasias usam BONUS_*).
 const BONUS_CANTIL := 9      # cura única abaixo de 35% (Super Miau)
@@ -513,7 +536,8 @@ const CONJUNTO_MOLDE: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 6, 6, 5, 8, 4,
 	BONUS_TIRO_DUPLO, BONUS_ESCORREGA, BONUS_AURA_REGEN, BONUS_SEMENTES, 3, 1,   # Miaucraft: Circo (explode ao morrer); Miaulax: Guardião (vida)
 	2, BONUS_ATORDOA, BONUS_CHIFRES, BONUS_VELOCIDADE, 5, BONUS_APARA,
 	BONUS_EMBOSCADA, BONUS_ALCANCE, BONUS_CERCO, BONUS_EXECUCAO, BONUS_ESQUIVA, BONUS_CURA_ABATE,
-	6, BONUS_ESPINHO, 4, BONUS_CANTIL, BONUS_FOLEGO, BONUS_SUSTO]   # lote 5: Ranger (rapidez do Caubói), King-Miau (dano do Viking)   # Leonarmiau: Rei (aura de dano); Deadmiau: Jardineiro (regeneração)
+	6, BONUS_ESPINHO, 4, BONUS_CANTIL, BONUS_FOLEGO, BONUS_SUSTO,
+	0]   # a última entrada é o Ateliê (reserva; o bônus real vem de molde_kit). lote 5: Ranger (rapidez do Caubói), King-Miau (dano do Viking)   # Leonarmiau: Rei (aura de dano); Deadmiau: Jardineiro (regeneração)
 
 # ---------- Poder especial da fantasia completa ----------
 ## Os 16 primeiros são os da primeira leva; os de baixo foram acrescentados na rodada de poderes diversos (valores novos no fim: o save grava a fantasia, não este índice).
@@ -531,7 +555,8 @@ const PODER_TIPO: Array[int] = [Poder.INVESTIDA, Poder.PROTEGE, Poder.FRENESI, P
 	Poder.TORRE, Poder.MANTEIGA, Poder.REVIVER, Poder.COLHEITA, Poder.CONSTRUIR, Poder.COCHILO,
 	Poder.PLANO, Poder.DOMO, Poder.LOBO, Poder.TURBO, Poder.ESFORCO, Poder.CHUTE,
 	Poder.APAGAO, Poder.ESPIRITO, Poder.LACO, Poder.KAMEHA, Poder.PEDRA, Poder.CAPTURA,
-	Poder.MEGAZORD, Poder.SOPRO, Poder.BRADO, Poder.RECOMPENSA, Poder.ESTASE, Poder.LOUCURA]
+	Poder.MEGAZORD, Poder.SOPRO, Poder.BRADO, Poder.RECOMPENSA, Poder.ESTASE, Poder.LOUCURA,
+	Poder.RAIO]   # Ateliê: reserva (o poder real vem de conj_do_poder)
 ## Poderes que o bicho fantasiado NÃO usa (o fantasiado só ganha o bônus de kit).
 const PODER_SO_GATO: Array[int] = [Poder.SALVAMENTO, Poder.OBJECAO, Poder.IMITAR, Poder.MANTEIGA, Poder.REVIVER, Poder.CONSTRUIR, Poder.COCHILO, Poder.PLANO, Poder.DOMO, Poder.LOBO,
 	Poder.ESPIRITO, Poder.LACO, Poder.KAMEHA, Poder.CAPTURA,
@@ -550,6 +575,7 @@ const PODER_NOME: Array[String] = [
 	"Plano de ataque", "Domo refletor", "Lobo solitário", "Turbo", "Esforço máximo", "Chute giratório",
 	"Modo Noir", "Alma Sombria", "Laço de seda", "Camehamiau!", "Pedra rolante", "Eu escolho você!",
 	"Megazord", "Sopro radioativo", "Bater no peito", "Recompensa", "Rifle de estase", "Loucura",
+	"Poder do Ateliê",
 ]
 const PODER_DICA: Array[String] = [
 	"investe pela fileira, fere quem cruza, derruba o primeiro e fica protegido",
@@ -607,7 +633,21 @@ const PODER_DICA: Array[String] = [
 	"marca o bicho mais forte: se cair no prazo, o time cura e bate mais",
 	"bolha que congela o bando: o dano retido sai de uma vez no fim",
 	"os 3 bichos mais fortes enlouquecem e se atacam; o chefe leva tentáculo",
+	"o poder que o criador do Ateliê escolheu",
 ]
+## Fantasia cujo poder a fantasia `c` solta: ela mesma, ou (no Ateliê) a escolhida pelo jogador.
+## É também o índice do poder nas tabelas por fantasia (nome, dica, PODER_KIT_FORCA e PODER_KIT_INTERVALO).
+static func conj_do_poder(c: int) -> int:
+	return Atelie.poder_conj() if c == Conjunto.ATELIE else c
+
+## Fantasia cujo bônus de kit a fantasia `c` dá (no Ateliê, a escolhida pelo jogador).
+static func conj_do_bonus(c: int) -> int:
+	return Atelie.bonus_conj() if c == Conjunto.ATELIE else c
+
+## Tipo do bônus de kit (valor de CONJUNTO_MOLDE) da fantasia `c`.
+static func molde_kit(c: int) -> int:
+	return CONJUNTO_MOLDE[conj_do_bonus(c)]
+
 const CONJUNTO_MIN := 2   # peças para o bônus parcial; com as 4, bônus completo
 
 # ---------- Raridades ----------
@@ -661,7 +701,7 @@ static func grau_conjunto(n: int) -> int:
 static func conjunto_bonus(c: int, grau: int) -> String:
 	var g: int = clampi(grau, 1, 2) - 1
 	var v: float = Balanco.conj_valor(c, g)
-	match CONJUNTO_MOLDE[c]:
+	match molde_kit(c):
 		Conjunto.CAVALEIRO:
 			return "+%d de armadura" % int(v)
 		Conjunto.GUARDIAO:

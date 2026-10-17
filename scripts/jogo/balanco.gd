@@ -193,6 +193,7 @@ const CRITICO_MAX := 0.8   # teto do crítico somado (Cartola + kit do Arqueiro)
 
 ## Valor do bônus de kit da fantasia `c` no grau `g` (0 = 2 ou 3 peças, 1 = as 4).
 static func conj_valor(c: int, g: int) -> float:
+	c = Pecas.conj_do_bonus(c)   # o Ateliê usa o valor do bônus que o jogador escolheu
 	if CONJ_NOVOS.has(c):
 		return float((CONJ_NOVOS[c] as Array)[g])
 	match Pecas.CONJUNTO_MOLDE[c]:

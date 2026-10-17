@@ -19,6 +19,8 @@ var colecao: Array[bool] = []
 # e "h<G>" chefe da gangue G. Gravação antiga simplesmente não as tem.
 const BICHOS_TOTAL := 35
 var bichos_vistos: Dictionary = {}
+# Ateliê (fantasia secreta criada pelo jogador): escolhas validadas por Atelie.ler; {} = ainda não criou. Campo opcional do save.
+var atelie: Dictionary = {}
 # torre: troféus (moeda permanente), melhorias compradas e módulos montados
 var trofeus: int = 0
 var melhorias: Array[int] = [0, 0, 0, 0]      # nível de cada Torre.Melhoria
@@ -75,6 +77,8 @@ func novo_jogo() -> void:
 		guarda.append(Peca.new(t))
 	colecao.clear()
 	bichos_vistos.clear()
+	atelie = {}
+	Atelie.aplicar(atelie)
 	_registrar_tudo()
 	_completar_time()
 	iniciar_fase(1)
@@ -864,7 +868,7 @@ func _gravar() -> void:
 		time.append(b.para_dados())
 	var arq := FileAccess.open(ARQUIVO, FileAccess.WRITE)
 	if arq != null:
-		arq.store_string(JSON.stringify({"versao": 3, "fase_liberada": fase_liberada, "fases_vencidas": fases_vencidas, "vencido": vencido.duplicate(), "curso": _dados_curso(), "pecas": pecas, "bonecos": time, "trofeus": trofeus, "melhorias": melhorias.duplicate(), "modulos": modulos.duplicate(), "colecao": colecao.duplicate(), "bichos": bichos_vistos.keys(), "recordes": recordes.duplicate(), "estat": estat.duplicate(), "feitos": feitos.keys(), "metas_pagas": metas_pagas.keys()}))
+		arq.store_string(JSON.stringify({"versao": 3, "fase_liberada": fase_liberada, "fases_vencidas": fases_vencidas, "vencido": vencido.duplicate(), "curso": _dados_curso(), "pecas": pecas, "bonecos": time, "trofeus": trofeus, "melhorias": melhorias.duplicate(), "modulos": modulos.duplicate(), "colecao": colecao.duplicate(), "bichos": bichos_vistos.keys(), "recordes": recordes.duplicate(), "estat": estat.duplicate(), "feitos": feitos.keys(), "metas_pagas": metas_pagas.keys(), "atelie": atelie}))
 
 ## Gravação de antes da versão 3 (3 raridades): a Lendária era o índice 2 e agora é o 3 (o 2 virou Épica).
 ## Sem isto, toda Lendária gravada viraria Épica.
@@ -887,7 +891,7 @@ func _migrar_raridades(dados: Dictionary) -> void:
 func _converter_retiradas() -> void:
 	var alvos: Array[int] = []
 	for c in Fases.lista_do_lugar(Fases.TOTAL):
-		if not Pecas.retirada(c):
+		if not Pecas.fora_do_jogo(c):
 			alvos.append(c)
 	if alvos.is_empty():
 		return
@@ -897,12 +901,12 @@ func _converter_retiradas() -> void:
 		listas.append(b.pecas)
 	for l in listas:
 		for p in l:
-			if p != null and Pecas.retirada(p.conjunto()):
+			if p != null and Pecas.fora_do_jogo(p.conjunto()):
 				p.tipo = Pecas.CONJUNTO_PECAS[alvos[k % alvos.size()]][p.slot()]
 				k += 1
 	for b in bonecos:
 		for i in range(b.herancas.size() - 1, -1, -1):
-			if Pecas.retirada(b.herancas[i]):
+			if Pecas.fora_do_jogo(b.herancas[i]):
 				b.herancas.remove_at(i)
 				if i < b.graus.size():
 					b.graus.remove_at(i)
@@ -934,6 +938,8 @@ func carregar() -> bool:
 		if typeof(d) == TYPE_DICTIONARY and bonecos.size() < Balanco.MAX_BONECOS:
 			bonecos.append(Boneco.de_dados(d))
 	_converter_retiradas()
+	atelie = Atelie.ler(dados.get("atelie", {}))   # campo opcional: gravação antiga não o tem
+	Atelie.aplicar(atelie)
 	trofeus = maxi(0, int(dados.get("trofeus", 0)))
 	melhorias = [0, 0, 0, 0]
 	var ml: Array = dados.get("melhorias", [])

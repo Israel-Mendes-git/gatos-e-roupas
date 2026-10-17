@@ -95,7 +95,9 @@ func _init() -> void:
 ## Varre as constantes de todas as classes do projeto: lista de 25 itens (tamanho antigo de Conjunto) ou 100 (antigo de Tipo)
 ## é tabela paralela que não ganhou as fantasias do lote 1 (foi assim que RoupaBicho estourou no índice 26).
 func _tabelas_paralelas(nc: int, nt: int) -> void:
-	var antigos: Array[int] = [nc - 30, nt - 120, nc - 24, nt - 96, nc - 18, nt - 72, nc - 12, nt - 48, nc - 6, nt - 24]   # tamanhos antes do lote 1, do 2, do 3, do 4 e do 5
+	var nc0: int = nc - 1   # sem o Ateliê (1 fantasia, 4 peças, acrescentadas depois do lote 5)
+	var nt0: int = nt - 4
+	var antigos: Array[int] = [nc0 - 30, nt0 - 120, nc0 - 24, nt0 - 96, nc0 - 18, nt0 - 72, nc0 - 12, nt0 - 48, nc0 - 6, nt0 - 24]   # tamanhos antes do lote 1, do 2, do 3, do 4 e do 5
 	for gc in ProjectSettings.get_global_class_list():
 		var sc: Script = load(gc["path"])
 		var m: Dictionary = sc.get_script_constant_map()
@@ -117,10 +119,10 @@ func _retiradas() -> void:
 		_ok(not (f as Array).has(mil), "Milhau ainda cai em algum lugar")
 	for m in Metas.lista():
 		_ok(str(m["id"]) != "fantasia_%d" % mil, "meta de fantasia do Milhau ainda existe")
-	_ok(Pecas.n_ativas() == Pecas.Conjunto.size() - 1, "n_ativas %d" % Pecas.n_ativas())
+	_ok(Pecas.n_ativas() == Pecas.Conjunto.size() - 2, "n_ativas %d" % Pecas.n_ativas())
 	for c in Pecas.Conjunto.size():
 		var pos: int = Pecas.posicao_ativa(c)
-		_ok((c == mil) == (pos < 0) and (pos < 0 or Pecas.conj_da_posicao(pos) == c), "posição visível incoerente na fantasia %d" % c)
+		_ok(Pecas.retirada(c) == (pos < 0) and (pos < 0 or Pecas.conj_da_posicao(pos) == c), "posição visível incoerente na fantasia %d" % c)
 	var e := Estado.new(77)
 	e.novo_jogo()
 	e.persistir = false

@@ -349,8 +349,8 @@ func calcular(u: Unidade) -> void:
 			continue
 		if g == 1:
 			# fantasia completa: ganha o poder especial
-			u.poder = Pecas.PODER_TIPO[c]
-			u.poder_conj = c
+			u.poder_conj = Pecas.conj_do_poder(c)   # no Ateliê: o poder (com a força e a recarga) da fantasia escolhida
+			u.poder = Pecas.PODER_TIPO[u.poder_conj]
 			var soma: float = 0.0
 			for p in u.pecas:
 				soma += p.poder()
@@ -358,7 +358,7 @@ func calcular(u: Unidade) -> void:
 		if u.sem_conjunto_t > 0.0:
 			continue   # Magnetomiau: o bônus de conjunto fica suspenso (o poder da fantasia completa continua)
 		var kv: float = Balanco.conj_valor(c, g)
-		match Pecas.CONJUNTO_MOLDE[c]:
+		match Pecas.molde_kit(c):
 			Pecas.Conjunto.CAVALEIRO:
 				u.armadura += kv
 			Pecas.Conjunto.GUARDIAO:
