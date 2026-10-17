@@ -95,14 +95,14 @@ func _init() -> void:
 ## Varre as constantes de todas as classes do projeto: lista de 25 itens (tamanho antigo de Conjunto) ou 100 (antigo de Tipo)
 ## é tabela paralela que não ganhou as fantasias do lote 1 (foi assim que RoupaBicho estourou no índice 26).
 func _tabelas_paralelas(nc: int, nt: int) -> void:
-	var antigos: Array[int] = [nc - 18, nt - 72, nc - 12, nt - 48, nc - 6, nt - 24]   # tamanhos antes do lote 1, do 2 e do 3
+	var antigos: Array[int] = [nc - 24, nt - 96, nc - 18, nt - 72, nc - 12, nt - 48, nc - 6, nt - 24]   # tamanhos antes do lote 1, do 2, do 3 e do 4
 	for gc in ProjectSettings.get_global_class_list():
 		var sc: Script = load(gc["path"])
 		var m: Dictionary = sc.get_script_constant_map()
 		for k in m:
 			var v: Variant = m[k]
 			if v is Array and (v as Array).size() in antigos:
-				_ok(false, "%s.%s tem %d itens (tamanho antigo): falta o lote 1, 2 ou 3" % [gc["class"], k, (v as Array).size()])
+				_ok(false, "%s.%s tem %d itens (tamanho antigo): falta o lote 1, 2, 3 ou 4" % [gc["class"], k, (v as Array).size()])
 	_ok(IconesPoder.BITS.size() >= Pecas.Poder.size(), "IconesPoder.BITS menor que Poder")
 	for c in nc:
 		_ok(Balanco.conj_valor(c, 0) != 0.0 and Balanco.conj_valor(c, 1) != 0.0, "conjunto %d sem valor de bônus" % c)
@@ -235,6 +235,7 @@ func _efeitos_diretos() -> void:
 	print("Imitar com último poder = pôquer: ok")
 	_efeitos_lote2()
 	_efeitos_lote3()
+	_efeitos_lote4()
 	# kits de 4 peças: números dos bônus
 	for c in range(Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.size()):
 		print("%-20s 2 peças: %s | 4 peças: %s" % [Pecas.CONJUNTO_NOME[c], Pecas.conjunto_bonus(c, 1), Pecas.conjunto_bonus(c, 2)])
@@ -507,3 +508,147 @@ func _efeitos_lote3() -> void:
 		sim._dano(agressor, mg, 30.0, false)
 		_ok(mg.vida < vm, "o tiro foi aparado (só golpe de perto)")
 
+
+func _efeitos_lote4() -> void:
+	# Miau-Noir: emboscada no kit; Apagão marca quem está dentro e faz errar
+	var sim := _cena(Pecas.Conjunto.MIAU_NOIR, 41)
+	var ng: Unidade = _gato_do_poder(sim, Pecas.Conjunto.MIAU_NOIR)
+	_ok(ng != null, "Miau-Noir sem poder")
+	_ok(ng.emboscada == Balanco.conj_valor(Pecas.Conjunto.MIAU_NOIR, 1), "Miau-Noir sem emboscada")
+	ng.poder_cd = 0.0
+	var vn: Unidade = _inimigo_perto(sim, ng, 80.0)
+	if vn != null:
+		_ok(sim.disparar_poder(ng), "Apagão não disparou")
+		var achou_zona: bool = false
+		for z in sim.zonas:
+			if z.get("tipo", "") == "apagao":
+				achou_zona = true
+				z["erra"] = 1.0
+		_ok(achou_zona, "Apagão sem zona")
+		vn.x = ng.x + 40.0
+		vn.y = ng.y
+		sim.passo(Balanco.DT)
+		_ok(vn.apagao_t > 0.0 or not vn.vivo, "o bicho dentro do Apagão não foi marcado")
+		if vn.vivo:
+			vn.apagao_erra = 1.0
+			vn.cd = 0.0
+			var v0: float = ng.vida
+			sim._atacar(vn, ng)
+			_ok(ng.vida == v0, "o golpe devia errar no Apagão")
+	# Hollowmiau: Alma sobe com golpe e é gasta no Espírito
+	sim = _cena(Pecas.Conjunto.HOLLOWMIAU, 42)
+	var hg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.HOLLOWMIAU)
+	_ok(hg != null, "Hollowmiau sem poder")
+	var vh: Unidade = _inimigo_perto(sim, hg, 100.0)
+	if vh != null:
+		hg.alma = 0.0
+		vh.vida_max = 9999.0
+		vh.vida = 9999.0
+		sim._dano(hg, vh, 1.0, true)
+		_ok(hg.alma == Balanco.ALMA_GOLPE, "a Alma não subiu com o golpe")
+		hg.alma = Balanco.ALMA_MAX
+		hg.poder_cd = 0.0
+		var vida_h: float = vh.vida
+		_ok(sim.disparar_poder(hg), "Espírito vingativo não disparou")
+		_ok(hg.alma < Balanco.ALMA_MAX, "a Alma não foi gasta")
+		_ok(vh.vida < vida_h, "o espírito não feriu")
+	# Silkmiau: laço liga os mais fortes e o dano se espalha; cerco no kit
+	sim = _cena(Pecas.Conjunto.SILKMIAU, 43)
+	var sg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.SILKMIAU)
+	_ok(sg != null and sg.cerco >= Balanco.conj_valor(Pecas.Conjunto.SILKMIAU, 1), "Silkmiau sem cerco")
+	if sg != null:
+		sg.poder_cd = 0.0
+		var ligaveis: Array[Unidade] = []
+		for b in sim.inimigos:
+			if b.vivo and not b.estrutura and not b.clone:
+				b.x = sg.x + 120.0 + 10.0 * ligaveis.size()
+				b.y = sg.y
+				b.vida_max = 9999.0
+				b.vida = 9999.0
+				ligaveis.append(b)
+		if ligaveis.size() >= 2:
+			_ok(sim.disparar_poder(sg), "Laço de seda não disparou")
+			var ligados: Array[Unidade] = []
+			for b in ligaveis:
+				if not b.laco.is_empty():
+					ligados.append(b)
+			_ok(ligados.size() >= 2, "o laço não ligou dois bichos")
+			if ligados.size() >= 2:
+				var v1: float = ligados[1].vida
+				sim._dano_poder(sg, ligados[0], 100.0)
+				_ok(ligados[1].vida < v1, "o dano não se espalhou pelo laço")
+	# Super Miaujin: carga interrompida por atordoamento; sem interrupção, o feixe sai
+	sim = _cena(Pecas.Conjunto.SUPER_MIAUJIN, 44)
+	var mg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.SUPER_MIAUJIN)
+	_ok(mg != null and mg.execucao > 1.0, "Super Miaujin sem execução")
+	var vm: Unidade = _inimigo_perto(sim, mg, 200.0)
+	if vm != null:
+		mg.carga_t = 0.0
+		mg.poder_cd = 0.0
+		_ok(sim.disparar_poder(mg) and mg.carga_t > 1.5, "Camehamiau não começou a carga")
+		mg.atordoado_t = 1.0
+		sim.passo(Balanco.DT)
+		_ok(mg.carga_t == 0.0, "atordoar devia interromper a carga")
+		mg.atordoado_t = 0.0
+		mg.poder_cd = 0.0
+		vm.vida_max = 9999.0
+		vm.vida = 9999.0
+		vm.x = mg.x + 200.0
+		vm.y = mg.y
+		vm.atordoado_t = 99.0
+		_ok(sim.disparar_poder(mg), "Camehamiau não disparou de novo")
+		var vida_m: float = vm.vida
+		for _i in int(2.3 / Balanco.DT):
+			vm.x = mg.x + 200.0
+			vm.y = mg.y
+			sim.passo(Balanco.DT)
+		_ok(vm.vida < vida_m or not vm.vivo, "o feixe do Camehamiau não feriu")
+	# O Arqueólogo: esquiva no kit; a pedra nasce, rola e atordoa
+	sim = _cena(Pecas.Conjunto.ARQUEOLOGO, 45)
+	var ag: Unidade = _gato_do_poder(sim, Pecas.Conjunto.ARQUEOLOGO)
+	_ok(ag != null and ag.esquiva >= Balanco.conj_valor(Pecas.Conjunto.ARQUEOLOGO, 1), "Arqueólogo sem esquiva")
+	var va: Unidade = _inimigo_perto(sim, ag, 300.0)
+	if va != null:
+		sim.ondas.clear()
+		ag.poder_cd = 0.0
+		va.vida_max = 9999.0
+		va.vida = 9999.0
+		_ok(sim.disparar_poder(ag), "Pedra rolante não disparou")
+		_ok(sim.ondas.size() == 1, "a pedra não nasceu")
+		var vida_a: float = va.vida
+		var atordoou: bool = false
+		for _i in int(2.6 / Balanco.DT):
+			va.x = 700.0
+			va.y = float(sim.ondas[0]["y"]) if not sim.ondas.is_empty() else va.y
+			va.cd = 5.0
+			sim.passo(Balanco.DT)
+			if va.atordoado_t > 0.0:
+				atordoou = true
+		_ok(va.vida < vida_a, "a pedra não feriu")
+		_ok(atordoou, "a pedra não atordoou")
+		_ok(sim.ondas.is_empty(), "a pedra devia sumir ao chegar")
+	# Treinador: abaixo de 60% captura (vira aliado, some da onda); acima, a bola balança
+	sim = _cena(Pecas.Conjunto.TREINADOR, 46)
+	var tg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.TREINADOR)
+	_ok(tg != null and tg.cura_abate >= Balanco.conj_valor(Pecas.Conjunto.TREINADOR, 1), "Treinador sem cura por abate")
+	var vt: Unidade = _inimigo_perto(sim, tg, 120.0)
+	if vt != null:
+		tg.poder_cd = 0.0
+		for b in sim.inimigos:
+			if b != vt and b.vivo:
+				b.vida = b.vida_max
+		vt.vida = vt.vida_max * 0.5
+		var antes_n: int = sim.nascidos_aliados.size()
+		_ok(sim.disparar_poder(tg), "Eu escolho você! não disparou")
+		_ok(not vt.vivo, "o bicho ferido devia ser capturado")
+		_ok(sim.nascidos_aliados.size() == antes_n + 1 and sim.nascidos_aliados[antes_n].capturado, "o aliado capturado não nasceu")
+	sim = _cena(Pecas.Conjunto.TREINADOR, 47)
+	tg = _gato_do_poder(sim, Pecas.Conjunto.TREINADOR)
+	vt = _inimigo_perto(sim, tg, 120.0)
+	if vt != null:
+		tg.poder_cd = 0.0
+		for b in sim.inimigos:
+			if b.vivo:
+				b.vida = b.vida_max
+		_ok(sim.disparar_poder(tg), "Eu escolho você! (bola) não disparou")
+		_ok(vt.vivo or sim.nascidos_aliados.is_empty(), "o bicho sadio não devia ser capturado")

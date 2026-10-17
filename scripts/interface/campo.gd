@@ -896,6 +896,24 @@ func _consumir() -> void:
 					Pecas.Poder.CHUTE:
 						snd_p = "golpe_forte"
 						tom_p = 1.1
+					Pecas.Poder.APAGAO:
+						snd_p = "poder"
+						tom_p = 0.5
+					Pecas.Poder.ESPIRITO:
+						snd_p = "poder_cura"
+						tom_p = 1.3
+					Pecas.Poder.LACO:
+						snd_p = "poder_pronto"
+						tom_p = 1.0
+					Pecas.Poder.KAMEHA:
+						snd_p = "poder_pronto"
+						tom_p = 0.6
+					Pecas.Poder.PEDRA:
+						snd_p = "golpe_forte"
+						tom_p = 0.6
+					Pecas.Poder.CAPTURA:
+						snd_p = "poder_pronto"
+						tom_p = 1.5
 				_som(snd_p, tom_p, -1.0, true, 0.03)
 				# nome do poder: cor da fantasia clareada até uma luminância mínima + contorno escuro grosso
 				# empilha: se já há um nome de poder aqui perto, este sobe uma linha (sem sobrepor)
@@ -994,6 +1012,24 @@ func _consumir() -> void:
 				_numero(ppy + Vector2(0, -26), "Aparou!", Color(0.9, 0.95, 1.0), 20, 1.0, 140.0)
 				tremor = maxf(tremor, 2.5)
 				fx.append({"poder": -2, "p": ppy, "c": ppy, "alvos": [Vector2(float(e["ax"]), float(e["ay"]) - 30 * ESC)], "cor": Color(0.9, 0.95, 1.0), "t": 0.0, "dur": 0.45, "sem": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "ex": {}})
+			"kameha":
+				_som("golpe_forte", 0.5, -1.0, true)
+				fx.append({"poder": -3, "p": Vector2(e["x"], e["y"]), "c": Vector2(e["x"], e["y"]), "alvos": [], "cor": Color(0.4, 0.75, 1.0), "t": 0.0, "dur": Balanco.PODER_KAMEHA_FEIXE_T,
+					"sem": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "ex": {"x0": float(e["x"]), "y0": float(e["y"]), "x1": float(e["x1"])}})
+				tremor = maxf(tremor, 6.0)
+			"carga_corta":
+				var pcc: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
+				_som("barreira", 0.6, -2.0, true)
+				_faisca(pcc, Color(0.5, 0.7, 1.0), 10, 200.0, 0.4, 3.0)
+				_numero(pcc + Vector2(0, -24), "Interrompido!", Color(1.0, 0.5, 0.4), 20, 1.0, 140.0)
+			"laco_passa":
+				var plp: Vector2 = Vector2(e["x"], e["y"] - 20 * ESC)
+				_faisca(plp, Color(1.0, 0.4, 0.5), 8, 160.0, 0.4, 3.0)
+			"captura":
+				var pcp: Vector2 = Vector2(e["x"], e["y"] - 24 * ESC)
+				_som("poder_pronto", 1.7, -2.0, true)
+				_faisca(pcp, Color(1.0, 1.0, 0.9), 14, 220.0, 0.5, 3.5)
+				_numero(pcp + Vector2(0, -26), "Capturado!", Color(1.0, 0.5, 0.45), 22, 1.2, 160.0)
 			"fala":
 				_numero(Vector2(e["x"], e["y"] - 110 * ESC), String(e["txt"]), Color(1.0, 0.35, 0.35), 26, 1.4, 220.0)
 			"muda":
@@ -1434,6 +1470,23 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 			tremor = maxf(tremor, 4.0)
 		Pecas.Poder.ESFORCO:
 			dur = 1.0
+		Pecas.Poder.APAGAO:
+			dur = 1.0
+		Pecas.Poder.ESPIRITO:
+			dur = 0.7
+			tremor = maxf(tremor, 3.0)
+		Pecas.Poder.LACO:
+			dur = 1.0
+		Pecas.Poder.KAMEHA:
+			dur = Balanco.PODER_KAMEHA_CARGA
+		Pecas.Poder.PEDRA:
+			dur = 0.6
+			tremor = maxf(tremor, 3.0)
+		Pecas.Poder.CAPTURA:
+			dur = 0.9
+		-3:
+			dur = Balanco.PODER_KAMEHA_FEIXE_T
+			tremor = maxf(tremor, 6.0)
 		Pecas.Poder.CHUTE:
 			dur = 0.6
 			tremor = maxf(tremor, 4.0)
@@ -2199,6 +2252,63 @@ func _desenhar_fx(f: Dictionary) -> void:
 			V.chute_arco(self, p + Vector2(0, -10.0), 46.0, u, esc_c)
 			for b in alvos:
 				V.estrela(self, b + Vector2(0, -20.0), 12.0 * a + 4.0, Color(1.0, 0.95, 0.7), esc_c)
+		Pecas.Poder.APAGAO:
+			# a noite cai: aro roxo abre até o raio e o bando é coberto
+			var ra_a: float = float(ex.get("raio", 170.0)) * (1.0 - pow(1.0 - u, 3.0))
+			V.aro(self, p + Vector2(0, 20.0), ra_a, ra_a * 0.36, Color(0.5, 0.4, 0.8), a * 1.4, 2.0)
+			for b in alvos:
+				V.estrela(self, b + Vector2(0, -34.0), 8.0 * a + 3.0, Color(0.85, 0.8, 1.0), esc_c)
+		Pecas.Poder.ESPIRITO:
+			# espírito branco em linha: faixa fantasma com cabeça de estrela; mais larga com mais Alma
+			var o_e := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 26.0 * ESC)
+			var x1_e: float = float(ex.get("x1", p.x + 400.0))
+			var cab: float = lerpf(o_e.x, x1_e, minf(1.0, u * 2.5))
+			var esp_e: float = V.sn(6.0 + 14.0 * float(ex.get("raio", 0.5)))
+			if absf(cab - o_e.x) > 2.0:
+				var xa_e: float = minf(o_e.x, cab)
+				V.quadro(self, xa_e, o_e.y - esp_e - q, absf(cab - o_e.x), esp_e * 2.0 + q * 2.0, V.CONT)
+				V.quadro(self, xa_e, o_e.y - esp_e, absf(cab - o_e.x), esp_e * 2.0, Color(0.85, 0.92, 1.0, 0.75 * a + 0.2))
+				V.quadro(self, xa_e, o_e.y - esp_e * 0.4, absf(cab - o_e.x), esp_e * 0.8, V.BRANCO)
+			V.estrela(self, Vector2(cab, o_e.y), 12.0 + esp_e, V.BRANCO, Color(0.3, 0.35, 0.55))
+		Pecas.Poder.LACO:
+			# fios vermelhos partem do gato e atam os bichos ligados (os fios que ficam saem de _desenhar_lacos)
+			for b in alvos:
+				var pb: Vector2 = p.lerp(b, minf(1.0, u * 3.0)) + Vector2(0, -20.0)
+				V.fio(self, p + Vector2(0, -20.0), pb, Color(0.9, 0.2, 0.3), t)
+				V.estrela(self, pb, 6.0 * a + 2.0, Color(1.0, 0.6, 0.65), esc_c)
+		Pecas.Poder.KAMEHA:
+			# carga: esfera azul cresce entre as mãos e faíscas douradas sobem (a aura persistente sai de _estados)
+			var rb: float = 6.0 + 16.0 * minf(1.0, u)
+			V.disco_c(self, p + Vector2(14.0, -22.0), rb, Color(0.35, 0.7, 1.0), Color(0.05, 0.15, 0.45))
+			V.disco(self, p + Vector2(13.0, -23.0), rb * 0.5, V.BRANCO)
+			V.aro(self, gp, 12.0 + 40.0 * minf(1.0, u), (12.0 + 40.0 * minf(1.0, u)) * 0.36, Color(1.0, 0.85, 0.2), a * 1.4, 1.5)
+		-3:
+			# feixe azul que cruza o campo
+			var o_k := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)) - 26.0 * ESC)
+			var x1_k: float = float(ex.get("x1", 1300.0))
+			var cresce: float = minf(1.0, u * 10.0) * (1.0 - maxf(0.0, (u - 0.7) / 0.3))
+			var lg_k: float = V.sn((16.0 + 8.0 * sin(t * 30.0)) * cresce)
+			if lg_k >= q:
+				var cmp_k: float = absf(x1_k - o_k.x)
+				V.quadro(self, o_k.x, o_k.y - lg_k - q, cmp_k, lg_k * 2.0 + q * 2.0, Color(0.05, 0.15, 0.45))
+				V.quadro(self, o_k.x, o_k.y - lg_k, cmp_k, lg_k * 2.0, Color(0.3, 0.65, 1.0))
+				V.quadro(self, o_k.x, o_k.y - lg_k * 0.45, cmp_k, lg_k * 0.9, V.BRANCO)
+			V.estrela(self, o_k, 16.0 * cresce + 4.0, Color(0.8, 0.95, 1.0), Color(0.05, 0.15, 0.45))
+		Pecas.Poder.PEDRA:
+			# poeira no lugar onde a pedra nasce (a pedra que rola sai de _desenhar_pedras)
+			var o_p := Vector2(float(ex.get("x0", p.x)), float(ex.get("y0", p.y)))
+			for k in 6:
+				V.cruz(self, o_p + Vector2(-k * 8.0 * u, -10.0 - k * 6.0 * u), 3.0, Color(0.75, 0.68, 0.55), esc_c)
+		Pecas.Poder.CAPTURA:
+			# a Miaubola voa até o bicho, balança e estala
+			var d_c: Vector2 = (alvos[0] as Vector2) if not alvos.is_empty() else p + Vector2(100, 0)
+			var voo: float = minf(1.0, u * 2.5)
+			var pc: Vector2 = (p + Vector2(0, -30.0)).lerp(d_c + Vector2(0, -24.0), voo) + Vector2(0, -sin(voo * PI) * 30.0)
+			V.disco_c(self, pc, 6.0, Color(0.95, 0.2, 0.2), Color(0.3, 0.05, 0.05))
+			V.quadro(self, pc.x - 6.0, pc.y, 12.0, 6.0, Color(1, 1, 1))
+			V.ponto(self, pc, V.CONT)
+			if voo >= 1.0:
+				V.estrela(self, d_c + Vector2(0, -24.0), 14.0 * a + 4.0, Color(1.0, 0.95, 0.8), esc_c)
 		-2:
 			# Aparar com a faca: lâmina cruza o golpe e brilha
 			V.faca_brilho(self, p, u, esc_c)
@@ -2311,6 +2421,40 @@ func _desenhar_domos() -> void:
 		var viva: float = clampf(float(z["t"]) / 0.5, 0.0, 1.0) * clampf((float(z["dur"]) - float(z["t"])) / 0.3, 0.0, 1.0)
 		V.domo(self, Vector2(float(z["x"]), float(z["y"]) + 24.0 * ESC), float(z["raio"]), rel, viva, Color(0.55, 0.75, 1.0))
 
+## Zona de escuridão do Apagão.
+func _desenhar_apagoes() -> void:
+	for zz in sim.zonas:
+		var z: Dictionary = zz
+		if z.get("tipo", "") != "apagao":
+			continue
+		var viva: float = clampf(float(z["t"]) / 0.5, 0.0, 1.0) * clampf((float(z["dur"]) - float(z["t"])) / 0.3, 0.0, 1.0)
+		V.escuridao(self, Vector2(float(z["x"]), float(z["y"]) + 24.0 * ESC), float(z["raio"]), rel, viva)
+
+## Pedra rolante: a rocha em movimento, com poeira atrás.
+func _desenhar_pedras() -> void:
+	for oo in sim.ondas:
+		var o: Dictionary = oo
+		var pe := Vector2(float(o["x"]), float(o["y"]) + 4.0)
+		var sx: float = signf(float(o["vx"]))
+		V.elipse(self, pe + Vector2(0, 16.0), 26.0, 8.0, Color(0, 0, 0, 0.3))
+		for k in 3:
+			V.cruz(self, pe + Vector2(-sx * (26.0 + k * 14.0), 8.0 - k * 5.0 + sin(rel * 12.0 + k) * 2.0), 3.0, Color(0.75, 0.68, 0.55), V.CONT)
+		V.rocha(self, pe, 24.0, float(o["x"]) / 90.0)
+
+## Laço de seda: fio entre os bichos ligados (em ordem) e um anel vermelho em cada um.
+func _desenhar_lacos() -> void:
+	for ll in sim.lacos:
+		var l: Dictionary = ll
+		var ms: Array = l["membros"]
+		var viva: float = clampf(float(l["t"]) / 0.4, 0.0, 1.0)
+		for i in ms.size():
+			var m: Unidade = ms[i]
+			var pm := Vector2(m.vx, m.vy - 30.0 * ESC)
+			V.aro(self, pm + Vector2(0, 14.0), 20.0, 10.0, Color(0.9, 0.2, 0.3), viva, 1.0)
+			if i > 0:
+				var m0: Unidade = ms[i - 1]
+				V.fio(self, Vector2(m0.vx, m0.vy - 30.0 * ESC), pm, Color(0.9, 0.2, 0.3, viva), rel)
+
 ## Rastro de chamas azuis do Turbo: uma labareda por zona.
 func _desenhar_chamas() -> void:
 	for zz in sim.zonas:
@@ -2334,7 +2478,7 @@ func _desenhar_mudas() -> void:
 func _desenhar_zonas() -> void:
 	for zz in sim.zonas:
 		var z: Dictionary = zz
-		if z.get("tipo", "enxame") in ["canteiro", "manteiga", "muda", "domo", "chama"]:
+		if z.get("tipo", "enxame") in ["canteiro", "manteiga", "muda", "domo", "chama", "apagao"]:
 			continue
 		var centro: Vector2 = Vector2(float(z["x"]), float(z["y"]) - 34.0 * ESC)
 		var raio: float = float(z["raio"])
@@ -2371,6 +2515,18 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 		for k in 3:
 			var fr: float = fposmod(rel * 1.6 + k * 0.33, 1.0)
 			V.ponto(self, pos + Vector2((k - 1) * 22.0, -h + fr * 36.0), Color(0.85, 0.95, 1.0))
+	if uu.carga_t > 0.0:
+		var pc_k: float = 1.0 - uu.carga_t / maxf(uu.carga_dur, 0.01)
+		V.aro(self, meio, (CORPO_LARG + 6.0 + 8.0 * pc_k) * esc_u, (CORPO_MEIO + 8.0 + 8.0 * pc_k) * esc_u, Color(1.0, 0.85, 0.2), 0.6 + 0.4 * sin(rel * 18.0), 1.5)
+		for k in 5:
+			var wk_k: float = fposmod(rel * 2.0 + k * 0.2, 1.0)
+			V.quadro(self, pos.x + (k - 2) * 8.0 * esc_u - V.Q * 0.5, pos.y - h * wk_k, V.Q, V.Q * 3.0, Color(1.0, 0.9, 0.35))
+	if uu.alma > 0.0:
+		var larg_a: float = 24.0
+		V.quadro(self, pos.x - larg_a * 0.5 - V.Q, pos.y - h - 16.0 - V.Q, larg_a + V.Q * 2.0, V.Q * 3.0, V.CONT)
+		V.quadro(self, pos.x - larg_a * 0.5, pos.y - h - 16.0, larg_a * uu.alma / Balanco.ALMA_MAX, V.Q, V.BRANCO)
+	if uu.apagao_t > 0.0:
+		V.aro(self, meio, (CORPO_LARG + 2.0) * esc_u, (CORPO_MEIO + 4.0) * esc_u, Color(0.45, 0.35, 0.7), 0.5, 1.0)
 	if uu.foco_t > 0.0:
 		var pf_m: float = 0.5 + 0.5 * sin(rel * 10.0)
 		V.aro(self, meio, (CORPO_LARG + 6.0) * esc_u, (CORPO_MEIO + 8.0) * esc_u, Color(1.0, 0.3, 0.3), 0.6 + 0.4 * pf_m, 1.5)
@@ -2794,7 +2950,10 @@ func _draw() -> void:
 	_desenhar_manteigas()
 	_desenhar_domos()
 	_desenhar_chamas()
+	_desenhar_apagoes()
 	_desenhar_mudas()
+	_desenhar_pedras()
+	_desenhar_lacos()
 	# unidades ordenadas por profundidade
 	var todos: Array = _ordem_profundidade()
 	# auras e sombras primeiro
@@ -2883,7 +3042,7 @@ func _draw() -> void:
 			# cão de guarda da Casinha: sprite próprio, do tamanho de um bicho comum (a escala da unidade é a do desenho antigo do chefe)
 			CaoGuarda.desenhar(self, pos, ESC * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
-			Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
+			Desenho.boneco(self, pos, esc_d, dir_d, (1 if uu2.capturado else uu2.equipe), (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
 		if uu2.barreira_int > 0.0 and uu2.barreira_cd <= 0.0:

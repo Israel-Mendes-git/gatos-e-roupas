@@ -366,3 +366,36 @@ static func faca_brilho(c: CanvasItem, ce: Vector2, u: float, cont: Color, q: fl
 	linha(c, ce + Vector2(-l * 0.8, l * 0.5), ce + Vector2(l * 0.2, -l * 0.35), BRANCO, q, q)
 	linha(c, ce + Vector2(-l * 0.6, -l * 0.7), ce + Vector2(l * 0.6, l * 0.7), Color(0.8, 0.82, 0.9, a), q, q)
 	estrela(c, ce, 8.0 + 12.0 * a, Color(1.0, 1.0, 0.9), cont, q)
+
+# ---------------------------------------------------------------- lote 4 da expansão: apagão, rocha, fio
+## Zona de escuridão do Apagão: disco escuro de quadradinhos, aro roxo e pontos claros que sobem como poeira.
+static func escuridao(c: CanvasItem, ce: Vector2, rx: float, t: float, viva: float, q: float = Q) -> void:
+	var ry: float = rx * 0.36
+	elipse(c, ce, rx * viva, ry * viva, Color(0.04, 0.02, 0.1, 0.5), q)
+	elipse(c, ce, rx * viva * 0.7, ry * viva * 0.7, Color(0.02, 0.01, 0.06, 0.4), q)
+	aro(c, ce, rx * viva, ry * viva, Color(0.45, 0.35, 0.7), viva, 1.0, q)
+	for i in 7:
+		var fx: float = fposmod(i * 0.381 + t * 0.07, 1.0) * 2.0 - 1.0
+		var fy: float = fposmod(i * 0.619 + t * 0.35, 1.0)
+		ponto(c, Vector2(ce.x + fx * rx * 0.8 * viva, ce.y - fy * 46.0), Color(0.7, 0.65, 0.9, 0.7 * viva), q)
+
+## Pedra rolante: rocha de pixels cinza girando (`rot` em voltas).
+static func rocha(c: CanvasItem, ce: Vector2, r: float, rot: float, q: float = Q) -> void:
+	disco_c(c, ce, r, Color(0.5, 0.48, 0.5), CONT, q)
+	disco(c, ce + Vector2(-r * 0.25, -r * 0.3), r * 0.55, Color(0.66, 0.64, 0.66), q)
+	for k in 3:
+		var a: float = rot * TAU + k * 2.1
+		ponto(c, ce + Vector2(cos(a), sin(a)) * r * 0.55, Color(0.3, 0.28, 0.32), q)
+	ponto(c, ce + Vector2(-r * 0.4, -r * 0.45), Color(0.88, 0.86, 0.86), q)
+
+## Fio de seda entre dois pontos, com uma leve barriga e nós de pixel.
+static func fio(c: CanvasItem, a: Vector2, b: Vector2, cor: Color, t: float, q: float = Q) -> void:
+	var n: int = maxi(3, int(a.distance_to(b) / 14.0))
+	var ant: Vector2 = a
+	for i in range(1, n + 1):
+		var k: float = float(i) / n
+		var pt: Vector2 = a.lerp(b, k) + Vector2(0, sin(k * PI) * 7.0 + sin(t * 6.0 + k * 9.0) * 1.5)
+		linha(c, ant, pt, cor, q, q)
+		ant = pt
+	ponto(c, a, Color(1, 0.8, 0.85), q)
+	ponto(c, b, Color(1, 0.8, 0.85), q)
