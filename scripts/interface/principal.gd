@@ -50,6 +50,8 @@ const TORRE_BT_MAPA := Rect2(1040, 12, 160, 48)
 const TORRE_BT_GUARDA := Rect2(20, 514, 160, 42)
 const FICH_BT_MAPA := Rect2(866, 12, 164, 48)
 const FICH_BT_GUARDA := Rect2(20, 666, 160, 36)
+const ATELIE_BT_MAPA := Rect2(692, 12, 164, 48)   # só aparece com o fichário completo
+const ATELIE_BT_GUARDA := Rect2(20, 624, 160, 36)
 const MOD_SLOT_Y := 484.0          # fileira dos módulos montados, junto da torre desenhada
 const MOD_SLOT := 26.0
 const MOD_SLOT_X0 := 20.0
@@ -250,6 +252,8 @@ var btn_torre: BotaoArte
 var oficina: Oficina
 var fichario: Fichario
 var btn_fich: BotaoArte
+var btn_atelie: BotaoArte
+var atelie_tela: AtelieTela
 var menus: Menus
 var tutorial: Tutorial     # tutorial guiado, treino do título e aulas de primeira vez (tutorial.gd)
 var _real: Dictionary = {}  # sessão verdadeira, guardada enquanto o treino do título (partida descartável) roda
@@ -376,6 +380,14 @@ func _ready() -> void:
 	btn_fich.pressed.connect(abrir_fichario)
 	btn_fich.visible = false
 	move_child(btn_fich, menus.get_index())
+	atelie_tela = AtelieTela.new()
+	add_child(atelie_tela)
+	atelie_tela.iniciar(self)
+	btn_atelie = _botao("Ateliê", ATELIE_BT_GUARDA, Color(0.95, 0.62, 0.85), 17)
+	btn_atelie.pintar = _pintar_botao_atelie
+	btn_atelie.pressed.connect(abrir_atelie)
+	btn_atelie.visible = false
+	move_child(btn_atelie, menus.get_index())
 	bloq_tela = Control.new()
 	bloq_tela.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bloq_tela.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -504,6 +516,7 @@ func ir_para_titulo() -> void:
 	campo.visible = false
 	for b in [btn_vel, btn_lutar, btn_mapa, btn_nova, btn_pausa, btn_torre, btn_fich]:
 		b.visible = false
+	btn_atelie.visible = false
 	_botoes_guarda(false)
 	resumo = {}
 	ajuda_aberta = false
@@ -2569,6 +2582,8 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 
 func _fechar_janelas() -> void:
 	oficina.fechar()
+	if atelie_tela != null:
+		atelie_tela.fechar()
 	if fichario != null:
 		fichario.fechar()
 
@@ -2602,6 +2617,48 @@ func _pintar_botao_fichario(bt: BotaoArte) -> void:
 		VFX.disco(bt, c, 6.0, Color(0.95, 0.3, 0.3))
 		VFX.ponto(bt, c + Vector2(-PX * 2.0, -PX * 2.0), Color(1.0, 0.68, 0.62))
 		Desenho.texto(bt, str(metas_selo.size()), Vector2(c.x - 12.0, c.y + 5.0), 14, Color.WHITE, 24.0)
+
+## Botão do Ateliê: aparece no mapa e no guarda-roupa quando o fichário está completo.
+func _atualizar_atelie() -> void:
+	if btn_atelie == null:
+		return
+	var livre: bool = (modo == Modo.MAPA or modo == Modo.GUARDA) and btn_fich.visible and Atelie.liberado(estado) and not menus.ativo() and not menus.em_transicao()
+	btn_atelie.visible = livre
+	if livre:
+		var r: Rect2 = ATELIE_BT_MAPA if modo == Modo.MAPA else ATELIE_BT_GUARDA
+		btn_atelie.position = r.position
+		btn_atelie.size = r.size
+	elif atelie_tela.aberta:
+		atelie_tela.fechar()
+
+## Abre o Ateliê (só no mapa e no guarda-roupa, com o fichário completo e sem outra janela por cima).
+func abrir_atelie() -> void:
+	if modo != Modo.MAPA and modo != Modo.GUARDA:
+		return
+	if menus.ativo() or menus.em_transicao() or oficina.aberta or (fichario != null and fichario.aberto()) or not fusao.is_empty():
+		return
+	arrasto = {}
+	atelie_tela.abrir()
+
+func _pintar_botao_atelie(bt: BotaoArte) -> void:
+	_pintar_botao(bt)
+	var d: int = bt.get_draw_mode()
+	var dy: float = 3.0 if (d == BaseButton.DRAW_PRESSED or d == BaseButton.DRAW_HOVER_PRESSED) else 0.0
+	# estrela de pixel (a fantasia secreta)
+	var o := Vector2(12, bt.size.y * 0.5 - 9.0 + dy)
+	var ouro := Color(1.0, 0.85, 0.3)
+	var esc := Color(0.45, 0.28, 0.0)
+	bt.draw_rect(Rect2(o.x + 8, o.y, 4, 18), esc)
+	bt.draw_rect(Rect2(o.x, o.y + 7, 20, 4), esc)
+	bt.draw_rect(Rect2(o.x + 4, o.y + 4, 12, 10), esc)
+	bt.draw_rect(Rect2(o.x + 9, o.y + 1, 2, 16), ouro)
+	bt.draw_rect(Rect2(o.x + 1, o.y + 8, 18, 2), ouro)
+	bt.draw_rect(Rect2(o.x + 5, o.y + 5, 10, 8), ouro)
+	var fonte: Font = UIComum.FONTE
+	var tam: int = bt.tam_fonte
+	var y: float = (bt.size.y - fonte.get_height(UIComum.tam(tam))) * 0.5 + fonte.get_ascent(UIComum.tam(tam)) - 3.0 + dy
+	bt.draw_string_outline(fonte, Vector2(40, y), "Ateliê", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 6, Color(0.16, 0.07, 0.05, 0.95))
+	bt.draw_string(fonte, Vector2(40, y), "Ateliê", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color.WHITE)
 
 ## Abre a oficina da torre (só no mapa e no guarda-roupa, sem menu nem cortina por cima).
 func abrir_oficina() -> void:
@@ -2782,7 +2839,7 @@ func _process(delta: float) -> void:
 	t += delta
 	# posição real do ponteiro a cada quadro: um botão filho captura o movimento e a posição guardada ficava velha;
 	# com menu, oficina ou cortina por cima o ponteiro "some" para a tela de baixo (sem dicas nem destaques fantasmas)
-	if menus.ativo() or menus.em_transicao() or (oficina != null and oficina.aberta):
+	if menus.ativo() or menus.em_transicao() or (oficina != null and oficina.aberta) or (atelie_tela != null and atelie_tela.aberta):
 		mouse = Vector2(-500, -500)
 	else:
 		mouse = get_local_mouse_position()
@@ -2802,6 +2859,7 @@ func _process(delta: float) -> void:
 		fichario.estado = estado
 		if fichario.aberto() and (not (modo == Modo.MAPA or modo == Modo.GUARDA) or menus.ativo() or menus.em_transicao()):
 			fichario.fechar()
+	_atualizar_atelie()
 	fusao_bloq.visible = not fusao.is_empty()
 	fusao_bloq.mouse_filter = Control.MOUSE_FILTER_STOP if not fusao.is_empty() else Control.MOUSE_FILTER_IGNORE
 	aviso_t = maxf(0.0, aviso_t - delta)
