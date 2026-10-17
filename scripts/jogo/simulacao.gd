@@ -1505,7 +1505,7 @@ func _largar(u: Unidade, causa: int) -> void:
 		return
 	var nivel: int = mini(Balanco.DROP_NIVEL_MAX, int(floor((estado.progresso() - 1) * Balanco.DROP_NIVEL_POR_PROG)))
 	for k in mini(vestidas.size(), 2 if u.chefe else 1):
-		var orig: Peca = vestidas.pop_at(rng.randi_range(0, vestidas.size() - 1))
+		var orig: Peca = vestidas.pop_at(_sortear_peca_vestida(vestidas, u.chefe or u.elite))
 		var nova := Peca.new(orig.tipo, nivel, _raridade_do_drop(u))
 		if u.chefe:
 			nova.nivel = maxi(nova.nivel, orig.nivel)  # o chefe larga no nível que usava
@@ -1515,6 +1515,21 @@ func _largar(u: Unidade, causa: int) -> void:
 			veio = causa
 		bau.append(nova)
 		_ev({"t": "drop", "x": u.x, "y": u.y, "tipo": nova.tipo, "marca": veio, "raridade": nova.raridade})
+
+## Qual peça vestida cai. Fantasiado e chefe (`ponderado`): a que o jogador ainda não teve pesa PESO_PECA_FALTA, as outras 1,0
+## (a última peça que falta deixa de levar muitas lutas). Comum: uniforme.
+func _sortear_peca_vestida(vestidas: Array, ponderado: bool) -> int:
+	if not ponderado or sem_pity or estado == null:
+		return rng.randi_range(0, vestidas.size() - 1)
+	var total: float = 0.0
+	for p in vestidas:
+		total += 1.0 if estado.ja_teve(p.tipo) else Balanco.PESO_PECA_FALTA
+	var r: float = rng.randf() * total
+	for i in vestidas.size():
+		r -= 1.0 if estado.ja_teve(vestidas[i].tipo) else Balanco.PESO_PECA_FALTA
+		if r < 0.0:
+			return i
+	return vestidas.size() - 1
 
 func _raridade_do_drop(u: Unidade) -> int:
 	var g: float = Balanco.degrau_drop(estado.fase, estado.ato, estado.invasao, estado.onda_invasao)
@@ -1611,6 +1626,7 @@ func carga_poder(u: Unidade) -> float:
 
 ## Medição por fantasia (só o simulador liga): usos, dano, abates e efeitos de cada poder.
 static var medir: bool = false
+static var sem_pity: bool = false   # medição: ignora a peça que falta (peso 1,0 em todas)
 static var tele: Dictionary = {}
 static var tele_i: Dictionary = {}   # idem, dos poderes dos bichos
 var _eq_tele: int = 0
