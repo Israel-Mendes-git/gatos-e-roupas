@@ -6,7 +6,7 @@ extends RefCounted
 ## ROBO = Raposa Ligeira, BONECA = Corvo Velho, REI_MASSINHA = Sapo-Rei; e CORUJA = Esquilo Acrobata, que entrou no lugar da coruja.)
 
 enum Familia { LATA, PELUCIA, CORDA, PORCELANA, MASSINHA }
-enum Chefe { GENERAL, URSO, ROBO, BONECA, REI_MASSINHA, TOUPEIRA, GAMBA, CORUJA, VIRALATA, TEXUGO }
+enum Chefe { GENERAL, URSO, ROBO, BONECA, REI_MASSINHA, TOUPEIRA, GAMBA, CORUJA, VIRALATA, TEXUGO, DOM_GATLEONE, IMORTAL_MIAU, PROGRAMA_MESTRE, REI_MIAUNIDAS, MAGNETOMIAU }
 
 const TOTAL := 5
 ## Os índices 0..4 são os cômodos (primeiro ato); 5..9 são os lugares de fora da casa (segundo ato).
@@ -144,26 +144,25 @@ const GANGUE_PELAGEM: Array = [
 const GANGUE_VIDA: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0]
 const GANGUE_VEL: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0]
 const GANGUE_DANO: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.0]
-## Por enquanto os chefes do 3º ato reaproveitam o desenho e a mecânica de um chefe existente (vestindo a fantasia-assinatura).
-const CHEFE_BASE_ATO3: Array[int] = [Chefe.URSO, Chefe.ROBO, Chefe.BONECA, Chefe.TEXUGO, Chefe.CORUJA]
+## Os chefes do 3º ato são gatos grandes com mecânica própria (Fases.Chefe 10 a 14; ver Simulacao._chefe_gangue).
 const CHEFE_ATAQUE_ATO3: Array[String] = [
-	"Cada patada fere todos em volta (provisório: golpes do Guaxinim Glutão). Poder: Pisão no gato mais forte",
-	"Dispara em direção à torre (provisório: Carga da Raposa Ligeira)",
-	"Atira de longe em quem está atrás (provisório: penas do Corvo Velho). Poder: Trovoada",
-	"Couro grosso: golpe fraco não fere (provisório: Texugo-Rei). Poder: Bola de espinhos",
-	"Arremessa bolotas de longe e dá saltos que ferem a fileira inteira (provisório: Esquilo Acrobata)",
+	"Chama o Mensageiro: se tocar a torre, leva um gato a dormir. Depois, Capangas. Poder: Arrastão",
+	"O comboio varre faixas do campo (aviso de 1 s); depois, duas faixas e mais veloz. Poder: Carga de lança",
+	"Lança disco que quica em 3 gatos e deixa em pixel por 3 s. Volta uma vez ao cair. Poder: Trovoada",
+	"Falange: de frente quase não leva dano. Chuta o gato da frente; depois, chuva de flechas. Poder: Fúria",
+	"Campo magnético puxa o time e anula o bônus de conjunto por 6 s; no fim, levanta um carro. Poder: Relâmpago",
 ]
 const CHEFE_FRAQUEZA_ATO3: Array[String] = [
-	"Pelo seco: fogo fere em dobro",
-	"Quando perde o fôlego, fica parado e frágil",
-	"Ossos ocos: golpes de perto ferem mais",
-	"Varinha, poderes e fogo passam pelo couro",
-	"Explosões o derrubam no meio do salto: ferem em dobro",
+	"Mate o Mensageiro antes da torre; pelo seco, fogo fere em dobro",
+	"Entre as faixas, nas fileiras livres, ele fica exposto",
+	"Quando recompila, fica um instante frágil: guarde força",
+	"Ataque pelos flancos e use poderes: de frente ele quase não sente",
+	"Sem o bônus de conjunto o time fica fraco: espalhe-se e mate rápido",
 ]
 
 ## Chefe (Fases.Chefe) cujo desenho e mecânica o chefe do lugar global `i` usa.
 static func chefe_base(i: int) -> int:
-	return i if i < TOTAL * 2 else CHEFE_BASE_ATO3[clampi(i - TOTAL * 2, 0, 4)]
+	return clampi(i, 0, TOTAL * 3 - 1)
 
 static func ataque_do_chefe(i: int) -> String:
 	return CHEFE_ATAQUE[i] if i < CHEFE_ATAQUE.size() else CHEFE_ATAQUE_ATO3[clampi(i - CHEFE_ATAQUE.size(), 0, 4)]

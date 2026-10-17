@@ -1033,6 +1033,9 @@ static func boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, equipe: 
 	if equipe == 0:
 		_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, fantasma_slots, destaque_slot, furia, variante, nocaute)
 		return
+	if chefe and chefe_tipo >= Fases.Chefe.DOM_GATLEONE:
+		_gato_chefe(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, chefe_tipo - Fases.Chefe.DOM_GATLEONE)
+		return
 	if gangue >= 0 and not chefe and not parte:
 		# gato rival (3º ato): o mesmo desenho do gato, virado para a esquerda, com a pelagem e a bandana da gangue
 		var g: int = clampi(gangue, 0, Fases.GANGUE_COR.size() - 1)
@@ -1353,6 +1356,24 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		c.draw_rect(Rect2(-4, -2, 8, 4), cb)
 		c.draw_rect(Rect2(-7, 1, 4, 5), esc_b)
 		c.draw_rect(Rect2(-6, 2, 2, 3), cb)
+	resetar(c)
+
+## Chefe de gangue (3º ato): o gato grande da gangue (pelagem, bandana e aura na cor dela), vestindo a fantasia-assinatura,
+## com a coroa de líder (a pedra da coroa leva a cor da gangue).
+static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, g: int) -> void:
+	g = clampi(g, 0, Fases.GANGUE_COR.size() - 1)
+	var cg: Color = Fases.GANGUE_COR[g]
+	_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, false, -1, furia, 0, false, Fases.GANGUE_PELAGEM[g], cg, true)
+	var q: int = gato_quadro(anim, andando, golpe, false)
+	_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.Onde.CABECA, q) * GATO_K, 0.0, GATO_K)
+	var ouro := Color(0.98, 0.8, 0.2, alfa)
+	var sombra := Color(0.45, 0.28, 0.0, alfa)
+	c.draw_rect(Rect2(-5, -11, 10, 3), sombra)
+	c.draw_rect(Rect2(-4, -10, 8, 1), ouro)
+	for dx in [-5, -1, 3]:
+		c.draw_rect(Rect2(dx, -14, 2, 3), sombra)
+		c.draw_rect(Rect2(dx, -13, 2, 2), ouro)
+	c.draw_rect(Rect2(-1, -10, 2, 2), Color(cg.r, cg.g, cg.b, alfa))
 	resetar(c)
 
 ## Sombra, aura e fantasma em pixel: valem para a grade de pixels do sprite do gato/bicho (transform com GATO_K).

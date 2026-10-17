@@ -18,6 +18,7 @@ func _init() -> void:
 	_moral()
 	_tipos_gangue()
 	_truques()
+	_chefes()
 	_save_antigo()
 	print("FALHAS: %d" % falhas)
 	quit(1 if falhas > 0 else 0)
@@ -46,7 +47,9 @@ func _entrada() -> void:
 		_ok((Balanco.ATO_COMODO_VIDA[a] as Array).size() == 5 and (Balanco.ATO_COMODO_DANO[a] as Array).size() == 5, "ATO_COMODO do ato %d com 5 lugares" % (a + 1))
 	_ok(Balanco.INIMIGO_NIVEL_MAX_ATO.size() == 3 and Balanco.INIMIGO_NIVEL_MAX_ATO[2] > Balanco.INIMIGO_NIVEL_MAX_ATO[1], "nível máximo dos bichos por ato")
 	for i in 5:
-		_ok(Fases.chefe_base(10 + i) >= 0 and Fases.chefe_base(10 + i) < Fases.CHEFE_NOME.size(), "chefe provisório do lugar %d" % (10 + i))
+		_ok(Fases.chefe_base(10 + i) == Fases.Chefe.DOM_GATLEONE + i, "chefe próprio do lugar %d" % (10 + i))
+		_ok(Balanco.CHEFE_PODER_CONJ.size() > Fases.chefe_base(10 + i) and Balanco.CHEFE_ESCALA_TIPO.size() > Fases.chefe_base(10 + i), "tabelas do chefe %d" % (10 + i))
+		_ok(Fases.fraqueza_do_chefe(10 + i).length() < 80 and Fases.ataque_do_chefe(10 + i) != "" and not "provisório" in Fases.ataque_do_chefe(10 + i), "textos do chefe %d" % (10 + i))
 		_ok(Fases.CHEFE_ASSINATURA[10 + i] >= 0, "assinatura do chefe %d" % (10 + i))
 	# o chefe do 3º ato veste a assinatura (60%) ou outra do lugar
 	var rng := RandomNumberGenerator.new()
@@ -236,6 +239,99 @@ func _estados_de(u: Unidade) -> Array:
 	for i in n:
 		r.append(ids[i])
 	return r
+
+## Luta de chefe de gangue: o chefe em campo, parado no meio, com um gato do time na frente.
+func _luta_chefe(g: int) -> Array:
+	var sim: Simulacao = _luta(g)
+	sim._spawnar({"pecas": [null, null, null, null], "tipo": Unidade.Tipo.COMUM, "chefe": true})
+	var ch: Unidade = sim.inimigos[sim.inimigos.size() - 1]
+	ch.x = 900.0
+	ch.y = 550.0
+	return [sim, ch]
+
+func _chefes() -> void:
+	for g in 5:
+		var r: Array = _luta_chefe(g)
+		var ch: Unidade = r[1]
+		_ok(ch.chefe_tipo == Fases.Chefe.DOM_GATLEONE + g and ch.gangue == g and not ch.rival, "chefe %d: tipo e gangue" % g)
+		# ciclo completo: avisa (1 s), solta, e a recarga recomeça
+		var sim: Simulacao = r[0]
+		ch.truque_cd = 0.0
+		sim._chefe_gangue(ch, 0.1)
+		_ok(ch.habil >= 0 and ch.aviso_t > 0.0 and ch.aviso_nome != "", "chefe %d: aviso de 1 s antes da habilidade" % g)
+		var n: int = 0
+		while ch.habil >= 0 and n < 40:
+			sim._chefe_gangue(ch, 0.1)
+			n += 1
+		_ok(n >= 9 and n <= 11 and ch.truque_cd > 0.0, "chefe %d: solta depois do aviso (%d passos)" % [g, n])
+		# atordoado no aviso: a habilidade se perde
+		ch.truque_cd = 0.0
+		sim._chefe_gangue(ch, 0.1)
+		ch.aviso_t = 0.0
+		sim._chefe_gangue(ch, 0.1)
+		_ok(ch.habil == -1, "chefe %d: atordoar corta a habilidade" % g)
+	# Dom Gatleone chama o Mensageiro
+	var r0: Array = _luta_chefe(0)
+	r0[1].truque_cd = 0.0
+	for k in 14:
+		r0[0]._chefe_gangue(r0[1], 0.1)
+	_ok(not r0[0].fila.is_empty() and r0[0].fila[0]["tipo"] == Unidade.Tipo.LADRAO and r0[0].fila[0]["gangue"] == 0, "Dom Gatleone: chama o Mensageiro")
+	# Programa Mestre: o disco deixa o gato em pixel e ele recompila uma vez
+	var r2: Array = _luta_chefe(2)
+	var s2: Simulacao = r2[0]
+	var m2: Unidade = r2[1]
+	var alvo: Unidade = s2.aliados[0]
+	alvo.x = 800.0
+	alvo.y = 550.0
+	m2.truque_cd = 0.0
+	for k in 14:
+		s2._chefe_gangue(m2, 0.1)
+	for k in 200:
+		s2._mover_projeteis(0.05)
+	var algum: bool = false
+	for al in s2.aliados:
+		if al.sequestro_t > 0.0 or not al.vivo:
+			algum = true
+	_ok(algum, "Programa Mestre: o disco deixa o gato em pixel")
+	var vmax: float = m2.vida_max
+	m2.vida = 1.0
+	s2._matar(m2, null)
+	_ok(m2.vivo and m2.recompilou and absf(m2.vida - vmax * Balanco.RECOMPILA_VIDA) < 1.0, "Programa Mestre: recompila uma vez")
+	m2.vida = 1.0
+	s2._matar(m2, null)
+	_ok(not m2.vivo, "Programa Mestre: na segunda queda, cai")
+	# Rei Miaunidas: de frente quase não leva dano, de flanco leva
+	var r3: Array = _luta_chefe(3)
+	var s3: Simulacao = r3[0]
+	var rei: Unidade = r3[1]
+	var atk: Unidade = s3.aliados[0]
+	atk.x = rei.x - 40.0
+	atk.y = rei.y
+	var v0: float = rei.vida
+	s3._dano(atk, rei, 100.0, true)
+	var frontal: float = v0 - rei.vida
+	atk.y = rei.y + 100.0
+	v0 = rei.vida
+	s3._dano(atk, rei, 100.0, true)
+	var flanco: float = v0 - rei.vida
+	_ok(frontal < flanco * 0.5 and flanco > 0.0, "Rei: frontal %.1f contra flanco %.1f" % [frontal, flanco])
+	# Magnetomiau: o ímã suspende o bônus de conjunto por 6 s
+	var r4: Array = _luta_chefe(4)
+	var s4: Simulacao = r4[0]
+	var mag: Unidade = r4[1]
+	var gt: Unidade = s4.aliados[0]
+	for k in Pecas.SLOTS:
+		gt.pecas[k] = Peca.new(Pecas.CONJUNTO_PECAS[Pecas.Conjunto.CAVALEIRO][k], 10)
+	s4.calcular(gt)
+	var arm0: float = gt.armadura
+	gt.x = mag.x - 200.0
+	mag.truque_cd = 0.0
+	for k in 14:
+		s4._chefe_gangue(mag, 0.1)
+	_ok(gt.sem_conjunto_t > 0.0 and gt.armadura < arm0, "Magnetomiau: bônus de conjunto suspenso (armadura %.1f -> %.1f)" % [arm0, gt.armadura])
+	for k in 70:
+		s4._sem_conjunto_tick(0.1)
+	_ok(gt.sem_conjunto_t == 0.0 and absf(gt.armadura - arm0) < 0.01, "Magnetomiau: o bônus volta depois de 6 s")
 
 func _truques() -> void:
 	# Oferta: o Mensageiro toca a torre e o gato com mais peças dorme 6 s, fora da luta

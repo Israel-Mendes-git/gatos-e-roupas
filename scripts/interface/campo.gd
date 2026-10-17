@@ -7627,4 +7627,4 @@ func _desenhar_avisos() -> void:
 		V.disco_c(self, pb, raio_b, cor.lerp(Color(1, 1, 1), 0.35 * pisca), cont_a)
 		V.arco(self, pb, raio_b - 5.0, -PI * 0.5, -PI * 0.5 + TAU * prog, cont_a, 1.0, 1.5)   # enche até soltar
 		_exclamacao(pb, Color(0.1, 0.04, 0.12))
-		Desenho.texto(self, Pecas.PODER_NOME[cj] + "!", pb + Vector2(-100, -raio_b - 8.0), 22, Color(1, 1, 1, 0.6 + 0.4 * pisca), 200.0, 5)
+		Desenho.texto(self, (uu.aviso_nome if uu.aviso_nome != "" else Pecas.PODER_NOME[cj] + "!"), pb + Vector2(-100, -raio_b - 8.0), 22, Color(1, 1, 1, 0.6 + 0.4 * pisca), 200.0, 5)

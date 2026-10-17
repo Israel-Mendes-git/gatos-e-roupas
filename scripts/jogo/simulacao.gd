@@ -351,6 +351,8 @@ func calcular(u: Unidade) -> void:
 			for p in u.pecas:
 				soma += p.poder()
 			u.poder_forca = soma / Pecas.SLOTS
+		if u.sem_conjunto_t > 0.0:
+			continue   # Magnetomiau: o bônus de conjunto fica suspenso (o poder da fantasia completa continua)
 		var kv: float = Balanco.conj_valor(c, g)
 		match Pecas.CONJUNTO_MOLDE[c]:
 			Pecas.Conjunto.CAVALEIRO:
@@ -505,6 +507,11 @@ func calcular(u: Unidade) -> void:
 				u.fraq_explosao = Balanco.CORUJA_EXPLOSAO
 			Fases.Chefe.TEXUGO:
 				u.armadura += Balanco.TEXUGO_COURO * u.esc_dano
+			Fases.Chefe.DOM_GATLEONE:
+				u.cerco += 0.5
+				u.fraq_fogo = 2.0
+			Fases.Chefe.MAGNETOMIAU:
+				vida *= 1.1
 	var antiga: float = u.vida_max
 	var frac: float = 1.0
 	if antiga > 0.0:
@@ -534,6 +541,9 @@ func _spawnar(item: Dictionary) -> void:
 	if chefe:
 		u.chefe_tipo = Fases.chefe_base(estado.lugar())
 		u.truque_cd = Balanco.TOUPEIRA_FORA_T if u.chefe_tipo == Fases.Chefe.TOUPEIRA else 5.0
+		if u.chefe_tipo >= Fases.Chefe.DOM_GATLEONE:
+			u.gangue = u.chefe_tipo - Fases.Chefe.DOM_GATLEONE   # gato grande da gangue (só desenho e identidade; não é "rival" da Disputa)
+			u.truque_cd = [Balanco.GATLEONE_PRIMEIRO, Balanco.IMORTAL_PRIMEIRO, Balanco.MESTRE_PRIMEIRO, Balanco.REI_CHUTE_PRIMEIRO, Balanco.MAGNETO_PRIMEIRO][u.gangue]
 		u.esc_vida *= Balanco.CHEFE_VIDA_MULT * (1.0 + Balanco.CHEFE_VIDA_FASE * estado.degrau_chefe())
 		u.esc_dano *= Balanco.CHEFE_DANO_MULT
 		u.reforco_cd = Balanco.GENERAL_REFORCO_T
@@ -573,6 +583,7 @@ func passo(dt: float) -> void:
 			u.lento *= 1.0 - Balanco.MORAL_VEL        # Moral: anda e ataca mais devagar
 			u.bonus_dano *= 1.0 - Balanco.MORAL_DANO
 	_truques_das_gangues()
+	_sem_conjunto_tick(dt)
 	for u in aliados + inimigos:
 		if u.assombrado_t > 0.0:
 			u.lento = minf(u.lento, Balanco.PODER_ESPIRITO_ASSOMBRA_LENTO)   # Alma Sombria
@@ -718,7 +729,7 @@ func _disco_quica(p: Dictionary, de: Unidade) -> void:
 		return
 	var nova: Array = ja.duplicate()
 	nova.append(melhor)
-	projeteis.append({"x": de.x, "y": de.y, "alvo": melhor, "dono": p["dono"], "dano": float(p["dano"]) * Balanco.DISCO_FATOR, "quica": int(p["quica"]) - 1, "ja": nova, "disco": true})
+	projeteis.append({"x": de.x, "y": de.y, "alvo": melhor, "dono": p["dono"], "dano": float(p["dano"]) * Balanco.DISCO_FATOR, "quica": int(p["quica"]) - 1, "ja": nova, "disco": true, "pixel": p.get("pixel", false)})
 	_cont("quica")
 
 ## Unidades do mesmo lado que ficaram uma em cima da outra se afastam de leve, mais na vertical
@@ -990,7 +1001,193 @@ func _chefe_age(u: Unidade, dt: float) -> bool:
 		Fases.Chefe.TEXUGO:
 			if u.vida < u.vida_max * Balanco.TEXUGO_FURIA:
 				u.frenesi_t = maxf(u.frenesi_t, 0.5)   # ferido, ataca em dobro até cair
+		Fases.Chefe.DOM_GATLEONE, Fases.Chefe.IMORTAL_MIAU, Fases.Chefe.PROGRAMA_MESTRE, Fases.Chefe.REI_MIAUNIDAS, Fases.Chefe.MAGNETOMIAU:
+			return _chefe_gangue(u, dt)
 	return true
+
+## Magnetomiau: o bônus de conjunto suspenso volta quando o tempo acaba.
+func _sem_conjunto_tick(dt: float) -> void:
+	for v in aliados:
+		if v.sem_conjunto_t > 0.0:
+			v.sem_conjunto_t -= dt
+			if v.sem_conjunto_t <= 0.0:
+				v.sem_conjunto_t = 0.0
+				calcular(v)
+
+## Chefes de gangue (3º ato, etapa 5; notas/ato3_proposta.md, seção 2): cada um solta suas habilidades com 1 s de aviso
+## (balão e área marcada), como os chefes de fora. Devolve false se o chefe não age neste passo (carregando o aviso).
+func _chefe_gangue(u: Unidade, dt: float) -> bool:
+	var frac: float = u.vida / maxf(u.vida_max, 1.0)
+	var fase2: bool = frac < Balanco.CHEFE_FASE2
+	if u.fragil_t > 0.0:
+		u.fragil_t -= dt
+		if u.fragil_t <= 0.0:
+			u.vulneravel = 1.0
+	if u.chefe_tipo == Fases.Chefe.IMORTAL_MIAU and fase2:
+		u.lento *= Balanco.IMORTAL_VEL2   # o guitarrista do comboio acelera o chefe
+	if u.habil >= 0:
+		u.andando = false
+		if u.aviso_t <= 0.0:
+			u.habil = -1   # atordoado no meio do aviso: a habilidade se perde
+			u.aviso_nome = ""
+			u.truque_cd = 4.0
+			return true
+		u.habil_t -= dt
+		u.aviso_t = maxf(u.habil_t, 0.001)
+		if u.habil_t > 0.0:
+			return false
+		var h: int = u.habil
+		u.habil = -1
+		u.aviso_t = 0.0
+		u.aviso_forma = {}
+		u.aviso_nome = ""
+		_chefe_solta(u, h, fase2)
+		return u.vivo
+	u.truque_cd -= dt
+	if u.truque_cd > 0.0 or u.x > Balanco.VISIVEL_X or u.aviso_t > 0.0:
+		return true
+	var gatos: Array[Unidade] = []
+	for v in aliados:
+		if v.vivo and v.sequestro_t <= 0.0 and not v.estrutura and v.x <= Balanco.VISIVEL_X:
+			gatos.append(v)
+	if gatos.is_empty():
+		u.truque_cd = 1.0
+		return true
+	var h2: int = 0
+	var forma: Dictionary = {}
+	var nome: String = ""
+	match u.chefe_tipo:
+		Fases.Chefe.DOM_GATLEONE:
+			nome = "Mensageiro!" if not fase2 else "Capangas!"
+			forma = {"circ": [Vector3(u.x, u.y, 80.0)]}
+		Fases.Chefe.IMORTAL_MIAU:
+			nome = "Comboio!"
+			var ys: Array = []
+			var cand: Array[Unidade] = gatos.duplicate()
+			cand.shuffle()
+			var rets: Array = []
+			for k in mini(2 if fase2 else 1, cand.size()):
+				ys.append(cand[k].y)
+				rets.append(Rect2(Balanco.TORRE_X, cand[k].y - Balanco.IMORTAL_FAIXA - 30.0, Balanco.VISIVEL_X - Balanco.TORRE_X, Balanco.IMORTAL_FAIXA * 2.0))
+			u.habil_dados_y = ys
+			forma = {"ret": rets}
+		Fases.Chefe.PROGRAMA_MESTRE:
+			nome = "Disco!"
+			var alvo: Unidade = _mais_perto(u, gatos, 1e5)
+			u.alvo_habil = alvo
+			forma = {"lin": [[Vector2(u.x, u.y), Vector2(alvo.x, alvo.y)]], "alvos": [Vector2(alvo.x, alvo.y)]}
+		Fases.Chefe.REI_MIAUNIDAS:
+			if fase2 and u.habil_n % 2 == 1:
+				h2 = 1
+				nome = "Flechas!"
+				var cs: Array = _aglomerados(gatos, Balanco.REI_FLECHAS_RAIO, Balanco.REI_FLECHAS_N)
+				var circ: Array = []
+				for c in cs:
+					circ.append(Vector3(c.x, c.y, Balanco.REI_FLECHAS_RAIO))
+				u.habil_dados_p = cs
+				forma = {"circ": circ}
+			else:
+				nome = "Chute!"
+				var frente: Unidade = gatos[0]
+				for v in gatos:
+					if v.x > frente.x:
+						frente = v
+				u.alvo_habil = frente
+				forma = {"alvos": [Vector2(frente.x, frente.y)]}
+		Fases.Chefe.MAGNETOMIAU:
+			if frac < Balanco.CHEFE_FASE3 and u.habil_n % 2 == 1:
+				h2 = 1
+				nome = "Carro!"
+				var forte: Unidade = gatos[0]
+				for v in gatos:
+					if v.vida > forte.vida:
+						forte = v
+				u.alvo_habil = forte
+				forma = {"circ": [Vector3(forte.x, forte.y, Balanco.MAGNETO_CARRO_RAIO)], "alvos": [Vector2(forte.x, forte.y)]}
+			else:
+				nome = "Ímã!"
+				forma = {"circ": [Vector3(u.x, u.y, Balanco.MAGNETO_RAIO)]}
+	u.habil = h2
+	u.habil_t = Balanco.PODER_AVISO_T
+	u.aviso_t = Balanco.PODER_AVISO_T
+	u.aviso_dur = Balanco.PODER_AVISO_T
+	u.aviso_forma = forma
+	u.aviso_nome = nome
+	u.andando = false
+	_ev({"t": "aviso", "x": u.x, "y": u.y, "poder": u.poder, "conj": u.poder_conj, "chefe": true})
+	return false
+
+func _chefe_solta(u: Unidade, h: int, fase2: bool) -> void:
+	u.habil_n += 1
+	var pontos: Array = []
+	match u.chefe_tipo:
+		Fases.Chefe.DOM_GATLEONE:
+			u.truque_cd = Balanco.GATLEONE_T * (0.8 if fase2 else 1.0)
+			fila.push_front({"t": tempo, "pecas": [null, null, null, null], "tipo": Unidade.Tipo.LADRAO, "rival": true, "gangue": 0})
+			_cont("mensageiro")
+			if fase2:
+				for k in Balanco.GATLEONE_CAPANGAS:
+					fila.push_front({"t": tempo, "pecas": [null, null, null, null], "tipo": Unidade.Tipo.GIGANTE, "rival": true, "gangue": 0})
+				_cont("capangas")
+			_ev({"t": "reforco", "x": u.x, "y": u.y})
+		Fases.Chefe.IMORTAL_MIAU:
+			u.truque_cd = Balanco.IMORTAL_T * (0.8 if fase2 else 1.0)
+			for yf in u.habil_dados_y:
+				for v in aliados.duplicate():
+					if v.vivo and not v.estrutura and absf(v.y - float(yf)) <= Balanco.IMORTAL_FAIXA:
+						pontos.append(Vector2(v.x, v.y))
+						v.atordoado_t = maxf(v.atordoado_t, 0.4)
+						_dano_poder(u, v, u.dano * Balanco.IMORTAL_DANO)
+			_cont("comboio")
+			if not pontos.is_empty():
+				_ev({"t": "poder", "x": u.x, "y": u.y, "eq": 1, "poder": Pecas.Poder.ATRAVESSA, "conj": Pecas.Conjunto.MOTOQUEIRO_MIAUSMA, "pontos": pontos})
+		Fases.Chefe.PROGRAMA_MESTRE:
+			u.truque_cd = Balanco.MESTRE_T * (0.8 if fase2 else 1.0)
+			var a: Unidade = u.alvo_habil
+			if a != null and a.vivo and a.sequestro_t <= 0.0:
+				projeteis.append({"x": u.x, "y": u.y, "alvo": a, "dono": u, "dano": u.dano * Balanco.MESTRE_DISCO_DANO, "quica": Balanco.DISCO_QUICAS, "ja": [a], "disco": true, "pixel": true})
+				_ev({"t": "tiro", "x": u.x, "y": u.y, "eq": 1})
+		Fases.Chefe.REI_MIAUNIDAS:
+			u.truque_cd = Balanco.REI_CHUTE_T if h == 0 else Balanco.REI_FLECHAS_T
+			if h == 0:
+				var f: Unidade = u.alvo_habil
+				if f != null and f.vivo:
+					f.x = maxf(Balanco.TORRE_X + 20.0, f.x - Balanco.REI_CHUTE_RECUA)
+					f.atordoado_t = maxf(f.atordoado_t, Balanco.REI_CHUTE_ATORDOA)
+					pontos.append(Vector2(f.x, f.y))
+					_dano_poder(u, f, u.dano * 0.8)
+					_cont("chute")
+			else:
+				for c in u.habil_dados_p:
+					for v in aliados.duplicate():
+						if v.vivo and not v.estrutura and _dentro(v, c.x, c.y, Balanco.REI_FLECHAS_RAIO):
+							pontos.append(Vector2(v.x, v.y))
+							_dano_poder(u, v, u.dano * Balanco.REI_FLECHAS_DANO)
+				_cont("flechas")
+			if not pontos.is_empty():
+				_ev({"t": "poder", "x": u.x, "y": u.y, "eq": 1, "poder": Pecas.Poder.ATRAVESSA if h == 1 else Pecas.Poder.EMPURRA, "conj": Pecas.Conjunto.VIKING, "pontos": pontos})
+		Fases.Chefe.MAGNETOMIAU:
+			u.truque_cd = Balanco.MAGNETO_T * (0.75 if u.vida < u.vida_max * Balanco.CHEFE_FASE3 else 1.0)
+			if h == 0:
+				for v in aliados:
+					if v.vivo and not v.estrutura and _dentro(v, u.x, u.y, Balanco.MAGNETO_RAIO):
+						v.x = minf(u.x - 60.0, v.x + Balanco.MAGNETO_PUXA)   # o ímã puxa o time para perto dele
+						v.sem_conjunto_t = Balanco.MAGNETO_SEM_CONJUNTO_T
+						calcular(v)
+						pontos.append(Vector2(v.x, v.y))
+				_cont("ima")
+			else:
+				u.truque_cd = Balanco.MAGNETO_CARRO_T
+				var f2: Unidade = u.alvo_habil
+				if f2 != null and f2.vivo:
+					for v in aliados.duplicate():
+						if v.vivo and not v.estrutura and _dentro(v, f2.x, f2.y, Balanco.MAGNETO_CARRO_RAIO):
+							pontos.append(Vector2(v.x, v.y))
+							v.atordoado_t = maxf(v.atordoado_t, 0.5)
+							_dano_poder(u, v, u.dano * Balanco.MAGNETO_CARRO_DANO)
+				_cont("carro")
+			if not pontos.is_empty():
+				_ev({"t": "poder", "x": u.x, "y": u.y, "eq": 1, "poder": Pecas.Poder.PUXA if h == 0 else Pecas.Poder.EXPLOSAO, "conj": Pecas.Conjunto.MAGO, "pontos": pontos})
 
 ## Aliado vivo mais perto da torre (alvo da Boneca Rachada).
 func _mais_atras() -> Unidade:
@@ -1440,6 +1637,10 @@ func _mover_projeteis(dt: float) -> void:
 				_acerta_ervilha(p, a)
 			else:
 				_dano(p["dono"], a, p["dano"], false)
+				if p.get("pixel", false) and a.vivo:
+					a.sequestro_t = maxf(a.sequestro_t, Balanco.MESTRE_PIXEL_T)   # em pixel: não age nem sofre dano
+					a.alvo = null
+					_cont("pixel")
 				if p.has("quica") and int(p["quica"]) > 0:
 					_disco_quica(p, a)
 				var dn: Unidade = p["dono"]
@@ -1504,6 +1705,8 @@ func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_are
 	else:
 		d *= 1.0 - alvo.furo
 	d *= _vul(alvo)
+	if alvo.chefe and alvo.chefe_tipo == Fases.Chefe.REI_MIAUNIDAS and _golpe_frontal(atk, alvo):
+		d *= 1.0 - (Balanco.REI_FRENTE_FASE2 if alvo.vida < alvo.vida_max * Balanco.CHEFE_FASE2 else Balanco.REI_FRENTE)   # falange do Rei: de frente quase não fere
 	if alvo.falange > 0 and _golpe_frontal(atk, alvo):
 		d *= 1.0 - Balanco.FALANGE_POR_VIZINHO * alvo.falange   # Falange: escudos juntos, de frente
 	if alvo.protegido_t > 0.0:
@@ -1595,6 +1798,21 @@ func _matar(u: Unidade, killer: Unidade, base: int = Pecas.Marca.CICATRIZ) -> vo
 		u.vida = u.vida_max * u.folego
 		u.protegido_t = maxf(u.protegido_t, 1.0)
 		_ev({"t": "folego", "x": u.x, "y": u.y})
+		return
+	if u.chefe and u.chefe_tipo == Fases.Chefe.PROGRAMA_MESTRE and not u.recompilou:
+		u.recompilou = true
+		u.vida = u.vida_max * Balanco.RECOMPILA_VIDA
+		u.protegido_t = maxf(u.protegido_t, Balanco.RECOMPILA_PROTEGE)
+		u.atordoado_t = 0.0
+		u.queima_t = 0.0
+		u.alvo = null
+		u.habil = -1
+		u.aviso_t = 0.0
+		u.aviso_forma = {}
+		u.fragil_t = Balanco.MESTRE_RECOMPILA_T
+		u.vulneravel = Balanco.MESTRE_RECOMPILA_DANO
+		_cont("recompila")
+		_ev({"t": "recompila", "x": u.x, "y": u.y})
 		return
 	if u.rival and u.gangue == 2 and u.tipo == Unidade.Tipo.COMUM and not u.chefe and not u.pequeno and not u.recompilou:
 		# Recompilação (Tropa do Grid): o Programa volta uma vez, com parte da vida

@@ -203,6 +203,16 @@ var truque_cd: float = 0.0      # chefes de fora: relógio do truque (mergulho, 
 var reforco_cd: float = 0.0     # General
 var corda_t: float = 0.0        # Robô: tempo restante do estado atual
 var parado: bool = false        # Robô sem corda
+# chefes de gangue (3º ato, etapa 5)
+var habil: int = -1             # habilidade em aviso (-1 nenhuma); o aviso de 1 s usa aviso_t e aviso_forma
+var habil_t: float = 0.0
+var habil_n: int = 0            # quantas já soltou (alterna as habilidades)
+var habil_dados_y: Array = []   # Imortal Miau: y das faixas avisadas
+var habil_dados_p: Array = []   # Rei Miaunidas: centros da chuva de flechas
+var alvo_habil: Unidade = null  # alvo fixado pelo aviso
+var aviso_nome: String = ""     # nome da habilidade no balão do aviso ("" = nome do poder)
+var sem_conjunto_t: float = 0.0 # Magnetomiau: o bônus de conjunto deste gato está suspenso
+var fragil_t: float = 0.0       # Programa Mestre: segundos frágil depois de recompilar
 var fraq_fogo: float = 1.0      # multiplicadores do dano recebido
 var fraq_explosao: float = 1.0
 var fraq_corpo: float = 1.0

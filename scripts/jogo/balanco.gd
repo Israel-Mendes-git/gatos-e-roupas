@@ -317,7 +317,7 @@ const CHEFE_TORRE_DANO := 2         # tijolos por golpe do chefe na torre
 const CHEFE_NIVEL_BONUS := 1        # níveis das peças do chefe acima dos inimigos da onda
 const CHEFE_LACAIOS := 0.6          # fração dos inimigos comuns numa onda de chefe
 const CHEFE_ATRASO := 2.5           # segundos depois do último lacaio
-const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 0.88, 1.0, 1.0, 0.8, 0.8, 0.8, 0.9]   # acerto por chefe: nenhum passa de ~2,1x a altura de um gato
+const CHEFE_ESCALA_TIPO: Array[float] = [1.0, 1.0, 1.0, 0.88, 1.0, 1.0, 0.8, 0.8, 0.8, 0.9, 0.78, 0.78, 0.78, 0.8, 0.8]   # acerto por chefe: nenhum passa de ~2,1x a altura de um gato
 const CHEFE_ESCALA := 1.7           # tamanho na tela
 
 # ---------- Chefes de cada fase (ver Fases.Chefe) ----------
@@ -532,6 +532,41 @@ const FALANGE_FLANCO := 60.0        # golpe vindo de mais de |dy| = isto é de f
 const MUTACAO_LIMIAR := 0.30
 const MUTACAO_DANO := 0.30
 const MUTACAO_VEL := 0.30
+# ---- Chefes de gangue (3º ato, etapa 5; notas/ato3_proposta.md, seção 2)
+const CHEFE_FASE2 := 0.5            # abaixo desta fração da vida o chefe entra na fase 2
+const CHEFE_FASE3 := 0.25           # Magnetomiau: fase final
+const GATLEONE_T := 18.0            # segundos entre as chamadas do Mensageiro
+const GATLEONE_PRIMEIRO := 9.0
+const GATLEONE_CAPANGAS := 2        # fase 2: a cada chamada, também chama Capangas
+const IMORTAL_T := 11.0             # segundos entre varridas do comboio
+const IMORTAL_PRIMEIRO := 7.0
+const IMORTAL_FAIXA := 38.0         # meia-largura da faixa varrida (y)
+const IMORTAL_DANO := 1.1           # x o dano do golpe, em cada gato da faixa
+const IMORTAL_VEL2 := 1.35          # fase 2: +velocidade do chefe (guitarrista do comboio)
+const MESTRE_T := 9.0
+const MESTRE_PRIMEIRO := 6.0
+const MESTRE_PIXEL_T := 3.0         # o gato atingido pelo disco vira pixel: não age nem sofre dano
+const MESTRE_DISCO_DANO := 1.0
+const MESTRE_RECOMPILA_DANO := 1.6  # recompilando fica frágil por um instante
+const MESTRE_RECOMPILA_T := 1.5
+const REI_FRENTE := 0.7             # redução do dano que vem de frente
+const REI_FRENTE_FASE2 := 0.6
+const REI_CHUTE_T := 13.0
+const REI_CHUTE_PRIMEIRO := 8.0
+const REI_CHUTE_RECUA := 240.0      # o gato da frente é jogado para o fundo
+const REI_CHUTE_ATORDOA := 0.8
+const REI_FLECHAS_T := 12.0         # fase 2: chuva de flechas
+const REI_FLECHAS_N := 3
+const REI_FLECHAS_RAIO := 90.0
+const REI_FLECHAS_DANO := 0.9
+const MAGNETO_T := 14.0
+const MAGNETO_PRIMEIRO := 8.0
+const MAGNETO_RAIO := 330.0
+const MAGNETO_PUXA := 140.0
+const MAGNETO_SEM_CONJUNTO_T := 6.0 # o bônus de conjunto fica suspenso neste tempo
+const MAGNETO_CARRO_T := 12.0       # fase final: levanta um carro
+const MAGNETO_CARRO_RAIO := 85.0
+const MAGNETO_CARRO_DANO := 2.2
 const ATO_FAMILIA_DA_CASA := 0.4    # fração dos bichos que ainda é da família do cômodo; o resto vem misturado
 const XP_ONDA_NOCAUTE := 1          # por onda vencida tendo caído
 const XP_RECUPERA_POR_NIVEL := 0.25  # XP de recuperação: +esta fração da XP da onda por nível que o gato está abaixo da média dos outros
@@ -1011,6 +1046,11 @@ const CHEFE_PODER_CONJ: Array[int] = [
 	Pecas.Conjunto.MAGO,         # Esquilo Acrobata: Relâmpago
 	Pecas.Conjunto.VIKING,       # Vira-Lata: Fúria
 	Pecas.Conjunto.OURICO,       # Texugo-Rei: Bola de espinhos
+	Pecas.Conjunto.TUBARAO,      # Dom Gatleone: Arrastão
+	Pecas.Conjunto.CAVALEIRO,    # Imortal Miau: Carga de lança
+	Pecas.Conjunto.TROVAO,       # Programa Mestre: Trovoada
+	Pecas.Conjunto.VIKING,       # Rei Miaunidas: Fúria
+	Pecas.Conjunto.MAGO,         # Magnetomiau: Relâmpago
 ]
 
 # ---------- Geometria do campo ----------
