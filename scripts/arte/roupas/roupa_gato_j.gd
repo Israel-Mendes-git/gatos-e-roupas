@@ -125,88 +125,108 @@ static func _montar(tipo: int) -> Array:
 	return []
 
 # ------------------------------------------------------------------ Arthur Miaurgon (Arthur Morgan, RDR2): couro preto com brilho azulado
-## c/C/S couro preto (médio, brilho cinza-azulado, sombra); v/V camisa e colete; m/M cinto e tira de couro marrom, faixa do chapéu e cabo; F/G fivela
-## dourada; t/T/u aço do revólver; r/R/p caderninho (capa vermelho-escura, brilho, folhas).
+## c/C/S couro preto (médio, brilho cinza-azulado, sombra); K/k camisa clara e v colete; m/M couro marrom (cinto, tira, faixa do chapéu, cabo, caderninho);
+## F/G balas e fivela dourada; t/T/u aço do revólver; p folhas do caderninho.
 const _PAL_ARTHUR := {
-	"o": Color("08080c"), "c": Color("2a2d38"), "C": Color("7388a6"), "S": Color("14151b"),
-	"v": Color("3e4252"), "V": Color("6a7188"),
-	"m": Color("5e3a22"), "M": Color("96622e"), "F": Color("e2b13c"), "G": Color("ffe58a"),
+	"o": Color("08080c"), "c": Color("2a2d38"), "C": Color("8aa4c4"), "S": Color("14151b"),
+	"v": Color("3e4252"), "K": Color("ddd6c0"), "k": Color("a8a088"),
+	"m": Color("5e3a22"), "M": Color("a06a32"), "F": Color("e8b83c"), "G": Color("fff0a0"),
 	"t": Color("6a7484"), "T": Color("b4bece"), "u": Color("363c48"),
-	"r": Color("7a2c2c"), "R": Color("b0504a"), "p": Color("e6dcc0"),
+	"p": Color("e6dcc0"),
 }
 
-## Chapéu de caubói preto gasto: copa vincada (dois picos), faixa marrom, aba média (10 px) com as pontas viradas para cima.
+## Linha mais baixa ocupada de `cv` na coluna x (-99 se vazia).
+static func _topo_col(cv: Dictionary, x: int) -> int:
+	var b: int = -99
+	for y in range(-16, 3):
+		if cv.has(Vector2i(x, y)):
+			b = y
+	return b
+
+## Chapéu de caubói preto gasto: aba larga e reta (12 px) com as pontas erguidas, copa baixa vincada no meio, faixa marrom e a sombra da aba.
 static func _ar_chapeu() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, 1, -23, [
+	RoupaGatoI._txt(cv, 1, -22, [
 		"...cccccc...",
 		"..cccccccc..",
 		"..cccccccc..",
-		".cMMMMMMMMc.",
-		".cccccccccc.",
-		"..SSSSSSSS..",
+		"c.MMMMMMMM.c",
+		"cccccccccccc",
+		".SSSSSSSSSS.",
 	])
-	RoupaGatoI._luz(cv, "c", "C", "S")
-	cv[Vector2i(6, -23)] = "S"
-	cv[Vector2i(7, -23)] = "S"
 	cv[Vector2i(6, -22)] = "S"
+	cv[Vector2i(7, -22)] = "S"
+	cv[Vector2i(6, -21)] = "S"
+	cv[Vector2i(7, -21)] = "S"
+	RoupaGatoI._luz(cv, "c", "C", "S")
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_ARTHUR)]
 
-## Jaqueta de couro preta curta (gola alta, brilho no ombro), camisa escura aparecendo no peito, tira a tiracolo e cinto-cartucheira com fivela dourada.
+## Jaqueta de couro preta aberta no peito (camisa clara em cima, colete embaixo), gola e lapela viradas com brilho claro, tira a tiracolo,
+## cartucheira de balas douradas com a fivela e o coldre no flanco.
 static func _ar_casaco() -> Array:
 	var cv: Dictionary = {}
 	RoupaGatoI._corpo_vest(cv, "c", -6, -8, -6)
 	RoupaGatoI._gola(cv, "c", 3)
-	for y in range(-10, -6):
+	for y in range(-11, -5):
 		for x in range(5, 8):
-			if cv.has(Vector2i(x, y)) and not (x == 5 and y == -10):
-				cv[Vector2i(x, y)] = "v"
-	RoupaGatoI._luz(cv, "c", "C", "S")
-	RoupaGatoI._linsobre(cv, Vector2i(4, -11), Vector2i(-3, -6), "m")
-	for x in range(-8, 9):
-		var b: int = -99
-		for y in range(-14, 0):
 			if cv.has(Vector2i(x, y)):
-				b = y
+				cv[Vector2i(x, y)] = "K" if y < -8 else "v"
+	if cv.has(Vector2i(4, -11)):
+		cv[Vector2i(4, -11)] = "K"
+	cv[Vector2i(6, -7)] = "F"
+	cv[Vector2i(6, -9)] = "k"
+	RoupaGatoI._luz(cv, "c", "C", "S")
+	for y2 in range(-12, -6):
+		if cv.has(Vector2i(4, y2)) and cv[Vector2i(4, y2)] != "K":
+			cv[Vector2i(4, y2)] = "C"
+	for p in [Vector2i(3, -15), Vector2i(3, -14), Vector2i(2, -14), Vector2i(-6, -10), Vector2i(-5, -10), Vector2i(-4, -11), Vector2i(-1, -12), Vector2i(0, -12), Vector2i(1, -11), Vector2i(-7, -8), Vector2i(2, -9)]:
+		if cv.has(p):
+			cv[p] = "C"
+	RoupaGatoI._linsobre(cv, Vector2i(3, -12), Vector2i(-3, -6), "m")
+	for x in range(-8, 9):
+		var b: int = _topo_col(cv, x)
 		if b > -99:
-			cv[Vector2i(x, b + 1)] = "M" if posmod(x, 2) == 0 else "m"
+			cv[Vector2i(x, b)] = "F" if posmod(x, 2) == 0 else "M"
+			cv[Vector2i(x, b + 1)] = "m"
 	for x2 in range(4, 7):
-		var b2: int = -99
-		for y2 in range(-14, 0):
-			if cv.has(Vector2i(x2, y2)):
-				b2 = y2
-		cv[Vector2i(x2, b2)] = "F"
-		cv[Vector2i(x2, b2 - 1)] = "G" if x2 == 4 else "F"
+		var b2: int = _topo_col(cv, x2)
+		cv[Vector2i(x2, b2 - 1)] = "F"
+		cv[Vector2i(x2, b2)] = "G" if x2 == 5 else "F"
+		cv[Vector2i(x2, b2 + 1)] = "F"
+	var bc: int = _topo_col(cv, 0)
+	for x3 in range(-1, 2):
+		for y3 in range(bc + 1, bc + 3):
+			cv[Vector2i(x3, y3)] = "M" if y3 == bc + 1 else "m"
+	cv[Vector2i(0, bc)] = "u"
+	cv[Vector2i(1, bc)] = "u"
 	RoupaGatoI._cont(cv, "o", false)
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_ARTHUR)]
 
-## Revólver: martelo, armação e cano de aço com o tambor, guarda-mato e cabo de madeira.
+## Revólver curto (12 px): martelo, cano escuro com fio de luz no alto, tambor, guarda-mato e cabo de madeira.
 static func _ar_revolver() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, 11, -14, [
-		"..uu.........",
-		".tTTTTTTTTTTT",
-		".tttutttttttt",
-		".tttutuuuuuu.",
-		"mmtt.........",
-		"mMm..........",
-		".mm..........",
+	RoupaGatoI._txt(cv, 11, -13, [
+		"..t.........",
+		".uTTTTTTTTT.",
+		".uuutuuuuuuu",
+		".uuutuuuuuu.",
+		"mmuu........",
+		"mMm.........",
+		".mm.........",
 	])
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.BOCA, _PAL_ARTHUR)]
 
-## Caderninho de couro vermelho-escuro com fecho dourado, folhas na borda e o lápis amarelo.
+## Caderninho pequeno de couro marrom com a tira e o fecho dourado, folhas na borda.
 static func _ar_diario() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, -9, -18, [
-		"..F...",
-		"..F...",
-		"rrrrrp",
-		"rRRRrp",
-		"rMMMFp",
-		"rRRRrp",
-		"rrrrrp",
+	RoupaGatoI._txt(cv, -9, -17, [
+		"MMMMp",
+		"MmmMp",
+		"mFFmp",
+		"MmmMp",
+		"MMMMp",
 	])
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_ARTHUR)]
