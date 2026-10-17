@@ -109,7 +109,7 @@ static func _montar(tipo: int) -> Array:
 		Pecas.Tipo.PELE_ATOMICA:
 			return _mz_pele()
 		Pecas.Tipo.GARRAS_MONSTRO:
-			return _mz_garras()
+			return _mz_bafo()
 		Pecas.Tipo.CAUDA_RADIOATIVA:
 			return _mz_cauda()
 		Pecas.Tipo.CABECA_GORILA:
@@ -633,24 +633,13 @@ static func _mz_pele() -> Array:
 	_cont(cv, "o", false)
 	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_MIAUZILLA)]
 
-static func _mz_garras() -> Array:
+static func _mz_bafo() -> Array:
 	var cv: Dictionary = {}
-	var hx: float = 12.5
-	var hy: float = -6.5
-	for i in 9:
-		var t: float = i / 8.0
-		RoupaGatoF._disco(cv, lerpf(4.0, hx - 1.5, t), lerpf(-10.5, hy - 0.5, t), 1.9, "b")
-	RoupaGatoF._disco(cv, hx, hy, 2.8, "b")
-	for k in [Vector2i(6, -9), Vector2i(8, -8), Vector2i(7, -10), Vector2i(10, -7), Vector2i(11, -9)]:
-		if cv.has(k) and k.y < hy:
-			cv[k] = "a"
-	_luz(cv, "b", "b", "a")
-	var cx: int = int(hx) + 3
-	var cy: int = int(hy)
-	for r in [[cy - 2, 0], [cy, 1], [cy + 2, 0]]:
-		_px(cv, cx + int(r[1]), int(r[0]), "w")
-		_px(cv, cx + int(r[1]) + 1, int(r[0]), "w")
-		_px(cv, cx + int(r[1]) + 2, int(r[0]), "W")
+	RoupaGatoF._disco(cv, 17.0, -12.5, 3.0, "e")
+	RoupaGatoG._anel(cv, "e", "f")
+	RoupaGatoF._disco(cv, 17.0, -12.5, 1.6, "E")
+	for p in [Vector2i(17, -17), Vector2i(17, -16), Vector2i(21, -16), Vector2i(22, -12), Vector2i(21, -9), Vector2i(17, -8), Vector2i(13, -9)]:
+		cv[p] = "e"
 	_cont(cv, "o")
 	return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_MIAUZILLA)]
 

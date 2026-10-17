@@ -153,7 +153,7 @@ const NOME: Array[String] = [
 	"Chapéu Amassado de Aventureiro", "Jaqueta de Couro Gasta", "Chicote de Barbante", "Ídolo Dourado de Atum",
 	"Boné Vermelho e Branco", "Mochila Amarela de Aventureiro", "Miaubola", "Rato Elétrico de Pelúcia",
 	"Capacete de Viseira Reluzente", "Macacão de Lycra Tamanho Gato", "Luvas do Ranger", "Pulseira de Transformar",
-	"Crista de Placas Dorsais", "Pele de Dinossauro Atômico", "Garras de Monstro Marinho", "Cauda Radioativa Gigante",
+	"Crista de Placas Dorsais", "Pele de Dinossauro Atômico", "Bafo Atômico", "Cauda Radioativa Gigante",
 	"Cabeça de Gorila Peluda", "Pelagem Preta de Gorila", "Mão de Gorila", "Banana",
 	"Chapéu de Fora-da-Lei Surrado", "Casaco de Couro com Lenço Vermelho", "Rifle de Caçador", "Caderninho de Esboços",
 	"Capuz de Leviatã com Mandíbulas", "Pele de Leviatã de Faixas Ferrugem", "Rifle de Estase", "Cauda de Leviatã com Nadadeiras",
