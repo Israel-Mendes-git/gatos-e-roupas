@@ -143,6 +143,12 @@ static func _topo_col(cv: Dictionary, x: int) -> int:
 			b = y
 	return b
 
+## Mandíbula em foice: pontos [x, y] com 2 px de espessura (cor de cima `ch`, de baixo `ch2`).
+static func _mand(cv: Dictionary, pts: Array, ch: String, ch2: String) -> void:
+	for p in pts:
+		cv[Vector2i(p[0], p[1])] = ch
+		cv[Vector2i(p[0], p[1] + 1)] = ch2
+
 ## Chapéu de caubói preto gasto: aba larga e reta (12 px) com as pontas erguidas, copa baixa vincada no meio, faixa marrom e a sombra da aba.
 static func _ar_chapeu() -> Array:
 	var cv: Dictionary = {}
@@ -236,77 +242,72 @@ static func _ar_diario() -> Array:
 ## w barriga clara; s/S/e/h aço azul do rifle de estase e brilho ciano da câmara (halo, núcleo, miolo).
 const _PAL_SUB := {
 	"o": Color("0c1822"), "a": Color("7a9eb2"), "A": Color("b0cdd8"), "d": Color("46687e"),
-	"r": Color("b0502c"), "R": Color("dc7c4c"), "D": Color("78301c"),
-	"m": Color("56503a"), "M": Color("8a8260"), "k": Color("0c1018"), "E": Color("d6e6ea"),
-	"w": Color("dfe9e4"), "s": Color("96a6b6"), "S": Color("2a78b0"), "e": Color("4cc8f0"), "h": Color("eafbff"), "u": Color("2e3a48"),
+	"r": Color("b0502c"), "R": Color("e08a52"), "D": Color("6e2a18"),
+	"k": Color("0c1018"), "E": Color("d6e6ea"), "w": Color("dfe9e4"),
+	"s": Color("96a6b6"), "S": Color("2a78b0"), "e": Color("4cc8f0"), "h": Color("eafbff"), "u": Color("2e3a48"),
 }
 
-## Cabeça do Reaper: a grande barbatana ferrugem inclinada para trás, o crânio azul-acinzentado com o olho grande preto de aro claro e
-## quatro mandíbulas em gancho (duas sobem na frente, duas descem sob o queixo); o focinho do gato aparece entre elas.
+## Cabeça do Reaper: crânio azul-acinzentado alongado para a frente com o olho pequeno e a boca de dentes, crista fina varrida para trás e as
+## quatro mandíbulas ferrugem em foice abertas em volta da boca (duas em cima, duas embaixo).
 static func _sub_capuz() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, 1, -24, [
-		"rr.............",
-		".rrrr..........",
-		".rrrrr.........",
-		"..rrrrrr.......",
-		"..rrrrrrr......",
-		"..arrrrraaa....",
-		"..aaaaaaaaaa...",
-		"..aaaEEEEEaaa.M",
-		"..aaaEkkkEaaMMM",
-		"..aadEkkkEaMMM.",
-		"...ddaEEEaaMM..",
-		"....dAaaaaa....",
-	])
+	RoupaGatoI._poli(cv, [2, -19, 8, -18, 13, -15, 15, -12, 14, -10, 9, -10, 3, -10], "a")
 	RoupaGatoI._luz(cv, "a", "A", "d")
-	# gancho de cima sobe na ponta
-	RoupaGatoI._txt(cv, 14, -17, ["M", "M"])
-	# mandíbulas de baixo: descem sob o queixo e voltam a curvar para a frente
-	RoupaGatoI._txt(cv, 10, -12, ["mM", ".mMM", "..mMM", "....mM", ".....m"])
+	for p in [Vector2i(8, -15), Vector2i(9, -15), Vector2i(8, -14), Vector2i(9, -14)]:
+		cv[p] = "k"
+	cv[Vector2i(8, -16)] = "E"
+	cv[Vector2i(9, -16)] = "E"
+	for x in range(11, 15):
+		cv[Vector2i(x, -12)] = "k"
+	cv[Vector2i(12, -11)] = "w"
+	cv[Vector2i(14, -11)] = "w"
+	RoupaGatoI._lin(cv, Vector2i(5, -19), Vector2i(-4, -25), "r")
+	RoupaGatoI._lin(cv, Vector2i(6, -19), Vector2i(-3, -25), "R")
+	RoupaGatoI._lin(cv, Vector2i(6, -18), Vector2i(0, -22), "r")
+	_mand(cv, [[12, -14], [13, -15], [14, -16], [15, -17], [16, -17], [17, -17], [18, -16]], "r", "D")
+	_mand(cv, [[9, -17], [10, -18], [11, -19], [12, -20], [13, -20], [14, -20], [15, -19]], "R", "r")
+	_mand(cv, [[12, -10], [13, -9], [14, -8], [15, -8], [16, -8], [17, -9]], "r", "D")
+	_mand(cv, [[9, -9], [10, -8], [11, -7], [12, -6], [13, -6], [14, -7]], "R", "r")
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CABECA, _PAL_SUB)]
 
-## Pele do Leviatã: corpo azul-acinzentado justo, faixas vermelho-ferrugem na vertical seguindo o dorso e a barriga clara.
+## Pele do Leviatã: corpo azul-acinzentado justo com faixas ferrugem diagonais (período de 6 px) e a barriga clara.
 static func _sub_pele() -> Array:
 	var cv: Dictionary = {}
 	RoupaGatoI._corpo_vest(cv, "a", -5, -7, -5)
 	RoupaGatoI._luz(cv, "a", "A", "d")
-	for fx in [-6, -2, 2]:
-		for y in range(-13, 0):
-			for x in range(fx, fx + 2):
-				if cv.has(Vector2i(x, y)) and cv[Vector2i(x, y)] != "o" and y < -5:
-					cv[Vector2i(x, y)] = "r" if x == fx else "D"
+	for k in cv.keys():
+		var q: Vector2i = k
+		if q.y < -5 and posmod(q.x + q.y, 6) < 2 and cv[q] != "A":
+			cv[q] = "r"
 	for x in range(-3, 4):
-		for y in range(-9, 0):
-			if cv.has(Vector2i(x, y)) and cv[Vector2i(x, y)] in ["a", "d"] and y >= -7:
+		for y in range(-7, 0):
+			if cv.has(Vector2i(x, y)) and cv[Vector2i(x, y)] != "r":
 				cv[Vector2i(x, y)] = "w"
 	RoupaGatoI._cont(cv, "o", false)
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB)]
 
-## Rifle de estase: coronha, câmara larga com núcleo ciano e halo escuro, cano com anéis e as duas pontas do fim.
+## Rifle de estase: coronha, câmara larga com núcleo ciano e halo escuro, cano com anéis (começa depois das mandíbulas).
 static func _sub_rifle() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, 13, -16, [
-		"..SSSSS........",
-		"ssSeeeSAAAAAAAA",
-		"ssSehheSaaDaaDa",
-		"ssSeeeSddddddd.",
-		"u.SSSSS...aa.aa",
-		"uu.............",
+	RoupaGatoI._txt(cv, 16, -15, [
+		"..SSSSS......",
+		"ssSeeeSAAAAAA",
+		"ssSehheSaaDaa",
+		"ssSeeeSddddd.",
+		"u.SSSSS...aa.",
+		"uu...........",
 	])
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.BOCA, _PAL_SUB)]
 
-## Barbatana dorsal do Leviatã: vela vermelho-ferrugem com nervuras escuras, inclinada para trás.
+## Barbatana dorsal: franja fina de espinhos ferrugem varridos para trás.
 static func _sub_barbatana() -> Array:
 	var cv: Dictionary = {}
-	RoupaGatoI._txt(cv, -11, -17, [
-		"....R....",
-		"...rrR...",
-		"..rDrrR..",
-		".rrDrDrR.",
-		"rrDrrDrrR",
+	RoupaGatoI._txt(cv, -10, -17, [
+		"R..R..R.R",
+		"rR.rR.rrR",
+		".rrrrrrr.",
 	])
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_SUB)]
