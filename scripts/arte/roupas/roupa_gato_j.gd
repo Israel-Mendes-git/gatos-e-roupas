@@ -101,7 +101,7 @@ static func _montar(tipo: int) -> Array:
 		Pecas.Tipo.MACACAO_LYCRA:
 			return _rg_macacao()
 		Pecas.Tipo.SABRE_BLASTER:
-			return _rg_sabre()
+			return _rg_luva()
 		Pecas.Tipo.PULSEIRA_TRANSFORMAR:
 			return _rg_pulseira()
 		Pecas.Tipo.CRISTA_PLACAS:
@@ -540,14 +540,16 @@ static func _rg_macacao() -> Array:
 	_cont(cv, "o", false)
 	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_RANGER)]
 
-static func _rg_sabre() -> Array:
+static func _rg_luva() -> Array:
 	var cv: Dictionary = {}
-	_txt(cv, 11, -13, [
-		"..GGGGGGGG..",
-		"mmmgggggggG.",
-		"mmmsssssss..",
-		"mm.m........",
-		".mm.........",
+	_txt(cv, 11, -16, [
+		"..wwwwww..",
+		"aawwwawwwW",
+		"aAwwaAaWWW",
+		"aAwwwawwwW",
+		"aawwwwWWWW",
+		"aawwwwwwwW",
+		"..wwwWWWW.",
 	])
 	_cont(cv, "o")
 	return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_RANGER)]
