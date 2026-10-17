@@ -29,17 +29,18 @@ static func onde(tipo: int) -> int:
 
 ## Peças com camada atrás do corpo do gato (manto do Hollowmiau, capa da Silkmiau, ponta da mochila do Treinador).
 static func tem_atras(tipo: int) -> bool:
-	return tipo == Pecas.Tipo.MANTO_PRETINHO or tipo == Pecas.Tipo.CAPA_CARMESIM or tipo == Pecas.Tipo.MOCHILA_AMARELA
+	return tipo == Pecas.Tipo.MANTO_PRETINHO or tipo == Pecas.Tipo.CAPA_CARMESIM or tipo == Pecas.Tipo.SOBRETUDO_CINZA or tipo == Pecas.Tipo.MOCHILA_AMARELA
 
 # ------------------------------------------------------------------ paletas
 ## Miau-Noir (como a referência dos quadrinhos): o contorno quase preto; H/h/s chapéu (preto puro, brilho vertical, sombra da aba); B faixa cinza-azulada;
 ## W lente branca com aro escuro r; G máscara cinza média e g linhas de teia; c/C/S sobretudo azul-acinzentado (médio, luz, sombra); k lapela clara;
-## F botões e fivela; w cinto; t/T/u ferro do lampião (médio, luz, sombra); l vidro; q/f quadros do filme; p película.
+## F botões e fivela; w cinto; t/T/u aço da pistola (médio, luz, sombra); m/M madeira do cabo; l vidro; q/f quadros do filme; p película.
 const _PAL_NOIR := {
 	"o": Color("080a10"), "H": Color("14161d"), "h": Color("5a6c88"), "s": Color("0c0e13"), "B": Color("5d6f86"),
 	"W": Color("f6f8fc"), "r": Color("12151c"), "G": Color("9aa3b0"), "g": Color("1e242e"),
 	"c": Color("4c5d76"), "C": Color("8597ad"), "S": Color("2a3240"), "k": Color("a9b8cc"), "F": Color("d4dde8"), "w": Color("161a22"),
 	"t": Color("565e6c"), "T": Color("8a94a4"), "u": Color("363c48"), "l": Color("aab4c2"), "q": Color("e8eaee"), "f": Color("c4ccd8"), "p": Color("1e222a"),
+	"m": Color("3a2616"), "M": Color("5e3c22"),
 }
 ## Hollowmiau: o contorno; w/W/d osso (médio, luz, sombra); k/e olho (preto, brilho); a/b/D manto grafite-azulado (médio, luz, sombra); n/N/s aço
 ## do prego (médio, luz, sombra); u couro do punho; g vidro da ampola (e a alma, em W).
@@ -192,7 +193,7 @@ static var _cache: Dictionary = {}
 ## Camadas da peça com arte própria; vazio = usa o fallback. A capa da Silkmiau balança em 2 quadros.
 static func _camadas(tipo: int, anim: float, maxima: bool = false) -> Array:
 	var fase: int = 0
-	if tipo == Pecas.Tipo.CAPA_CARMESIM and not maxima:
+	if (tipo == Pecas.Tipo.CAPA_CARMESIM and not maxima) or tipo == Pecas.Tipo.SOBRETUDO_CINZA:
 		fase = int(anim * 4.0) % 2
 	var ch: int = tipo * 4 + fase
 	if _cache.has(ch):
@@ -217,6 +218,77 @@ static func _capa_silk(fase: int) -> Dictionary:
 			hem = mini(hem, -1 + int(ceil((x + 9) * 0.7)))
 		for y in range(topo, hem + 1):
 			cv[Vector2i(x, y)] = "a"
+	return cv
+
+## Variante do casaco do Miau-Noir (só para a folha de comparação em notas/lote4/noir3).
+static var noir_v: int = 0
+
+## Barra do casaco por coluna x (-8..8): pontas atrás e na frente, mais alta sob a barriga para as patas aparecerem.
+const _BARRA_NOIR := [
+	{-8: -4, -7: -2, -6: -3, -5: -3, -4: -2, -3: -4, -2: -4, -1: -5, 0: -5, 1: -4, 2: -4, 3: -3, 4: -2, 5: -3, 6: -3, 7: -2, 8: -4},
+	{-8: -3, -7: -2, -6: -4, -5: -3, -4: -2, -3: -4, -2: -5, -1: -5, 0: -5, 1: -5, 2: -4, 3: -3, 4: -3, 5: -2, 6: -4, 7: -3, 8: -3},
+]
+
+## Casaco da frente: dorso curvo até a barra, cinto, peito transpassado (2 fileiras de 3 botões), lapelas claras em V e dobras verticais.
+static func _noir_casaco() -> Dictionary:
+	var cv: Dictionary = {}
+	var barra: Dictionary = _BARRA_NOIR[noir_v]
+	for x in range(-8, 9):
+		for y in range(int(_TOPO_CORPO[x]), int(barra[x]) + 1):
+			cv[Vector2i(x, y)] = "c"
+	_gola(cv, "c")
+	_luz(cv, "c", "C", "S")
+	_px(cv, 3, -15, "C")
+	_px(cv, 3, -14, "C")
+	_px(cv, 2, -14, "S")
+	# dobras verticais do pano caindo da cintura para a barra: sombra funda e fio de luz
+	for fx in [[-7, "S"], [-5, "C"], [-3, "S"], [-1, "C"], [1, "S"], [3, "C"]]:
+		for y in range(-5, 0):
+			if cv.has(Vector2i(fx[0], y)) and cv[Vector2i(fx[0], y)] == "c":
+				cv[Vector2i(fx[0], y)] = fx[1]
+	# lapelas largas e claras em V: o braço de trás sobe até a gola alta (largo, com borda de sombra) e o da frente fecha no peito
+	for d in [0, 1, 2]:
+		_linsobre(cv, Vector2i(5, -8), Vector2i(0 + d, -13), "k")
+		_linsobre(cv, Vector2i(4, -8), Vector2i(-1 + d, -13), "k")
+	_linsobre(cv, Vector2i(6, -8), Vector2i(2, -13), "S")
+	_linsobre(cv, Vector2i(5, -8), Vector2i(8, -10), "k")
+	_linsobre(cv, Vector2i(6, -8), Vector2i(8, -9), "C")
+	if noir_v == 1:
+		_linsobre(cv, Vector2i(-1, -12), Vector2i(-6, -9), "C")
+		_linsobre(cv, Vector2i(0, -12), Vector2i(-5, -9), "C")
+	_sobre(cv, -8, -6, 9, -5, "w")
+	_px(cv, 5, -6, "F")
+	_px(cv, 4, -6, "F")
+	# duas fileiras de três botões claros (a última desce pela saia)
+	for b in [Vector2i(4, -9), Vector2i(7, -9), Vector2i(4, -7), Vector2i(7, -7), Vector2i(4, -4), Vector2i(7, -4)]:
+		if cv.has(b) and cv[b] != "w":
+			cv[b] = "F"
+	_cont(cv, "o")
+	return cv
+
+## Aba do casaco atrás do gato: cai da anca, abre em bicos e balança 1 px entre os dois quadros (`fase`).
+static func _noir_aba(fase: int) -> Dictionary:
+	var cv: Dictionary = {}
+	var cima: Array = ["....ccc", "...cccS", "..ccccS", "..cCcSS", ".cccCSS"]
+	_txt(cv, -13, -10, cima)
+	var baixo: Array = [".cccCSS", "cc.cSSS", "c..cS.S", "...S..S"]
+	if noir_v == 1:
+		baixo = [".cccCSS", "cc.cSSS", "c.cc.SS", "...S.S."]
+	_txt(cv, -13 - fase, -5, baixo)
+	return cv
+
+## Pistola de detetive: ferrolho com mira e cão, cano reto de aço escuro, guarda-mato e cabo de madeira inclinado.
+static func _noir_pistola() -> Dictionary:
+	var cv: Dictionary = {}
+	_txt(cv, 13, -10, [
+		"TTTTTTTTT",
+		"ttttttttu",
+		".uuuuuuu.",
+		"mMt.u....",
+		"mMm......",
+		".mm......",
+	])
+	_cont(cv, "o")
 	return cv
 
 ## Colunas ocupadas (topo e base) de `cv` na coluna x; [99, -99] se vazia.
@@ -577,33 +649,14 @@ static func _montar(tipo: int, fase: int) -> Array:
 			])
 			return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_NOIR)]
 		Pecas.Tipo.SOBRETUDO_CINZA:
-			# sobretudo transpassado azul-acinzentado que segue o dorso curvo: gola alta, lapela larga e clara em diagonal, duas fileiras de botões
-			# claros, cinto escuro com fivela, dobras de luz e sombra e a barra que sobe em arco sob a barriga, deixando as patas saírem
-			_corpo(cv, "c", -4, -7, -4)
-			_gola(cv, "c")
-			_luz(cv, "c", "C", "S")
-			_px(cv, 3, -15, "C")
-			_px(cv, 3, -14, "C")
-			_px(cv, 2, -14, "S")
-			_linsobre(cv, Vector2i(2, -12), Vector2i(5, -9), "C")
-			_linsobre(cv, Vector2i(3, -12), Vector2i(6, -9), "C")
-			_linsobre(cv, Vector2i(4, -12), Vector2i(7, -9), "k")
-			_linsobre(cv, Vector2i(5, -12), Vector2i(8, -9), "S")
-			_sobre(cv, -8, -6, 9, -5, "w")
-			_px(cv, 5, -6, "F")
-			_dobras(cv, [-3, 2], "S")
-			_dobras(cv, [-5, 0], "C")
-			for b in [Vector2i(4, -8), Vector2i(7, -8), Vector2i(4, -7), Vector2i(7, -7)]:
-				if cv.has(b) and cv[b] != "w":
-					cv[b] = "F"
-			_cont(cv, "o", false)
-			return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_NOIR)]
+			# casaco comprido de detetive: segue o dorso curvo, cai abaixo da barriga como saia (barra em pontas, patas por baixo) e tem uma aba
+			# que balança atrás do corpo; cinto marcando a cintura, peito transpassado e lapelas claras em V até a gola alta
+			var cv_aba: Dictionary = _noir_aba(fase)
+			_cont(cv_aba, "o")
+			return [_lay(_noir_casaco(), RoupaGato.Onde.CORPO, _PAL_NOIR), _lay(cv_aba, RoupaGato.Onde.CORPO, _PAL_NOIR, true)]
 		Pecas.Tipo.LANTERNA_BECO:
-			# lampião de beco APAGADO, pequeno e de ferro cinza (alça de arame, vidro fosco), para não roubar o olho do rosto
-			_txt(cv, 12, -14, [".ww.", "tttt", "tlqt", "tlft", "tlft", "tttt", ".uu."])
-			_luz(cv, "t", "T", "u")
-			_cont(cv, "o")
-			return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_NOIR)]
+			# pistola de detetive dos anos 30 (estilo Colt 1911): ferrolho e cano retos de aço escuro, cão e mira, guarda-mato e cabo de madeira
+			return [_lay(_noir_pistola(), RoupaGato.Onde.BOCA, _PAL_NOIR)]
 		Pecas.Tipo.ROLO_FILME:
 			# carretel de filme pequeno e escuro deitado no dorso, com dois quadros claros
 			_txt(cv, -6, -13, [".pppp", "pqfpp", ".ppp."])

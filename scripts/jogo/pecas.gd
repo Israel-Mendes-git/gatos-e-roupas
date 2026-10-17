@@ -146,7 +146,7 @@ const NOME: Array[String] = [
 	"Para-brisa de Capacete", "Carroceria Azul Turbo", "Bola Gigante de Futebol Cósmico", "Propulsor Turbo",
 	"Máscara Vermelha de Olhos Brancos", "Traje Vermelho Cheio de Remendos", "Duas Katanas de Papelão", "Chimichanga Fatal",
 	"Franja Rebelde Loira", "Jaqueta de Couro Marrom", "Pistola do Agente", "Maleta do Mercador",
-	"Fedora com Máscara de Teia", "Sobretudo Cinza Pingando", "Lanterna de Beco", "Rolo de Filme P&B",
+	"Fedora com Máscara de Teia", "Sobretudo Cinza Pingando", "Pistola do Detetive", "Rolo de Filme P&B",
 	"Máscara de Cavaleiro Oco", "Manto Preto Pequenino", "Prego Afiado", "Frasco de Alma",
 	"Máscara de Casca Branca com Chifres Finos", "Capa Vermelha Esvoaçante", "Agulha de Costura Gigante", "Novelo de Seda",
 	"Cabelo Dourado Espetado", "Kimono Laranja Rasgado", "Concha de Energia Azul", "Esfera de Quatro Estrelas",
