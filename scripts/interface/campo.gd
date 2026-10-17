@@ -2732,6 +2732,18 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 			var ang: float = rel * 6.0 + k * TAU / 3.0
 			V.brilho(self, pos + Vector2(cos(ang) * 22.0, -h - 6.0 + sin(ang) * 6.0), 4.0, Desenho.DOURADO, Color(0.3, 0.18, 0.0))
 
+## Coroa dourada de pixel sobre o rival-líder (3º ato): `c` é o centro da base da coroa.
+func _coroa_lider(c: Vector2) -> void:
+	var q: float = V.Q
+	var ouro := Color(1.0, 0.82, 0.2)
+	var sombra := Color(0.78, 0.5, 0.08)
+	draw_rect(Rect2(c.x - 3.0 * q, c.y - 3.0 * q, 6.0 * q, 4.0 * q), V.CONT)
+	draw_rect(Rect2(c.x - 2.0 * q, c.y - 2.0 * q, q, q), ouro)
+	draw_rect(Rect2(c.x, c.y - 2.0 * q, q, q), ouro)
+	draw_rect(Rect2(c.x + q, c.y - 2.0 * q, q, q), ouro)
+	draw_rect(Rect2(c.x - 2.0 * q, c.y - q, 4.0 * q, q), ouro)
+	draw_rect(Rect2(c.x - 2.0 * q, c.y, 4.0 * q, q), sombra)
+
 ## Fileira de ícones de estado sobre a barra de vida (ver IconesEstado): até `maximo` ícones, na ordem de
 ## prioridade (controle primeiro); se sobrar estado, o último é o "…". Pisca no último 0,5 s.
 ## Devolve quantos ícones desenhou.
@@ -3215,6 +3227,8 @@ func _draw() -> void:
 				draw_rect(Rect2(bx, by, cheio * V.Q, V.Q), cor_b)
 				draw_rect(Rect2(bx, by, V.Q, V.Q), V.tom(cor_b, 1.45))
 		var n_ico: int = _fila_estados(uu2, pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u, ico_max)
+		if uu2.lider and uu2.vivo:
+			_coroa_lider(Vector2(V.sn(pos.x), V.sn(pos.y - (CORPO_ALT + 6.0) * esc_u - 6.0 - (22.0 if n_ico > 0 else 0.0))))
 		if uu2.equipe == 1 and sim.prioritario(uu2):
 			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * esc_u - (22.0 if n_ico > 0 else 0.0)), 9.0, 1.0)
 	_desenhar_avisos()
@@ -6269,6 +6283,8 @@ func _estados_linhas(u: Unidade) -> Array:
 				nome = "Em fúria"
 			IconesEstado.E.CURA:
 				nome = "Curando no canteiro"
+			IconesEstado.E.ABALADO:
+				nome = "Abalado: -%s de dano e de velocidade" % Simulacao.pct(Balanco.MORAL_DANO)
 			IconesEstado.E.FUGINDO:
 				nome = "Fugindo com %d bloco%s" % [u.carga, "" if u.carga == 1 else "s"]
 		saida.append([id, nome, ("%s s" % Simulacao.num(tp)) if tp < IconesEstado.SEM_TEMPO else "", 13, Color(0.85, 1.0, 0.85)])

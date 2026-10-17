@@ -479,6 +479,9 @@ const ATO_DANO_DEGRAU := 0.05
 const ATO_COMODO_VIDA: Array = [[1.0, 1.0, 1.0, 1.0, 1.0], [1.12, 0.92, 1.05, 1.15, 1.08], [0.85, 0.95, 0.65, 0.8, 0.45]]
 const ATO_COMODO_DANO: Array = [[1.0, 1.0, 1.0, 1.0, 1.0], [1.08, 0.82, 1.0, 1.15, 1.06], [0.85, 0.95, 0.75, 0.85, 0.55]]
 const RIVAL_FRACAO_DO_LUGAR := 0.6  # 3º ato: fração das peças vestidas pelos rivais comuns que vem da lista do lugar (o resto, dos atos anteriores)
+const MORAL_T := 6.0                # 3º ato, Moral simples: segundos que os rivais ficam abalados quando o líder cai
+const MORAL_DANO := 0.30            # abalado: -30% de dano
+const MORAL_VEL := 0.30             # abalado: -30% de velocidade (anda e ataca mais devagar)
 const AGGRO_RIVAL := 100000.0       # Disputa: o rival escolhe alvo entre todos os gatos de pé, sem o limite do AGGRO
 const ATO_FAMILIA_DA_CASA := 0.4    # fração dos bichos que ainda é da família do cômodo; o resto vem misturado
 const XP_ONDA_NOCAUTE := 1          # por onda vencida tendo caído
@@ -1020,7 +1023,27 @@ static func gerar_plano(fase: int, onda: int, rng: RandomNumberGenerator, ato: i
 		plano.append(item)
 	_sortear_tipos(plano, p, rng)
 	_sortear_elites(plano, lugar, onda, nivel, rng, pesos_fantasia)
+	if ato >= 3:
+		_marcar_lider(plano)
 	return plano
+
+## 3º ato: o rival mais forte da onda é o líder (fantasiado, depois grandalhão, depois quem veste mais peças).
+## Sem sorteio, para não mexer no rng da luta; em empate fica o primeiro.
+static func _marcar_lider(plano: Array) -> void:
+	var melhor: int = -1
+	var nota_melhor: int = -1
+	for i in plano.size():
+		var it: Dictionary = plano[i]
+		var n: int = 0
+		for p in it["pecas"]:
+			if p != null:
+				n += 1
+		var nota: int = n + (100 if it.get("elite", false) else 0) + (50 if int(it["tipo"]) == Unidade.Tipo.GIGANTE else 0)
+		if nota > nota_melhor:
+			nota_melhor = nota
+			melhor = i
+	if melhor >= 0:
+		plano[melhor]["lider"] = true
 
 ## Embaralha com o rng da luta (o shuffle() do Godot usa o rng global e tira a repetibilidade das ondas).
 static func _embaralhar(a: Array, rng: RandomNumberGenerator) -> void:

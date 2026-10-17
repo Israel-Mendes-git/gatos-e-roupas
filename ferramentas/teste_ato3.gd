@@ -15,6 +15,7 @@ func _init() -> void:
 	_raridade()
 	_plano_rival()
 	_disputa()
+	_moral()
 	_save_antigo()
 	print("FALHAS: %d" % falhas)
 	quit(1 if falhas > 0 else 0)
@@ -129,6 +130,57 @@ func _disputa() -> void:
 		a.vivo = false
 	var r: Unidade = sim.inimigos[0]
 	_ok(sim._escolher(r) == null, "sem gato de pé o rival não tem alvo (vai à torre)")
+
+func _moral() -> void:
+	# todo plano do 3º ato tem exatamente um líder; o 2º ato não tem
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	for fase in range(1, 6):
+		for onda in range(1, Balanco.ONDAS_TOTAIS + 1):
+			var n: int = 0
+			for it in Balanco.gerar_plano(fase, onda, rng, 3, 0):
+				if it.get("lider", false):
+					n += 1
+			_ok(n == 1, "plano do 3º ato com 1 líder (fase %d onda %d: %d)" % [fase, onda, n])
+	for it in Balanco.gerar_plano(1, 3, rng, 2, 0):
+		_ok(not it.get("lider", false), "2º ato sem líder")
+	var e: Estado = _estado()
+	e.fases_vencidas = Fases.TOTAL
+	e.vencido = [2, 2, 2, 2, 2]
+	e.iniciar_fase(1)
+	e.onda = 3
+	e.preparar_onda()
+	var sim := Simulacao.new()
+	sim.gerar_eventos = false
+	sim.iniciar(e, 99)
+	var pecas: Array = [null, null, null, null]
+	sim.inimigos.clear()
+	sim._spawnar({"pecas": pecas, "tipo": Unidade.Tipo.COMUM, "rival": true, "gangue": 0, "lider": true})
+	sim._spawnar({"pecas": pecas, "tipo": Unidade.Tipo.COMUM, "rival": true, "gangue": 0})
+	sim._spawnar({"pecas": pecas, "tipo": Unidade.Tipo.COMUM})   # bicho comum: não é rival
+	var lid: Unidade = sim.inimigos[0]
+	var riv: Unidade = sim.inimigos[1]
+	var bicho: Unidade = sim.inimigos[2]
+	_ok(lid.lider and not riv.lider and not bicho.lider, "só o marcado é líder")
+	sim.passo(0.1)
+	_ok(riv.abalado_t == 0.0 and absf(riv.bonus_dano - 1.0) < 0.001 and riv.lento > 0.99, "antes de o líder cair ninguém está abalado")
+	sim._matar(lid, null)
+	_ok(riv.abalado_t > Balanco.MORAL_T - 0.01, "rival vivo abalado %.2f s" % riv.abalado_t)
+	_ok(bicho.abalado_t == 0.0, "bicho que não é rival não abala")
+	sim.passo(0.1)
+	_ok(absf(riv.bonus_dano - (1.0 - Balanco.MORAL_DANO)) < 0.001, "abalado: -30%% de dano (%.2f)" % riv.bonus_dano)
+	_ok(riv.lento <= 1.0 - Balanco.MORAL_VEL + 0.001, "abalado: -30%% de velocidade (%.2f)" % riv.lento)
+	var ids := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+	var tps := PackedFloat32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+	var na: int = IconesEstado.ativos(riv, [], ids, tps)
+	var achou: bool = false
+	for i in na:
+		if ids[i] == IconesEstado.E.ABALADO:
+			achou = true
+	_ok(achou, "ícone de abalado aparece")
+	for k in int(Balanco.MORAL_T / 0.5) + 2:
+		sim.passo(0.5)
+	_ok(riv.vivo == false or (riv.abalado_t <= 0.0 and absf(riv.bonus_dano - 1.0) < 0.001), "o abalo passa depois de %.0f s" % Balanco.MORAL_T)
 
 func _save_antigo() -> void:
 	var e: Estado = _estado()

@@ -101,7 +101,7 @@ func iniciar(e: Estado, semente: int = 0) -> void:
 	var t: float = Balanco.SPAWN_INICIO
 	for spec in e.plano:
 		t += rng.randf_range(Balanco.SPAWN_MIN, Balanco.SPAWN_MAX)
-		fila.append({"t": t, "pecas": spec["pecas"], "tipo": spec["tipo"], "elite": spec.get("elite", false), "rival": spec.get("rival", false), "gangue": spec.get("gangue", -1)})
+		fila.append({"t": t, "pecas": spec["pecas"], "tipo": spec["tipo"], "elite": spec.get("elite", false), "rival": spec.get("rival", false), "gangue": spec.get("gangue", -1), "lider": spec.get("lider", false)})
 	if not e.chefe.is_empty():
 		fila.append({"t": t + Balanco.CHEFE_ATRASO, "pecas": e.chefe, "tipo": Unidade.Tipo.COMUM, "chefe": true})
 
@@ -526,6 +526,7 @@ func _spawnar(item: Dictionary) -> void:
 	u.familia = clampi(int(item.get("fam", estado.fase - 1)), 0, Fases.TOTAL - 1)
 	u.rival = item.get("rival", false)
 	u.gangue = int(item.get("gangue", -1)) if u.rival else -1
+	u.lider = u.rival and item.get("lider", false)
 	var p: int = estado.progresso()
 	u.esc_vida = Balanco.INIMIGO_VIDA_MULT * (1.0 + Balanco.INIMIGO_VIDA_ONDA * (p - 1)) * estado.mult_vida() * estado.forca_vida()
 	u.esc_dano = (1.0 + Balanco.INIMIGO_DANO_ONDA * (p - 1)) * estado.mult_dano() * estado.forca_dano()
@@ -565,6 +566,11 @@ func passo(dt: float) -> void:
 		u.bonus_dano = 1.0
 	_aplicar_auras(aliados, inimigos)
 	_aplicar_auras(inimigos, aliados)
+	for u in inimigos:
+		if u.abalado_t > 0.0:
+			u.abalado_t -= dt
+			u.lento *= 1.0 - Balanco.MORAL_VEL        # Moral: anda e ataca mais devagar
+			u.bonus_dano *= 1.0 - Balanco.MORAL_DANO
 	for u in aliados + inimigos:
 		if u.assombrado_t > 0.0:
 			u.lento = minf(u.lento, Balanco.PODER_ESPIRITO_ASSOMBRA_LENTO)   # Alma Sombria
@@ -1470,6 +1476,12 @@ func _matar(u: Unidade, killer: Unidade, base: int = Pecas.Marca.CICATRIZ) -> vo
 	if killer != null and killer.vivo:
 		_ao_abater(killer)
 	if u.equipe == 1:
+		if u.lider:
+			# Moral simples: sem o líder, os rivais vivos ficam abalados por um tempo
+			for v in inimigos:
+				if v.vivo and v.rival and v != u:
+					v.abalado_t = Balanco.MORAL_T
+			_ev({"t": "moral", "x": u.x, "y": u.y})
 		if u.fugindo and u.carga > 0:
 			estado.tijolos += u.carga  # morreu fugindo: devolve os tijolos
 			_ev({"t": "devolve", "x": u.x, "y": u.y, "n": u.carga})
