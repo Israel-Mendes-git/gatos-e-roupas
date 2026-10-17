@@ -527,14 +527,11 @@ func _efeitos_lote4() -> void:
 		_ok(sim.zonas.is_empty() or not sim.zonas.any(func(z: Dictionary) -> bool: return z.get("tipo", "") == "apagao"), "o Modo Noir não é de área")
 		vn.x = ng.x + 40.0
 		vn.y = ng.y
-		sim.passo(Balanco.DT)
-		_ok(vn.apagao_t > 0.0 or not vn.vivo, "o bicho dentro do Apagão não foi marcado")
-		if vn.vivo:
-			vn.apagao_erra = 1.0
-			vn.cd = 0.0
-			var v0: float = ng.vida
-			sim._atacar(vn, ng)
-			_ok(ng.vida == v0, "o golpe devia errar no Apagão")
+		ng.noir_erra = 1.0
+		vn.cd = 0.0
+		var v0: float = ng.vida
+		sim._atacar(vn, ng)
+		_ok(ng.vida == v0, "o golpe devia errar no Modo Noir")
 	# Hollowmiau: Alma sobe com golpe e é gasta na Alma Sombria
 	sim = _cena(Pecas.Conjunto.HOLLOWMIAU, 42)
 	var hg: Unidade = _gato_do_poder(sim, Pecas.Conjunto.HOLLOWMIAU)
@@ -650,6 +647,8 @@ func _efeitos_lote4() -> void:
 		for b in sim.inimigos:
 			if b.vivo:
 				b.vida = b.vida_max
+		_ok(sim.disparar_poder(tg), "Eu escolho você! (bola) não disparou")
+		_ok(vt.vivo or sim.nascidos_aliados.is_empty(), "o bicho sadio não devia ser capturado")
 
 ## Lote 5: Ranger Miau, Miauzilla, King-Miau, Arthur Miaurgon, Submiautica, Catchullu.
 func _prepara(sim: Simulacao, g: Unidade, n: int, dx: float, vida: float = 9999.0) -> Array[Unidade]:
@@ -816,5 +815,3 @@ func _efeitos_lote5() -> void:
 			for b in vc:
 				if b.louco_t > 0.0 and b.alvo != null:
 					_ok(sim.inimigos.has(b.alvo) and b.alvo != b, "o enlouquecido devia mirar o bicho mais perto")
-		_ok(sim.disparar_poder(tg), "Eu escolho você! (bola) não disparou")
-		_ok(vt.vivo or sim.nascidos_aliados.is_empty(), "o bicho sadio não devia ser capturado")
