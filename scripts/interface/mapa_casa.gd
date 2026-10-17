@@ -1390,6 +1390,7 @@ func _lugar_ruas(f: int, t: float, est: Estado, d: int) -> void:
 	_r(bx + 4, by + 4, 20, 20, C_OURO)
 	_r(bx + 4, by + 4, 20, 4, Color(1.0, 0.94, 0.6))
 	Desenho.texto(cv, str(f), Vector2(bx + 8, by + 21), 16, Color(0.22, 0.12, 0.06))
+	EmblemaGangue.desenhar(cv, fi, Vector2(bx + 50.0, by + 12.0), 32.0, true)   # brasão da gangue do lugar
 	if feito:
 		_selo()
 	elif not aberto:

@@ -1744,7 +1744,7 @@ func _montar_bichos() -> void:
 		for k in range(0 if pagina == 0 else BICHOS_CASA, BICHOS_CASA if pagina == 0 else lista.size()):
 			var r: Rect2 = rect_tile_bicho(k)
 			itens.append({"id": "b%d" % k, "r": r, "on": true})
-			if not estado.viu_bicho(lista[k]["chave"]):
+			if lista[k]["k"] != "gangue" and not estado.viu_bicho(lista[k]["chave"]):
 				_jobs.append({"k": "bicho", "i": k, "pos": r.position + Vector2(TILE_W * 0.5, TILE_H - 40.0), "esc": _esc_mini(lista[k])})
 	else:
 		var k2: int = pagina - BICHOS_PAG_INDICE
@@ -1771,7 +1771,9 @@ func _tile_bicho(e: Estado, k: int) -> void:
 	_moldura_px(r, Color(0.9, 0.68, 0.1) if der else PAPEL_BORDA)
 	var pe: Vector2 = r.position + Vector2(TILE_W * 0.5, TILE_H - 40.0)
 	V.disco(self, pe + Vector2(0, -22.0), 27.0, cor.lerp(PAPEL, 0.75) if viu else PAPEL_ESC)
-	if viu:
+	if en["k"] == "gangue":
+		EmblemaGangue.desenhar(self, int(en["i"]), pe + Vector2(0, -22.0), 48.0, viu)   # o brasão da gangue (silhueta com ? se ainda não vista)
+	elif viu:
 		_bicho(self, en, pe, _esc_mini(en), false)
 	var nome: String = en["nome"] if viu else "???"
 	var aj: Dictionary = ajustar(nome, [12, 11, 10, 9], r.size.x - 6.0, 2)
@@ -1836,6 +1838,7 @@ func _indice_gangues(e: Estado) -> void:
 		_txt("Tipos de rival vistos: %d de %d" % [n_v, tipos.size()], Vector2(r.position.x + 20.0, r.position.y + 50.0), 15, TINTA2)
 		var vc: bool = e.viu_chefe_gangue(g)
 		_txt(("Chefe: " + Fases.nome_do_chefe(Fases.TOTAL * 2 + g)) if vc else "Chefe: ainda não visto", Vector2(r.position.x + 20.0, r.position.y + 74.0), 15, TINTA if vc else TINTA2)
+		EmblemaGangue.desenhar(self, g, r.position + Vector2(r.size.x - 44.0, 58.0), 48.0, viu)
 		if e.vencido[g] >= 3:
 			_estrela(r.position + Vector2(r.size.x - 22.0, 22.0), COR_OURO)
 
@@ -1981,6 +1984,8 @@ func _ficha_gangue(e: Estado, k: int) -> void:
 	var viu: bool = e.viu_bicho(en["chave"])
 	var cor: Color = en["cor"]
 	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else "Gangue desconhecida", [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
+	EmblemaGangue.desenhar(self, g, Vector2(COL_E_X + 28.0, 95.0), 32.0, viu)
+	EmblemaGangue.desenhar(self, g, Vector2(COL_E_X + COL_W - 28.0, 95.0), 32.0, viu)
 	_cabine_ficha(e, en, viu, cor)
 	var pb := Rect2(COL_E_X, 392.0, COL_W, 118.0)
 	_caixa(pb, ("O truque: " + GANGUE_TRUQUE_NOME[g]) if viu else "O truque", cor)
