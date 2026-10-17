@@ -171,7 +171,7 @@ const CONJ_NOVOS: Dictionary = {
 	Pecas.Conjunto.DEADMIAU: [3.0, 6.0],              # regeneração por segundo
 	Pecas.Conjunto.MEON: [0.2, 0.4],                  # chance de aparar um golpe corpo a corpo com a faca
 	# lote 4
-	Pecas.Conjunto.MIAU_NOIR: [1.5, 2.0],             # emboscada: multiplicador do 1º golpe em cada inimigo
+	Pecas.Conjunto.MIAU_NOIR: [1.8, 2.5],             # emboscada: multiplicador do 1º golpe em cada inimigo
 	Pecas.Conjunto.HOLLOWMIAU: [20.0, 50.0],          # alcance a mais
 	Pecas.Conjunto.SILKMIAU: [0.2, 0.45],             # cerco: fração do dano que fere em volta
 	Pecas.Conjunto.SUPER_MIAUJIN: [0.3, 0.6],         # execução: dano a mais em quem está abaixo de EXECUCAO_LIMIAR
@@ -466,7 +466,7 @@ const PODER_KIT_FORCA: Dictionary = {
 	Pecas.Conjunto.STARDEW_MIAULLEY: 2.2, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
 	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7, Pecas.Conjunto.MIMIAU: 0.6,
 	Pecas.Conjunto.SUPER_MIAUJIN: 0.7, Pecas.Conjunto.TREINADOR: 1.6,
-	Pecas.Conjunto.MIAUZILLA: 1.2, Pecas.Conjunto.ARTHUR_MIAURGON: 1.6, Pecas.Conjunto.CATCHULLU: 0.7,
+	Pecas.Conjunto.MIAUZILLA: 1.2, Pecas.Conjunto.ARTHUR_MIAURGON: 2.6, Pecas.Conjunto.CATCHULLU: 0.7,
 }
 # Acerto da recarga por fantasia (x PODER_INTERVALO), medido com o simulador (kits=todos): >1 recarrega mais devagar.
 const PODER_KIT_INTERVALO: Dictionary = {
@@ -478,7 +478,7 @@ const PODER_KIT_INTERVALO: Dictionary = {
 	Pecas.Conjunto.ROCKET_MIAUGUE: 0.75, Pecas.Conjunto.STARDEW_MIAULLEY: 0.8, Pecas.Conjunto.SOMBRIO: 0.8,
 	Pecas.Conjunto.GELO: 0.8, Pecas.Conjunto.FENIX_MIAUSSIMO: 0.8, Pecas.Conjunto.MEON: 0.85,
 	Pecas.Conjunto.MAGO: 0.9, Pecas.Conjunto.PIRATA: 1.15,
-	Pecas.Conjunto.SUPER_MIAUJIN: 1.5, Pecas.Conjunto.TREINADOR: 0.6, Pecas.Conjunto.MIAU_NOIR: 1.3,
+	Pecas.Conjunto.SUPER_MIAUJIN: 1.5, Pecas.Conjunto.TREINADOR: 0.6, Pecas.Conjunto.MIAU_NOIR: 0.7,
 	Pecas.Conjunto.ARTHUR_MIAURGON: 0.85, Pecas.Conjunto.CATCHULLU: 1.2,
 }
 const PODER_PRIMEIRO := 3.5         # segundos até o primeiro uso
@@ -785,10 +785,10 @@ const APARA_DANO := 2.5                # x dano de ataque de quem aparou
 const PODER_POQUER_DANO: Array[float] = [0.55, 0.75, 1.15, 1.7, 2.2, 2.35, 2.8, 4.2, 6.1]
 # ---- Lote 4 da expansão
 # Modo Noir (Miau-Noir, enum APAGAO): o gato fica em preto e branco; os bichos erram os golpes nele e os tiros dele ferem mais
-const PODER_NOIR_T := 5.0
-const PODER_NOIR_ERRA := 0.5
+const PODER_NOIR_T := 6.0
+const PODER_NOIR_ERRA := 0.55
 const PODER_NOIR_ERRA_CHEFE := 0.3
-const PODER_NOIR_DANO := 1.5         # x no dano dos tiros enquanto em preto e branco
+const PODER_NOIR_DANO := 2.2         # x no dano dos tiros enquanto em preto e branco
 const PODER_NOIR_HER_T := 2.5
 const PODER_NOIR_HER_ERRA := 0.3
 const PODER_NOIR_HER_DANO := 1.2
