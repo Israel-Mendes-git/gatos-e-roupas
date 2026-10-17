@@ -34,7 +34,7 @@ const BTN_FECHAR := Rect2(540, 624, 200, 44)
 const BTN_X := Rect2(1124.0, 38.0, 42.0, 42.0)
 const BTN_MELHORAR_W := 136.0
 const TEXTO_DESLOC := 84.0        # x do texto numa linha de melhoria, a partir da borda dela
-const QUADRADOS_DESLOC := 214.0   # x dos oito quadradinhos de nível, a partir da borda da linha
+const QUADRADOS_DESLOC := 206.0   # x dos oito quadradinhos de nível, a partir da borda da linha
 const ABAS_NOME: Array[String] = ["Da casa", "De fora", "Das ruas"]
 const COR_NIVEL_ALTO := Color(1.0, 0.58, 0.22)   # níveis 6 a 8 (custam mais)
 const COR_NIVEL_TOPO := Color(0.95, 0.4, 0.75)   # níveis 9 e 10 (3º ato)
@@ -191,7 +191,7 @@ static func rect_melhorar(i: int) -> Rect2:
 
 static func rect_quadrado(i: int, k: int) -> Rect2:
 	var r: Rect2 = rect_linha(i)
-	return Rect2(r.position.x + QUADRADOS_DESLOC + k * 16.0, r.position.y + 15.0, 13.0, 13.0)
+	return Rect2(r.position.x + QUADRADOS_DESLOC + k * 14.0, r.position.y + 15.0, 12.0, 12.0)
 
 ## Cartão do módulo `i` (0 a 9) na sua aba: cinco por aba.
 static func rect_card(i: int) -> Rect2:
