@@ -66,7 +66,7 @@ const _PAL: Array = [
 	{"a": Color("8c6a3c"), "A": Color("b8905e"), "d": Color("5a4026"), "b": Color("3a2a1a"), "B": Color("6a5030"), "e": Color("e8c860")},   # o arqueólogo
 	{"a": Color("e03a3a"), "A": Color("ff7a70"), "d": Color("8c1a22"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630"), "g": Color("4a9a50")},   # treinador
 	# lote 5 da expansão (49 a 54)
-	{"a": Color("2fb050"), "A": Color("7ae08a"), "d": Color("1a6a30"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # ranger miau (verde)
+	{"a": Color("2fa050"), "A": Color("6cd486"), "d": Color("1a6234"), "b": Color("f6f2ea"), "B": Color("ffffff"), "e": Color("2a2630")},   # ranger miau (verde)
 	{"a": Color("3aa898"), "A": Color("78d8c8"), "d": Color("1e6a60"), "b": Color("6a7a8a"), "B": Color("a0b0c0"), "e": Color("5ac8ff")},   # miauzilla (verde-água)
 	{"a": Color("4a3a30"), "A": Color("7a6252"), "d": Color("2a2018"), "b": Color("b08a62"), "B": Color("d8b88c"), "e": Color("f2c230")},   # king-miau
 	{"a": Color("2a2630"), "A": Color("5a5666"), "d": Color("14121a"), "b": Color("8a5a3a"), "B": Color("b88a60"), "e": Color("d8323a")},   # arthur miaurgon
@@ -540,13 +540,13 @@ const _CHAPEU: Array = [
 		"oaaaabgbbo.",
 		"oaaaabggbo.",
 		"oddddddddoo"]},
-	# 49 ranger miau: capacete verde liso com a viseira preta espelhada
+	# 49 ranger miau: capacete verde liso com a viseira preta espelhada e a joia dourada
 	{"cheio": true, "l": [
-		"..ooooooo..",
+		"...ooyoo...",
 		"oAaaaaaaaAo",
-		"oaakkkkkaao",
-		"oaakkkkkaao",
-		".oddddddo.."]},
+		"oakkkkkkkao",
+		"oakkkkkkkao",
+		".oddwwddo.."]},
 	# 50 miauzilla: fileira de placas dorsais pontudas
 	{"cheio": false, "l": [
 		"o.o.o.o.o.o",

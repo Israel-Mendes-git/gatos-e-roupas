@@ -26,6 +26,8 @@ static func onde(tipo: int) -> int:
 			return RoupaGato.Onde.CORPO
 		Pecas.Tipo.CADERNINHO:
 			return RoupaGato.Onde.CORPO
+		Pecas.Tipo.PULSEIRA_TRANSFORMAR:
+			return RoupaGato.Onde.CORPO
 	return -1
 
 ## Peças com camada atrás do corpo do gato (asas do manto do Catchullu).
@@ -94,6 +96,14 @@ static func _montar(tipo: int) -> Array:
 			return _cth_livro()
 		Pecas.Tipo.TENTACULO_FOFO:
 			return _cth_tentaculo()
+		Pecas.Tipo.CAPACETE_VISEIRA:
+			return _rg_capacete()
+		Pecas.Tipo.MACACAO_LYCRA:
+			return _rg_macacao()
+		Pecas.Tipo.SABRE_BLASTER:
+			return _rg_sabre()
+		Pecas.Tipo.PULSEIRA_TRANSFORMAR:
+			return _rg_pulseira()
 		_:
 			pass
 	return []
@@ -372,6 +382,95 @@ static func _cth_tentaculo() -> Array:
 			cv[Vector2i(q[0], q[1])] = "i"
 	RoupaGatoI._cont(cv, "o")
 	return [RoupaGatoI._lay(cv, RoupaGato.Onde.CORPO, _PAL_CTHU)]
+
+# ------------------------------------------------------------------ Ranger Miau (Green Ranger, Mighty Morphin)
+## Ranger Miau (Green Ranger): o contorno; a/A/d verde (médio, luz, sombra); k viseira preta e l reflexo; w/W branco; y/Y/z escudo dourado (médio, luz, sombra);
+## g/G/s aço do sabre; m cabo; p forro rosa das orelhas.
+const _PAL_RANGER := {
+	"o": Color("0a1a10"), "a": Color("2fa050"), "A": Color("6cd486"), "d": Color("1a6234"),
+	"k": Color("1c1c28"), "l": Color("8a98d0"), "w": Color("f2f2f4"), "W": Color("b8bac8"),
+	"y": Color("e0b838"), "Y": Color("fff0a0"), "z": Color("9a7418"), "p": Color("f0a0b0"),
+	"g": Color("b4bac6"), "G": Color("e4e8f0"), "s": Color("707888"), "m": Color("3a3440"),
+}
+# ------------------------------------------------------------------ Ranger Miau
+static func _rg_capacete() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 1, -21, [
+		"..aa....aa..",
+		".appa..appa.",
+		".aaaaYYaaaa.",
+		"aaaAAyyAAaaa",
+		"aaaaaaaaaaad",
+		"aaakkkkkkkkd",
+		"aaakkkkklkkd",
+		"aaaakkklkkkd",
+		".aaakkkkkkd.",
+		".aaadkkkkkd.",
+		"..awwwwdd...",
+		"...wWWd.....",
+	])
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.CABECA, _PAL_RANGER)]
+
+static func _rg_macacao() -> Array:
+	var cv: Dictionary = {}
+	RoupaGatoI._corpo_vest(cv, "a", -5, -7, -5)
+	_luz(cv, "a", "A", "d")
+	var tp: Dictionary = RoupaGatoI._TOPO_VEST
+	for x in range(-3, 9):
+		for y in range(int(tp[x]), int(tp[x]) + 3):
+			if cv.has(Vector2i(x, y)):
+				cv[Vector2i(x, y)] = "y"
+	for y in range(-12, -8):
+		for x in range(4, 9):
+			if cv.has(Vector2i(x, y)):
+				cv[Vector2i(x, y)] = "y"
+	for x2 in range(-3, 9):
+		var t: int = int(tp[x2])
+		if cv.has(Vector2i(x2, t)):
+			cv[Vector2i(x2, t)] = "Y"
+		if cv.has(Vector2i(x2, t + 2)):
+			cv[Vector2i(x2, t + 2)] = "z"
+	for x3 in range(4, 9):
+		if cv.has(Vector2i(x3, -9)):
+			cv[Vector2i(x3, -9)] = "z"
+	for p in [Vector2i(6, -12), Vector2i(5, -11), Vector2i(7, -11), Vector2i(6, -10)]:
+		cv[p] = "z"
+	cv[Vector2i(6, -11)] = "Y"
+	for x4 in range(-8, 9):
+		if cv.has(Vector2i(x4, -8)):
+			cv[Vector2i(x4, -8)] = "w"
+	cv[Vector2i(3, -8)] = "y"
+	cv[Vector2i(4, -8)] = "Y"
+	for x5 in range(5, 8):
+		cv[Vector2i(x5, -6)] = "y"
+		cv[Vector2i(x5, -5)] = "w"
+		cv[Vector2i(x5, -4)] = "W"
+	for x6 in range(-8, -4):
+		cv[Vector2i(x6, -6)] = "y" if x6 > -8 else "a"
+		cv[Vector2i(x6, -5)] = "w"
+		cv[Vector2i(x6, -4)] = "W"
+	_cont(cv, "o", false)
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_RANGER)]
+
+static func _rg_sabre() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 11, -13, [
+		"..GGGGGGGG..",
+		"mmmgggggggG.",
+		"mmmsssssss..",
+		"mm.m........",
+		".mm.........",
+	])
+	_cont(cv, "o")
+	return [_lay(cv, RoupaGato.Onde.BOCA, _PAL_RANGER)]
+
+static func _rg_pulseira() -> Array:
+	var cv: Dictionary = {}
+	_txt(cv, 5, -4, ["gggg", "gYyg", "gyyg"])
+	_cont(cv, "o", false)
+	return [_lay(cv, RoupaGato.Onde.CORPO, _PAL_RANGER)]
+
 
 static func _fallback(tipo: int) -> Array:
 	var col: int = ((tipo - PRIMEIRO) / Pecas.SLOTS) % 4
