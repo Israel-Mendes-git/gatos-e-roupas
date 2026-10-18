@@ -82,6 +82,8 @@ func _init() -> void:
 			torre_fim.append(0.0)
 			mods_fim.append(0.0)
 		var completas: int = 0
+		var schro_n: int = 0
+		var schro_v: int = 0
 		var pecas_fim: float = 0.0
 		var marcas_fim: float = 0.0
 		var raras: float = 0.0
@@ -131,6 +133,18 @@ func _init() -> void:
 				inv_casa.append(_jogar_invasao(pol, e, g % Fases.TOTAL + 1, false, 5000 + g))
 				inv_fora.append(_jogar_invasao(pol, e, (g + 2) % Fases.TOTAL + 1, true, 7000 + g))
 				inv_ruas.append(_jogar_invasao(pol, e, (g + 3) % Fases.TOTAL + 1, false, 9000 + g, true))
+				if opcoes.has("schro"):
+					# Gato de Schrödinger com o time do fim do jogo desta campanha: 3 sementes, nenhuma grava o estado
+					for sd in 3:
+						e.iniciar_secreto()
+						var ss := Simulacao.new()
+						ss.gerar_eventos = false
+						ss.iniciar(e, 12000 + g * 31 + sd)
+						while not ss.terminada and ss.tempo < Balanco.TEMPO_MAX:
+							ss.passo(Balanco.DT)
+						schro_n += 1
+						if ss.vitoria:
+							schro_v += 1
 			var todas: Array = e.guarda.duplicate()
 			for b in e.bonecos:
 				for p in b.pecas:
@@ -143,6 +157,8 @@ func _init() -> void:
 					raras += 1
 				elif p.raridade >= Pecas.Raridade.EPICA:
 					lendarias += 1
+		if opcoes.has("schro"):
+			print("SCHRO: vitoria %d/%d (%d%%)" % [schro_v, schro_n, int(100.0 * schro_v / maxf(1.0, schro_n))])
 		print("%-9s campanhas completas %d/%d | pecas ao fim %.1f (raras %.1f, lendarias %.1f, marcas %.1f)" % [pol, completas, n_jogos, pecas_fim / n_jogos, raras / n_jogos, lendarias / n_jogos, marcas_fim / n_jogos])
 		for fa in Fases.TOTAL * Balanco.ATOS:
 			var f: int = fa % Fases.TOTAL

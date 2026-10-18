@@ -550,8 +550,8 @@ const GARRA_REGEN := 0.02
 # ---- Gato de Schrödinger (chefe secreto, caixa do Sótão): alterna entre vivo e morto
 const SCHRO_T := 6.0                # segundos em cada estado
 const SCHRO_AVISO := 1.2            # aviso antes de cada troca
-const SCHRO_VIDA := 4.0             # multiplicador de vida do chefe (calibrar com teste_secretos)
-const SCHRO_DANO := 2.0
+const SCHRO_VIDA := 22.0            # multiplicador de vida do chefe (calibrar com teste_secretos)
+const SCHRO_DANO := 5.0
 const SCHRO_ATORDOA := 0.6          # morto: a pata atordoa o gato atingido
 const SCHRO_TROFEUS := 20           # troféus extras na primeira vitória
 # ---- Chefes de gangue (3º ato, etapa 5; notas/ato3_proposta.md, seção 2)
