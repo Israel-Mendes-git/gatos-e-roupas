@@ -379,6 +379,7 @@ func _ready() -> void:
 	fichario = Fichario.new()
 	fichario.estado = estado
 	fichario.metas_vistas.connect(func() -> void: metas_selo.clear())
+	fichario.ajuda_pedida.connect(func() -> void: tutorial.rever())
 	add_child(fichario)
 	btn_fich = _botao("Fichário [F]", FICH_BT_GUARDA, Color(0.62, 0.8, 1.0), 17)
 	btn_fich.pintar = _pintar_botao_fichario
@@ -1398,7 +1399,6 @@ func _mapa_guarda_desenho() -> Dictionary:
 			_mapa_guarda_c = _mapa_guarda()
 	return _mapa_guarda_c
 
-## Situação da fantasia c para o gato `alvo`: {"pecas": [Peca ou null], "onde": [FS_*], "dono": [índice do gato ou -1],
 ## Assinatura barata (uma vez por quadro) da coleção: guarda-roupa e roupas vestidas, com identidade, ordem,
 ## tipo, nível, raridade, marcas e flag de nova. Muda quando qualquer coisa que os caches do desenho leem muda.
 func _sig_colecao() -> int:
@@ -1416,6 +1416,7 @@ func _sig_colecao() -> int:
 	_sig_v = h
 	return h
 
+## Situação da fantasia c para o gato `alvo`: {"pecas": [Peca ou null], "onde": [FS_*], "dono": [índice do gato ou -1],
 ## "tipos": [tipo], "gato": n, "guarda": n, "outro": n, "nao": n}. Cada lista tem 4 itens, na ordem das peças da fantasia.
 func _situacao_fantasia(c: int, alvo: int, mapa: Dictionary = {}) -> Dictionary:
 	if mapa.is_empty():
@@ -2444,11 +2445,11 @@ func _pos_peca(q: Peca) -> Vector2:
 
 ## Recalcula, para cada tipo com peças repetidas, se alguma dupla ainda pode fundir.
 func _atualizar_pares() -> void:
-	_pares.clear()
 	var sg: int = _sig_colecao()
 	if sg == _pares_sig:
 		return
 	_pares_sig = sg
+	_pares.clear()
 	var por_tipo: Dictionary = {}
 	for q in estado.guarda:
 		if not por_tipo.has(q.tipo):
@@ -4434,7 +4435,6 @@ func _ladrilho(r: Rect2, p: Peca, escondida: bool = false, sob: bool = false) ->
 	if sob:
 		_c.draw_rect(r.grow(1.0), Desenho.DOURADO, false, 2.0)
 
-## Grade da aba Fantasias: um cartão por fantasia, com as 4 peças, o nome e quantas dá para vestir.
 ## Moldura de madeira fina e tarja da cor da fantasia de um ladrilho (só depende do tamanho e do conjunto).
 func _ladrilho_moldura(a: CanvasItem, r: Rect2, cj: int) -> void:
 	nove(a, GUI_TEX, R_FINA, M_FINA, r, 0.5)
@@ -4450,6 +4450,7 @@ func _ladrilho_peca(a: CanvasItem, r: Rect2, tipo: int, nivel: int, marcas: Arra
 	if marcas.size() > 0:
 		Desenho.pontos_marcas(a, Vector2(r.position.x + 6.0 * k, c.y), marcas, 2.2 * k, 5.6 * k, true)
 
+## Grade da aba Fantasias: um cartão por fantasia, com as 4 peças, o nome e quantas dá para vestir.
 func _cartoes_fantasias() -> void:
 	var alvo: int = _alvo_vestir()
 	var mapa: Dictionary = _mapa_guarda_desenho()
