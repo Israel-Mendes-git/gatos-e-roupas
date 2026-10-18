@@ -159,6 +159,7 @@ var _estrelas: Array = []
 var _lascas: Array = []     # pontinhos da terra: [Rect2, cor]
 var _capim: Array = []
 var _tufos: Array = []      # tufos do gramado de fora: [Rect2, cor]
+var _manchas_ruas: Array = []   # manchas do asfalto das ruas: [Rect2, cor] (calculadas na primeira vez)
 
 func _init(dono: Object = null) -> void:
 	p = dono
@@ -1303,13 +1304,16 @@ func _cena_ruas(t: float, est: Estado, d: int) -> void:
 	_ceu(t)
 	_r(0, 96, 1280, 508, Color(0.10, 0.11, 0.17))
 	_r(0, 96, 1280, 4, Color(0.2, 0.22, 0.32))
-	for ix in range(0, 1280, 8):
-		for iy in range(104, 600, 12):
-			var n: float = _ruido(ix * 0.61 + iy * 1.27)
-			if n > 0.86:
-				_r(ix, iy, 4, 4, Color(0.15, 0.16, 0.24))
-			elif n < 0.05:
-				_r(ix, iy, 8, 4, Color(0.07, 0.08, 0.13))
+	if _manchas_ruas.is_empty():
+		for ix in range(0, 1280, 8):
+			for iy in range(104, 600, 12):
+				var n: float = _ruido(ix * 0.61 + iy * 1.27)
+				if n > 0.86:
+					_manchas_ruas.append([Rect2(ix, iy, 4, 4), Color(0.15, 0.16, 0.24)])
+				elif n < 0.05:
+					_manchas_ruas.append([Rect2(ix, iy, 8, 4), Color(0.07, 0.08, 0.13)])
+	for m in _manchas_ruas:
+		cv.draw_rect(m[0], m[1])
 	_ruas_asfalto()
 	_trilha(t)
 	for f in range(1, Fases.TOTAL + 1):

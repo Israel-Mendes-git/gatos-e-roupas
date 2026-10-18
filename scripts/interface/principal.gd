@@ -221,6 +221,10 @@ var _cont_aba_q: int = -1          # quadro em que _cont_aba foi calculado (cach
 var _cont_aba: Array[int] = []
 var _mapa_guarda_q: int = -1       # idem para o mapa "melhor peça de cada tipo" do desenho
 var _mapa_guarda_c: Dictionary = {}
+var _mapa_guarda_sig: int = 0
+var _sig_q: int = -1
+var _sig_v: int = 0
+var _pares_sig: int = -1
 var _quebrar_c: Dictionary = {}
 var _tam_cabe_c: Dictionary = {}   # cache de _tam_cabe: a fonte não muda
 var rolagem: int = 0  # primeira linha visível
@@ -379,7 +383,6 @@ func _ready() -> void:
 	btn_fich = _botao("Fichário [F]", FICH_BT_GUARDA, Color(0.62, 0.8, 1.0), 17)
 	btn_fich.pintar = _pintar_botao_fichario
 	btn_fich.pressed.connect(abrir_fichario)
-	fichario.ajuda_pedida.connect(func() -> void: tutorial.rever())
 	btn_fich.visible = false
 	move_child(btn_fich, menus.get_index())
 	atelie_tela = AtelieTela.new()
@@ -1389,10 +1392,30 @@ func _mapa_guarda_desenho() -> Dictionary:
 	var qd: int = Engine.get_process_frames()
 	if _mapa_guarda_q != qd:
 		_mapa_guarda_q = qd
-		_mapa_guarda_c = _mapa_guarda()
+		var sg: int = _sig_colecao()
+		if sg != _mapa_guarda_sig:   # a coleção não mudou: o mesmo mapa serve (só o que o desenho lê entra na assinatura)
+			_mapa_guarda_sig = sg
+			_mapa_guarda_c = _mapa_guarda()
 	return _mapa_guarda_c
 
 ## Situação da fantasia c para o gato `alvo`: {"pecas": [Peca ou null], "onde": [FS_*], "dono": [índice do gato ou -1],
+## Assinatura barata (uma vez por quadro) da coleção: guarda-roupa e roupas vestidas, com identidade, ordem,
+## tipo, nível, raridade, marcas e flag de nova. Muda quando qualquer coisa que os caches do desenho leem muda.
+func _sig_colecao() -> int:
+	var qd: int = Engine.get_process_frames()
+	if _sig_q == qd:
+		return _sig_v
+	_sig_q = qd
+	var h: int = estado.guarda.size() + 7
+	for q in estado.guarda:
+		h = h * 31 + q.get_instance_id() + q.tipo * 100003 + q.nivel * 1009 + q.raridade * 17 + q.marcas.size() * 3 + (1 if q.nova else 0)
+	h = h * 31 + 13
+	for b in estado.bonecos:
+		for q in b.pecas:
+			h = h * 31 + (0 if q == null else q.get_instance_id() + q.tipo * 100003 + q.nivel * 1009 + q.raridade * 17 + q.marcas.size() * 3)
+	_sig_v = h
+	return h
+
 ## "tipos": [tipo], "gato": n, "guarda": n, "outro": n, "nao": n}. Cada lista tem 4 itens, na ordem das peças da fantasia.
 func _situacao_fantasia(c: int, alvo: int, mapa: Dictionary = {}) -> Dictionary:
 	if mapa.is_empty():
@@ -2422,6 +2445,10 @@ func _pos_peca(q: Peca) -> Vector2:
 ## Recalcula, para cada tipo com peças repetidas, se alguma dupla ainda pode fundir.
 func _atualizar_pares() -> void:
 	_pares.clear()
+	var sg: int = _sig_colecao()
+	if sg == _pares_sig:
+		return
+	_pares_sig = sg
 	var por_tipo: Dictionary = {}
 	for q in estado.guarda:
 		if not por_tipo.has(q.tipo):
@@ -2892,11 +2919,12 @@ func _process(delta: float) -> void:
 	_atualizar_guarda(delta)
 	if modo != Modo.COMBATE:
 		# fichário ou oficina abertos: o fundo fica atrás de uma cortina preta de 74% e de um painel cheio,
-		# então basta redesenhá-lo a cada 4 quadros (o mapa e o guarda-roupa custam 15 a 30 ms por desenho)
+		# então basta redesenhá-lo nos quadros da abertura (o mapa e o guarda-roupa custam 15 a 30 ms por desenho);
+		# depois fica congelado: redesenhar a cada 4 quadros fazia uma trava de ~30 ms bem na janela
 		var coberto: bool = (fichario != null and fichario.aberto()) or (oficina != null and oficina.aberta)
 		if coberto and _coberto_ant:
-			_coberto_q = (_coberto_q + 1) % 4
-			if _coberto_q == 0:
+			_coberto_q = mini(_coberto_q + 1, 99)
+			if _coberto_q <= 3:
 				queue_redraw()
 		else:
 			_coberto_q = 0
