@@ -47,6 +47,7 @@ var aula: Dictionary = {}
 var aula_i: int = 0
 var _t_aula: float = 0.0
 var _vigia_t: float = 0.0
+var _no_topo: bool = false        # a aula de uma janela (Oficina, Fichário) está à vista e o tutorial foi para o topo
 
 func iniciar(d: Variant) -> void:
 	p = d
@@ -324,6 +325,20 @@ func _alvos(id: String) -> Array[Rect2]:
 	match nome:
 		"gatos":
 			r.append(Rect2(206, 8, 780, 440))
+		"of_trofeus":
+			r.append(Rect2(500.0, 50.0, 280.0, 100.0))
+		"of_melhorias":
+			r.append(Oficina.rect_linha(0).merge(Oficina.rect_linha(Torre.MELHORIA_NOME.size() - 1)))
+		"of_modulos":
+			r.append(Oficina.rect_aba(0).merge(Oficina.rect_aba(Oficina.ABAS_NOME.size() - 1)).merge(Oficina.rect_card(Torre.MODULOS_POR_ABA - 1)))
+		"of_fechar":
+			r.append(Oficina.BTN_FECHAR)
+		"fi_pagina":
+			r.append(Fichario.PG_E.merge(Fichario.PG_D))
+		"fi_abas":
+			r.append(Rect2(1096.0, 90.0, 150.0, 590.0))
+		"fi_nav":
+			r.append(Fichario.BTN_ANT.merge(Fichario.BTN_PROX))
 		"gato":
 			var i: int = int(arg)
 			if i < e.bonecos.size():
@@ -455,6 +470,9 @@ func _process(delta: float) -> void:
 		_vigiar_aulas(delta)
 		_vis_guiado = false
 	p.campo.segurar = _quer_segurar()
+	if _no_topo and aula.is_empty():
+		_no_topo = false
+		p.move_child(self, p.menus.get_index())   # volta para logo abaixo dos menus, como no início
 	var vis: bool = _vis_guiado or not aula.is_empty() or (fonte != Fonte.NENHUM and _ambiente_livre())
 	if vis != visible:
 		visible = vis
@@ -552,6 +570,15 @@ func _input(ev: InputEvent) -> void:
 			Som.tocar("clique")
 			_entendi()
 			return
+	if not aula.is_empty() and _no_topo and fonte == Fonte.NENHUM:
+		# aula de uma janela: só o "Entendi" vale (Esc ainda fecha a janela e encerra a aula)
+		if ev is InputEventMouseButton:
+			get_viewport().set_input_as_handled()
+		elif ev is InputEventKey and (ev as InputEventKey).pressed and (ev as InputEventKey).keycode != KEY_ESCAPE:
+			if not (ev as InputEventKey).echo and ((ev as InputEventKey).keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]):
+				_entendi()
+			get_viewport().set_input_as_handled()
+		return
 	if not _bloqueando():
 		return
 	var s: Dictionary = roteiro[passo_i]
@@ -677,6 +704,9 @@ func _aula(id: String) -> Dictionary:
 
 ## Qual tela está à vista (para o botão "?"): guarda, mapa, prep (preparação da luta) ou luta.
 func _contexto() -> String:
+	var ov: String = _overlay()
+	if ov != "":
+		return ov
 	match int(p.modo):
 		M_GUARDA:
 			return "guarda"
@@ -686,11 +716,23 @@ func _contexto() -> String:
 			return "prep" if p.campo.prep else "luta"
 	return ""
 
+## Janela por cima do jogo que tem o próprio "?": "oficina", "fichario" ou "" (nenhuma).
+func _overlay() -> String:
+	if p == null:
+		return ""
+	if p.oficina != null and p.oficina.aberta:
+		return "oficina"
+	if p.fichario != null and p.fichario.aberto():
+		return "fichario"
+	return ""
+
 ## Botão "?": repete as aulas da tela atual (sem gravar progresso e sem mexer no guiado). Devolve false se não há o que repetir agora.
 func rever() -> bool:
-	if p == null or fonte != Fonte.NENHUM or p.menus.ativo() or p.menus.em_transicao() or not _ambiente_livre():
+	if p == null or fonte != Fonte.NENHUM or p.menus.ativo() or p.menus.em_transicao():
 		return false
 	var ctx: String = _contexto()
+	if ctx != "oficina" and ctx != "fichario" and not _ambiente_livre():
+		return false
 	var a: Dictionary = _aula_rever(ctx)
 	if a.is_empty():
 		return false
@@ -700,6 +742,10 @@ func rever() -> bool:
 	aula = a
 	aula_i = 0
 	_t_aula = 0.0
+	if ctx == "oficina" or ctx == "fichario":
+		# a janela fica acima do tutorial na árvore: o tutorial sobe para o topo enquanto a aula dura
+		p.move_child(self, p.get_child_count() - 1)
+		_no_topo = true
 	Som.tocar("aba", 1.25, 0.03, -6.0)
 	return true
 
@@ -730,6 +776,22 @@ func _aula_rever(ctx: String) -> Dictionary:
 			]
 			if e.campanha_vencida():
 				b.append(["Casa limpa, mas os bichos fugiram para fora! Este botão (ou V) alterna as vistas: a casa, o Quintal e o resto. Na casa, I abre a Invasão sem fim.", "mapa_vista"])
+		"oficina":
+			d["modos"] = [M_GUARDA, M_MAPA]
+			b = [
+				["Troféus pagam melhorias permanentes da torre. " + Oficina.explicacao_trofeus() + ".", "of_trofeus"],
+				["Cada botão Melhorar compra um nível da torre. O preço sobe a cada nível; botão apagado quer dizer que faltam troféus (passe o mouse para ver o motivo).", "of_melhorias"],
+				["Cada chefe vencido libera um módulo. Monte nas vagas livres; as abas separam os da casa, de fora e das ruas.", "of_modulos"],
+				["Setas e Enter também mexem aqui. Esc ou Fechar volta ao jogo.", "of_fechar"],
+			]
+		"fichario":
+			d["modos"] = [M_GUARDA, M_MAPA]
+			b = [
+				["O Fichário é o álbum das fantasias: uma página para cada uma, com as 4 peças, o poder e onde achar. Peça que ainda não apareceu fica em silhueta.", "fi_pagina"],
+				["As abas pulam para o Índice, para um cômodo, para as fantasias de fora, para as Metas (prêmios em troféus) e para o Bestiário dos bichos.", "fi_abas"],
+				["Voltar e Avançar viram as páginas (também setas, A e D, ou a roda do mouse).", "fi_nav"],
+				["A última página mostra a fantasia criada no Ateliê, que abre quando o fichário está completo.", "fi_pagina"],
+			]
 		"prep":
 			var a_prep: Dictionary = _aula("a_prep")
 			d["modos"] = [M_COMBATE]
@@ -769,7 +831,11 @@ func _vigiar_aulas(delta: float) -> void:
 		_t_aula += delta
 		if bool(aula.get("rever", false)):
 			# revisão pedida pelo botão "?": se a tela mudou, simplesmente acaba (nada a lembrar, nada gravado)
-			if not _ambiente_livre() or _contexto() != str(aula["ctx"]):
+			var ctx_a: String = str(aula["ctx"])
+			if ctx_a == "oficina" or ctx_a == "fichario":
+				if _contexto() != ctx_a or p.menus.ativo():
+					aula = {}
+			elif not _ambiente_livre() or _contexto() != ctx_a:
 				aula = {}
 			return
 		if not _ambiente_livre() or not (int(p.modo) in (aula["modos"] as Array)):

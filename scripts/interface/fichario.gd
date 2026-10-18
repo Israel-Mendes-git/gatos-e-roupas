@@ -16,6 +16,7 @@ extends Control
 signal fechado
 ## O jogador abriu a aba "Metas" (o selo de metas novas no botão do mapa pode sumir).
 signal metas_vistas
+signal ajuda_pedida   # o "?" foi apertado: o dono repete a aula do Fichário
 
 ## Valor de `abrir()` que abre direto na aba "Metas".
 const PAGINA_METAS := -2
@@ -139,6 +140,7 @@ var x_sobre: bool = false
 var x_press: bool = false
 var carimbo_t: float = 9.0          # < 0.25: o carimbo está batendo na página
 var ganhos_exib: float = 0.0        # prêmio total das metas, contando
+const BTN_AJUDA := Rect2(1022.0, 24.0, 38.0, 38.0)   # "?": repete a aula do Fichário
 const BTN_X := Rect2(1070.0, 22.0, 42.0, 42.0)         # o que a silhueta desenha nesta página
 
 func _init() -> void:
@@ -522,6 +524,7 @@ func _montar() -> void:
 	itens.append({"id": "ant", "r": BTN_ANT, "on": metas_pag > 0 if em_metas else pagina > 0})
 	itens.append({"id": "prox", "r": BTN_PROX, "on": metas_pag < 1 if em_metas else pagina < total_paginas() - 1})
 	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true})
+	itens.append({"id": "ajuda", "r": BTN_AJUDA, "on": true})
 	if em_metas:
 		return
 	if em_bichos:
@@ -595,7 +598,10 @@ func acionar(id: String) -> void:
 		Som.tocar("aba")
 	elif id.begins_with("f") or id.begins_with("b") or id == "fechar":
 		Som.tocar("clique")
-	if id == "fechar":
+	if id == "ajuda":
+		Som.tocar("clique")
+		ajuda_pedida.emit()
+	elif id == "fechar":
 		fechar()
 	elif id == "ant":
 		ir_para_pagina(pagina - 1)
@@ -1093,15 +1099,15 @@ func _botoes() -> void:
 		var id: String = it["id"]
 		if id.begins_with("aba") or _eh_tile(id) or id.begins_with("pgf"):
 			continue
-		var txt: String = "Fechar" if id == "fechar" else ("Voltar" if id == "ant" else "Avançar")
-		var cor: Color = UIComum.B_MARROM if id == "fechar" else UIComum.B_OURO
+		var txt: String = "?" if id == "ajuda" else ("Fechar" if id == "fechar" else ("Voltar" if id == "ant" else "Avançar"))
+		var cor: Color = UIComum.B_AZUL if id == "ajuda" else (UIComum.B_MARROM if id == "fechar" else UIComum.B_OURO)
 		var o: Dictionary = {"on": it["on"], "foco": i == foco and it["on"], "h": UIComum.anim_h(anim, id), "p": UIComum.anim_p(anim, id), "tam": 17}
 		UIComum.botao(self, it["r"], txt, cor, o, t)
-		if id != "fechar":
+		if id == "ant" or id == "prox":
 			_seta_nav(it["r"], -1.0 if id == "ant" else 1.0, it["on"], float(o["h"]), float(o["p"]))
 	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bestiário: gangues" if pagina == 1 else "Bicho %d de %d" % [pagina - 1, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Ateliê  ·  a sua fantasia" if pagina_do_atelie() else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
 	_txt(marca, Vector2(250.0, 672.0), 15 if marca.length() < 26 else 13, Color(1, 0.94, 0.8), 240.0, 4)
-	_txt("Setas ou A/D  |  PgUp/PgDn  |  Esc fecha", Vector2(696.0, 672.0), 12, Color(1, 0.94, 0.8, 0.7), 240.0, 3)
+	_txt("Setas ou A/D  |  Esc fecha", Vector2(696.0, 672.0), 12, Color(1, 0.94, 0.8, 0.7), 240.0, 3)
 
 ## Seta em pixel dentro do botão Voltar/Avançar, junto da borda; acompanha o crescer e o afundar do botão.
 func _seta_nav(r: Rect2, dir: float, on: bool, h: float, pr: float) -> void:

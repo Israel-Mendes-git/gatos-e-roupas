@@ -379,6 +379,7 @@ func _ready() -> void:
 	btn_fich = _botao("Fichário [F]", FICH_BT_GUARDA, Color(0.62, 0.8, 1.0), 17)
 	btn_fich.pintar = _pintar_botao_fichario
 	btn_fich.pressed.connect(abrir_fichario)
+	fichario.ajuda_pedida.connect(func() -> void: tutorial.rever())
 	btn_fich.visible = false
 	move_child(btn_fich, menus.get_index())
 	atelie_tela = AtelieTela.new()

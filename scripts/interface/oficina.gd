@@ -32,6 +32,7 @@ const CARD_H := 76.0
 const CARD_GAP := 5.0
 const BTN_FECHAR := Rect2(540, 624, 200, 44)
 const BTN_X := Rect2(1124.0, 38.0, 42.0, 42.0)
+const BTN_AJUDA := Rect2(1074.0, 38.0, 42.0, 42.0)   # "?": repete a aula da Oficina
 const BTN_MELHORAR_W := 136.0
 const TEXTO_DESLOC := 84.0        # x do texto numa linha de melhoria, a partir da borda dela
 const QUADRADOS_DESLOC := 206.0   # x dos oito quadradinhos de nível, a partir da borda da linha
@@ -418,6 +419,7 @@ func _montar() -> void:
 		var cheio: bool = not monta and e.modulos.size() >= e.vagas_modulos()
 		var cor: Color = Color(0.95, 0.55, 0.4) if monta else (Color(0.55, 0.65, 0.55) if cheio else Color(0.55, 0.9, 0.5))
 		itens.append({"id": "d%d" % m, "r": rect_btn_modulo(m), "on": true, "txt": "Desmontar" if monta else "Montar", "cor": cor, "tam": 16, "custo": false})
+	itens.append({"id": "ajuda", "r": BTN_AJUDA, "on": true, "txt": "?", "cor": Color(0.62, 0.8, 1.0), "tam": 22, "custo": false})
 	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true, "txt": "Fechar", "cor": UIComum.B_MARROM, "tam": 22, "custo": false})
 	foco = itens.size() - 1
 	for k in itens.size():
@@ -446,6 +448,11 @@ func acionar(id: String) -> void:
 	if id == "fechar" or id == "x":
 		Som.tocar("clique")
 		fechar()
+		return
+	if id == "ajuda":
+		Som.tocar("clique")
+		if dono.tutorial != null:
+			dono.tutorial.rever()
 		return
 	if id.begins_with("a"):
 		var na: int = int(id.substr(1))
