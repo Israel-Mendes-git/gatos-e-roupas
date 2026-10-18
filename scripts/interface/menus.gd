@@ -1492,13 +1492,14 @@ func _cena_final() -> void:
 	var ro := Rect2(660, 345, 330, 145)
 	_painel_gato(ro, false)
 	_t("O que foi liberado", Vector2(ro.position.x, ro.position.y + 40.0), 20, C_NOME, ro.size.x)
-	var liberados: Array = ["Invasão sem fim liberada no mapa", "Metas no fichário"]
+	# 2º ato vencido: a casa e o lado de fora são dos gatos, e as ruas do bairro (3º ato) se abrem
+	var liberados: Array = ["As ruas do bairro foram abertas: 3º ato", "Invasão sem fim e metas no fichário"]
 	if bairro:
 		liberados = ["Torre: quarta vaga de módulo", "Nível 40: quarta herança", "Invasão sem fim e metas"]
-	var yo: float = ro.position.y + (68.0 if bairro else 76.0)
+	var yo: float = ro.position.y + 68.0
 	for txt in liberados:
 		_pata(0, Vector2(ro.position.x + 26.0, yo - 20.0), 1)
 		for l in _quebra(txt, 17, ro.size.x - 90.0):
 			_t(l, Vector2(ro.position.x + 52.0, yo), 17, C_TEXTO)
 			yo += 21.0
-		yo += 3.0 if bairro else 10.0
+		yo += 3.0
