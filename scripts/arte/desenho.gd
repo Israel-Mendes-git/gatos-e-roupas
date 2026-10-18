@@ -1660,6 +1660,24 @@ static func caixa_peca(tipo: int) -> Rect2:
 	var tv: int = Atelie.forma(tipo)
 	return IconeDados.CAIXA[tv] if tv < IconeDados.CAIXA.size() else (RoupaGatoJ.caixa(tv) if tv >= RoupaGatoJ.PRIMEIRO else RoupaGatoI.caixa(tv) if tv >= RoupaGatoI.PRIMEIRO else RoupaGatoH.caixa(tv) if tv >= RoupaGatoH.PRIMEIRO else RoupaGatoG.caixa(tv) if tv >= RoupaGatoG.PRIMEIRO else (RoupaGatoF.caixa(tv) if tv >= RoupaGatoF.PRIMEIRO else RoupaGatoE.caixa(tv)))
 
+## Só o brilho de raridade que `icone` põe atrás da peça (mesma conta de posição e escala), para o guarda-roupa
+## poder guardar o resto do ícone em textura e deixar o brilho, que pulsa, para desenhar a cada quadro.
+static func icone_brilho(c: CanvasItem, tipo: int, centro: Vector2, tam: float, raridade: int) -> void:
+	if raridade <= 0:
+		return
+	if ICONE_PIXEL:
+		var cx: Rect2 = caixa_peca(tipo)
+		var px: float = tam * 0.92 / maxf(9.0, maxf(cx.size.x, cx.size.y))
+		var meio: Vector2 = cx.position + cx.size * 0.5
+		c.draw_set_transform(centro - meio * px, 0.0, Vector2(px, px))
+		brilho_raridade(c, meio, 17.0 * tam / 30.0 / px, raridade)
+		resetar(c)
+	else:
+		var sc: float = tam / 30.0
+		c.draw_set_transform(centro - icon_off(tipo) * sc, 0.0, Vector2(sc, sc))
+		brilho_raridade(c, icon_off(tipo), 17.0, raridade)
+		resetar(c)
+
 static func icone(c: CanvasItem, tipo: int, centro: Vector2, tam: float, nivel: int = 0, f: float = 0.0, anim: float = 0.0, marcas: Array = [], raridade: int = 0) -> void:
 	if ICONE_PIXEL:
 		# o ícone é a própria roupa em pixel art que o gato veste (RoupaGato), ampliada para caber

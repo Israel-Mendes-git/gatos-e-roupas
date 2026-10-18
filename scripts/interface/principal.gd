@@ -4410,21 +4410,46 @@ func _ladrilho(r: Rect2, p: Peca, escondida: bool = false, sob: bool = false) ->
 			elif p.raridade >= 5:
 				_c.draw_rect(r.grow(-5), Color(1.0, 1.0, 1.0, 0.45 + 0.4 * pulso), false, 1.0)
 				_c.draw_rect(r.grow(3), Color(cr_r.r, cr_r.g, cr_r.b, 0.12 + 0.18 * pulso), false, 1.0)
-	nove(_c, GUI_TEX, R_FINA, M_FINA, r, 0.5)
-	# tarja da fantasia
-	_c.draw_rect(Rect2(r.position.x + 4, r.position.y + 4, r.size.x - 8, 4), Pecas.CONJUNTO_COR[p.conjunto()])
+	# moldura + tarja e ícone + pips + marcas não mudam de um quadro para o outro: vão para texturas pré-compostas
+	# (ver CacheDesenho). O brilho de raridade pulsa, então fica de fora e é desenhado a cada quadro, entre as duas.
+	var cj: int = p.conjunto()
+	var inteiro: bool = r.position == r.position.round() and r.size == r.size.round()
 	var c: Vector2 = r.get_center() + Vector2(0, 2)
 	var tam: float = r.size.x * 0.72
-	Desenho.icone(_c, p.tipo, c, tam, 0, 0.0, 0.0, [], p.raridade)
-	var k: float = r.size.x / 46.0
-	if p.nivel > 0:
-		Desenho.pips(_c, Vector2(c.x, r.end.y - 5.0 * k), p.nivel, 1.8 * k, 5.0 * k)
-	if p.marcas.size() > 0:
-		Desenho.pontos_marcas(_c, Vector2(r.position.x + 6.0 * k, c.y), p.marcas, 2.2 * k, 5.6 * k, true)
+	var k1: int = hash([1, r.size, cj]) if inteiro else 0
+	if not (inteiro and CacheDesenho.desenhar(_c, k1, r)):
+		if inteiro and CacheDesenho.pode_criar(_c, k1):
+			CacheDesenho.criar(_c, k1, r.size, func(a: CanvasItem) -> void: _ladrilho_moldura(a, Rect2(Vector2.ZERO, r.size), cj))
+		_ladrilho_moldura(_c, r, cj)
+	if p.raridade > 0:
+		Desenho.icone_brilho(_c, p.tipo, c, tam, p.raridade)
+	var k2: int = hash([2, r.size, p.tipo, p.nivel, p.marcas, Atelie.forma(p.tipo), CacheDesenho.atelie_sig() if p.tipo >= Pecas.Tipo.ATELIE_CABECA else 0]) if inteiro else 0
+	if not (inteiro and CacheDesenho.desenhar(_c, k2, r)):
+		if inteiro and CacheDesenho.pode_criar(_c, k2):
+			var tp: int = p.tipo
+			var nv: int = p.nivel
+			var mc: Array = p.marcas.duplicate()
+			CacheDesenho.criar(_c, k2, r.size, func(a: CanvasItem) -> void: _ladrilho_peca(a, Rect2(Vector2.ZERO, r.size), tp, nv, mc))
+		_ladrilho_peca(_c, r, p.tipo, p.nivel, p.marcas)
 	if sob:
 		_c.draw_rect(r.grow(1.0), Desenho.DOURADO, false, 2.0)
 
 ## Grade da aba Fantasias: um cartão por fantasia, com as 4 peças, o nome e quantas dá para vestir.
+## Moldura de madeira fina e tarja da cor da fantasia de um ladrilho (só depende do tamanho e do conjunto).
+func _ladrilho_moldura(a: CanvasItem, r: Rect2, cj: int) -> void:
+	nove(a, GUI_TEX, R_FINA, M_FINA, r, 0.5)
+	a.draw_rect(Rect2(r.position.x + 4, r.position.y + 4, r.size.x - 8, 4), Pecas.CONJUNTO_COR[cj])
+
+## Ícone (sem o brilho de raridade), pips de nível e marcas de um ladrilho.
+func _ladrilho_peca(a: CanvasItem, r: Rect2, tipo: int, nivel: int, marcas: Array) -> void:
+	var c: Vector2 = r.get_center() + Vector2(0, 2)
+	Desenho.icone(a, tipo, c, r.size.x * 0.72, 0, 0.0, 0.0, [], 0)
+	var k: float = r.size.x / 46.0
+	if nivel > 0:
+		Desenho.pips(a, Vector2(c.x, r.end.y - 5.0 * k), nivel, 1.8 * k, 5.0 * k)
+	if marcas.size() > 0:
+		Desenho.pontos_marcas(a, Vector2(r.position.x + 6.0 * k, c.y), marcas, 2.2 * k, 5.6 * k, true)
+
 func _cartoes_fantasias() -> void:
 	var alvo: int = _alvo_vestir()
 	var mapa: Dictionary = _mapa_guarda_desenho()
