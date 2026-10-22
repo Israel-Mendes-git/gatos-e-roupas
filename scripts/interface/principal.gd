@@ -4466,10 +4466,7 @@ func _painel_guarda() -> void:
 		if p != oculta and not _em_voo(p):
 			_realce_fantasia(r, p)
 		if _pares.has(p.tipo) and p != oculta:
-			var sr := Rect2(r.position.x + 3, r.position.y + 10, 26, 15)
-			draw_rect(sr, Color(0.05, 0.14, 0.08, 0.88))
-			draw_rect(sr, Color(0.5, 1.0, 0.6, 0.7), false, 1.0)
-			Desenho.texto(self, "×%d" % int(_pares[p.tipo]), Vector2(sr.position.x, sr.end.y - 1), 13, Color(0.75, 1.0, 0.8), sr.size.x)
+			_selo_pares(r, int(_pares[p.tipo]))
 		if arrasto.has("peca") and p != arrasto["peca"] and estado.pode_fundir(p, arrasto["peca"]):
 			_destaque_fusao(r.get_center(), 25.0)
 		if p.nova:
@@ -4489,6 +4486,22 @@ func _painel_guarda() -> void:
 	# destaque quando arrastando um boneco ou peça usada para tirar
 	if (arrasto.has("peca") and arrasto["origem"] != null) or arrasto.has("boneco"):
 		draw_rect(PAINEL.grow(-10), Color(1, 0.9, 0.5, 0.16 + 0.1 * sin(t * 8.0)))
+
+## Selo "×N" (peças iguais que podem se fundir): pílula pequena no canto de cima à esquerda do ladrilho,
+## em fonte 3x5, para não cobrir a peça. A grade é a da arte do guarda-roupa (PX), um passo abaixo.
+func _selo_pares(r: Rect2, n: int) -> void:
+	var e: int = maxi(int(PX) - 1, 1)
+	var ef: float = float(e)
+	var txt: String = "x%d" % n
+	var w: float = float(txt.length() * 4 + 1) * ef   # miolo: 1 de folga, o texto, 1 de folga
+	var h: float = 7.0 * ef
+	var o := Vector2(floorf(r.position.x / ef) * ef + ef, floorf(r.position.y / ef) * ef + ef)
+	var cont := Color(0.05, 0.14, 0.08)
+	# pílula: retângulo com os quatro cantos cortados, contorno escuro de 1 pixel
+	draw_rect(Rect2(o.x + ef, o.y, w, h), cont)
+	draw_rect(Rect2(o.x, o.y + ef, w + 2.0 * ef, h - 2.0 * ef), cont)
+	draw_rect(Rect2(o.x + ef, o.y + ef, w, h - 2.0 * ef), Color(0.24, 0.62, 0.34))
+	IconesPoder.texto(self, txt, Vector2(o.x + ef, o.y), Color(0.97, 1.0, 0.9), e, false)
 
 ## Conjunto de fantasia mais frequente nas peças de um inimigo (-1 se ninguém passa de 1).
 func _fantasia_de(pecas: Array) -> int:
