@@ -27,18 +27,6 @@ static var _cache: Dictionary = {}
 # ---------------------------------------------------------------- cabeças (sem contorno; `.` = vazio)
 # js = linha onde começa a mandíbula, ms = coluna onde começa a boca, ab = linhas abertas no golpe, ex/ey = olho
 const _CAB: Dictionary = {
-	"G": {"js": 6, "ms": 8, "ab": 3, "ex": 9, "ey": 3, "rows": [   # gambá
-		"...wwwwwwww.....",
-		".wwwwwwwwwwww...",
-		"lllllwwwwwwwww..",
-		"llllmmmmmmmmmmnn",
-		"lllmmmmmmmmmmmnn",
-		"mmmmmmmmmmmmmn..",
-		"mmmmmmmmmmmmmm..",
-		".mmmmmmmmmmmm...",
-		"..dmmmmmmmmd....",
-		"...dddddddd.....",
-	]},
 	"T": {"js": 6, "ms": 8, "ab": 3, "ex": 9, "ey": 3, "rows": [   # texugo
 		"....wwwwwwwwww....",
 		"..wwwwwwwwwwwwww..",
@@ -69,10 +57,10 @@ static func _pal(ct: int, alfa: float) -> Dictionary:
 				"B": Color("8fdcf6"), "b": Color("3a8ab8"), "S": Color("4a3020"),
 				"T": Color("7a5636"), "t": Color("43301f"), "u": Color("a87a4e"),
 				"j": _hx("fff2a0", 0.34), "J": _hx("fff2a0", 0.17), "x": _hx("ffffff", 0.7)}, true)
-		6:   # gambá: preto-azulado, listra branca, fedor verde
-			P.merge({"o": Color("07050c"), "l": Color("4e4764"), "m": Color("2f2a3c"), "d": Color("171420"),
-				"w": Color("f8f6fa"), "v": Color("c6c4da"), "n": Color("e08a98"), "y": Color("ffe14a"), "Y": Color("d9a21c"),
-				"q": Color("7a1c2c"), "e": Color("9a6a86"),
+		6:   # gambá: preto-azulado com brilho, listra branca, nariz rosa, lenço de mecânico, fedor verde
+			P.merge({"o": Color("07050c"), "h": Color("6e6890"), "l": Color("4a4360"), "m": Color("2c2739"), "d": Color("171420"),
+				"w": Color("f8f6fa"), "v": Color("c2c0d8"), "n": Color("e08a98"), "q": Color("7a1c2c"),
+				"R": Color("d8443a"), "r": Color("8a2a26"), "c": Color("e8e0d0"),
 				"z": _hx("9ae84c", 0.62), "Z": _hx("62b82e", 0.42), "x": _hx("c8f58a", 0.3)}, true)
 		7:   # esquilo acrobata: castanho, peito creme, rabão mais claro, faixa verde-água com estrela de ouro
 			P.merge({"o": Color("1c1008"), "l": Color("d49a62"), "m": Color("a8683a"), "d": Color("6e4020"), "D": Color("4a2a14"),
@@ -637,77 +625,105 @@ static func _luz_sobre(G: PackedInt32Array, L: PackedInt32Array) -> void:
 			G[k] = L[k]
 
 # ================================================================ 6 GAMBÁ FEDIDO
+## Cabeça de perfil, baixa e de focinho fino: a listra branca entra pela nuca, cobre o alto do crânio e desce em
+## lista pelo focinho até perto do nariz; olho pequeno com brilho, nariz rosa na ponta.
+const _GB_CAB: Array = [
+	"...wwww.........",
+	"wwwwwwwww.......",
+	"wwwwwwwwwwl.....",
+	"vvvvwwwwwwvll...",
+	"llllkklvwwwvllnn",
+	"lllkwkllllvvllnn",
+	"mmllllllllllmmm.",
+	"mmmmmmllmmmmm...",
+	"dmmmmmmmmmmd....",
+	".ddmmmmmdd......",
+	"...dddd.........",
+]
+const _GB_CAB_INFO: Dictionary = {"js": 7, "ms": 8, "ab": 2, "ex": 4, "ey": 4}
+## Orelhinha redonda de perto e a de longe (atrás do crânio).
+const _GB_ORELHA: Array = [".hl.", "hlml", "lmmd"]
+const _GB_ORELHA_L: Array = ["dd.", "ddd"]
+## Corpo baixo e arredondado, lombo arqueado mais alto na anca; a listra branca corre por cima, da nuca à anca.
+const _GB_CORPO: Array = [
+	"......wwwwwwww..............",
+	"....wwwwwwwwwwwwww..........",
+	"...wwwvvvvvvvvwwwwwwwwwww...",
+	"..wwvvhhhhllllvvvvwwwwwwwww.",
+	".wwvhhlllllllllllhvvvvvwwww.",
+	"wwvhllmmmmmmmmllllhhhhllvvll",
+	"wvllmmmmmmmmmmmmmmlllllllllm",
+	"vllmmmmmmmmmmmmmmmmmmmmmmmmm",
+	"ddmmmmmmmmmmmmmmmmmmmmmmmmd.",
+	".dddmmmmmmmmmmmmmmmmmmmmdd..",
+	"..ddddddddddddddddddddddd...",
+	"....ddddddddddddddddddd.....",
+]
+## Rabão preto felpudo erguido atrás da anca, com a listra branca subindo pelo meio até a ponta que cai para a frente.
+const _GB_RABO: Array = [
+	"......l.l.ll.l......",
+	"....lllmlllmlllll...",
+	"...lmmmwwwwwwwmmlll.",
+	"..lmmwwwwwwwwwwwmmml",
+	".lmmwwwwvvvvwwwwwmmd",
+	"lmmwwwvvmmmmvvwwwwmd",
+	".lmwwvmmmmmmmmvwwwmd",
+	"lmwwvmmmmmmddmmvwwwd",
+	"lmwwvmmmmmd..dmvwwwd",
+	".lmwwvmmmmd...dvwwvd",
+	"lmmwwvmmmmd...dvwwd.",
+	".lmwwvmmmd....dwvwd.",
+	"lmmwwvmmmd....d.dd.d",
+	".lmwwwvmmmd.........",
+	"lmmmwwvmmmd.........",
+	".lmmwwwvmmmd........",
+	"..lmmwwvmmmd........",
+	".llmwwwvmmmd........",
+	"...lmmwwvmmmd.......",
+	"..llmmwwvmmmd.......",
+	".....lmmwwvmmmd.....",
+	"......lmmwwvmmmd....",
+	".......lmmwwvmmmd...",
+	"........llmwwvmmmd..",
+	"..........lmmwwvmmd.",
+]
+## Lenço de mecânico sujo de graxa amarrado no pescoço (sai quando o gambá veste roupa de corpo).
+const _GB_LENCO: Array = ["rRR...", "RRRR..", "RwRRR.", ".RRRr.", "..RRr.", "...r.."]
+
 static func _geo6(g: Dictionary, tk: int) -> void:
-	var q: int = g["q"]
 	var ph: int = g["ph"]
 	var e: int = [0, -1, 3, 2, 1][ph]
-	var bx: int = -9
-	var bw: int = 21
-	var bh: int = 10
-	var by0: int = -15 + int(g["bob"]) - int(g["resp"])
-	bh += int(g["resp"])
-	var hx: int = 6 + e
-	var hy: int = by0 - 2 + (1 if ph == 1 else 0)
-	var sway: int = [0, 1, 2, 1, 0, -1][q] if g["andando"] else (-4 if (ph == 2 or ph == 3) else (3 if ph == 1 else 0))
+	var bx: int = -15
+	var by0: int = -17 + int(g["bob"]) - int(g["resp"])
+	var hx: int = bx + 20 + e
+	var hy: int = by0 + 1 + (1 if ph == 1 else 0)
+	var q: int = g["q"]
+	var sway: int = [0, 1, 1, 0, -1, -1][q] if g["andando"] else ((tk / 520) % 2 if ph == 0 else (-1 if ph == 1 else 2))
 	g["e"] = e
 	g["bx"] = bx
-	g["bw"] = bw
-	g["bh"] = bh
 	g["by0"] = by0
 	g["hx"] = hx
 	g["hy"] = hy
 	g["sway"] = sway
 	g["boca"] = ph == 2 or ph == 3
-	g["ext"] = (tk / 150) % 6
-	g["a"] = [Vector2(hx + 6, hy - 3), Vector2(bx + bw * 0.5, by0 + bh * 0.5), Vector2(hx + 15, hy + 5), Vector2(bx + 3, by0 + 1),
-		Vector2(hx + 3, hy + 8), Vector2(hx + 10, hy + 4), Vector2(hx + 9, hy + 3)]
-	g["patas"] = Vector2(0, 0)
+	g["ext"] = (tk / 150) % 6 + 6 * ((tk / 520) % 2 if (ph == 0 and not g["andando"]) else 0)
+	g["a"] = [Vector2(hx + 5, hy + 1), Vector2(bx + 12, by0 + 5), Vector2(hx + 15, hy + 6), Vector2(bx + 2, by0 + 3),
+		Vector2(hx + 3, hy + 8), Vector2(hx + 6, hy + 4), Vector2(hx + 6, hy + 4)]
+	g["patas"] = Vector2(1, 0)
 
-## Rabo enorme erguido: discos de raio variável ao longo de uma curva em S (negro nas bordas, listra branca no miolo, ponta branca).
-static func _rabo6(L: PackedInt32Array, g: Dictionary) -> void:
-	var rx: int = int(g["bx"]) + 3
-	var ry: int = int(g["by0"]) + 5
-	var alt: int = 23
-	var sway: int = g["sway"]
-	var n: int = alt * 2
-	var centros: Array = []
-	for i in n + 1:
-		var t: float = float(i) / float(n)
-		var cx: int = rx - roundi(8.0 * sin(t * PI * 0.8)) + roundi(float(sway) * t * t)
-		var cy: int = ry - roundi(t * float(alt))
-		var r: float = 2.0 + 5.2 * sin(PI * pow(t, 0.72)) * (1.0 - 0.15 * t)
-		centros.append([cx, cy, r, t, i])
-	for cc in centros:
-		var r2: int = roundi(float(cc[2])) + (1 if (int(cc[4]) * 7) % 5 == 0 and float(cc[3]) > 0.2 else 0)
-		for dy in range(-r2, r2 + 1):
-			for dx in range(-r2, r2 + 1):
-				if dx * dx + dy * dy > r2 * r2 + r2:
-					continue
-				var ch: String = "m"
-				if dx < -r2 * 0.35:
-					ch = "l"
-				elif dx > r2 * 0.35:
-					ch = "d"
-				_px(L, int(cc[0]) + dx, int(cc[1]) + dy, ch)
-	for cc in centros:
-		var t: float = cc[3]
-		if t < 0.1:
-			continue
-		var rw: int = roundi(float(cc[2]) * (0.92 if t > 0.86 else 0.5))
-		if rw < 1:
-			continue
-		for dy in range(-rw, rw + 1):
-			for dx in range(-rw, rw + 1):
-				if dx * dx + dy * dy > rw * rw + rw:
-					continue
-				_px(L, int(cc[0]) + dx + 1, int(cc[1]) + dy, "v" if dx > rw * 0.3 else "w")
+## Rabão: cada linha de cima balança mais que as de baixo (a base fica presa na anca).
+static func _rabo6(L: PackedInt32Array, x: int, y: int, sway: int) -> void:
+	var n: int = _GB_RABO.size()
+	for j in n:
+		var u: float = 1.0 - float(j) / float(n - 1)
+		_bmp(L, x + roundi(float(sway) * u * u * 1.5), y + j, [_GB_RABO[j]])
 
 ## Fedor: fiapos ondulantes e bolhas verdes subindo (sem contorno), um quadro por fase do relógio.
 static func _fedor(G: PackedInt32Array, g: Dictionary, forte: bool) -> void:
 	var f: int = g["ext"]
 	var Z := _nova()
 	var by0: int = g["by0"]
-	var bases: Array = [-19, -12, -5, 2, 9, 16]
+	var bases: Array = [-30, -23, -16, -9, -2, 5]
 	for i in bases.size():
 		var ph: float = fposmod(float(f) / 6.0 + float(i) / 6.0, 1.0)
 		var y: int = by0 - 6 - roundi(ph * 34.0) - (i % 2) * 3
@@ -722,9 +738,9 @@ static func _fedor(G: PackedInt32Array, g: Dictionary, forte: bool) -> void:
 			_px(Z, x + roundi(1.5 * sin(float(k) * 1.3 + float(f))), y + 3 + k, "Z" if ph < 0.75 else "x")
 	if forte:
 		var ty: int = by0 - 24
-		_elip(Z, -20, ty - 6, 11, 8, "z", "z", "Z")
-		_elip(Z, -13, ty - 12, 9, 7, "z", "Z", "Z")
-		_elip(Z, -23, ty, 8, 6, "Z", "Z", "x")
+		_elip(Z, -27, ty - 6, 11, 8, "z", "z", "Z")
+		_elip(Z, -20, ty - 12, 9, 7, "z", "Z", "Z")
+		_elip(Z, -31, ty, 8, 6, "Z", "Z", "x")
 	# névoa rasteira junto das patas
 	for k in 6:
 		var x: int = -16 + k * 6 + (f % 2) * 2
@@ -732,50 +748,62 @@ static func _fedor(G: PackedInt32Array, g: Dictionary, forte: bool) -> void:
 	_luz(G, Z)
 
 static func _monta6(G: PackedInt32Array, g: Dictionary) -> void:
+	var ph: int = g["ph"]
 	var bx: int = g["bx"]
-	var bw: int = g["bw"]
-	var bh: int = g["bh"]
 	var by0: int = g["by0"]
 	var hx: int = g["hx"]
 	var hy: int = g["hy"]
-	var ph: int = g["ph"]
-	# rabo
+	# rabão erguido atrás da anca
 	var R := _nova()
-	_rabo6(R, g)
+	_rabo6(R, bx - 14, by0 - 18, g["sway"])
 	_comp(G, R)
-	# patas
+	# patas de longe e orelha de longe
 	var L1 := _nova()
 	var L2 := _nova()
-	var hip: int = by0 + bh - 3
-	_pernas(L1, L2, g, 4, -7, hip, 3, "d", "d", "d", 4)
+	var hip: int = by0 + 9
+	_pernas(L1, L2, g, bx + 20, bx + 3, hip, 3, "d", "m", "d", 2)
 	_comp(G, L1)
-	_comp(G, L2)
-	# orelha de longe
 	var OL := _nova()
-	_bmp(OL, hx + 6, hy - 3, ["dd..", "dddd", "dddd"])
+	_bmp(OL, hx + 4, hy - 1, _GB_ORELHA_L)
 	_comp(G, OL)
-	# corpo + pescoço + cabeça + orelha de perto
+	# corpo e cabeça na mesma camada (a listra corre sem emenda da nuca à anca); o molde do tronco é só o corpo
 	var B := _nova()
-	_elip(B, bx, by0, bw, bh)
+	_bmp(B, bx, by0, _GB_CORPO)
 	_tr = B.duplicate()
-	_cr = BichoPx.cranio(_CAB["G"]["rows"])
-	_elip(B, hx - 3, hy + 3, 9, 9)
-	var cab: Array = _cab_rows(_CAB["G"], g["boca"])
+	var cb: Dictionary = _GB_CAB_INFO.duplicate()
+	cb["rows"] = _GB_CAB
+	var cab: Array = _cab_rows(cb, g["boca"])
 	_bmp(B, hx, hy, cab)
-	_faixa_topo(B, bx + 5, bx + bw - 5, 3, "w", "v")
-	_bmp(B, hx + 2, hy - 3, [".mm.", "mlem", "mmmm"])
-	# olho grande amarelo com pupila e brilho; sobrancelha pesada
-	var ex: int = hx + int(_CAB["G"]["ex"])
-	var ey: int = hy + int(_CAB["G"]["ey"])
-	_rect(B, ex - 1, ey, 5, 4, "y")
-	_rect(B, ex + 1, ey + 1, 3, 3, "k")
-	_px(B, ex - 1, ey, "w")
-	_px(B, ex, ey, "w")
-	_rect(B, ex - 1, ey + 3, 5, 1, "Y")
-	_rect(B, ex + 1, ey + 3, 3, 1, "k")
-	_trazo(B, ex - 2, ey - 2 + (0 if ph == 0 else 1), ex + 4, ey - 1 + (1 if ph == 0 else 2), 1, "k")
-	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
+	_cr = 9
+	# cenho fechado de chefe (desce no bote)
+	var ex: int = hx + int(_GB_CAB_INFO["ex"])
+	var ey: int = hy + int(_GB_CAB_INFO["ey"])
+	_trazo(B, ex - 2, ey - 1 + (0 if ph == 0 else 1), ex + 2, ey + (0 if ph == 0 else 1), 1, "k")
+	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy + _OY, cab)
 	_comp(G, B)
+	# patas de perto, com as garrinhas claras na ponta do pé
+	for d in [[bx + 3, 0.0, false], [bx + 20, 0.5, true]]:
+		var xf: int = d[0]
+		var yf: int = -1
+		if g["andando"]:
+			var phs: float = fposmod(float(g["q"]) / 6.0 + float(d[1]), 1.0)
+			xf = int(d[0]) + roundi(2.5 * cos(TAU * phs))
+			yf = -1 - maxi(0, roundi(2.0 * sin(TAU * phs)))
+		if d[2] and int(g["e"]) > 0:
+			xf = int(d[0]) + 2 + int(g["e"])
+			yf = maxi(hip + 2, -2 - 2 * int(g["e"]))
+		_px(L2, xf + 4, yf, "c")
+	_comp(G, L2)
+	# orelha de perto
+	if not BichoPx.cabeca_coberta:
+		var OP := _nova()
+		_bmp(OP, hx + 1, hy - 2, _GB_ORELHA)
+		_comp(G, OP)
+	# lenço de mecânico no pescoço
+	if not BichoPx.corpo_coberto:
+		var Le := _nova()
+		_bmp(Le, hx - 2, hy + 5, _GB_LENCO)
+		_comp(G, Le)
 	_fedor(G, g, ph == 2 or ph == 3)
 
 # ================================================================ 7 ESQUILO ACROBATA (Fases.Chefe.CORUJA)
