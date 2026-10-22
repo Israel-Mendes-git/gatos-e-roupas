@@ -812,6 +812,9 @@ func _consumir() -> void:
 				var po: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				# antecipação: clarão no gato, pulinho, bordas escurecem; o efeito entra ANTECIP_PODER depois
 				var gato_p: Unidade = _unidade_perto(Vector2(e["x"], e["y"]), 0)
+				# poder de bicho (eq 1): quem usou, para o rasante do Esquilo e para subir o nome acima de um chefe alto
+				var bicho_p: Unidade = _unidade_perto(Vector2(e["x"], e["y"]), 1) if int(e.get("eq", 0)) == 1 else null
+				var sobe_p: float = _topo_extra(bicho_p) * 1.6 if bicho_p != null else 0.0
 				if gato_p != null:
 					var jp: Dictionary = _ju(gato_p)
 					jp["antecip"] = ANTECIP_PODER * 1.5
@@ -905,7 +908,7 @@ func _consumir() -> void:
 						nivel_nome += 1
 				# herança: a placa leva o selo com o ícone do poder (pela fantasia herdada: na Carga de lança o evento sai com poder -1)
 				var her_p: int = Pecas.PODER_TIPO[clampi(int(e["conj"]), 0, Pecas.PODER_TIPO.size() - 1)] if e.get("heranca", false) else -1
-				numeros.append({"p": Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 92 * ESC - nivel_nome * 46.0), "txt": ("Herança: " if e.get("heranca", false) else "") + Simulacao.heranca_nome_curto(e["conj"], int(e.get("grau", 1))) + "!", "cor": _cor_legivel(Pecas.CONJUNTO_COR[e["conj"]], 0.78), "vida": 1.5, "tam": 28, "larg": 380.0, "ct": 8, "placa": true, "her": her_p})
+				numeros.append({"p": Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 92 * ESC - sobe_p - nivel_nome * 46.0), "txt": ("Herança: " if e.get("heranca", false) else "") + Simulacao.heranca_nome_curto(e["conj"], int(e.get("grau", 1))) + "!", "cor": _cor_legivel(Pecas.CONJUNTO_COR[e["conj"]], 0.78), "vida": 1.5, "tam": 28, "larg": 380.0, "ct": 8, "placa": true, "her": her_p})
 				if her_p >= 0 and gato_p != null:
 					var her_k: int = 0   # duas heranças do mesmo gato juntas: o selinho novo vai ao lado, sem cobrir o outro
 					for hf0 in her_fx:
@@ -919,18 +922,19 @@ func _consumir() -> void:
 				if int(e.get("poder", 0)) == Pecas.Poder.TELEPORTE:
 					alvos_p = [Vector2(float(e.get("x0", e["x"])), float(e.get("y0", e["y"])) - 24 * ESC)]   # no teleporte, o risco vai da origem ao destino
 				if e.has("texto"):
-					var pt_txt: Vector2 = Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 150 * ESC - nivel_nome * 46.0)
+					var pt_txt: Vector2 = Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 150 * ESC - sobe_p - nivel_nome * 46.0)
 					if not alvos_p.is_empty() and int(e.get("poder", 0)) == Pecas.Poder.POQUER:
 						pt_txt = Vector2(clampf(alvos_p[0].x, 140.0, 1140.0), alvos_p[0].y - 70.0)
 					_numero(pt_txt, String(e["texto"]), cp.lightened(0.25), 24, 1.5, 300.0)
 				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp,
-					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "x1": float(e.get("x1", e["x"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0)), "combos": int(e.get("combos", 0))}})
+					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "x1": float(e.get("x1", e["x"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0)), "combos": int(e.get("combos", 0)),
+						"eq": int(e.get("eq", 0)), "u": bicho_p}})
 			"aviso":
 				# um bicho carrega o poder: ping de alerta (o desenho da área sai de _desenhar_avisos)
 				_som("poder_pronto", 0.6 if e.get("chefe", false) else 0.8, -2.0, true)
 			"aviso_cortado":
 				# o bicho foi atordoado no meio da carga: o "!" do balão se parte e o poder se perde
-				var pcv: Vector2 = Vector2(e["x"], e["y"] - (CORPO_ALT + 40.0) * ESC)
+				var pcv: Vector2 = Vector2(e["x"], e["y"] - (CORPO_ALT + 40.0) * ESC - _topo_extra(_unidade_perto(Vector2(e["x"], e["y"]), 1)))
 				tfx.append({"k": "aviso_cortado", "p": pcv, "t": 0.0, "dur": 0.75})
 				_faisca(pcv, Color(1.0, 0.85, 0.4), 6, 130.0, 0.4, 2.6)
 				_numero(pcv + Vector2(0, -34), "cortado!", Color(1.0, 0.85, 0.5), 15, 0.9, 120.0)
@@ -1304,6 +1308,15 @@ func _unidade_perto(p: Vector2, eq: int) -> Unidade:
 			melhor = uu
 	return melhor
 
+## Quanto o sprite de um chefe passa (px de tela) acima do topo padrão de corpo (CORPO_ALT): o balão do "!" e o nome
+## do poder sobem isso para não cobrir a cara. Só o Esquilo Acrobata (cabeção + rabão por cima) precisa hoje.
+func _topo_extra(uu: Unidade) -> float:
+	if uu == null or not uu.chefe:
+		return 0.0
+	if uu.chefe_tipo == Fases.Chefe.CORUJA:
+		return 55.0
+	return 0.0
+
 func _anel(c: Vector2, rx: float, ry: float, cor: Color, larg: float) -> void:
 	var pts := PackedVector2Array()
 	for i in 25:
@@ -1337,7 +1350,7 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 		Pecas.Poder.FRENESI:
 			dur = 0.9
 		Pecas.Poder.ATRAVESSA:
-			dur = 0.55
+			dur = 0.55 if int(ex.get("eq", 0)) == 0 else 0.7   # rasante de bicho: tempo para o salto atravessar a faixa
 		Pecas.Poder.RAJADA:
 			dur = 0.85
 		Pecas.Poder.GELO:
@@ -1444,6 +1457,63 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 	for i in 8:
 		sem.append(randf())
 	fx.append({"poder": poder, "p": po, "c": centro, "alvos": alvos, "cor": cor, "t": 0.0, "dur": dur, "sem": sem, "ex": ex})
+
+## Bolota do Esquilo que acabou de sair: a simulação cria o projétil no mesmo passo do golpe, enquanto o sprite ainda está na
+## fase 1 (noz erguida atrás da cabeça, primeiros 20% de 0,22 s). Nesse instante, e só perto do dono, a bolota do voo fica
+## escondida; ela aparece quando o braço já estica para a frente (fase 2), saindo da mão.
+func _bolota_na_mao(d: Dictionary) -> bool:
+	var dono: Unidade = d["dono"]
+	if dono == null or not dono.chefe or dono.chefe_tipo != Fases.Chefe.CORUJA:
+		return false
+	return dono.golpe > 0.22 * 0.8 and absf(float(d["x"]) - dono.x) < 40.0
+
+## Bolota em pixel (quadradinhos de V.Q): corpo marrom com luz e sombra, chapéu mais escuro com escamas e cabinho, contorno
+## escuro de 1. `giro` 0..3 = quartos de volta (0 = chapéu para cima), em torno da célula (3, 3): coordenada inteira, sem meio pixel.
+## O chapéu é mais largo que o corpo (a aba sobra dos dois lados) e o corpo afina numa ponta: silhueta de bolota, não de losango.
+const _BOLOTA: Array = ["...s..", ".CcCC.", "CcCcCC", ".lbbb.", ".lbbd.", ".lbdd.", "..bd.."]
+func _bolota(ce: Vector2, giro: int) -> void:
+	var q: float = V.Q
+	var cores: Dictionary = {"s": Color(0.3, 0.18, 0.08), "C": Color(0.36, 0.22, 0.11), "c": Color(0.54, 0.36, 0.18),
+		"b": Color(0.84, 0.57, 0.26), "l": Color(0.98, 0.8, 0.5), "d": Color(0.6, 0.37, 0.15)}
+	var ox: float = V.sn(ce.x)
+	var oy: float = V.sn(ce.y)
+	for passo in 2:
+		for j in _BOLOTA.size():
+			var lin: String = _BOLOTA[j]
+			for i in lin.length():
+				var ch: String = lin[i]
+				if ch == ".":
+					continue
+				var cx: int = i - 3
+				var cy: int = j - 3
+				for r in giro:
+					var t0: int = cx
+					cx = -cy
+					cy = t0
+				var x: float = ox + cx * q
+				var y: float = oy + cy * q
+				if passo == 0:
+					draw_rect(Rect2(x - q, y, q * 3.0, q), V.CONT)
+					draw_rect(Rect2(x, y - q, q, q * 3.0), V.CONT)
+				else:
+					draw_rect(Rect2(x, y, q, q), cores[ch])
+
+## Rasante do Esquilo Acrobata: a simulação só aplica o dano (o chefe não sai do lugar), então o salto é só de desenho —
+## três cópias translúcidas do sprite em arco, indo por cima da faixa até `x_fim` e voltando (a de trás com atraso).
+## `base` = pés do chefe quando o rasante saiu; `u` = 0..1 do efeito.
+func _rasante_saltos(ue: Unidade, base: Vector2, x_fim: float, u: float) -> void:
+	var esc_g: float = ESC * ue.escala()
+	var tp_g: int = Unidade.Tipo.GEMEO if ue.pequeno else ue.tipo
+	var alfas: Array = [0.6, 0.4, 0.24]
+	for k in 3:
+		var w: float = u * 1.2 - k * 0.1
+		if w <= 0.0 or w >= 1.0:
+			continue
+		var ida: float = sin(w * PI)                       # 0 -> 1 (no fim da faixa) -> 0
+		var x_g: float = lerpf(base.x, x_fim + 30.0, ida)
+		var y_g: float = base.y - absf(sin(w * TAU)) * 70.0  # um arco na ida e outro na volta, por cima dos gatos
+		var dir_g: float = -1.0 if w < 0.5 else 1.0
+		Desenho.boneco(self, Vector2(x_g, y_g), esc_g, dir_g, 1, ue.pecas, 0.0, ue.anim, false, 0.12, alfas[k], false, -1, 0.0, tp_g, false, ue.chefe, ue.familia, ue.elite, ue.chefe_tipo, ue.parte, false, 0)
 
 ## Bola de fogo em pixel: lóbulos com contorno vinho, laranja, amarelo e miolo claro. `calor` 1 = recém-explodiu
 ## (miolo branco), 0 = brasa apagando.
@@ -1596,12 +1666,26 @@ func _desenhar_fx(f: Dictionary) -> void:
 			var alt: float = V.sn(3.0 + 14.0 * a)
 			var x_ini: float = p.x
 			var ancho: float = 1320.0 - x_ini
+			if int(ex.get("eq", 0)) == 1:
+				# rasante de bicho (Esquilo Acrobata): o feixe vai para a ESQUERDA, cruzando a faixa dos gatos até o mais
+				# distante dela (com folga), e o esquilo salta em arco por cima dela (cópias translúcidas do sprite)
+				var x_fim: float = p.x - 160.0
+				for b in alvos:
+					x_fim = minf(x_fim, b.x - 70.0)
+				x_fim = maxf(0.0, x_fim)
+				var cresce_r: float = minf(1.0, u / 0.35)   # o feixe acompanha o salto e depois apaga
+				x_ini = p.x - (p.x - x_fim) * cresce_r
+				ancho = p.x - x_ini
+				var ue: Unidade = ex.get("u", null)
+				if ue != null and is_instance_valid(ue):
+					_rasante_saltos(ue, p + Vector2(0, 30.0 * ESC), x_fim, u)
 			V.quadro(self, x_ini, p.y - alt - q, ancho, alt * 2.0 + q * 2.0, V.CONT)
 			V.quadro(self, x_ini, p.y - alt, ancho, alt * 2.0, c)
 			V.quadro(self, x_ini, p.y - alt * 0.55, ancho, alt * 1.1, clr_c)
 			V.quadro(self, x_ini, p.y - maxf(q, alt * 0.22), ancho, maxf(q, alt * 0.44), V.BRANCO)
+			var sent_a: float = -1.0 if int(ex.get("eq", 0)) == 1 else 1.0   # as faíscas correm no sentido do rasante
 			for k in 8:
-				var xk: float = x_ini + fposmod(k / 8.0 + u * 1.2, 1.0) * ancho
+				var xk: float = x_ini + fposmod(k / 8.0 + u * 1.2 * sent_a, 1.0) * ancho
 				V.quadro(self, xk, p.y - alt - q * 3.0 - (k % 3) * q, q, q * 2.0, clr_c)
 			for b in alvos:
 				V.estrela(self, b, 16.0 * a + 4.0, Color(1.0, 0.95, 0.6))
@@ -2716,6 +2800,12 @@ func _atualizar_visual(dt: float, delta_real: float) -> void:
 				particulas.append({"p": ppos, "v": Vector2(randf_range(-8, 8), randf_range(-8, 8)), "vida": 0.22, "max": 0.22, "cor": Color(1.0, 0.82, 0.3, 0.7), "r": 3.0, "g": 0.0, "tipo": 0})
 			elif dono.equipe == 0:
 				particulas.append({"p": ppos, "v": Vector2.ZERO, "vida": 0.22, "max": 0.22, "cor": Color(0.7, 0.85, 1.0, 0.6), "r": 3.2, "g": 0.0, "tipo": 0})
+			elif dono.chefe and dono.chefe_tipo == Fases.Chefe.CORUJA:
+				# bolota do Esquilo: só um grãozinho marrom de vez em quando, atrás da noz (nunca por cima dela)
+				if randf() < 0.35 and not _bolota_na_mao(d):
+					var alvo_r: Unidade = d["alvo"]
+					var sx_r: float = signf((Balanco.TORRE_X if alvo_r == null else alvo_r.x) - float(d["x"]))
+					particulas.append({"p": ppos + Vector2(-sx_r * randf_range(14.0, 20.0), randf_range(-3.0, 3.0)), "v": Vector2(-sx_r * 10.0, randf_range(-6.0, 4.0)), "vida": 0.16, "max": 0.16, "cor": Color(0.55, 0.36, 0.18) if randf() < 0.5 else Color(0.78, 0.55, 0.28), "r": V.Q, "g": 120.0, "tipo": 5})
 			else:
 				particulas.append({"p": ppos, "v": Vector2(randf_range(-10, 10), randf_range(-14, 6)), "vida": 0.3, "max": 0.3, "cor": Color(1.0, 0.4, 0.25, 0.6), "r": 3.0, "g": 0.0, "tipo": 0})
 	for i in range(her_fx.size() - 1, -1, -1):
@@ -2938,6 +3028,8 @@ func _draw() -> void:
 		var sx: float = signf(Balanco.TORRE_X - pp.x if alvo == null else alvo.x - pp.x)
 		if dono == null:
 			pp += _desvio_boca(float(d["x"]))   # o tiro da torre nasce na boca do canhão
+		if dono != null and _bolota_na_mao(d):
+			continue
 		V.elipse(self, pp + Vector2(0, altura - 2), 6.0, 2.0, Color(0, 0, 0, 0.25))
 		if dono == null:
 			for tr in 3:
@@ -2950,11 +3042,10 @@ func _draw() -> void:
 			V.disco_c(self, pp, 4.0, Color(0.78, 0.92, 1.0), Color(0.1, 0.2, 0.45))
 			V.disco(self, pp + Vector2(-1, -1), 2.0, Color(1, 1, 1))
 		elif dono.chefe and dono.chefe_tipo == Fases.Chefe.CORUJA:
-			# bolota do Esquilo Acrobata: noz com chapeuzinho, girando no ar
-			var gira: bool = int(float(d["x"]) / 24.0) % 2 == 0
-			V.disco_c(self, pp, 4.5, Color(0.79, 0.54, 0.24), Color(0.3, 0.17, 0.07))
-			V.quadro(self, pp.x - 5.0, pp.y - (6.0 if gira else 1.0), 10.0 if gira else 4.0, 4.0 if gira else 10.0, Color(0.48, 0.32, 0.19))
-			V.disco(self, pp + Vector2(-1.5, 1.0), 1.5, Color(0.95, 0.75, 0.45))
+			# bolota do Esquilo Acrobata: noz com chapéu, girando no ar em 4 quartos de volta (pelo tempo). Enquanto o
+			# sprite ainda mostra a noz erguida atrás da cabeça (fase 1 do golpe), a do voo não aparece: nada de bolota dupla.
+			# (a escondida já saiu acima, antes da sombra). Rola no sentido do voo: para a esquerda, anti-horário.
+			_bolota(pp, posmod(int(rel * 14.0) * (1 if sx > 0.0 else -1), 4))
 		else:
 			for tr in 3:
 				V.quadro(self, pp.x - sx * (8.0 + tr * 7.0), pp.y - 1.5, 6.0 - tr * 1.5, 3.0, Color(1.0, 0.45, 0.25))
@@ -2995,6 +3086,9 @@ func _draw() -> void:
 				V.quadro(self, p["p"].x - dd.x * V.Q * 2.0, p["p"].y - dd.y * V.Q * 2.0, V.Q, V.Q, V.tom(Color(c.r, c.g, c.b, 1.0), 0.7))
 		elif p["tipo"] == 4:
 			V.brilho(self, p["p"], maxf(V.Q, p["r"] * (0.5 + 0.5 * a)), Color(c.r, c.g, c.b, 1.0))
+		elif p["tipo"] == 5:
+			# grãozinho: um quadradinho só, sem contorno (farelo da bolota do Esquilo)
+			V.quadro(self, p["p"].x, p["p"].y, V.Q, V.Q, Color(c.r, c.g, c.b, 1.0))
 		else:
 			# fagulha: quadradinho com contorno que encolhe
 			var rf: float = maxf(V.Q, p["r"] * (0.4 + a * 0.6))
@@ -6240,7 +6334,7 @@ func _desenhar_avisos() -> void:
 				V.quadro(self, pa.x + cos(ang) * (rr + 4.0) - q, pa.y + sin(ang) * (rr + 4.0) - q, q * 2.0, q * 2.0, Color(1, 1, 1))
 		# balão sobre o bicho, piscando
 		var esc_u: float = ESC * uu.escala()
-		var pb: Vector2 = Vector2(uu.vx, uu.vy - (CORPO_ALT + 40.0) * esc_u + sin(rel * 14.0) * 2.0)
+		var pb: Vector2 = Vector2(uu.vx, uu.vy - (CORPO_ALT + 40.0) * esc_u - _topo_extra(uu) + sin(rel * 14.0) * 2.0)
 		var raio_b: float = 19.0 + 4.0 * pisca
 		V.quadro(self, V.sn(pb.x) - q * 2.0, V.sn(pb.y + raio_b) - q, q * 5.0, q * 3.0, cont_a)
 		V.quadro(self, V.sn(pb.x) - q, V.sn(pb.y + raio_b) + q * 2.0, q * 3.0, q * 2.0, cont_a)
