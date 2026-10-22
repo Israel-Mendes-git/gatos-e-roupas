@@ -560,7 +560,7 @@ static func _camada(c: Object, base: Vector2, n: int, nmax: int, nf: int, lv_est
 				tipo = 2
 			elif i == ENGRENAGEM_I and lv_cad > 0:
 				tipo = 3
-		_bloco(c, rb.position + Vector2(0, dy), Desenho.b(Desenho.cor_tijolo(i), br), Desenho.letra_tijolo(i), tipo)
+		_bloco(c, rb.position + Vector2(0, dy), Desenho.b(Desenho.cor_tijolo(i), br), Desenho.letra_tijolo(i), tipo, i >= nf * COLS or i % COLS == COLS - 1)
 		if tipo >= 2:
 			if gravando:
 				c.cortar([tipo, rb.position, dy])
@@ -580,24 +580,27 @@ static func _caixa(c: Object, base: Vector2) -> void:
 	_r(c, x + 12.0, y + 8.0, 16.0, 4.0, KRAFT_ESCURO)    # etiqueta
 	_r(c, x + 140.0, y + 8.0, 12.0, 4.0, KRAFT_ESCURO)
 
-static func _bloco(c: Object, p: Vector2, cor: Color, letra: String, tipo: int = 0) -> void:
+## Bloco de brinquedo 40x20. O contorno escuro (1 pixel de G) fica só em cima e à esquerda: o vizinho de
+## baixo/da direita fecha o resto, então entre dois blocos há 1 pixel e não 2. `fecha` desenha também o lado
+## direito (última coluna e blocos soltos). A placa é creme e lisa: letra de fonte de texto não cabia em 8 px.
+static func _bloco(c: Object, p: Vector2, cor: Color, _letra: String, tipo: int = 0, fecha: bool = false) -> void:
+	var di: float = G if fecha else 0.0
 	_r(c, p.x, p.y, BW, BH, cor.darkened(0.55))
-	_r(c, p.x + G, p.y + G, BW - 2.0 * G, BH - 2.0 * G, cor)
-	_r(c, p.x + G, p.y + G, BW - 2.0 * G, G, cor.lightened(0.3))
-	_r(c, p.x + G, p.y + BH - 2.0 * G, BW - 2.0 * G, G, cor.darkened(0.22))
+	_r(c, p.x + G, p.y + G, BW - G - di, BH - G, cor)
+	_r(c, p.x + G, p.y + G, BW - G - di, G, cor.lightened(0.3))
+	_r(c, p.x + G, p.y + BH - G, BW - G - di, G, cor.darkened(0.22))
 	match tipo:
-		0:
-			_r(c, p.x + 16.0, p.y + 4.0, 8.0, 12.0, Color(0.99, 0.95, 0.82))
-			_r(c, p.x + 12.0, p.y + 8.0, 16.0, 4.0, Color(0.99, 0.95, 0.82))
-			c.draw_string(UIComum.FONTE, Vector2(p.x + 20.0 - 6.6, p.y + 10.0 + 4.2), letra, HORIZONTAL_ALIGNMENT_CENTER, 13.2, UIComum.tam(12), cor.darkened(0.4))
+		0:  # placa creme lisa, com a borda de baixo um tom abaixo
+			_r(c, p.x + 3.0 * G, p.y + 2.0 * G, 5.0 * G, G, Color(0.99, 0.95, 0.82))
+			_r(c, p.x + 3.0 * G, p.y + 3.0 * G, 5.0 * G, G, Color(0.99, 0.95, 0.82).lerp(cor, 0.35))
 		1:  # janelinha acesa
-			_r(c, p.x + 12.0, p.y + 4.0, 16.0, 12.0, Color(0.30, 0.18, 0.10))
-			_r(c, p.x + 16.0, p.y + 8.0, 8.0, 4.0, Color(1.0, 0.90, 0.50))
-			_r(c, p.x + 16.0, p.y + 8.0, 4.0, 4.0, Color(1.0, 0.97, 0.78))
+			_r(c, p.x + 3.0 * G, p.y + G, 5.0 * G, 3.0 * G, Color(0.30, 0.18, 0.10))
+			_r(c, p.x + 4.0 * G, p.y + 2.0 * G, 3.0 * G, G, Color(1.0, 0.90, 0.50))
+			_r(c, p.x + 4.0 * G, p.y + 2.0 * G, G, G, Color(1.0, 0.97, 0.78))
 		2:  # cruz da enfermaria
-			_r(c, p.x + 16.0, p.y + 4.0, 8.0, 12.0, Color(0.30, 0.85, 0.45))
-			_r(c, p.x + 12.0, p.y + 8.0, 16.0, 4.0, Color(0.30, 0.85, 0.45))
-			_r(c, p.x + 16.0, p.y + 4.0, 8.0, 4.0, Color(0.55, 1.0, 0.65))
+			_r(c, p.x + 5.0 * G, p.y + G, G, 3.0 * G, Color(0.30, 0.85, 0.45))
+			_r(c, p.x + 4.0 * G, p.y + 2.0 * G, 3.0 * G, G, Color(0.30, 0.85, 0.45))
+			_r(c, p.x + 5.0 * G, p.y + G, G, G, Color(0.55, 1.0, 0.65))
 
 static func _meio(c: Object, x: float, y: float, w: float, h: float, cor: Color) -> void:
 	_r(c, x, y, w, h, cor.darkened(0.55))
@@ -608,7 +611,7 @@ static func _caidos(c: Object, base: Vector2, dano: float, n: int) -> void:
 	if n <= 0 or dano < 0.12:
 		return
 	var y: float = base.y + 4.0
-	_bloco(c, Vector2(base.x + 76.0, y), Desenho.cor_tijolo(3), Desenho.letra_tijolo(3), 0)
+	_bloco(c, Vector2(base.x + 76.0, y), Desenho.cor_tijolo(3), Desenho.letra_tijolo(3), 0, true)
 	if dano >= 0.4:
 		_meio(c, base.x + 124.0, y + 4.0, 20.0, 16.0, Desenho.cor_tijolo(6))
 		_meio(c, base.x + 144.0, y, 20.0, 16.0, Desenho.cor_tijolo(6))
