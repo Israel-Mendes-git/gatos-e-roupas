@@ -896,8 +896,8 @@ func _argolas() -> void:
 	for i in 5:
 		var y: float = _sn(118.0 + i * 108.0)
 		# furos nas duas folhas: discos de 3 células
-		V.disco(self, Vector2(PG_E.end.x - 12.0, y + 1.5), 4.0, FURO)
-		V.disco(self, Vector2(PG_D.position.x + 12.0, y + 1.5), 4.0, FURO)
+		V.disco(self, Vector2(PG_E.end.x - 12.0, y + 1.5), 4.0, FURO, Q)
+		V.disco(self, Vector2(PG_D.position.x + 12.0, y + 1.5), 4.0, FURO, Q)
 		# argola de metal atravessando a espinha: cinco fileiras (contorno, brilho, miolo, sombra, contorno)
 		draw_rect(Rect2(xe, y - Q * 2.0, Q * 15.0, Q * 5.0), ARGOLA_CONT)
 		draw_rect(Rect2(xe, y - Q, Q * 15.0, Q), ARGOLA_CL)
@@ -909,7 +909,7 @@ func _argolas() -> void:
 
 ## Ponta da argola: disco com contorno e um brilho em cima à esquerda.
 func _ponta_argola(px: float, y: float) -> void:
-	V.disco_c(self, Vector2(px, y + 1.5), 3.0, ARGOLA, ARGOLA_CONT)
+	V.disco_c(self, Vector2(px, y + 1.5), 3.0, ARGOLA, ARGOLA_CONT, Q)
 	draw_rect(Rect2(_sn(px) - Q, y - Q, Q, Q), ARGOLA_CL)
 
 func _faixa(r: Rect2, txt: String, tams: Array, cor: Color) -> void:
@@ -1058,7 +1058,7 @@ func _abas(e: Estado) -> void:
 		_txt(sub, Vector2(cx - larg_t * 0.5, rr.position.y + 44.0), 13, TINTA2, larg_t)
 		if i == ABA_METAS and not metas_novas.is_empty() and not em_metas:
 			var sn_c := Vector2(rr.position.x + 19.5, rr.position.y + 28.5)
-			V.disco_c(self, sn_c, 4.0, SELO_NOVO, TINTA)
+			V.disco_c(self, sn_c, 4.0, SELO_NOVO, TINTA, Q)
 			draw_rect(Rect2(_sn(sn_c.x) - Q, _sn(sn_c.y) - Q, Q, Q), SELO_NOVO.lightened(0.55))
 		if i > 0 and i < ABA_FORA and comodo_bloqueado(e, i - 1):
 			_cadeado(Vector2(rr.position.x + 18.0, rr.position.y + 28.0), Color(0.3, 0.2, 0.25))
@@ -1191,7 +1191,7 @@ func _tile(e: Estado, c: int, r: Rect2) -> void:
 	_moldura_px(r, Color(0.9, 0.68, 0.1) if completa else PAPEL_BORDA)
 	var cab: int = Pecas.CONJUNTO_PECAS[c][0]
 	var centro := r.position + Vector2(r.size.x * 0.5, TILE_ICO_Y)
-	V.disco(self, centro, 24.0, cor.lerp(PAPEL, 0.7))
+	V.disco(self, centro, 24.0, cor.lerp(PAPEL, 0.7), Q)
 	if e.ja_teve(cab):
 		Desenho.icone(self, cab, centro, 50.0)
 	# nome em até duas linhas
@@ -1312,7 +1312,7 @@ func _linha_peca(e: Estado, c: int, s: int) -> void:
 	else:
 		# interrogação num selo no canto da caixa (o ícone em silhueta vem da camada filha)
 		var sc: Vector2 = cx.position + Vector2(cx.size.x - 6.0, 8.0)
-		V.disco_c(self, sc, 7.0, Color(0.62, 0.2, 0.2), Color(0.25, 0.08, 0.08))
+		V.disco_c(self, sc, 7.0, Color(0.62, 0.2, 0.2), Color(0.25, 0.08, 0.08), Q)
 		_txt("?", Vector2(_sn(sc.x) - 9.0, _sn(sc.y) + 8.0), 16, Color.WHITE, 21.0)
 	var x: float = r.position.x + 88.0
 	var larg: float = r.size.x - 88.0 - 10.0
@@ -1668,7 +1668,7 @@ func _tile_bicho(e: Estado, k: int) -> void:
 	draw_rect(Rect2(r.position.x, r.position.y, r.size.x, Q * 2.0), cor.darkened(0.15) if viu else Color(0.5, 0.45, 0.42))
 	_moldura_px(r, Color(0.9, 0.68, 0.1) if der else PAPEL_BORDA)
 	var pe: Vector2 = r.position + Vector2(TILE_W * 0.5, TILE_H - 40.0)
-	V.disco(self, pe + Vector2(0, -22.0), 27.0, cor.lerp(PAPEL, 0.75) if viu else PAPEL_ESC)
+	V.disco(self, pe + Vector2(0, -22.0), 27.0, cor.lerp(PAPEL, 0.75) if viu else PAPEL_ESC, Q)
 	if viu:
 		_bicho(self, en, pe, _esc_mini(en), false)
 	var nome: String = en["nome"] if viu else "???"
