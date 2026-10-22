@@ -1013,11 +1013,25 @@ static func _bicho(c: CanvasItem, fam: int, tipo: int, ct: int, parte: bool, par
 			for dx in [-1.7, 1.7]:
 				_bola(c, kn + Vector2(dx, 0), 2.4, osso, ctn)
 
-static func boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, equipe: int, pecas: Array, f: float = 0.0, anim: float = 0.0, andando: bool = false, golpe: float = 0.0, alfa: float = 1.0, fantasma_slots: bool = false, destaque_slot: int = -1, furia: float = 0.0, tipo: int = 0, carregando: bool = false, chefe: bool = false, familia: int = 0, elite: bool = false, chefe_tipo: int = -1, parte: bool = false, parado: bool = false, variante: int = 0, nocaute: bool = false) -> void:
+static func boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, equipe: int, pecas: Array, f: float = 0.0, anim: float = 0.0, andando: bool = false, golpe: float = 0.0, alfa: float = 1.0, fantasma_slots: bool = false, destaque_slot: int = -1, furia: float = 0.0, tipo: int = 0, carregando: bool = false, chefe: bool = false, familia: int = 0, elite: bool = false, chefe_tipo: int = -1, parte: bool = false, parado: bool = false, variante: int = 0, nocaute: bool = false, preparo: float = 0.0, dor: bool = false, queda: float = -1.0) -> void:
 	if equipe == 0:
 		_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, fantasma_slots, destaque_slot, furia, variante, nocaute)
 		return
+	# ganchos de pose (ver BichoPx.preparo/dor/queda): valem só durante este desenho
+	BichoPx.preparo = clampf(preparo, 0.0, 1.0)
+	BichoPx.dor = dor
+	BichoPx.queda = queda
+	# nocaute: em pé (golpe recebido) -> 90 graus (focinho para cima) -> de barriga para cima no ar -> deitado no chão
+	BichoPx.queda_giro = 0 if queda < 0.25 else (1 if queda < 0.5 else 2)
+	BichoPx.queda_chao = queda >= 0.75
+	BichoPx.fuga = carregando and tipo == Unidade.Tipo.LADRAO and not chefe and not parte
 	_bicho_px(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, tipo, carregando, chefe, familia, elite, chefe_tipo, parte, parado)
+	BichoPx.preparo = 0.0
+	BichoPx.dor = false
+	BichoPx.queda = -1.0
+	BichoPx.queda_giro = 0
+	BichoPx.queda_chao = false
+	BichoPx.fuga = false
 	return
 	var cor: Color
 	if equipe == 0:
@@ -1097,6 +1111,9 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	var ct: int = (chefe_tipo % BICHO_CHEFES_DESENHADOS) if chefe else -1
 	var fam: int = 4 if parte else familia % 5
 	var filhote: bool = tipo == Unidade.Tipo.GEMEO and carregando
+	if andando and tipo == Unidade.Tipo.SALTADOR and not chefe and not parte and BichoPx.queda < 0.0:
+		# Saltador: o avanço do desenho se concentra no ar (a unidade anda reto; o bicho fica no chão e voa no pulo)
+		pos.x += float(BichoPx.avanco_pulo(anim)) * GATO_K * esc * dir
 	# sombra e aura na grade de pixels do sprite (GATO_K), a mesma do bicho
 	_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
 	if _com_sombra(c, false):
@@ -1114,7 +1131,8 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null and not sem_chapeu
 	BichoPx.corpo_coberto = pecas.size() > 1 and pecas[1] != null
 	BichoPx.ultimo_quadro = {}
-	if not (parte or filhote):
+	var caido: bool = BichoPx.queda >= 0.0   # nocaute: só o corpo (as roupas não giram junto)
+	if not (parte or filhote or caido):
 		# camadas atrás do corpo do bicho (capa, aljava, roda)
 		for s in [1, 3, 0, 2]:
 			var pa: Peca = pecas[s]
@@ -1132,7 +1150,7 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	BichoPx.desenhar(c, fam, tipo, anim, andando, golpe, f, alfa, carregando and tipo == Unidade.Tipo.LADRAO, filhote, ct, parte, parado)
 	BichoPx.cabeca_coberta = false
 	BichoPx.corpo_coberto = false
-	if parte or filhote:
+	if parte or filhote or caido:
 		resetar(c)
 		return
 	var q: Dictionary = BichoPx.quadro(fam, tipo, anim, andando, golpe, ct, parte, parado)
@@ -1161,7 +1179,7 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 			continue
 		if Pecas.SLOT[p.tipo] == Pecas.SLOT_CORPO and q.has("t") and Dictionary(q["t"]).is_empty():
 			continue   # sem tronco à mostra (a toupeira debaixo da terra): a roupa de corpo não tem onde ficar
-		var rot: float = -sin(golpe / 0.22 * PI) * 0.5 if (onde == RoupaGato.Onde.BOCA and golpe > 0.0) else 0.0
+		var rot: float = -BichoPx.curva_golpe(golpe) * 0.5 if onde == RoupaGato.Onde.BOCA else 0.0
 		var o: Vector2 = RoupaGato.ORIGEM[onde] + BichoPx.desloc(onde, fam, tipo, anim, andando, golpe, ct, parado)
 		if not q.is_empty() and (s == Pecas.SLOT_CABECA or s == Pecas.SLOT_CORPO) and Pecas.SLOT[p.tipo] == s:
 			# chapéu e roupa de corpo têm versão própria para os bichos (RoupaBicho): desenhadas para eles, não convertidas do gato

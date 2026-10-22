@@ -216,9 +216,9 @@ static func _comp(G: PackedInt32Array, L: PackedInt32Array, borda: bool = true) 
 # ---------------------------------------------------------------- pose (comum a desenhar e desloc)
 static func _geo(tipo: int, anim: float, andando: bool, golpe: float, mini: bool) -> Dictionary:
 	var pt: int = BichoPx.pose_truque
-	var e: float = 0.0
-	if golpe > 0.0:
-		e = sin(PI * clampf(1.0 - golpe / _DUR_GOLPE, 0.0, 1.0))
+	var e: float = BichoPx.curva_golpe(golpe)   # contato (língua fora) logo no passo do dano, volta desacelerando
+	var pr: int = BichoPx.recuo(golpe)        # preparo: cabeça recua 1-2 px e o corpo agacha 1
+	var dor: int = 1 if BichoPx.dor else 0
 	var esp: Dictionary = _ESPF if mini else _ESP[clampi(tipo, 0, 4)]
 	var amp: int = esp["amp"]
 	var q: int = 0
@@ -245,8 +245,8 @@ static func _geo(tipo: int, anim: float, andando: bool, golpe: float, mini: bool
 	var hh: int = rows.size()
 	var bh: int = int(esp["bh"]) - sq
 	var pe: int = esp["pe"]
-	var by0: int = -pe - bh - salto
-	var hx: int = int(esp["hx"]) + ei
+	var by0: int = -pe - bh - salto + (1 if pr > 0 else 0)
+	var hx: int = int(esp["hx"]) + ei - pr - dor
 	var hy: int = by0 + int(esp["hoff"])
 	if aire > 0:
 		hx += 1
@@ -259,11 +259,12 @@ static func _geo(tipo: int, anim: float, andando: bool, golpe: float, mini: bool
 			hx += 2   # curvado para a frente sob o peso da bomba
 			hy += 2
 		Unidade.Tipo.ATIRADOR:
-			if e > 0.0:
+			if e > 0.0 or pr > 0:
 				hx = int(esp["hx"])   # na hora do tiro fica ereto, mirando
 				hy -= 1
 	return {"q": q, "e": e, "ei": ei, "boca": boca, "tl": tl, "salto": salto, "aire": aire, "sq": sq, "resp": resp, "esp": esp, "ch": ch,
-		"hw": hw, "hh": hh, "bx": int(esp["bx"]), "bw": int(esp["bw"]), "bh": bh, "pe": pe, "by0": by0, "hx": hx, "hy": hy, "pt": pt, "andando": andando}
+		"hw": hw, "hh": hh, "bx": int(esp["bx"]), "bw": int(esp["bw"]), "bh": bh, "pe": pe, "by0": by0, "hx": hx, "hy": hy, "pt": pt, "andando": andando,
+		"pr": pr, "dor": dor, "ol": BichoPx.modo_olho()}
 
 ## Quanto o lugar `onde` se desloca em relação à planta do gato parado (as roupas acompanham por aqui).
 static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parado: bool) -> Vector2:
@@ -321,7 +322,8 @@ static func _cab_rows(ch: Dictionary, boca: bool) -> Array:
 
 # ---------------------------------------------------------------- montagem do quadro
 static func _chave(g: Dictionary, tipo: int, mk: int, carregando: bool) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [int(g["andando"]), tipo, mk, int(carregando), g["q"], g["ei"], int(g["boca"]), g["tl"], g["aire"], g["salto"], g["sq"], g["resp"], g["pt"], int(g["hx"])]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [int(g["andando"]), tipo, mk, int(carregando), g["q"], g["ei"], int(g["boca"]), g["tl"], g["aire"], g["salto"], g["sq"], g["resp"], g["pt"], int(g["hx"]),
+		g["pr"], g["dor"], g["ol"]]
 
 static func _monta(tipo: int, mk: int, carregando: bool, g: Dictionary) -> Dictionary:
 	var G := _nova()
@@ -350,7 +352,8 @@ static func _monta(tipo: int, mk: int, carregando: bool, g: Dictionary) -> Dicti
 	var fx: int = bx + 5                # coluna do pé de perto
 	var ax: int = int(esp["hx"]) + 2    # coluna do braço
 	var top: int = by0 + bh - 4         # onde o braço nasce
-	var cab_rows: Array = _cab_rows(ch, g["boca"])
+	# olho saltado: apertado/X por cima da bolha do olho
+	var cab_rows: Array = BichoPx.olhos(_cab_rows(ch, g["boca"]), int(ch["ex"]), int(ch["ey"]), int(g["ol"]), "ewk", "l", "k", 6)
 
 	# membros de longe
 	var L1 := _nova()
@@ -527,7 +530,7 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 		_cache[k] = _monta(tipo, mk, carregando, g)
 	var s: Dictionary = _cache[k]
 	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
-	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(tipo, mk, alfa), f)
+	BichoPx.sprite(c, s, _pal(tipo, mk, alfa), f)
 
 ## Quadro em cache do bicho nesta pose (sprite "l" e molde do tronco "t"), para as roupas acompanharem o desenho.
 static func quadro(tipo: int, anim: float, andando: bool, golpe: float) -> Dictionary:

@@ -138,6 +138,7 @@ static func _pal(tipo: int, filhote: bool, alfa: float) -> Dictionary:
 			P.merge({"o": Color("56648a"), "l": Color("ffffff"), "m": Color("e6eef8"), "d": Color("b2c2dc"), "v": Color("ffffff"), "e": Color("e8b4c4"), "f": Color("8a9ab8"), "u": Color("ffffff"), "n": Color("3a3a4a"), "a": Color("f0dcb4"), "b": Color("d0b488"), "c": Color("9a7e5c")}, true)
 		_:   # vermelha: laranja, meias escuras, ponta branca
 			P.merge({"o": Color("3a1a10"), "l": Color("f8ac4c"), "m": Color("e47a2a"), "d": Color("a84a20"), "v": Color("fff0d8"), "e": Color("3a2018"), "f": Color("3a2018"), "u": Color("fffaf0"), "n": Color("2a1c20")}, true)
+	BichoPx.pal_extra(P)
 	for kk in P.keys():
 		var cc: Color = P[kk]
 		cc.a = alfa
@@ -226,30 +227,34 @@ static func _comp(G: PackedInt32Array, L: PackedInt32Array, borda: bool = true) 
 # ---------------------------------------------------------------- pose (comum a desenhar e desloc)
 static func _geo(tipo: int, anim: float, andando: bool, golpe: float, filhote: bool, carregando: bool) -> Dictionary:
 	var pt: int = BichoPx.pose_truque
-	var e: float = 0.0
-	if golpe > 0.0:
-		e = sin(PI * clampf(1.0 - golpe / _DUR_GOLPE, 0.0, 1.0))
+	var e: float = BichoPx.curva_golpe(golpe)   # contato logo no passo do dano, volta desacelerando
 	var sal: bool = tipo == Unidade.Tipo.SALTADOR and not filhote
+	var gig: bool = tipo == Unidade.Tipo.GIGANTE and not filhote
+	var fuga: bool = BichoPx.fuga and andando and not filhote
 	var q: int = 0
 	var salto: int = 0
 	var aire: int = 0
+	var agach: int = 0
 	var bob: int = 0
+	var hbob: int = 0
 	var resp: int = 0
 	if andando:
 		if sal:
-			var fase: float = fposmod(anim / _HOP, 1.0)
-			if fase >= 0.3 and fase < 0.92:
-				var t: float = (fase - 0.3) / 0.62
-				salto = roundi(4.0 * sin(PI * t))
-				if salto > 0:
-					aire = 1 if t < 0.5 else 2
+			var pl: Vector3i = BichoPx.pulo(anim)   # agacha, voa 9 px, amortece a aterrissagem
+			salto = pl.x
+			aire = pl.y
+			agach = pl.z
 		else:
 			q = posmod(int(anim * _PASSO), 6)
-			bob = -1 if q % 3 == 1 else 0
+			var bb: Vector2i = BichoPx.bob_passo(q, gig, fuga)
+			bob = bb.x
+			hbob = bb.y
 	elif golpe <= 0.0:
 		resp = (int(Time.get_ticks_msec() / 650) + int(anim * 7.0)) % 2
 	var ei: int = roundi(3.0 * e)
 	var boca: bool = e > 0.4
+	var pr: int = BichoPx.recuo(golpe)        # preparo: cabeça recua 1-2 px e o corpo agacha 1
+	var dor: int = 1 if BichoPx.dor else 0
 	var esp: Dictionary
 	if filhote:
 		esp = {"bx": -5, "bw": 10, "bh": 6, "pe": 3, "hx": 1, "hoff": -2, "cab": "D", "pf": 2, "pt": -4, "ore": "4", "tr": [7, 2, 1]}
@@ -262,11 +267,11 @@ static func _geo(tipo: int, anim: float, andando: bool, golpe: float, filhote: b
 	var bw: int = esp["bw"]
 	var bh: int = esp["bh"]
 	var pe: int = esp["pe"]
-	var by0: int = -pe - bh - salto + bob
+	var by0: int = -pe - bh - salto + bob + (1 if pr > 0 else 0)
 	by0 -= resp
 	bh += resp
-	var hdx: int = ei
-	var hdy: int = 0
+	var hdx: int = ei - pr - dor
+	var hdy: int = hbob
 	if aire > 0:
 		hdx += 1
 		hdy = -1
@@ -278,17 +283,18 @@ static func _geo(tipo: int, anim: float, andando: bool, golpe: float, filhote: b
 			hdx += 2
 			hdy += 2
 		Unidade.Tipo.ATIRADOR:
-			if e > 0.0:
-				hdx = 0
+			if e > 0.0 or pr > 0:
+				hdx = 0   # mirando (no preparo) e no tiro fica ereto
 				hdy = -1
 	var hx: int = int(esp["hx"]) + hdx
 	var hoff: int = int(esp["hoff"])
 	if sal and aire == 0:
-		hoff = -6
+		hoff = -6 + agach   # sentado; desce ao agachar para o pulo e ao amortecer a aterrissagem
 		hx -= 1
 	var hy: int = by0 + hoff + hdy - (resp if tipo == Unidade.Tipo.COMUM else 0)
 	return {"q": q, "e": e, "ei": ei, "boca": boca, "salto": salto, "aire": aire, "bob": bob, "resp": resp, "esp": esp, "ch": ch,
-		"hw": hw, "hh": hh, "bx": int(esp["bx"]), "bw": bw, "bh": bh, "pe": pe, "by0": by0, "hx": hx, "hy": hy, "pt": pt, "sal": sal, "andando": andando}
+		"hw": hw, "hh": hh, "bx": int(esp["bx"]), "bw": bw, "bh": bh, "pe": pe, "by0": by0, "hx": hx, "hy": hy, "pt": pt, "sal": sal, "andando": andando,
+		"agach": agach, "pr": pr, "dor": dor, "ol": BichoPx.modo_olho(), "fuga": fuga}
 
 static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parado: bool) -> Vector2:
 	var g: Dictionary = _geo(tipo, anim, andando, golpe, false, false)
@@ -361,15 +367,21 @@ static func _pernas(L1: PackedInt32Array, L2: PackedInt32Array, g: Dictionary) -
 	var pf: int = esp["pf"]
 	var pt: int = esp["pt"]
 	var andando: bool = g["andando"]
-	var defs: Array = [[pt + 3, 0.5, "d", L1], [pf + 3, 0.0, "d", L1], [pt, 0.0, "m", L2], [pf, 0.5, "m", L2]]
+	# as de longe num tom bem mais escuro (#) que as de perto: as quatro patas leem separadas
+	var defs: Array = [[pt + 3, 0.5, "#", L1], [pf + 3, 0.0, "#", L1], [pt, 0.0, "m", L2], [pf, 0.5, "m", L2]]
+	var fuga: bool = g["fuga"]
+	if fuga:
+		# galope do Ladrão com a carga: as de trás juntas, as da frente juntas (meia volta depois), passada maior
+		defs = [[pt + 3, 1.0 / 6.0, "#", L1], [pf + 3, 0.5 + 1.0 / 6.0, "#", L1], [pt, 0.0, "m", L2], [pf, 0.5, "m", L2]]
 	for d in defs:
 		var x: int = d[0]
 		var xf: int = x
 		var yf: int = -1
 		if andando:
 			var ph: float = fposmod(float(q) / 6.0 + float(d[1]), 1.0)
-			xf = x + roundi(2.5 * cos(TAU * ph))
-			yf = -1 - maxi(0, roundi(2.0 * sin(TAU * ph)))
+			var pp: Vector2i = BichoPx.pe_passo(x, ph, BichoPx.PASSADA_FUGA if fuga else BichoPx.PASSADA)
+			xf = pp.x
+			yf = pp.y
 		if int(g["ei"]) > 0 and d[1] == 0.5 and d[2] == "m" and x == pf:
 			xf = x + 2 + int(g["ei"])
 			yf = maxi(hip + 1, -2 - 2 * int(g["ei"]))
@@ -452,7 +464,8 @@ static func _pup(G: PackedInt32Array, x: int, y: int, bw: int, bh: int, hw: int,
 
 # ---------------------------------------------------------------- montagem do quadro
 static func _chave(g: Dictionary, tipo: int, filhote: bool, carregando: bool) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [int(g["andando"]), tipo, int(filhote), int(carregando), g["q"], g["ei"], int(g["boca"]), g["aire"], g["salto"], g["resp"], g["pt"]]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [int(g["andando"]), tipo, int(filhote), int(carregando), g["q"], g["ei"], int(g["boca"]), g["aire"], g["salto"], g["resp"], g["pt"],
+		g["agach"], g["pr"], g["dor"], g["ol"], int(g["fuga"]), g["bob"]]
 
 static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) -> Dictionary:
 	var G := _nova()
@@ -473,7 +486,10 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	var q: int = g["q"]
 	var ore: Dictionary = _OREL[esp["ore"]]
 	var orows: Array = ore["r"]
-	var oy: int = hy - orows.size() + 1
+	var od: int = g["dor"]   # dor: orelhas baixas e para trás
+	var oy: int = hy - orows.size() + 1 + 2 * od
+	if od > 0:
+		orows = orows.slice(0, orows.size() - 2)   # baixam encolhendo para dentro da cabeça
 
 	# rabo
 	var L := _nova()
@@ -502,15 +518,15 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	var far: Array = []
 	for s in orows:
 		far.append(String(s).replace("l", "d").replace("m", "d"))
-	_bmp(OL, hx + int(ore["fx"]), oy + 1, far)
+	_bmp(OL, hx + int(ore["fx"]) - od, oy + 1, far)
 	_comp(G, OL)
 
 	# corpo + pescoço + cabeça + orelha de perto numa camada só
-	var cab_rows: Array = _cab_rows(ch, g["boca"])
+	var cab_rows: Array = BichoPx.olhos(_cab_rows(ch, g["boca"]), int(ch["ex"]), int(ch["ey"]), int(g["ol"]), "kw", "m", "k")
 	var B := _nova()
 	if sal and g["aire"] == 0:
 		_elip(B, bx, -10, 11, 9)                   # anca redonda no chão
-		_elip(B, bx + 4, -17, 8, 12)               # tronco inclinado, subindo para a cabeça
+		_elip(B, bx + 4, -17 + int(g["agach"]), 8, 12 - int(g["agach"]))   # tronco inclinado, subindo para a cabeça (encolhe ao agachar)
 	elif sal:
 		_elip(B, bx, by0 - 4, 10, bh + 4)
 		_elip(B, bx + 6, by0 + 2, bw - 6, bh - 1)
@@ -520,9 +536,9 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	var TR: PackedInt32Array = B.duplicate()   # só o tronco: molde das peças de corpo (BichoPx.quadro)
 	_elip(B, hx - 2, py0, 8, maxi(5, by0 + bh - py0 - 1))   # pescoço
 	_bmp(B, hx, hy, cab_rows)
-	_bmp(B, hx + int(ore["nx"]), oy, orows)
+	_bmp(B, hx + int(ore["nx"]) - od, oy, orows)
 	BichoPx.tirar(TR, _W, _H, hx, hy, cab_rows)   # a roupa de corpo fica atrás da cabeça
-	BichoPx.tirar(TR, _W, _H, hx + int(ore["nx"]), oy, orows)
+	BichoPx.tirar(TR, _W, _H, hx + int(ore["nx"]) - od, oy, orows)
 	if sal and g["aire"] == 0:
 		_tinta(B, bx + 7, -14, 5, 9, "v")
 	elif gig:
@@ -536,10 +552,17 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 				var s: String = cab_rows[j]
 				if i < s.length() and s[i] != ".":
 					_px(B, hx + i, hy + j, "k")
-		_px(B, hx + 5, hy + 3, "y")
-		_px(B, hx + 6, hy + 3, "w")
-		_px(B, hx + 5, hy + 4, "y")
-		_px(B, hx + 6, hy + 4, "y")
+		if int(g["ol"]) == 0:
+			_px(B, hx + 5, hy + 3, "y")
+			_px(B, hx + 6, hy + 3, "w")
+			_px(B, hx + 5, hy + 4, "y")
+			_px(B, hx + 6, hy + 4, "y")
+		elif int(g["ol"]) == 1:
+			_rect(B, hx + 4, hy + 4, 3, 1, "y")   # olho apertado na máscara
+		else:
+			for d in [-1, 0, 1]:
+				_px(B, hx + 5 + d, hy + 3 + d, "y")   # olho em X
+				_px(B, hx + 5 + d, hy + 3 - d, "y")
 	_comp(G, B)
 
 	# adereços
@@ -547,7 +570,7 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 		var CX := _nova()
 		_elip(CX, bx + 1, -11, 8, 9)   # coxa traseira redonda
 		var ae: int = g["ei"]
-		var topo: int = -11 - ae
+		var topo: int = -11 - ae + int(g["agach"])
 		var fim: int = -1 - 2 * ae
 		_rect(CX, bx + 12 + ae, topo, 2, fim - topo + 1, "m")   # braço dianteiro (sobe e avança no golpe)
 		_rect(CX, bx + 12 + ae, fim - 2, 2, 3, "f")
@@ -556,7 +579,7 @@ static func _monta(tipo: int, filhote: bool, carregando: bool, g: Dictionary) ->
 	if lad:
 		var S := _nova()
 		var sx: int = bx
-		var sy: int = by0 - 3
+		var sy: int = by0 - 3 + (BichoPx.saco_passo(q) if g["fuga"] else 0)   # fugindo: o saco balança fora de fase
 		if carregando:
 			_rect(S, sx + 1, sy - 6, 3, 3, "r")
 			_rect(S, sx + 4, sy - 7, 3, 3, "B")
@@ -606,7 +629,7 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 		_cache[k] = _monta(tipo, filhote, carregando, g)
 	var s: Dictionary = _cache[k]
 	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
-	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(tipo, filhote, alfa), f)
+	BichoPx.sprite(c, s, _pal(tipo, filhote, alfa), f)
 
 ## Quadro em cache do bicho nesta pose (sprite "l" e molde do tronco "t"), para as roupas acompanharem o desenho.
 static func quadro(tipo: int, anim: float, andando: bool, golpe: float) -> Dictionary:

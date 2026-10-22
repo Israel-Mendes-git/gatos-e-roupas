@@ -21,6 +21,234 @@ static var cabeca_coberta: bool = false
 ## Só vale durante a chamada de desenhar().
 static var corpo_coberto: bool = false
 
+# ---------------------------------------------------------------- ganchos de animação
+## Estados de pose que não cabem nos parâmetros de desenhar(): Desenho.boneco liga antes de desenhar o bicho e desliga depois
+## (valem só durante a chamada). Cada família lê em _geo e põe na chave do cache.
+## `preparo` 0..1 = janela antes do golpe (a recarga está acabando): cabeça recua, corpo agacha, corda puxada.
+static var preparo: float = 0.0
+## `dor` = acabou de apanhar (~0,12 s): olhos apertados, cabeça 1 px para trás, orelhas baixas.
+static var dor: bool = false
+## `queda` < 0 = vivo; 0..1 = nocaute em curso (o "fantasma" do bicho derrotado): olho em X e o quadro gira de 90 em 90 graus
+## até ficar de barriga para cima (ver sprite()). `queda_giro` = quartos de volta (0, 1, 2) e `queda_chao` = deitado no chão.
+static var queda: float = -1.0
+static var queda_giro: int = 0
+static var queda_chao: bool = false
+## `fuga` = Ladrão fugindo com a carga: corre (galope) em vez de andar, saco balançando fora de fase.
+static var fuga: bool = false
+
+const DUR_GOLPE := 0.22    # duração do golpe (golpe vai de 0.22 a 0)
+const PREPARO_T := 0.16    # janela de preparo antes do golpe (s de recarga restante)
+
+## Extensão do golpe (0..1). O dano sai no passo em que golpe = 0,22: o contato aparece LOGO ali (1), segura uns dois quadros
+## e volta desacelerando (rápido no começo, assentando no fim). Antes era um seno que só chegava ao ápice 0,11 s depois do dano.
+static func curva_golpe(golpe: float) -> float:
+	if golpe <= 0.0:
+		return 0.0
+	var r: float = clampf(golpe / DUR_GOLPE, 0.0, 1.0)
+	if r >= 0.72:
+		return 1.0
+	var u: float = r / 0.72
+	return u * u
+
+## Recuo de preparo em pixels (0, 1 ou 2): só antes do golpe, nunca durante.
+static func recuo(golpe: float) -> int:
+	if golpe > 0.0 or preparo <= 0.0:
+		return 0
+	return 1 if preparo < 0.5 else 2
+
+## Modo do olho: 0 aberto, 1 apertado (dor), 2 em X (nocaute).
+static func modo_olho() -> int:
+	if queda >= 0.0:
+		return 1 if queda < 0.18 else 2
+	return 1 if dor else 0
+
+## Troca o olho de uma cabeça em linhas de letras. Procura as letras de `olho` numa janela em volta de (ex, ey), pinta-as com `fundo`
+## e desenha por cima, com `traco`: apertado = risco fechado com a ruga de trás; X = xis de 3x3 no meio do olho.
+static func olhos(rows: Array, ex: int, ey: int, modo: int, olho: String, fundo: String, traco: String, alcance: int = 4) -> Array:
+	if modo == 0:
+		return rows
+	var r: Array = rows.duplicate()
+	var x0: int = 999
+	var y0: int = 999
+	var x1: int = -1
+	var y1: int = -1
+	for j in range(maxi(0, ey - 1), mini(r.size(), ey + 4)):
+		var s: String = r[j]
+		for i in range(maxi(0, ex - 1), mini(s.length(), ex + alcance)):
+			if olho.contains(s[i]):
+				x0 = mini(x0, i)
+				y0 = mini(y0, j)
+				x1 = maxi(x1, i)
+				y1 = maxi(y1, j)
+				s = s.substr(0, i) + fundo + s.substr(i + 1)
+		r[j] = s
+	if x1 < 0:
+		return rows
+	var pts: Array = []
+	var cx: int = (x0 + x1 + 1) / 2
+	var cy: int = (y0 + y1) / 2
+	if modo == 1:
+		var ym: int = (y0 + y1 + 1) / 2
+		for i in range(x0, x1 + 1):
+			pts.append(Vector2i(i, ym))
+		pts.append(Vector2i(x0, ym - 1))   # ruga de trás: o olho fecha com força
+		if x1 > x0:
+			pts.append(Vector2i(x1 + 1, ym))
+	else:
+		for d in [-1, 0, 1]:
+			pts.append(Vector2i(cx + d, cy + d))
+			pts.append(Vector2i(cx + d, cy - d))
+	for p in pts:
+		var v: Vector2i = p
+		if v.y < 0 or v.y >= r.size():
+			continue
+		var s2: String = r[v.y]
+		if v.x < 0 or v.x >= s2.length() or s2[v.x] == ".":
+			continue
+		r[v.y] = s2.substr(0, v.x) + traco + s2.substr(v.x + 1)
+	return r
+
+## Passo dos bichos comuns: amplitude da passada (px que o pé anda para cada lado do quadril) e quanto a pata sobe na passagem.
+const PASSADA := 3.0
+const PATA_SOBE := 3.0
+const QUADROS_PASSO := 6
+const PASSO_ANIM := 1.3     # quadros de passo por unidade de anim (_PASSO das famílias)
+
+## Pé no passo de fase `ph` (0..1): no ar (sin > 0) ele vai de trás para a frente, no chão volta de frente para trás, acompanhando
+## o chão que passa (antes andava ao contrário: a pata no ar ia para trás e a do chão para a frente — o passo "patinava").
+static func pe_passo(x: int, ph: float, passada: float = PASSADA, sobe: float = PATA_SOBE) -> Vector2i:
+	var xf: int = x - roundi(passada * cos(TAU * ph))
+	var yf: int = -1 - maxi(0, roundi(sobe * sin(TAU * ph)))
+	return Vector2i(xf, yf)
+
+## Sobe-e-desce do corpo no passo (quadro `q` de 0 a 5): [corpo, cabeça em relação ao corpo]. Comum: 1 px na passagem.
+## Grandalhão: 2 px, desce pesado no apoio e a cabeça chega um quadro atrasada. Fuga (galope): 2 px, alto no voo do galope.
+static func bob_passo(q: int, gig: bool, fuga: bool) -> Vector2i:
+	if fuga:
+		var gal: Array = [0, -1, -2, -2, -1, 0]
+		return Vector2i(gal[q % 6], 0)
+	if gig:
+		var pes: Array = [0, -2, -1]
+		var corpo: int = pes[q % 3]
+		return Vector2i(corpo, int(pes[posmod(q - 1, 3)]) - corpo)
+	return Vector2i(-1 if q % 3 == 1 else 0, 0)
+
+## Saco do Ladrão fugindo: chega dois quadros atrasado ao sobe-e-desce do corpo (balança fora de fase). Pixels em relação ao corpo.
+static func saco_passo(q: int) -> int:
+	return bob_passo(posmod(q - 2, 6), false, true).x - bob_passo(q, false, true).x
+
+## Unidades de `anim` por pixel andado, por bicho: a mesma conta de ANIM_POR_PX com a passada de cada um (galope do Ladrão
+## fugindo, passada dos chefes). A Campo usa isto para o pé não deslizar.
+static func anim_por_px(chefe_tipo: int, fuga_ladrao: bool) -> float:
+	var passada: float = PASSADA
+	if fuga_ladrao:
+		passada = PASSADA_FUGA
+	elif chefe_tipo >= 0:
+		passada = [2.5, 2.0, 3.5, 3.0, 3.0, 2.0, 2.5, 2.5, 2.5, 2.5][clampi(chefe_tipo, 0, 9)]
+	return (float(QUADROS_PASSO) * 0.5 / PASSO_ANIM) / (2.0 * passada)
+
+const PASSADA_FUGA := 4.0
+
+## Unidades de `anim` por pixel do sprite andado: meio ciclo (3 quadros) para o pé de apoio varrer 2 x PASSADA pixels.
+## A Campo avança `anim` pela distância andada (|dx| / (GATO_K * escala)) vezes isto: o pé fica parado no chão.
+const ANIM_POR_PX := (float(QUADROS_PASSO) * 0.5 / PASSO_ANIM) / (2.0 * PASSADA)
+
+## Pulo do Saltador (fase 0..1 do ciclo de `_HOP` unidades de anim): [altura, no ar (0 chão, 1 subindo, 2 descendo), agacha
+## (0, 1 = preparando o pulo, 2 = amortecendo a aterrissagem)].
+const HOP := 6.3
+const HOP_ALT := 9.0
+const HOP_SAI := 0.26      # fase em que deixa o chão
+const HOP_POUSA := 0.78    # fase em que toca o chão
+static func pulo(anim: float) -> Vector3i:
+	var fase: float = fposmod(anim / HOP, 1.0)
+	if fase < HOP_SAI:
+		return Vector3i(0, 0, 1 if fase >= HOP_SAI - 0.12 else 0)
+	if fase < HOP_POUSA:
+		var t: float = (fase - HOP_SAI) / (HOP_POUSA - HOP_SAI)
+		var h: int = roundi(HOP_ALT * sin(PI * t))
+		if h <= 0:
+			return Vector3i(0, 0, 2 if t > 0.5 else 1)
+		return Vector3i(h, 1 if t < 0.5 else 2, 0)
+	return Vector3i(0, 0, 2 if fase < HOP_POUSA + 0.12 else 0)
+
+## Deslocamento VISUAL em x (pixels do sprite) do Saltador: a unidade anda em velocidade constante na simulação; o desenho concentra
+## o avanço no ar (parado no chão, voa no pulo). Média zero no ciclo, então ele nunca se afasta de onde a unidade está.
+static func avanco_pulo(anim: float) -> int:
+	var fase: float = fposmod(anim / HOP, 1.0)
+	var g: float = clampf((fase - HOP_SAI) / (HOP_POUSA - HOP_SAI), 0.0, 1.0)
+	g = g * g * (3.0 - 2.0 * g)
+	var comp: float = HOP / ANIM_POR_PX   # pixels andados num ciclo
+	return roundi(comp * (g - fase + (HOP_SAI + HOP_POUSA) * 0.5 - 0.5))
+
+## Tons extras de toda paleta de bicho: `#` = pata de longe (bem mais escura que o tom d, para as quatro patas lerem separadas).
+static func pal_extra(P: Dictionary) -> void:
+	if P.has("d") and not P.has("#"):
+		var cd: Color = P["d"]
+		var a: float = cd.a
+		cd = cd.darkened(0.32)
+		cd.a = a
+		P["#"] = cd
+
+## Desenha o quadro `s` ({"x", "y", "l"}) com a paleta `pal`. No nocaute (queda >= 0) o quadro gira em passos de 90 graus em volta
+## do meio (a grade continua inteira) e, deitado, apoia o lombo no chão; de barriga para cima a luz troca (l <-> d).
+static func sprite(c: CanvasItem, s: Dictionary, pal: Dictionary, f: float) -> void:
+	if queda < 0.0 or (queda_giro == 0 and not queda_chao):
+		RoupaGato.sprite(c, s["x"], s["y"], s["l"], pal, f)
+		return
+	var k: String = "g%d%d" % [queda_giro, int(queda_chao)]
+	if not s.has(k):
+		s[k] = girar(s, queda_giro, queda_chao)
+	var r: Dictionary = s[k]
+	RoupaGato.sprite(c, r["x"], r["y"], r["l"], pal, f)
+
+static func girar(s: Dictionary, quartos: int, chao: bool) -> Dictionary:
+	var lin: Array = s["l"]
+	var h: int = lin.size()
+	var w: int = String(lin[0]).length()
+	var x0: int = s["x"]
+	var y0: int = s["y"]
+	var cx: int = x0 + w / 2
+	var cy: int = y0 + h / 2
+	var nw: int = h if quartos % 2 == 1 else w
+	var nh: int = w if quartos % 2 == 1 else h
+	var out: Array = []
+	for j in nh:
+		out.append(".".repeat(nw))
+	var nx0: int = 0
+	var ny0: int = 0
+	if quartos % 4 == 1:
+		# 90 graus no sentido anti-horário (focinho para cima): (dx, dy) -> (dy, -dx)
+		nx0 = cx + (y0 - cy)
+		ny0 = cy - (x0 + w - cx)
+	else:
+		nx0 = 2 * cx - (x0 + w)
+		ny0 = 2 * cy - (y0 + h)
+	for j in h:
+		var src: String = lin[j]
+		for i in w:
+			var ch: String = src[i]
+			if ch == ".":
+				continue
+			var ax: int = x0 + i
+			var ay: int = y0 + j
+			var bx: int
+			var by: int
+			if quartos % 4 == 1:
+				bx = cx + (ay - cy)
+				by = cy - (ax - cx) - 1
+			else:
+				bx = 2 * cx - ax - 1
+				by = 2 * cy - ay - 1
+				if ch == "l":
+					ch = "d"
+				elif ch == "d":
+					ch = "l"
+			var row: String = out[by - ny0]
+			out[by - ny0] = row.substr(0, bx - nx0) + ch + row.substr(bx - nx0 + 1)
+	if chao:
+		ny0 = -nh   # lombo no chão
+	return {"x": nx0, "y": ny0, "l": out}
+
 ## Arte nova (refeita do zero) de cada família de bichos comuns, um arquivo por família. Enquanto o arquivo
 ## de uma família não existe, ela continua com o desenho antigo (BichoPxA/BichoPxB).
 const NOVOS: Array[String] = ["res://scripts/arte/bichos/bicho_px_rato.gd", "res://scripts/arte/bichos/bicho_px_guaxinim.gd", "res://scripts/arte/bichos/bicho_px_raposa.gd", "res://scripts/arte/bichos/bicho_px_corvo.gd", "res://scripts/arte/bichos/bicho_px_sapo.gd"]
