@@ -3167,6 +3167,65 @@ class Pixel extends Node2D:
 
 class Fundo extends Pixel:
 	const YS: Array[float] = [447.0, 466.0, 490.0, 520.0, 556.0, 600.0, 652.0, 712.0]
+	## Objetos de primeiro plano por cômodo (18 colunas x até 8 linhas, quadradinhos de G): k corpo, r borda acesa,
+	## m meio-tom. Ficam no canto de baixo à direita, fora da faixa da barra de poderes.
+	const SIL_FRENTE: Dictionary = {
+		1: [  # chinelo esquecido
+			"..................", "........rrrr......", ".......rkkkkr.....", "......rkk..kkr....",
+			"..rrrrkkrrrrkkrr..", ".rkkkkkkkkkkkkkkr.", ".kmmkkkkkkkkkkkkk.", "..kkkkkkkkkkkkkk..",
+		],
+		2: [  # pé torneado de poltrona com a barra da saia
+			"rrrrrrrrrrrrrrrr..", "kkkkkkkkkkkkkkkk..", "kmkmkmkmkmkmkmkk..", "...........rkr....",
+			"..........rkkkr...", "...........kmk....", "..........rkkkr...", "...........kkk....",
+		],
+		3: [  # pé de cadeira com a travessa
+			"rrrrrrrrrrrrrr....", "kkkkkkkkkkkkkk....", ".rk.........rk....", ".kk.........kk....",
+			".kkrrrrrrrrrkk....", ".kkkkkkkkkkkkk....", ".kk.........kk....", ".kk.........kk....",
+		],
+		4: [  # caixa de papelão fechada com fita
+			"..rrrrrrrrrrrrr...", "..kkkkkkmkkkkkk...", "..kkkkkkmkkkkkk...", "..kkkkkkmkkkkkk...",
+			"..kmkkkkmkkkkkk...", "..kkkkkkmkkkkkk...", "..kkkkkkkkkkkkk...", "..kkkkkkkkkkkkk...",
+		],
+		5: [  # balde com alça
+			"....rrrrrrrr......", "...r........r.....", "..rrrrrrrrrrrr....", "..kkkkkkkkkkkk....",
+			"..kmkkkkkkkkkk....", "...kkkkkkkkkk.....", "...kmmmmmmmmk.....", "...kkkkkkkkkk.....",
+		],
+		6: [  # tufos de mato alto
+			"..r.......r.......", "..k..r....k...r...", ".rk.rk...rk..rk...", ".kk.kk.r.kk.rkk.r.",
+			"rkkrkkrk.kkrkkkrk.", "kkkkkkkkrkkkkkkkk.", "kkkkkkkkkkkkkkkkk.", "kkkkkkkkkkkkkkkkk.",
+		],
+		7: [  # pneu deitado de pé, encostado
+			"....rrrrrrrr......", "..rrkkkkkkkkrr....", ".rkkkkmmmmkkkkr...", ".kkkkm....mkkkk...",
+			".kkkkm....mkkkk...", ".kkkkkmmmmkkkkk...", "..kkkkkkkkkkkk....", "....kkkkkkkk......",
+		],
+		8: [  # boca de ventilação com chapéu
+			"....rrrrrrrrrr....", "....kkkkkkkkkk....", "......rkkkkr......", "......kmmmmk......",
+			"......kkkkkk......", "......kmmmmk......", "....rrkkkkkkrr....", "....kkkkkkkkkk....",
+		],
+		9: [  # cone de trânsito
+			"........rr........", ".......rkkr.......", ".......kmmk.......", "......rkkkkr......",
+			"......kkkkkk......", ".....kmmmmmmk.....", "...rrkkkkkkkkrr...", "...kkkkkkkkkkkk...",
+		],
+		10: [  # pedra com raiz por cima
+			"...r..............", "...kr.....rrr.....", "....kr..rrkkkrr...", ".....krrkkkkkkkr..",
+			"....rkkkkkkkmkkkr.", "...rkkkmkkkkkkkkk.", "..rkkkkkkkkkkkkkk.", "..kkkkkkkkkkkkkkk.",
+		],
+	}
+
+	## Desenha um bitmap de texto com quadradinhos de G; `o` é o canto de cima à esquerda.
+	func _bitmap(o: Vector2, linhas: Array, pal: Dictionary) -> void:
+		for y in linhas.size():
+			var ln: String = linhas[y]
+			var x: int = 0
+			while x < ln.length():
+				var ch: String = ln[x]
+				var x1: int = x + 1
+				while x1 < ln.length() and ln[x1] == ch:
+					x1 += 1
+				if pal.has(ch):
+					draw_rect(Rect2(o.x + x * G, o.y + y * G, (x1 - x) * G, G), pal[ch])
+				x = x1
+
 	var fase: int = 1
 
 	func _draw() -> void:
@@ -3596,48 +3655,13 @@ class Fundo extends Pixel:
 					_elipse(Vector2(1154, 468), 170, 22, Color(luz.r, luz.g, luz.b, 0.04))
 		if not Campo.CENARIO_SILHUETAS:
 			return
-		match fase:
-			2:
-				# pé de poltrona e canto de tapete em silhueta
-				draw_rect(Rect2(930, 690, 36, 50), sil)
-				draw_rect(Rect2(918, 686, 60, 10), sil)
-				draw_rect(Rect2(980, 704, 50, 8), Color(0, 0, 0, 0.5))
-			3:
-				# pé de cadeira no canto de baixo (longe da torre e da caixa)
-				draw_rect(Rect2(1010, 704, 70, 36), sil)
-				draw_rect(Rect2(1002, 698, 86, 10), sil)
-			4:
-				draw_rect(Rect2(1030, 700, 90, 40), sil)
-				draw_rect(Rect2(1046, 686, 56, 18), sil)
-			5:
-				draw_rect(Rect2(1030, 702, 100, 38), sil)
-				draw_rect(Rect2(1046, 690, 36, 16), sil)
-			6:
-				# tufos de mato alto no canto de baixo
-				for k in 9:
-					var bx: float = 960.0 + k * 14.0
-					draw_colored_polygon(PackedVector2Array([Vector2(bx, 740), Vector2(bx + 14, 740), Vector2(bx + 7 + (k % 3 - 1) * 8.0, 690 - (k % 4) * 6.0)]), sil)
-			7:
-				# pneu encostado no canto de baixo
-				draw_rect(Rect2(1010, 700, 90, 40), sil)
-				draw_rect(Rect2(1022, 690, 66, 14), sil)
-			8:
-				# boca de ventilação e cano no canto de baixo
-				draw_rect(Rect2(1020, 704, 80, 36), sil)
-				draw_rect(Rect2(1040, 684, 40, 24), sil)
-				draw_rect(Rect2(1030, 678, 60, 8), sil)
-			9:
-				# tampa de bueiro e meio-fio na frente
-				draw_rect(Rect2(1000, 706, 110, 34), sil)
-				draw_rect(Rect2(990, 700, 130, 8), sil)
-			10:
-				# pedra e raiz no canto de baixo
-				draw_colored_polygon(PackedVector2Array([Vector2(1000, 740), Vector2(1020, 700), Vector2(1070, 690), Vector2(1110, 740)]), sil)
-				draw_rect(Rect2(1060, 680, 12, 20), sil)
-			_:
-				# chinelo esquecido no canto de baixo
-				draw_rect(Rect2(900, 698, 70, 14), sil)
-				draw_rect(Rect2(960, 690, 24, 22), sil)
+		# objeto de primeiro plano no canto de baixo, ENTRE a barra de poderes (termina em x ~ 1075) e a caixa de
+		# peças (x >= 1160): antes eram blocos pretos lisos atrás da barra e pareciam defeito. Agora é um objeto
+		# reconhecível do cômodo, escuro mas com a borda de cima acesa pela luz do cenário (k = corpo, r = borda).
+		var luz_b: Color = P.luz
+		var pal_sil: Dictionary = {"k": Color(sil.r, sil.g, sil.b, 1.0), "r": Color(sil.r, sil.g, sil.b, 1.0).lerp(luz_b, 0.38), "m": Color(sil.r, sil.g, sil.b, 1.0).lerp(luz_b, 0.16)}
+		var bm: Array = SIL_FRENTE.get(fase, SIL_FRENTE[1])
+		_bitmap(Vector2(1090.0, 720.0 - bm.size() * G), bm, pal_sil)
 		# vinheta em degraus: base (abaixo da faixa) e bordas laterais estreitas
 		for k in 2:
 			draw_rect(Rect2(-40, 700 + k * 14.0, 1360, 60), Color(0, 0, 0.04, 0.10))
