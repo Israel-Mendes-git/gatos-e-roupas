@@ -265,6 +265,7 @@ var torre_pulso: float = 0.0
 var mensagem_t: float = 0.0
 var chefe_t: float = 0.0
 var fx: Array = []       # efeitos longos dos poderes: {poder, p, alvos, cor, t, dur, sem}
+var queimados: Array = [] # marcas de queimado no chão (Relâmpago, Trovoada): {p, t, dur, r, cor}
 var caidos: Array = []   # gatos nocauteados: ficam dormindo onde caíram até o fim da onda
 var tranco: Dictionary = {}   # Unidade -> Vector2(direção, tempo restante) do recuo ao apanhar
 var fundo: Fundo = null       # cenário estático (nó filho que não redesenha)
@@ -367,6 +368,7 @@ func iniciar(e: Estado) -> void:
 	voando.clear()
 	caidos.clear()
 	fx.clear()
+	queimados.clear()
 	tranco.clear()
 	tfx.clear()
 	golpe_torre = 0.0
@@ -1444,6 +1446,12 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 	for i in 8:
 		sem.append(randf())
 	fx.append({"poder": poder, "p": po, "c": centro, "alvos": alvos, "cor": cor, "t": 0.0, "dur": dur, "sem": sem, "ex": ex})
+	if poder == Pecas.Poder.RAIO or poder == Pecas.Poder.TROVOADA:
+		# o raio deixa o chão chamuscado onde caiu; a marca some sozinha em alguns segundos
+		for a in (alvos if not alvos.is_empty() else [po]):
+			queimados.append({"p": (a as Vector2) + Vector2(0, 24 * ESC), "t": 0.0, "dur": 3.2, "r": 36.0 if poder == Pecas.Poder.RAIO else 42.0, "cor": Color(1.0, 0.75, 0.25) if poder == Pecas.Poder.RAIO else Color(0.8, 0.62, 1.0)})
+		while queimados.size() > 12:
+			queimados.pop_front()
 
 ## Bola de fogo em pixel: lóbulos com contorno vinho, laranja, amarelo e miolo claro. `calor` 1 = recém-explodiu
 ## (miolo branco), 0 = brasa apagando.
@@ -1480,6 +1488,37 @@ func _fumaca_px(base: Vector2, raio: float, n: int, u: float, cor: Color, sem: f
 			continue
 		V.bolha(self, base + Vector2(cos(ang) * rr, sin(ang) * rr * 0.4 - sobe), tam, cor)
 
+## Clarão do raio: 2 quadros (de 1/30 s) com a tela inteira clara, o 1º forte e o 2º pela metade; depois nada.
+func _clarao_raio(t: float, cor: Color) -> void:
+	if t < 1.0 / 30.0:
+		draw_rect(Rect2(-20, -20, 1320, 760), Color(cor.r, cor.g, cor.b, 0.55))
+	elif t < 2.0 / 30.0:
+		draw_rect(Rect2(-20, -20, 1320, 760), Color(cor.r, cor.g, cor.b, 0.25))
+
+## Largura do raio: grosso no impacto (12 quadradinhos) e afinando em degraus até 4 enquanto ele dura (`fim` = u final).
+func _larg_raio(u: float, fim: float) -> float:
+	var k: float = clampf(u / fim, 0.0, 1.0)
+	return V.sn(lerpf(V.Q * 12.0, V.Q * 4.0, sqrt(k))) + V.Q
+
+## Marcas de queimado no chão: mancha escura achatada com brasas que apagam; encolhe em degraus até sumir.
+func _desenhar_queimados() -> void:
+	for qm in queimados:
+		var uq: float = clampf(float(qm["t"]) / float(qm["dur"]), 0.0, 1.0)
+		var degrau: float = ceilf((1.0 - uq) * 4.0) / 4.0     # 1, .75, .5, .25: some em 4 passos
+		var rq: float = float(qm["r"]) * (0.55 + 0.45 * degrau)
+		var pq: Vector2 = qm["p"]
+		V.elipse(self, pq, rq, rq * 0.3, Color(0.06, 0.03, 0.05, 0.6 * degrau))
+		V.elipse(self, pq, rq * 0.55, rq * 0.17, Color(0.02, 0.01, 0.02, 0.45 * degrau))
+		if uq < 0.45:
+			# brasas: alguns quadradinhos na cor do raio piscando dentro da mancha
+			var cq: Color = qm["cor"]
+			for k in 5:
+				if int(rel * 12.0 + k * 3) % 4 == 0:
+					continue
+				var ax: float = (fposmod(k * 0.618 + pq.x * 0.01, 1.0) - 0.5) * rq * 1.3
+				var ay: float = (fposmod(k * 0.382, 1.0) - 0.5) * rq * 0.35
+				V.quadro(self, pq.x + ax, pq.y + ay, V.Q, V.Q, cq if uq < 0.25 else V.tom(cq, 0.6))
+
 func _desenhar_fx(f: Dictionary) -> void:
 	var t: float = f["t"]
 	var u: float = clampf(t / float(f["dur"]), 0.0, 1.0)
@@ -1498,8 +1537,7 @@ func _desenhar_fx(f: Dictionary) -> void:
 	match int(f["poder"]):
 		Pecas.Poder.RAIO:
 			var quad: int = int(t * 18.0)
-			if u < 0.1:
-				draw_rect(Rect2(-20, -20, 1320, 760), Color(1, 1, 0.9, 0.16 * (1.0 - u / 0.1)))
+			_clarao_raio(t, Color(1, 1, 0.9))
 			for k in qtd.size():
 				var b: Vector2 = qtd[k]
 				var pe: Vector2 = b + Vector2(0, 24 * ESC)
@@ -1507,7 +1545,7 @@ func _desenhar_fx(f: Dictionary) -> void:
 				V.elipse(self, pe, 46.0 * minf(1.0, u * 8.0), 13.0 * minf(1.0, u * 8.0), Color(0.08, 0.05, 0.1, 0.4 * a))
 				if u < 0.45:
 					var topo := Vector2(b.x + (sem[k % 8] - 0.5) * 60.0, -10.0)
-					V.raio(self, topo, b, Color(1.0, 0.9, 0.35), sem[k % 8] * 9.0 + quad * 1.7, 14.0)
+					V.raio(self, topo, b, Color(1.0, 0.9, 0.35), sem[k % 8] * 9.0 + quad * 1.7, _larg_raio(u, 0.45))
 				V.aro(self, pe, 12.0 + 70.0 * ue, (12.0 + 70.0 * ue) * 0.35, Color(1.0, 0.92, 0.4), a * 1.2, 1.0)
 				if u < 0.3:
 					V.disco_c(self, b, 20.0 * (1.0 - u / 0.3) + 3.0, Color(1.0, 0.98, 0.8), Color(0.5, 0.3, 0.05))
@@ -1777,8 +1815,7 @@ func _desenhar_fx(f: Dictionary) -> void:
 		Pecas.Poder.TROVOADA:
 			var quadro_t: int = int(t * 18.0)
 			var roxo := Color(0.78, 0.65, 1.0)
-			if u < 0.2:
-				draw_rect(Rect2(-20, -20, 1320, 760), Color(0.75, 0.7, 1.0, 0.12 * (1.0 - u / 0.2)))
+			_clarao_raio(t, Color(0.86, 0.82, 1.0))
 			for k in qtd.size():
 				var b: Vector2 = qtd[k]
 				var pe: Vector2 = b + Vector2(0, 24 * ESC)
@@ -1786,7 +1823,7 @@ func _desenhar_fx(f: Dictionary) -> void:
 				V.elipse(self, pe, rr_t, rr_t * 0.34, Color(0.6, 0.45, 1.0, 0.25 * a))
 				V.aro(self, pe, rr_t, rr_t * 0.34, roxo, minf(1.0, a * 2.0), 1.5)
 				if u < 0.45:
-					V.raio(self, Vector2(b.x + (sem[k % 8] - 0.5) * 50.0, -10.0), b, roxo, sem[k % 8] * 9.0 + quadro_t * 1.7, 16.0)
+					V.raio(self, Vector2(b.x + (sem[k % 8] - 0.5) * 50.0, -10.0), b, roxo, sem[k % 8] * 9.0 + quadro_t * 1.7, _larg_raio(u, 0.45))
 				if u < 0.3:
 					V.disco_c(self, b, 16.0 * (1.0 - u / 0.3) + 3.0, Color(0.95, 0.9, 1.0), Color(0.25, 0.15, 0.5))
 				for j in 4:
@@ -2699,6 +2736,10 @@ func _atualizar_visual(dt: float, delta_real: float) -> void:
 		fx[i]["t"] += dt
 		if fx[i]["t"] >= fx[i]["dur"]:
 			fx.remove_at(i)
+	for i in range(queimados.size() - 1, -1, -1):
+		queimados[i]["t"] += dt
+		if queimados[i]["t"] >= queimados[i]["dur"]:
+			queimados.remove_at(i)
 	for k in tranco.keys():
 		var tv: Vector2 = tranco[k]
 		tv.y -= dt
@@ -2797,6 +2838,7 @@ func _draw() -> void:
 	_desenhar_domos()
 	_desenhar_chamas()
 	_desenhar_mudas()
+	_desenhar_queimados()
 	# unidades ordenadas por profundidade
 	var todos: Array = _ordem_profundidade()
 	# auras e sombras primeiro
