@@ -38,6 +38,47 @@ static func tam_menor(t: int) -> int:
 			return TAMANHOS_NITIDOS[k]
 	return TAMANHOS_NITIDOS[0]
 
+## Largura do texto no tamanho em que ele é DESENHADO (o nítido de `tam`). Medir com o tamanho "de projeto"
+## (13, 15...) dá uma largura menor do que a real, porque abaixo de 22 tudo vira 19.
+static func largura(txt: String, t: float) -> float:
+	return FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam(t)).x
+
+## Texto que cabe em `larg`: inteiro se couber; senão abrevia a última palavra com ponto ("Aperto somb.");
+## se nem a primeira palavra couber, corta com reticências. Não há fonte nítida menor que 19 para encolher.
+static func caber(txt: String, t: float, larg: float) -> String:
+	if largura(txt, t) <= larg:
+		return txt
+	var s: String = txt
+	while s.length() > 2:
+		s = s.substr(0, s.length() - 1).strip_edges()
+		var corte: int = s.rfind(" ")
+		if corte > 0 and s.length() - corte > 2 and largura(s + ".", t) <= larg:
+			return s + "."
+		if corte < 0 and largura(s + "…", t) <= larg:
+			return s + "…"
+	return s
+
+## Quebra em até `max_l` linhas que cabem em `larg` (a última é abreviada se ainda sobrar texto).
+static func linhas(txt: String, t: float, larg: float, max_l: int = 2) -> PackedStringArray:
+	var res := PackedStringArray()
+	var atual: String = ""
+	var palavras: PackedStringArray = txt.split(" ", false)
+	var i: int = 0
+	while i < palavras.size():
+		var tent: String = palavras[i] if atual == "" else atual + " " + palavras[i]
+		if atual != "" and largura(tent, t) > larg:
+			if res.size() == max_l - 1:
+				break
+			res.append(atual)
+			atual = palavras[i]
+		else:
+			atual = tent
+		i += 1
+	if i < palavras.size():
+		atual += " " + " ".join(palavras.slice(i))
+	res.append(caber(atual, t, larg))
+	return res
+
 const GATO_TEX: Texture2D = preload("res://assets/terceiros/gui/gato_ui.png")
 const C_CONT := Color(0.24, 0.17, 0.19)
 const C_CREME := Color(1.0, 0.94, 0.88)

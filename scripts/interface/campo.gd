@@ -5400,10 +5400,8 @@ func _botao_poder(i: int) -> void:
 	var tx: float = painel.end.x + 5.0
 	var larg_t: float = dentro.end.x - tx - 1.0
 	var nome: String = str(b["nome"])
-	var fonte: Font = UIComum.FONTE
 	var tam_n: int = 19
-	if fonte.get_string_size(nome, HORIZONTAL_ALIGNMENT_LEFT, -1, tam_n).x > larg_t:
-		tam_n = 15   # nome comprido: um passo abaixo do nítido (a barra é estreita)
+	nome = UIComum.caber(nome, tam_n, larg_t + 1.0)   # nome comprido abrevia (não há fonte nítida menor que 19)
 	var cor_nome: Color = Color(1, 1, 1) if viva else Color(0.75, 0.75, 0.8)
 	Desenho.texto(self, nome, Vector2(tx, dentro.position.y + 17.0), tam_n, cor_nome, -1.0, 4)
 	var txt: String
