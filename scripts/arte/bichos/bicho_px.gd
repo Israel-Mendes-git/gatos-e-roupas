@@ -72,7 +72,7 @@ static func olhos(rows: Array, ex: int, ey: int, modo: int, olho: String, fundo:
 	var y0: int = 999
 	var x1: int = -1
 	var y1: int = -1
-	for j in range(maxi(0, ey - 1), mini(r.size(), ey + 4)):
+	for j in range(maxi(0, ey), mini(r.size(), ey + 4)):
 		var s: String = r[j]
 		for i in range(maxi(0, ex - 1), mini(s.length(), ex + alcance)):
 			if olho.contains(s[i]):

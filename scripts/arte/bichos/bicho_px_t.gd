@@ -111,9 +111,7 @@ static func _traco(k: BichoPxB._K, x0: float, y0: float, x1: float, y1: float, c
 
 static func sobre(c: CanvasItem, fam: int, tipo: int, anim: float, andando: bool, golpe: float, f: float, alfa: float) -> void:
 	var k := BichoPxB._K.new(c, f, alfa)
-	var sn: float = 0.0
-	if golpe > 0.0:
-		sn = sin(PI * clampf(1.0 - golpe / 0.22, 0.0, 1.0))
+	var sn: float = BichoPx.curva_golpe(golpe)   # contato logo no passo do dano
 	var cab: Vector2 = _a(RoupaGato.Onde.CABECA, fam, tipo, anim, andando, golpe)
 	var tr: Vector2 = _a(RoupaGato.Onde.TRASEIRA, fam, tipo, anim, andando, golpe)
 	var pe: Vector2 = _a(RoupaGato.Onde.PESCOCO, fam, tipo, anim, andando, golpe)
@@ -121,7 +119,7 @@ static func sobre(c: CanvasItem, fam: int, tipo: int, anim: float, andando: bool
 	var co: Vector2 = _a(RoupaGato.Onde.CORPO, fam, tipo, anim, andando, golpe)
 	match tipo:
 		Unidade.Tipo.ATIRADOR:
-			_atirador(k, cab, tr, pe, bo, sn)
+			_atirador(k, cab, tr, pe, bo, golpe)
 		Unidade.Tipo.CURANDEIRO:
 			_curandeiro(k, cab, tr, pe, co)
 		Unidade.Tipo.ESCUDEIRO:
@@ -129,7 +127,7 @@ static func sobre(c: CanvasItem, fam: int, tipo: int, anim: float, andando: bool
 		Unidade.Tipo.BOMBA:
 			_bomba(k, cab, tr, pe)
 
-static func _atirador(k: BichoPxB._K, cab: Vector2, tr: Vector2, pe: Vector2, bo: Vector2, sn: float) -> void:
+static func _atirador(k: BichoPxB._K, cab: Vector2, tr: Vector2, pe: Vector2, bo: Vector2, golpe: float) -> void:
 	var tx: int = roundi(tr.x)
 	var ty: int = roundi(tr.y)
 	var bx: int = roundi(bo.x)
@@ -148,14 +146,16 @@ static func _atirador(k: BichoPxB._K, cab: Vector2, tr: Vector2, pe: Vector2, bo
 	var gx: int = bx + 4
 	k.r(gx - 1, by - 1, 3, 3, O)
 	k.r(gx, by, 2, 2, COURO_L)
-	# arco de madeira: arco do alto à ponta de baixo, corda e flecha (a corda recua no golpe)
-	var pux: int = roundi(3.0 * sn)
+	# arco de madeira: arco do alto à ponta de baixo, corda e flecha. A corda é puxada no PREPARO (antes do tiro, com a flecha
+	# encaixada) e solta no passo em que a flecha sai (golpe = 0,22): ali ela passa um pixel para a frente e vibra de volta
+	var pux: int = roundi(3.0 * BichoPx.preparo) if golpe <= 0.0 else (-1 if golpe > 0.17 else 0)
+	var flecha: bool = golpe <= 0.0 and BichoPx.preparo > 0.0
 	k.lin(float(gx - 1), float(by - 8), float(gx + 2), float(by - 4), 1.0, COURO_L, O)
 	k.lin(float(gx + 2), float(by - 4), float(gx + 3), float(by + 1), 2.0, COURO, O)
 	k.lin(float(gx + 3), float(by + 1), float(gx - 1), float(by + 6), 1.0, COURO_L, O)
 	_traco(k, float(gx - 1), float(by - 8), float(gx - pux), float(by - 1), CORDA)
 	_traco(k, float(gx - pux), float(by - 1), float(gx - 1), float(by + 6), CORDA)
-	if sn > 0.1:
+	if flecha:
 		_traco(k, float(gx - pux), float(by - 1), float(gx + 6), float(by - 1), CORDA)
 		k.r(gx + 6, by - 2, 2, 3, ACO_L)
 		k.r(gx - pux - 1, by - 2, 2, 3, PENA)

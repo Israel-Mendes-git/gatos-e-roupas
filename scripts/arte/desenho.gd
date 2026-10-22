@@ -1129,6 +1129,8 @@ static func _bicho_px(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas
 	# chefe de coroa (ver BichoPx.coroa_fixa) não veste peça de cabeça: a coroa fica
 	var sem_chapeu: bool = chefe and BichoPx.coroa_fixa(ct)
 	BichoPx.cabeca_coberta = pecas.size() > 0 and pecas[0] != null and not sem_chapeu
+	if BichoPx.queda_chao and BichoPx.coroa_fixa(ct):
+		BichoPx.cabeca_coberta = true   # chefe caído: a coroa/capacete saiu rolando (Campo desenha o adereço no chão)
 	BichoPx.corpo_coberto = pecas.size() > 1 and pecas[1] != null
 	BichoPx.ultimo_quadro = {}
 	var caido: bool = BichoPx.queda >= 0.0   # nocaute: só o corpo (as roupas não giram junto)
@@ -1230,6 +1232,15 @@ const PELAGENS: Array = [[0, Color(1, 1, 1)], [1, Color(1, 1, 1)], [2, Color(1, 
 const GATO_K := 3.2        # unidades locais por pixel do sprite original
 const MAO_BICHO := 1.0     # escala da peça de mão nos bichos (a 0.6 a espada e a varinha viravam um fiapo)
 const GATO_CHAO := 25.0    # y do pé dentro do quadro original
+## Passo do gato pela distância: unidades de `anim` por pixel do sprite andado. Calibrado para dar o mesmo ritmo de antes (14 por
+## segundo) no passo normal; quando o gato for redesenhado, acertar pela passada dos quadros novos (pé parado no chão).
+const GATO_ANIM_POR_PX := 0.75
+
+## Quanto `anim` avança por pixel de tela andado (o passo acompanha a distância, não o relógio: o pé não patina).
+## `esc` = escala do boneco na tela (ESC x escala da unidade).
+static func anim_por_px_tela(equipe: int, esc: float, chefe_tipo: int = -1, fuga_ladrao: bool = false) -> float:
+	var k: float = GATO_ANIM_POR_PX if equipe == 0 else BichoPx.anim_por_px(chefe_tipo, fuga_ladrao)
+	return k / maxf(0.001, GATO_K * esc)
 
 ## Quadro do atlas para o estado do gato.
 static func gato_quadro(anim: float, andando: bool, golpe: float, nocaute: bool = false) -> int:

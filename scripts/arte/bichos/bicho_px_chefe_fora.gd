@@ -225,6 +225,13 @@ static func _cabk(nome: String, k: float) -> Dictionary:
 	return _ck[key]
 
 static func _cab_rows(ch: Dictionary, boca: bool) -> Array:
+	var r0: Array = _cab_rows0(ch, boca)
+	if ch.has("olho"):
+		var o: Array = ch["olho"]
+		return BichoPx.olhos(r0, int(ch["ex"]), int(ch["ey"]), BichoPx.modo_olho(), o[0], o[1], o[2])
+	return r0
+
+static func _cab_rows0(ch: Dictionary, boca: bool) -> Array:
 	var rows: Array = ch["rows"]
 	if not boca:
 		return rows
@@ -262,30 +269,32 @@ static func _pata(L: PackedInt32Array, x: int, ytop: int, xf: int, yf: int, w: i
 ## quatro patas de quadrúpede (duas de longe em L1, duas de perto em L2); `solta` = a pata da frente de perto vai à frente no golpe
 static func _pernas(L1: PackedInt32Array, L2: PackedInt32Array, g: Dictionary, pf: int, pt: int, hip: int, w: int, far: String, near: String, meia: String, nm: int, solta: bool = true) -> void:
 	var q: int = g["q"]
+	var av: int = g["av"]
 	var defs: Array = [[pt + 3, 0.5, far, L1, false], [pf + 3, 0.0, far, L1, false], [pt, 0.0, near, L2, false], [pf, 0.5, near, L2, true]]
 	for d in defs:
 		var x: int = d[0]
-		var xf: int = x
+		var xf: int = x - av
 		var yf: int = -1
 		if g["andando"]:
 			var ph: float = fposmod(float(q) / 6.0 + float(d[1]), 1.0)
-			xf = x + roundi(2.5 * cos(TAU * ph))
-			yf = -1 - maxi(0, roundi(2.0 * sin(TAU * ph)))
+			var pp: Vector2i = BichoPx.pe_passo(x, ph, 2.5, 2.0)   # pé no ar vai para a frente
+			xf = pp.x
+			yf = pp.y
 		if solta and d[4] and int(g["e"]) > 0:
 			xf = x + 2 + int(g["e"])
 			yf = maxi(hip + 2, -2 - 2 * int(g["e"]))
 		_pata(d[3], x, hip, xf, yf, w, d[2], meia, nm)
 
 # ---------------------------------------------------------------- pose (comum a desenhar e desloc)
+## Fase do golpe: 0 parado, 1 preparo, 2 golpe (contato), 3 segue, 4 volta. O preparo acontece na janela ANTES do dano
+## (BichoPx.preparo, recarga acabando); no passo do dano (golpe = 0,22) já é o contato. Antes o preparo vinha depois do dano.
 static func _fase(golpe: float) -> int:
 	if golpe <= 0.0:
-		return 0
+		return 1 if BichoPx.preparo >= 0.35 else 0
 	var t: float = clampf(1.0 - golpe / _DUR_GOLPE, 0.0, 0.999)
-	if t < 0.2:
-		return 1
-	if t < 0.5:
+	if t < 0.3:
 		return 2
-	if t < 0.75:
+	if t < 0.6:
 		return 3
 	return 4
 
@@ -296,13 +305,15 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 	var bob: int = 0
 	var resp: int = 0
 	var ph: int = _fase(golpe)
+	if ph == 0 and BichoPx.dor and ct != 7 and not parado:
+		ph = 1   # dor: a pose recolhida (cabeça para trás) do preparo, com o olho apertado
 	var tk: int = Time.get_ticks_msec()
 	if andando:
 		q = posmod(int(anim * _PASSO), 6)
 		bob = -1 if q % 3 == 1 else 0
 	elif ph == 0:
 		resp = (int(tk / 650) + int(anim * 7.0)) % 2
-	var g: Dictionary = {"ct": ct, "q": q, "ph": ph, "bob": bob, "resp": resp, "andando": andando, "parado": parado, "ext": 0}
+	var g: Dictionary = {"ct": ct, "q": q, "ph": ph, "bob": bob, "resp": resp, "andando": andando, "parado": parado, "ext": 0, "ol": BichoPx.modo_olho(), "av": 0, "lag": 0}
 	match ct:
 		5:
 			_geo5(g, tk)
@@ -317,7 +328,7 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 	return g
 
 static func _chave(g: Dictionary) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], g["q"], g["ph"], g["bob"], g["resp"], int(g["andando"]), int(g["parado"]), g["ext"], int(BichoPx.cabeca_coberta) * 2 + int(BichoPx.corpo_coberto)]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], g["q"], g["ph"], g["bob"], g["resp"], int(g["andando"]), int(g["parado"]), g["ext"], int(BichoPx.cabeca_coberta) * 2 + int(BichoPx.corpo_coberto), g["ol"]]
 
 ## Molde do tronco e largura do crânio do quadro em montagem (cada _monta* grava aqui): as roupas de corpo e o chapéu se ajustam.
 static var _tr: PackedInt32Array = PackedInt32Array()
@@ -340,7 +351,7 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 		_cache[k] = _monta(g)
 	var s: Dictionary = _cache[k]
 	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
-	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(ct, alfa), f)
+	BichoPx.sprite(c, s, _pal(ct, alfa), f)
 
 ## Quadro em cache do chefe nesta pose (sprite "l", molde do tronco "t", crânio "c"), para as roupas acompanharem o desenho.
 static func quadro(chefe_tipo: int, anim: float, andando: bool, golpe: float, parado: bool) -> Dictionary:
@@ -441,7 +452,8 @@ const _TP_PE_L: Array = [".pppp", "ppppQQ"]
 static func _geo5(g: Dictionary, tk: int) -> void:
 	var q: int = g["q"]
 	var ph: int = g["ph"]
-	var bx: int = -16
+	var av: int = [0, -1, 3, 2, 1][ph] if not g["parado"] else 0   # bote: o corpo inteiro avança (preparo recua)
+	var bx: int = -16 + av
 	var by0: int = -14 + int(g["bob"]) - int(g["resp"])
 	var ax: int = 0
 	var ay: int = 0
@@ -457,8 +469,10 @@ static func _geo5(g: Dictionary, tk: int) -> void:
 	g["ax"] = ax
 	g["ay"] = ay
 	g["dente"] = ph == 2 or ph == 3
-	g["cx0"] = bx + 14
-	g["cy0"] = by0 - 4
+	g["av"] = av
+	g["lag"] = 2 if ph == 2 else (1 if ph == 3 else 0)   # o capacete chega atrasado
+	g["cx0"] = bx + 14 - int(g["lag"])
+	g["cy0"] = by0 - 4 - (1 if ph == 2 else 0)
 	if g["parado"]:
 		g["ext"] = (tk / 140) % 4
 		g["cx0"] = -8
@@ -537,7 +551,7 @@ static func _monta5(G: PackedInt32Array, g: Dictionary) -> void:
 	_comp(G, B)
 	# olhinho minúsculo com brilho, logo abaixo da aba do capacete
 	var O := _nova()
-	_bmp(O, bx + 24, by0 + 3, ["ll", "kw"])
+	_bmp(O, bx + 24, by0 + 3, [["ll", "kw"], ["ll", "kk"], ["kl", "lk"]][int(g["ol"])])   # aberto, apertado, X
 	_luz_forte(G, O)
 	# focinho em camada própria; boca com dentinhos no bote
 	var F := _nova()
@@ -1112,7 +1126,7 @@ const _TEX_CAB: Array = [
 	".wwwwwwwwww.....",
 	"...wwwwww.......",
 ]
-const _TEX_CAB_INFO: Dictionary = {"js": 8, "ms": 8, "ab": 2, "ex": 4, "ey": 6}
+const _TEX_CAB_INFO: Dictionary = {"js": 8, "ms": 8, "ab": 2, "ex": 4, "ey": 6, "olho": ["wy", "k", "w"]}
 ## Corpo baixo e largo, grisalho por cima (pelos claros soltos), barriga escura.
 const _TEX_CORPO: Array = [
 	".......l.l.l.l.l..............",
@@ -1133,8 +1147,11 @@ const _TEX_RABO: Array = ["..ll.", "llmml", "lmmmd", ".mmd."]
 static func _geo9(g: Dictionary, tk: int) -> void:
 	var ph: int = g["ph"]
 	var e: int = [0, -2, 3, 2, 1][ph]
-	var bx: int = -17
+	var av: int = [0, -1, 3, 2, 1][ph]   # bote: o corpo inteiro avança (preparo recua); os pés ficam
+	var bx: int = -17 + av
 	var bw: int = 30
+	g["av"] = av
+	g["lag"] = 2 if ph == 2 else (1 if ph == 3 else 0)   # capa e coroa chegam atrasadas
 	var bh: int = 12
 	var by0: int = -16 + int(g["bob"]) - int(g["resp"])
 	var hx: int = bx + 28 + e
@@ -1169,7 +1186,7 @@ static func _monta9(G: PackedInt32Array, g: Dictionary) -> void:
 	# capa vermelha por cima do dorso: presa no pescoço, cai pelas costas e passa da anca, com barra de ouro e ondulando
 	var Ca := _nova()
 	var nk: int = bx + bw - 4
-	var tras: int = bx - 3 - (2 if g["andando"] else 0) - (2 if ph == 1 else 0)
+	var tras: int = bx - 3 - (2 if g["andando"] else 0) - (2 if ph == 1 else 0) - 2 * int(g["lag"])
 	for x in range(tras, nk + 1):
 		var u: float = float(x - tras) / float(maxi(1, nk - tras))   # 0 atrás, 1 no pescoço
 		var topo: int = by0 - 1 + (1 if x < bx + 2 else 0)
@@ -1207,8 +1224,11 @@ static func _monta9(G: PackedInt32Array, g: Dictionary) -> void:
 	var gy: int = -1
 	if g["andando"]:
 		var ph2: float = fposmod(float(q) / 6.0 + 0.5, 1.0)
-		gx = pf + roundi(2.5 * cos(TAU * ph2))
-		gy = -1 - maxi(0, roundi(2.0 * sin(TAU * ph2)))
+		var pp2: Vector2i = BichoPx.pe_passo(pf, ph2, 2.5, 2.0)
+		gx = pp2.x
+		gy = pp2.y
+	else:
+		gx = pf - int(g["av"])
 	if int(g["e"]) > 0:
 		gx = pf + 2 + int(g["e"])
 		gy = maxi(hip + 2, -2 - 2 * int(g["e"]))
@@ -1229,5 +1249,5 @@ static func _monta9(G: PackedInt32Array, g: Dictionary) -> void:
 	# coroa de ouro com gemas (sai quando o texugo veste chapéu)
 	if not BichoPx.cabeca_coberta:
 		var Cr := _nova()
-		_bmp(Cr, hx + 1, hy - 4, _COROA)
+		_bmp(Cr, hx + 1 - int(g["lag"]), hy - 4 - (1 if int(g["lag"]) > 1 else 0), _COROA)
 		_comp(G, Cr)
