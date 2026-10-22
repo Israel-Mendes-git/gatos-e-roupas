@@ -243,15 +243,20 @@ static func flor(c: CanvasItem, ce: Vector2, cor: Color, miolo: Color, cont: Col
 	c.draw_rect(Rect2(x, y, q, q), miolo)
 
 # ---------------------------------------------------------------- lote 2 da expansão: estruturas, sono e mudas
-## Letra "z" de sono em quadradinhos (3x3), com contorno.
+## Letra "z" de sono em quadradinhos de `q`: barra de cima, diagonal e barra de baixo. O escuro é só uma sombra
+## de 1 quadradinho embaixo e à direita de cada traço (contorno em volta inteira fechava o miolo e virava caixa).
+## `tam` < 2 dá um z de 4x4 quadradinhos; 2 ou mais, de 5x5. `ce` é o canto de cima à esquerda.
 static func zzz(c: CanvasItem, ce: Vector2, tam: float, cor: Color, cont: Color = CONT, q: float = Q) -> void:
 	var x: float = sn(ce.x, q)
 	var y: float = sn(ce.y, q)
-	var u: float = q * maxf(1.0, roundf(tam))
-	c.draw_rect(Rect2(x - q, y - q, u * 3.0 + q * 2.0, u * 3.0 + q * 2.0), cont)
-	c.draw_rect(Rect2(x, y, u * 3.0, u), cor)
-	c.draw_rect(Rect2(x + u, y + u, u, u), cor)
-	c.draw_rect(Rect2(x, y + u * 2.0, u * 3.0, u), cor)
+	var n: int = 5 if tam >= 2.0 else 4
+	for camada in 2:
+		var o: float = q if camada == 0 else 0.0
+		var cc: Color = cont if camada == 0 else cor
+		c.draw_rect(Rect2(x + o, y + o, n * q, q), cc)
+		c.draw_rect(Rect2(x + o, y + (n - 1) * q + o, n * q, q), cc)
+		for k in range(1, n - 1):
+			c.draw_rect(Rect2(x + (n - 1 - k) * q + o, y + k * q + o, q, q), cc)
 
 ## Torre de ervilha: caule, duas folhas, cabeça redonda e o cano que recua no tiro. `base` = pés; `dir` = para onde olha; `golpe` > 0 logo após atirar.
 static func torre_ervilha(c: CanvasItem, base: Vector2, esc: float, dir: float, golpe: float, frac: float, q: float = Q) -> void:

@@ -2140,9 +2140,9 @@ func _desenhar_fx(f: Dictionary) -> void:
 			V.aro(self, gp, rs * (1.0 - pow(1.0 - u, 2.0)), rs * (1.0 - pow(1.0 - u, 2.0)) * 0.36, azul_s, a * 1.4, 2.0)
 			V.aro(self, gp, rs * 0.6 * (1.0 - pow(1.0 - u, 2.0)), rs * 0.6 * (1.0 - pow(1.0 - u, 2.0)) * 0.36, Color(0.8, 0.88, 1.0), a, 1.0)
 			for b in qtd:
-				for k in 2:
-					var wz: float = fposmod(u * 1.2 + k * 0.5, 1.0)
-					V.zzz(self, b + Vector2(8.0 + k * 10.0, -30.0 - wz * 36.0), 1.0 + k, Color(0.85, 0.92, 1.0))
+				# um "z" por gato, cada um na sua fase (a posição desencontra as subidas)
+				var wz: float = fposmod(u * 1.2 + fposmod(b.x * 0.013, 1.0), 1.0)
+				V.zzz(self, b + Vector2(8.0 + wz * 10.0, -30.0 - wz * 36.0), 2.0 if wz > 0.4 else 1.0, Color(0.85, 0.92, 1.0))
 		Pecas.Poder.PLANO:
 			# mira azul fecha sobre o alvo e riscos saem do líder
 			for b in qtd:
@@ -2360,9 +2360,11 @@ func _estados(uu: Unidade, pos: Vector2, esc_u: float, dir: float) -> void:
 	if uu.queima_t > 0.0:
 		_chamas(pos, esc_u)
 	if uu.sono_t > 0.0 or uu.cochilo_t > 0.0:
-		for k in 3:
-			var wz: float = fposmod(rel * 0.7 + k * 0.33, 1.0)
-			V.zzz(self, pos + Vector2(8.0 * esc_u + wz * 16.0, -h - 4.0 - wz * 30.0), 1.0 + (1.0 if k == 2 else 0.0), Color(0.85, 0.92, 1.0))
+		# um "z" só por unidade, que sobe em diagonal e cresce no meio; a fase vem da unidade, então
+		# vizinhos dormindo não sobem juntos (antes eram 3 caixas por gato, empilhadas)
+		var wz: float = fposmod(rel * 0.55 + float(uu.get_instance_id() % 89) * 0.173, 1.0)
+		if wz < 0.9:
+			V.zzz(self, pos + Vector2(8.0 * esc_u + wz * 18.0, -h - 10.0 - wz * 30.0), 2.0 if wz > 0.35 else 1.0, Color(0.85, 0.92, 1.0))
 	if uu.frio_t > 0.0:
 		V.elipse(self, pos + Vector2(0, 2), CORPO_LARG * 1.05 * esc_u, 8.0 * esc_u, Color(0.6, 0.85, 1.0, 0.4))
 		for k in 5:
@@ -2823,13 +2825,12 @@ func _draw() -> void:
 		var pouso: float = clampf((tq - 0.4) / 0.18, 0.0, 1.0)
 		var sq_q: float = 1.0 - 0.14 * sin(pouso * PI)
 		Desenho.boneco(self, Vector2(cd["x"], cd["y"]), ESC * sq_q, 1.0 / sq_q, 0, cd["pecas"], 0.0, 0.0, false, 0.0, 0.85, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, cd["var"], true)
-		# "z z" subindo devagar, o segundo z maior e atrasado
-		for zi in 2:
-			var wz: float = fposmod(rel * 0.45 + zi * 0.5, 1.0)
-			# z de pixel (fonte 3x5): nasce pequeno, cresce no meio da subida e some (sem alfa)
-			var vz: float = sin(wz * PI)
-			if vz > 0.25:
-				IconesPoder.texto(self, "z", Vector2(cd["x"] + 30.0 + zi * 12.0 + wz * 8.0, cd["y"] - 62.0 - wz * 26.0), Color(0.8, 0.9, 1.0), 3 if (vz < 0.7 or zi == 0) else 6)
+		# um "z" por gato, subindo devagar; a fase vem da posição, então gatos caídos lado a lado não sobem
+		# juntos. Nasce pequeno, cresce no meio da subida e some (sem alfa); contorno só em volta dos traços
+		var wz: float = fposmod(rel * 0.45 + fposmod(float(cd["x"]) * 0.0137, 1.0), 1.0)
+		var vz: float = sin(wz * PI)
+		if vz > 0.25:
+			V.zzz(self, Vector2(cd["x"] + 30.0 + wz * 10.0, cd["y"] - 66.0 - wz * 26.0), 2.0 if vz > 0.7 else 1.0, Color(0.8, 0.9, 1.0))
 	for fa in fantasmas:
 		var fan: Dictionary = fa
 		var ug: Unidade = fan["u"]
