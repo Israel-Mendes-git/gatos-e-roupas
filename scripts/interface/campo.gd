@@ -5,6 +5,20 @@ extends Node2D
 signal terminou(vitoria: bool)
 
 const ESC := 1.35
+## Pixel uniforme: no desenho das unidades 1 pixel do sprite = PX_SPRITE px de tela (a grade do cenário, 4 px).
+## ESC_PX = PX_SPRITE / Desenho.GATO_K. Bicho com Unidade.escala() >= ESCALA_GRADE_2 (o grandalhão) usa a escala 2
+## da grade (8 px); chefe usa CHEFE_GRADE (Gambá e Esquilo ficam em 4 px: já são grandes na própria grade e a 8 px
+## passariam de 4x a altura de um gato). Só o desenho: Unidade.escala() e as distâncias do jogo não mudam.
+const PX_SPRITE := 4.0
+const ESC_PX := 1.25
+const ESCALA_GRADE_2 := 1.3
+const CHEFE_GRADE: Array[float] = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0, 1.0, 2.0, 2.0]   # por Fases.Chefe
+static func esc_tela(u: Unidade) -> float:
+	if u.chefe:
+		return ESC_PX * CHEFE_GRADE[clampi(u.chefe_tipo, 0, CHEFE_GRADE.size() - 1)]
+	return ESC_PX * (2.0 if u.escala() >= ESCALA_GRADE_2 else 1.0)
+static func px_grade(p: Vector2) -> Vector2:
+	return Vector2(roundf(p.x / PX_SPRITE) * PX_SPRITE, roundf(p.y / PX_SPRITE) * PX_SPRITE)
 const V := preload("res://scripts/interface/vfx_px.gd")   # pedaços de pixel art dos efeitos
 const BAU_POS := Vector2(1205, 672)
 const TORRE_BASE := Vector2(10, 652)
@@ -1502,7 +1516,7 @@ func _bolota(ce: Vector2, giro: int) -> void:
 ## três cópias translúcidas do sprite em arco, indo por cima da faixa até `x_fim` e voltando (a de trás com atraso).
 ## `base` = pés do chefe quando o rasante saiu; `u` = 0..1 do efeito.
 func _rasante_saltos(ue: Unidade, base: Vector2, x_fim: float, u: float) -> void:
-	var esc_g: float = ESC * ue.escala()
+	var esc_g: float = esc_tela(ue)
 	var tp_g: int = Unidade.Tipo.GEMEO if ue.pequeno else ue.tipo
 	var alfas: Array = [0.6, 0.4, 0.24]
 	for k in 3:
@@ -1513,7 +1527,7 @@ func _rasante_saltos(ue: Unidade, base: Vector2, x_fim: float, u: float) -> void
 		var x_g: float = lerpf(base.x, x_fim + 30.0, ida)
 		var y_g: float = base.y - absf(sin(w * TAU)) * 70.0  # um arco na ida e outro na volta, por cima dos gatos
 		var dir_g: float = -1.0 if w < 0.5 else 1.0
-		Desenho.boneco(self, Vector2(x_g, y_g), esc_g, dir_g, 1, ue.pecas, 0.0, ue.anim, false, 0.12, alfas[k], false, -1, 0.0, tp_g, false, ue.chefe, ue.familia, ue.elite, ue.chefe_tipo, ue.parte, false, 0)
+		Desenho.boneco(self, px_grade(Vector2(x_g, y_g)), esc_g, dir_g, 1, ue.pecas, 0.0, ue.anim, false, 0.12, alfas[k], false, -1, 0.0, tp_g, false, ue.chefe, ue.familia, ue.elite, ue.chefe_tipo, ue.parte, false, 0)
 
 ## Bola de fogo em pixel: lóbulos com contorno vinho, laranja, amarelo e miolo claro. `calor` 1 = recém-explodiu
 ## (miolo branco), 0 = brasa apagando.
@@ -2892,7 +2906,7 @@ func _draw() -> void:
 		var uu: Unidade = u
 		var alt_s: float = _salto(uu)
 		var pe_u: Vector2 = Vector2(uu.vx, uu.vy)
-		V.elipse(self, pe_u, 32.0 * ESC * uu.escala() * (1.0 - minf(alt_s, 20.0) * 0.012), 32.0 * ESC * uu.escala() * 0.3 * (1.0 - minf(alt_s, 20.0) * 0.012), Color(0, 0, 0, 0.22 * (1.0 - minf(alt_s, 20.0) * 0.01)))
+		V.elipse(self, pe_u, 32.0 * esc_tela(uu) * (1.0 - minf(alt_s, 20.0) * 0.012), 32.0 * esc_tela(uu) * 0.3 * (1.0 - minf(alt_s, 20.0) * 0.012), Color(0, 0, 0, 0.22 * (1.0 - minf(alt_s, 20.0) * 0.01)))
 		if uu.coroa_bonus > 0.0:
 			var pc: float = 0.5 + 0.5 * sin(rel * 2.0)
 			V.aro(self, pe_u, Balanco.COROA_RAIO, Balanco.COROA_RAIO * 0.3, Color(1.0, 0.82, 0.2), 0.5 + 0.3 * pc, 1.0)
@@ -2908,11 +2922,11 @@ func _draw() -> void:
 			var giro_q: float = cos(uq * TAU * 1.5)
 			var dir_q: float = signf(giro_q) * maxf(absf(giro_q), 0.18)
 			var alt_q: float = sin(uq * PI) * 34.0
-			Desenho.boneco(self, Vector2(cd["x"], cd["y"] - alt_q), ESC, dir_q, 0, cd["pecas"], 0.6 * (1.0 - uq), 0.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, cd["var"], false)
+			Desenho.boneco(self, px_grade(Vector2(cd["x"], cd["y"] - alt_q)), ESC_PX, dir_q, 0, cd["pecas"], 0.6 * (1.0 - uq), 0.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, cd["var"], false)
 			continue
 		var pouso: float = clampf((tq - 0.4) / 0.18, 0.0, 1.0)
 		var sq_q: float = 1.0 - 0.14 * sin(pouso * PI)
-		Desenho.boneco(self, Vector2(cd["x"], cd["y"]), ESC * sq_q, 1.0 / sq_q, 0, cd["pecas"], 0.0, 0.0, false, 0.0, 0.85, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, cd["var"], true)
+		Desenho.boneco(self, px_grade(Vector2(cd["x"], cd["y"])), ESC_PX * sq_q, 1.0 / sq_q, 0, cd["pecas"], 0.0, 0.0, false, 0.0, 0.85, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, cd["var"], true)
 		# "z z" subindo devagar, o segundo z maior e atrasado
 		for zi in 2:
 			var wz: float = fposmod(rel * 0.45 + zi * 0.5, 1.0)
@@ -2925,9 +2939,9 @@ func _draw() -> void:
 		var ug: Unidade = fan["u"]
 		var uf: float = clampf(float(fan["t"]) / float(fan["dur"]), 0.0, 1.0)
 		var pf: Vector2 = Vector2(float(fan["x"]), float(fan["y"]) - sin(uf * PI) * 26.0)
-		var esc_f: float = ESC * ug.escala() * (1.0 + 0.1 * sin(uf * PI))
+		var esc_f: float = esc_tela(ug) * (1.0 + 0.1 * sin(uf * PI))
 		var tp_f: int = Unidade.Tipo.GEMEO if ug.pequeno else ug.tipo
-		Desenho.boneco(self, pf, esc_f, -1.0 * (1.0 + 0.2 * (1.0 - uf)), 1, ug.pecas, 1.0 - uf * 0.5, 0.0, false, 0.0, 1.0 - uf * uf, false, -1, 0.0, tp_f, false, ug.chefe, ug.familia, ug.elite, ug.chefe_tipo, ug.parte, false, 0)
+		Desenho.boneco(self, px_grade(pf), esc_f, -1.0 * (1.0 + 0.2 * (1.0 - uf)), 1, ug.pecas, 1.0 - uf * 0.5, 0.0, false, 0.0, 1.0 - uf * uf, false, -1, 0.0, tp_f, false, ug.chefe, ug.familia, ug.elite, ug.chefe_tipo, ug.parte, false, 0)
 	var ico_max: int = 3 if todos.size() > 24 else 4   # luta pesada: menos ícones por unidade
 	for u in todos:
 		var uu2: Unidade = u
@@ -2939,7 +2953,7 @@ func _draw() -> void:
 			# tranco: recuo curto no sentido do golpe recebido
 			var trc: Vector2 = tranco[uu2]
 			pos.x += trc.x * sin(clampf(trc.y / 0.16, 0.0, 1.0) * PI) * 7.0
-		var esc_u: float = ESC * uu2.escala()
+		var esc_u: float = esc_tela(uu2)
 		var tp: int = Unidade.Tipo.GEMEO if uu2.pequeno else uu2.tipo
 		# vida: antecipação (recuo curto antes do golpe corpo a corpo), respirar parado, esmaga-e-estica no golpe levado
 		if uu2.vivo and not uu2.distancia and uu2.golpe <= 0.0 and uu2.alvo != null and uu2.cd > 0.0 and uu2.cd < 0.16:
@@ -2971,9 +2985,9 @@ func _draw() -> void:
 			_desenhar_estrutura(uu2, pos, fl_u, dir_d)
 		elif uu2.cao:
 			# cão de guarda da Casinha: sprite próprio, do tamanho de um bicho comum (a escala da unidade é a do desenho antigo do chefe)
-			CaoGuarda.desenhar(self, pos, ESC * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
+			CaoGuarda.desenhar(self, px_grade(pos), ESC_PX * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
-			Desenho.boneco(self, pos, esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
+			Desenho.boneco(self, px_grade(pos), esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
 		if uu2.barreira_int > 0.0 and uu2.barreira_cd <= 0.0:
@@ -5244,7 +5258,7 @@ func _anel_poder_chao(u: Unidade) -> void:
 	var i: int = poder_de[u]
 	var b: Dictionary = poder_btns[i]
 	var cor: Color = b["cor"]
-	var esc_u: float = ESC * u.escala()
+	var esc_u: float = esc_tela(u)
 	var destaque: bool = poder_hover == i and u.vivo
 	var pe_u: Vector2 = Vector2(u.vx, u.vy)
 	if _poder_aguarda(u) >= 0:
@@ -5257,7 +5271,7 @@ func _anel_poder_chao(u: Unidade) -> void:
 		V.aro(self, pe_u, 50.0 * esc_u, 15.0 * esc_u, V.CONT, 1.0, 3.0)
 		V.aro(self, pe_u, 50.0 * esc_u, 15.0 * esc_u, Color(1.0, 0.97, 0.8), 1.0, 2.0)
 
-const HER_SELO := 36.0               # selo de herança: aro de 1 + ícone de 10 + aro de 1 quadradinhos de V.Q
+const HER_SELO := 48.0               # selo de herança: aro de 1 + ícone de 10 + aro de 1 quadradinhos de V.Q
 const HER_FX_DUR := 0.9              # quanto o selinho fica sobre o gato quando a herança dispara (s)
 const HER_ROXO := Color(0.72, 0.56, 1.0)
 const HER_MIOLO := Color(0.16, 0.08, 0.26)
@@ -5279,7 +5293,7 @@ func _selo_heranca(c: Vector2, poder: int, contorno: bool) -> void:
 	draw_rect(Rect2(x + l - q * 5.0, y + l - q, q * 4.0, q), V.tom(HER_ROXO, 0.55))
 	draw_rect(Rect2(x + l - q, y + l - q * 4.0, q, q * 3.0), V.tom(HER_ROXO, 0.55))
 	draw_rect(Rect2(x + q, y + q, l - q * 2.0, l - q * 2.0), HER_MIOLO)
-	IconesPoder.desenhar(self, poder, Vector2(x + l * 0.5, y + l * 0.5), 3, 1.0, q)
+	IconesPoder.desenhar(self, poder, Vector2(x + l * 0.5, y + l * 0.5), int(V.Q), 1.0, q)
 
 ## Selinho da herança que acabou de disparar: nasce rente à cabeça do gato, sobe um pouco, atrás do balão do poder
 ## carregado (para não cobri-lo), e pisca antes de sumir (sem alfa).
@@ -5290,7 +5304,7 @@ func _selo_heranca_gato(hf: Dictionary) -> void:
 	var tt: float = float(hf["t"])
 	if tt > HER_FX_DUR - 0.25 and int(tt / 0.06) % 2 == 1:
 		return
-	var esc_u: float = ESC * u.escala()
+	var esc_u: float = esc_tela(u)
 	var sobe: float = minf(tt / 0.14, 1.0)
 	var p := Vector2(u.vx - 40.0 - (HER_SELO + V.Q * 3.0) * int(hf.get("k", 0)), u.vy - (CORPO_ALT + 6.0) * esc_u - 12.0 - 16.0 * sobe - 9.0 * tt)
 	_selo_heranca(p, int(hf["poder"]), true)
@@ -5306,16 +5320,16 @@ func _icone_poder_gato(u: Unidade, pos: Vector2, esc_u: float) -> void:
 	var p: Vector2 = Vector2(pos.x, pos.y - (CORPO_ALT + 6.0) * esc_u - 26.0 + bob)
 	var px_: float = V.sn(p.x)
 	var py_: float = V.sn(p.y)
-	# balão na cor da fantasia com o ícone do poder (escala 3 = a grade da luta) e a ponta para o gato
+	# balão na cor da fantasia com o ícone do poder (escala V.Q = a grade da luta) e a ponta para o gato
 	V.quadro(self, px_ - V.Q * 3.0, py_ + V.Q * 4.0, V.Q * 7.0, V.Q * 2.0, V.CONT)
 	V.quadro(self, px_ - V.Q * 2.0, py_ + V.Q * 6.0, V.Q * 5.0, V.Q * 2.0, V.CONT)
 	V.quadro(self, px_ - V.Q, py_ + V.Q * 8.0, V.Q * 3.0, V.Q, V.CONT)
 	V.quadro(self, px_ - V.Q, py_ + V.Q * 4.0, V.Q * 3.0, V.Q * 4.0, cor)
-	V.disco_c(self, p, 15.0, cor, V.CONT)
+	V.disco_c(self, p, V.Q * 5.0, cor, V.CONT)
 	V.quadro(self, px_ - V.Q * 4.0, py_ - V.Q * 3.0, V.Q, V.Q, V.tom(cor, 1.7))
-	IconesPoder.desenhar(self, int(b["poder"]), Vector2(px_ + V.Q * 0.5, py_ + V.Q * 0.5), 3, 1.0, V.Q)
+	IconesPoder.desenhar(self, int(b["poder"]), Vector2(px_ + V.Q * 0.5, py_ + V.Q * 0.5), int(V.Q), 1.0, V.Q)
 	# a tecla, em algarismo de pixel, na borda direita do balão
-	IconesPoder.texto(self, String.num_int64(int(b["tecla"])), Vector2(px_ + V.Q * 4.0, py_ - V.Q), Color(1, 1, 1), 3)
+	IconesPoder.texto(self, String.num_int64(int(b["tecla"])), Vector2(px_ + V.Q * 4.0, py_ - V.Q), Color(1, 1, 1), int(V.Q))
 
 func _btn_em(p: Vector2) -> int:
 	for i in poder_btns.size():
@@ -5522,13 +5536,13 @@ func _botao_poder(i: int) -> void:
 	Desenho.texto(self, txt, Vector2(tx + 23.0, dentro.end.y - 4.0), 17 if pronto and viva else 15, cor_s, -1.0, 4)
 	if auto:
 		# selo AUTO de pixel: plaquinha dourada com contorno e letras 3x5 na grade da luta
-		var sl: float = IconesPoder.largura("AUTO") + V.Q * 2.0
+		var sl: float = IconesPoder.largura("AUTO", int(V.Q)) + V.Q * 2.0
 		var sr: Rect2 = Rect2(V.sn(r.end.x - sl - 6.0), V.sn(r.position.y - 9.0), sl, V.Q * 7.0)
 		draw_rect(sr.grow(V.Q), V.CONT)
 		draw_rect(sr, Desenho.DOURADO)
 		draw_rect(Rect2(sr.position.x, sr.end.y - V.Q, sr.size.x, V.Q), V.tom(Desenho.DOURADO, 0.75))
 		draw_rect(Rect2(sr.position.x, sr.position.y, sr.size.x, V.Q), V.tom(Desenho.DOURADO, 1.4))
-		IconesPoder.texto(self, "AUTO", sr.position + Vector2(V.Q, 0.0), Color(0.3, 0.14, 0.04), 3, false)
+		IconesPoder.texto(self, "AUTO", sr.position + Vector2(V.Q, 0.0), Color(0.3, 0.14, 0.04), int(V.Q), false)
 	# brilho que corre pelo botão quando o poder fica pronto: faixa inclinada em degraus de quadradinho
 	var bri: float = float(b.get("brilho", 0.0))
 	if bri > 0.0:
@@ -5620,11 +5634,11 @@ func _hud() -> void:
 			var fr_b: float = clampf(ub.vida / ub.vida_max, 0.0, 1.0)
 			var nome_b: String = Fases.CHEFE_NOME[estado.lugar()]
 			Desenho.texto(self, nome_b, Vector2(632, 42), 22, Color(1.0, 0.85, 0.8), 424.0, 4)
-			# barra de pixel: 140 quadradinhos x 3, contorno escuro, brilho em cima e sombra embaixo
+			# barra de pixel: 420 px em quadradinhos de V.Q, 3 de altura, contorno escuro, brilho em cima e sombra embaixo
 			var q: float = V.Q
-			var x0: float = 633.0
-			var y0: float = 51.0
-			var nq: int = 140
+			var x0: float = 632.0
+			var y0: float = 52.0
+			var nq: int = int(420.0 / q)
 			var cheio: int = clampi(ceili(fr_b * nq - 0.01), 1 if fr_b > 0.0 else 0, nq)
 			var ver := Color(0.92, 0.25, 0.22)
 			draw_rect(Rect2(x0 - q, y0 - q, (nq + 2) * q, q * 5.0), V.CONT)
@@ -5739,7 +5753,7 @@ func _prep_bt_em(p: Vector2) -> String:
 	return ""
 
 func _caixa_unidade(u: Unidade) -> Rect2:
-	var e: float = ESC * u.escala()
+	var e: float = esc_tela(u)
 	return Rect2(u.vx - (CORPO_LARG + 4.0) * e, u.vy - (CORPO_ALT + 4.0) * e, (CORPO_LARG + 4.0) * 2.0 * e, (CORPO_ALT + 12.0) * e)
 
 ## Unidade viva sob o ponto (a mais à frente, isto é, a de maior y).
@@ -5758,7 +5772,7 @@ func _previa_em(p: Vector2) -> int:
 	for i in prep_previa.size():
 		var g: Dictionary = prep_previa[i]
 		var pos: Vector2 = g["pos"]
-		var e: float = ESC * (g["u"] as Unidade).escala()
+		var e: float = esc_tela(g["u"] as Unidade)
 		if Rect2(pos.x - (CORPO_LARG + 4.0) * e, pos.y - (CORPO_ALT + 4.0) * e, (CORPO_LARG + 4.0) * 2.0 * e, (CORPO_ALT + 12.0) * e).has_point(p):
 			achou = i
 	return achou
@@ -6079,7 +6093,7 @@ func _desenhar_foco() -> void:
 		return
 	var aliado: bool = u.equipe == 0
 	var cor: Color = Color(0.55, 0.85, 1.0) if aliado else Color(1.0, 0.5, 0.42)
-	var esc_u: float = ESC * u.escala()
+	var esc_u: float = esc_tela(u)
 	# elipse no chão em quadradinhos: contorno escuro de 3 e a cor no meio
 	var pe_f: Vector2 = Vector2(u.vx, u.vy)
 	var rx_f: float = 46.0 * esc_u
@@ -6088,7 +6102,7 @@ func _desenhar_foco() -> void:
 	var alvo: Unidade = u.alvo
 	if not prep and alvo != null and alvo.vivo:
 		var pa: Vector2 = Vector2(u.vx, u.vy - CORPO_MEIO * esc_u)
-		var pb: Vector2 = Vector2(alvo.vx, alvo.vy - CORPO_MEIO * ESC * alvo.escala())
+		var pb: Vector2 = Vector2(alvo.vx, alvo.vy - CORPO_MEIO * esc_tela(alvo))
 		var n: int = maxi(2, int(pa.distance_to(pb) / 15.0))
 		for i in n:
 			# trilha de quadradinhos que crescem (1 -> 2) e clareiam a caminho do alvo
@@ -6220,18 +6234,18 @@ func _desenhar_prep() -> void:
 		var g: Dictionary = gd
 		var b: Unidade = g["u"]
 		var pos: Vector2 = g["pos"]
-		var e: float = ESC * b.escala()
+		var e: float = esc_tela(b)
 		var marcado: bool = sim.prioridade == int(g["prio"])
 		V.elipse(self, pos, 32.0 * e, 32.0 * e * 0.3, Color(0, 0, 0, 0.22))
 		var resp: float = 1.0 + sin(rel * 2.6 + pos.x) * 0.016
-		Desenho.boneco(self, pos, e * resp, -1.0 / resp, 1, b.pecas, 0.0, 0.0, false, 0.0, 1.0, false, -1, 0.0, b.tipo, false, b.chefe, b.familia, b.elite, b.chefe_tipo, false, false, 0)
+		Desenho.boneco(self, px_grade(pos), e * resp, -1.0 / resp, 1, b.pecas, 0.0, 0.0, false, 0.0, 1.0, false, -1, 0.0, b.tipo, false, b.chefe, b.familia, b.elite, b.chefe_tipo, false, false, 0)
 		if marcado:
 			_mira(pos + Vector2(0, -(CORPO_ALT + 22.0) * e), 10.0, 1.0)
 		if not b.chefe:
 			IconesPoder.texto(self, "x%d" % int(g["n"]), pos + Vector2(CORPO_LARG * e * 0.55, -12.0), Color(1, 1, 1), 3)
 	for i in sim.aliados.size():
 		var a: Unidade = sim.aliados[i]
-		var ea: float = ESC * a.escala()
+		var ea: float = esc_tela(a)
 		var cp: Color = PREP_COR[a.postura]
 		var rot: String = Boneco.POSTURA_NOMES[a.postura]
 		var y_rot: float = a.vy - (CORPO_ALT + 12.0) * ea
@@ -6333,7 +6347,7 @@ func _desenhar_avisos() -> void:
 				var ang: float = k * TAU / 4.0 + rel * 2.0
 				V.quadro(self, pa.x + cos(ang) * (rr + 4.0) - q, pa.y + sin(ang) * (rr + 4.0) - q, q * 2.0, q * 2.0, Color(1, 1, 1))
 		# balão sobre o bicho, piscando
-		var esc_u: float = ESC * uu.escala()
+		var esc_u: float = esc_tela(uu)
 		var pb: Vector2 = Vector2(uu.vx, uu.vy - (CORPO_ALT + 40.0) * esc_u - _topo_extra(uu) + sin(rel * 14.0) * 2.0)
 		var raio_b: float = 19.0 + 4.0 * pisca
 		V.quadro(self, V.sn(pb.x) - q * 2.0, V.sn(pb.y + raio_b) - q, q * 5.0, q * 3.0, cont_a)

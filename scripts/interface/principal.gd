@@ -8,7 +8,7 @@ enum Modo { GUARDA, COMBATE, FIM, MAPA, TITULO }
 # Mapa da casa: true = casa em corte (mapa_casa.gd); false = os cinco cartões de antes, intactos.
 const MAPA_EM_CORTE := true
 
-const ESC_G := 1.85
+const ESC_G := 1.875   # 6 px de tela por pixel do sprite (GATO_K 3,2): escala inteira, 2 quadradinhos da grade PX de 3 px
 const PE_Y := 418.0
 const TORRE_G := Vector2(24, 422)
 const PAINEL := Rect2(215, 466, 760, 250)
@@ -2575,10 +2575,10 @@ func _pintar_botao_fichario(bt: BotaoArte) -> void:
 		# selo: há meta cumprida que o jogador ainda não viu na aba "Metas"
 		# disco de pixel: contorno escuro, miolo vermelho, sombra embaixo e um brilho em cima
 		var c: Vector2 = Vector2(bt.size.x - 8.0, 6.0)
-		VFX.disco(bt, c, 12.0, Color(0.2, 0.08, 0.08))
-		VFX.disco(bt, c, 9.0, Color(0.72, 0.16, 0.18))
-		VFX.disco(bt, c, 6.0, Color(0.95, 0.3, 0.3))
-		VFX.ponto(bt, c + Vector2(-PX * 2.0, -PX * 2.0), Color(1.0, 0.68, 0.62))
+		VFX.disco(bt, c, 12.0, Color(0.2, 0.08, 0.08), PX)
+		VFX.disco(bt, c, 9.0, Color(0.72, 0.16, 0.18), PX)
+		VFX.disco(bt, c, 6.0, Color(0.95, 0.3, 0.3), PX)
+		VFX.ponto(bt, c + Vector2(-PX * 2.0, -PX * 2.0), Color(1.0, 0.68, 0.62), PX)
 		Desenho.texto(bt, str(metas_selo.size()), Vector2(c.x - 12.0, c.y + 5.0), 14, Color.WHITE, 24.0)
 
 ## Abre a oficina da torre (só no mapa e no guarda-roupa, sem menu nem cortina por cima).
@@ -3491,7 +3491,7 @@ func _camada_voos() -> void:
 		_elipse_px(base + Vector2(0, 3), 40.0 + 90.0 * k, ry_c, _com_alfa(cor.lightened(0.3), 0.5 * (1.0 - k)))
 		_feixe_px(base.x, base.y + 3.0 - ry_c, 46.0, base.y - 150.0, 30.0, cor.lightened(0.4), 0.45 * (1.0 - k), 0.0, 4)
 		var rc: float = 30.0 + 110.0 * k
-		VFX.aro(_c, base + Vector2(0, -50), rc, rc, Color(1, 0.95, 0.7), 1.0 - k, 2.0 if k < 0.35 else 1.0)
+		VFX.aro(_c, base + Vector2(0, -50), rc, rc, Color(1, 0.95, 0.7), 1.0 - k, 2.0 if k < 0.35 else 1.0, PX)
 	for v in voos:
 		var k2: float = clampf(float(v["t"]), 0.0, 1.0)
 		var e: float = 1.0 - pow(1.0 - k2, 3.0)
@@ -3926,7 +3926,7 @@ func _bonecos() -> void:
 		_ellipse_sombra(base + Vector2(0, 3), 52.0, 11.0, Color(0, 0, 0, 0.4 if existe else 0.16))
 		if not existe:
 			var vazio: Array = [null, null, null, null]
-			Desenho.boneco(self, base, ESC_G, 1.0, 0, vazio, 0.0, 0.0, false, 0.0, 0.12)
+			Desenho.boneco(self, base.snapped(Vector2(PX, PX)), ESC_G, 1.0, 0, vazio, 0.0, 0.0, false, 0.0, 0.12)
 			var yv: float = 300.0
 			for l in _quebrar("Vença o próximo cômodo", 13, 120.0):
 				Desenho.texto(self, l, Vector2(base.x - 60, yv), 13, Color(1, 1, 1, 0.6), 120.0, 3)
@@ -3982,7 +3982,7 @@ func _bonecos() -> void:
 			var kp := Vector2i(i, s2)
 			if pulos.has(kp) and float(pulos[kp]) < 0.4:
 				pulo = maxf(pulo, sin(PI * float(pulos[kp]) / 0.4) * 14.0)
-		var pose: Vector2 = base + Vector2(0, bob - pulo)
+		var pose: Vector2 = (base + Vector2(0, bob - pulo)).snapped(Vector2(PX, PX))   # na grade de 3 px (pixel do gato = 6)
 		Desenho.boneco(self, pose, esc, 1.0, 0, mostradas, 0.0, t * 3.0, false, 0.0, alfa_gato, true, slot_dest, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
 		if tem:
 			_estrelas_treino(base, b.pontos)
@@ -4026,11 +4026,11 @@ func _estrelas_treino(base: Vector2, pontos: int) -> void:
 		_estrela4(p, 5.0 + 3.5 * sin(t * 6.0 + k * 1.7), Color(1.0, 0.95, 0.55))
 	# selo de moeda em pixel: contorno escuro, aro claro, miolo dourado com sombra embaixo e brilho em cima
 	var bp: Vector2 = Vector2(base.x + 54.0, _sn(base.y - 118.0 - absf(sin(t * 4.0)) * 9.0))
-	VFX.disco(self, bp, 22.0, Color(0.1, 0.05, 0.02))
-	VFX.disco(self, bp, 19.0, Color(1.0, 0.97, 0.7))
-	VFX.disco(self, bp, 16.0, Color(0.86, 0.58, 0.1))
-	VFX.disco(self, bp + Vector2(-PX, -PX), 13.0, Color(1.0, 0.8, 0.2))
-	VFX.ponto(self, bp + Vector2(-PX * 3.0, -PX * 3.0), Color(1.0, 0.97, 0.7))
+	VFX.disco(self, bp, 22.0, Color(0.1, 0.05, 0.02), PX)
+	VFX.disco(self, bp, 19.0, Color(1.0, 0.97, 0.7), PX)
+	VFX.disco(self, bp, 16.0, Color(0.86, 0.58, 0.1), PX)
+	VFX.disco(self, bp + Vector2(-PX, -PX), 13.0, Color(1.0, 0.8, 0.2), PX)
+	VFX.ponto(self, bp + Vector2(-PX * 3.0, -PX * 3.0), Color(1.0, 0.97, 0.7), PX)
 	Desenho.texto(self, "+%d" % pontos, bp + Vector2(-18, 7), 18, COR_TINTA_ESC, 40.0)
 
 ## Nome grande, nível e barra de experiência no alto do vão do boneco.
@@ -4716,8 +4716,8 @@ func _efeitos() -> void:
 				_elipse_px(pe, 24.0 * (1.0 - k / 0.6), 24.0 * (1.0 - k / 0.6), Color(1, 1, 0.8, 0.45))
 			var r1: float = 18.0 + 40.0 * k
 			var r2: float = 10.0 + 24.0 * k
-			VFX.aro(_c, pe, r1, r1, Color(1.0, 0.95, 0.6), 1.0 - k, 2.0 if k < 0.4 else 1.0)
-			VFX.aro(_c, pe, r2, r2, Color(0.6, 1.0, 0.75), 0.8 * (1.0 - k))
+			VFX.aro(_c, pe, r1, r1, Color(1.0, 0.95, 0.6), 1.0 - k, 2.0 if k < 0.4 else 1.0, PX)
+			VFX.aro(_c, pe, r2, r2, Color(0.6, 1.0, 0.75), 0.8 * (1.0 - k), 1.0, PX)
 			if k < 0.85:
 				_estrela4(pe + Vector2(0, -30.0 * k), 6.0 + 8.0 * (1.0 - k), Color(1.0, 0.95, 0.5), CONT_PX)
 	for tv in tijolos_voando:
