@@ -593,6 +593,8 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 		if travou:
 			continue
 		e.vencido = [2, 2, 2, 2, 2]   # os lugares de fora ficam abertos para a invasão lá fora
+		# piso=0: só as lutas dos kits ficam sem a vida mínima do corpo (a campanha até aqui é a mesma, para comparar)
+		Simulacao.sem_piso_corpo = str(opcoes.get("piso", "1")) == "0"
 		_preparar(pol, e, false)
 		var b0: Boneco = e.bonecos[e.bonecos.size() - 1]   # o kit vai no último gato; nível e raridade são a média do time
 		var originais: Array = b0.pecas.duplicate()
@@ -659,6 +661,7 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 				tel[kk] = float(tel.get(kk, 0.0)) + float(d[kk])
 		for s in Pecas.SLOTS:
 			b0.pecas[s] = originais[s]
+		Simulacao.sem_piso_corpo = false
 	print("kits (%s), %d campanhas, 6 lutas fixas por campanha e kit; último gato veste o kit%s" % [pol, n_jogos, "; os outros vestem fantasias parceiras" if opcoes.has("equipe") else ""])
 	print("  %-20s %-22s vitoria%% | vivos | tempo |  usos  |  dano  | abates | extras (por luta)" % ["fantasia", "poder"])
 	for c in lista + [-1]:

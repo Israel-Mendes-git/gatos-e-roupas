@@ -233,7 +233,7 @@ func calcular(u: Unidade) -> void:
 			continue
 		var m: float = p.poder()
 		var nv: int = p.nivel_efetivo()
-		if u.equipe == 0 and p.slot() == Pecas.SLOT_CORPO:
+		if u.equipe == 0 and p.slot() == Pecas.SLOT_CORPO and not sem_piso_corpo:
 			vida += maxf(0.0, Balanco.CORPO_VIDA_MIN - float(CORPO_VIDA_PROPRIA.get(p.molde(), 0.0))) * m   # todo corpo protege um pouco; a passiva da peça continua a mesma
 		match p.molde():
 			Pecas.Tipo.PORRETE:
@@ -2118,7 +2118,8 @@ func carga_poder(u: Unidade) -> float:
 
 ## Medição por fantasia (só o simulador liga): usos, dano, abates e efeitos de cada poder.
 static var medir: bool = false
-static var sem_pity: bool = false   # medição: ignora a peça que falta (peso 1,0 em todas)
+static var sem_pity: bool = false
+static var sem_piso_corpo: bool = false   # medição: desliga a vida mínima da peça de corpo (Balanco.CORPO_VIDA_MIN)   # medição: ignora a peça que falta (peso 1,0 em todas)
 static var tele: Dictionary = {}
 static var tele_i: Dictionary = {}   # idem, dos poderes dos bichos
 var _eq_tele: int = 0
