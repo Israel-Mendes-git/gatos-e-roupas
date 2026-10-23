@@ -6786,7 +6786,7 @@ func _poder_aguarda(u: Unidade) -> int:
 		return -1
 	var i: int = poder_de[u]
 	var b: Dictionary = poder_btns[i]
-	if u.vivo and bool(b["pronto"]) and not bool(b["trancado"]):
+	if u.vivo and bool(b["pronto"]) and not bool(b["trancado"]) and not u.poder_armado:
 		return i
 	return -1
 
@@ -6933,7 +6933,8 @@ func _input(ev: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_pedir_poder(idx)
 
-## O jogador pede o poder do botão `i`. Não carregado: nada acontece. Sem alvo ou atordoado: o botão treme.
+## O jogador pede o poder do botão `i`. Não carregado: nada acontece. Sem alvo ou atordoado: o botão treme
+## e o poder fica armado (sai sozinho quando aparecer alvo).
 func _pedir_poder(i: int) -> void:
 	if not sim.poder_manual:
 		return   # modo automático: os cliques não são necessários
@@ -6941,15 +6942,14 @@ func _pedir_poder(i: int) -> void:
 	var u: Unidade = b["u"]
 	if not u.vivo or u.poder_cd > 0.0:
 		return
-	if u.atordoado_t > 0.0:
-		_recusar_poder(b, "atordoado")
-		return
+	var atordoado: bool = u.atordoado_t > 0.0
 	if sim.disparar_poder(u):
 		b["flash"] = 1.0
 		b["pop"] = 1.0
 		poder_seta_t = 0.0
 	else:
-		_recusar_poder(b, "sem alvo")
+		_recusar_poder(b, "atordoado" if atordoado else "sem alvo")
+		poder_seta_t = 0.0
 
 func _recusar_poder(b: Dictionary, motivo: String) -> void:
 	b["tremor"] = 0.4
@@ -7063,6 +7063,9 @@ func _botao_poder(i: int) -> void:
 	elif trancado:
 		txt = "atordoado"
 		cor_s = Desenho.DOURADO
+	elif pronto and u.poder_armado and not auto:
+		txt = "ARMADO"   # pedido sem alvo: sai sozinho quando aparecer
+		cor_s = Desenho.DOURADO.lerp(Color(1, 1, 1), 0.3 * pu)
 	elif pronto:
 		txt = "PRONTO"
 		cor_s = Color(1, 1, 1).lerp(cor, 0.25 * (1.0 - pu))

@@ -1479,10 +1479,11 @@ func _agir(u: Unidade, dt: float) -> void:
 	elif u.poder >= 0:
 		u.poder_cd -= dt
 		u.poder_pronto = u.poder_cd <= 0.0
-		if u.poder_pronto and u.confuso_t <= 0.0 and not (poder_manual and u.equipe == 0) and _usar_poder(u):
+		if u.poder_pronto and u.confuso_t <= 0.0 and not (poder_manual and u.equipe == 0 and not u.poder_armado) and _usar_poder(u):
 			u.poder_cd = _intervalo_poder(u)
 			u.poder_cd_menos = 0.0
 			u.poder_pronto = false
+			u.poder_armado = false
 			if not u.vivo:
 				return
 	if not u.herancas.is_empty() and not _herancas_agem(u, dt):
@@ -2046,15 +2047,18 @@ func _raridade_do_drop(u: Unidade) -> int:
 	return Pecas.Raridade.COMUM
 
 ## O jogador manda o gato usar o poder da fantasia. Devolve false se não está carregado
-## ou se agora não há em quem usar (o poder continua carregado).
+## ou se agora não há em quem usar (ou está atordoado): aí o pedido fica armado e o poder sai sozinho
+## assim que puder, para a luta curta não perder o uso.
 func disparar_poder(u: Unidade) -> bool:
-	if u == null or not u.vivo or u.poder < 0 or u.poder_cd > 0.0 or u.atordoado_t > 0.0:
+	if u == null or not u.vivo or u.poder < 0 or u.poder_cd > 0.0:
 		return false
-	if not _usar_poder(u):
+	if u.atordoado_t > 0.0 or not _usar_poder(u):
+		u.poder_armado = true
 		return false
 	u.poder_cd = _intervalo_poder(u)
 	u.poder_cd_menos = 0.0
 	u.poder_pronto = false
+	u.poder_armado = false
 	return true
 
 ## Fração dos poderes de apoio (cura, proteção, frenesi) quando o disparo é uma herança: sobe com o grau.

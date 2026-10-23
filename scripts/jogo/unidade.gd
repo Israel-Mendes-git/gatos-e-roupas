@@ -95,6 +95,7 @@ var poder_atelie: bool = false  # o poder vem da fantasia do Ateliê (força men
 var poder_forca: float = 1.0    # força média das peças da fantasia
 var poder_cd: float = Balanco.PODER_PRIMEIRO
 var poder_pronto: bool = false  # carregado, esperando o jogador disparar (modo manual)
+var poder_armado: bool = false  # modo manual: o jogador pediu sem alvo (ou atordoado); sai sozinho quando der
 var atordoado_t: float = 0.0
 var protegido_t: float = 0.0
 var frenesi_t: float = 0.0
