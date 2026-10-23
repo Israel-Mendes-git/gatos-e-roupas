@@ -19,24 +19,28 @@ um guarda-roupa cheio de peças e muita luta.
 
 ![Guarda-roupa](docs/imagens/guarda-roupa.png)
 
-![Luta no sótão](docs/imagens/luta.png)
+![Luta na cozinha](docs/imagens/luta.png)
 
 ## A campanha
 
-A casa tem cinco cômodos — Quarto, Sala, Cozinha, Sótão e Porão —, cada um com a sua
-família de bichos, cinco ondas e um chefe no fim. Vencida a casa, a aventura continua do
-lado de fora: quintal, garagem, telhado, rua e a toca, com chefes novos.
+A campanha tem três atos. A casa tem cinco cômodos — Quarto, Sala, Cozinha, Sótão e
+Porão —, cada um com a sua família de bichos, cinco ondas e um chefe no fim. Vencida a
+casa, a aventura continua do lado de fora: quintal, garagem, telhado, rua e a toca, com
+chefes novos. Por último vêm as ruas do bairro, onde o time enfrenta gangues de outros
+gatos, também fantasiados, cada uma com os seus truques e um chefe.
 
 ![Mapa da casa](docs/imagens/mapa.png)
 
 Pelo caminho:
 
-- **25 fantasias** e 100 peças para colecionar, guardadas num fichário
+- **quase 60 fantasias** para colecionar peça por peça, guardadas num fichário
 - **gatos que crescem** junto com a campanha e herdam os poderes das fantasias que vestiram
 - **uma torre** que protege a casa e melhora com os troféus ganhos nas lutas
-- **invasão sem fim** e metas para depois de terminar a campanha
+- **o Ateliê**, onde quem completa o fichário cria a própria fantasia
+- **segredos**, invasão sem fim e metas para depois de terminar a campanha
 
 ## Créditos
 
-Gatos: **Last tick**. Interface: **PaperHatLizard** e **ToffeeCraft**. Os efeitos
-sonoros foram sintetizados para o jogo.
+Gatos: **Last tick**. Interface: **PaperHatLizard** e **ToffeeCraft**. Fonte: **Jersey 10**,
+de Sarah Cadigan-Fried (The Soft Type Project). Os efeitos sonoros foram sintetizados para
+o jogo.
