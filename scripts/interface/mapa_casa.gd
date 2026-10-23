@@ -30,7 +30,7 @@ const BT_FINAL := Rect2(20, 14, 92, 34)
 const BT_VISTA := Rect2(120, 14, 112, 34)      # "Ver a casa" / "Ver lá fora": alterna a vista (só no segundo ato)
 const BOTAO_VISTA := 4
 const RETRATO := Rect2(880, 238, 160, 124)     # área própria do retrato do chefe no painel
-const RETRATO_ESCALA := 1.0
+const RETRATO_ESCALA := 0.78   # recuado: no 1.0 o rabo e a arma dos chefes maiores saíam da caixa e eram cortados
 const BOTAO_NENHUM := 0
 const BOTAO_JOGAR := 1
 const BOTAO_INVASAO := 2
@@ -427,6 +427,7 @@ func _cena_casa(t: float, est: Estado, d: int) -> void:
 	_disco(100.0, CHAO_Y - 12.0, 12.0, Color(0.18, 0.42, 0.2))
 	_disco(732.0, CHAO_Y - 12.0, 16.0, C_CONTORNO)
 	_disco(732.0, CHAO_Y - 12.0, 12.0, Color(0.18, 0.42, 0.2))
+	_vagalumes(t)
 	_chamine(t)
 	_telhado()
 	_corpo()
@@ -445,6 +446,20 @@ func _cena_casa(t: float, est: Estado, d: int) -> void:
 		var bloq: bool = d > est.fase_liberada
 		_moldura(rd.grow(4.0), 4.0, Color(0.7, 0.7, 0.78, 0.8) if bloq else Color(0.97, 0.97, 1.0))
 	_marca_escolhido(COMODOS, t)
+
+## Vaga-lumes perto das árvores: pontinhos que vagam devagar e acendem e apagam, cada um no seu tempo.
+func _vagalumes(t: float) -> void:
+	var bases: Array[Vector2] = [Vector2(70, CHAO_Y - 70), Vector2(120, CHAO_Y - 40), Vector2(760, CHAO_Y - 90), Vector2(820, CHAO_Y - 50), Vector2(30, CHAO_Y - 120)]
+	for k in bases.size():
+		var luz: float = sin(t * (1.3 + k * 0.17) + k * 2.3)
+		if luz < 0.2:
+			continue
+		var pos: Vector2 = bases[k] + Vector2(sin(t * 0.5 + k) * 18.0, cos(t * 0.37 + k * 1.3) * 10.0)
+		var x: float = snappedf(pos.x, 4.0)
+		var y: float = snappedf(pos.y, 4.0)
+		if luz > 0.6:
+			_r(x - 4, y - 4, 12, 12, Color(1.0, 0.95, 0.4, 0.18))
+		_r(x, y, 4, 4, Color(1.0, 0.96, 0.55) if luz > 0.6 else Color(0.8, 0.82, 0.35))
 
 ## Cômodo escolhido por clique: moldura dourada grossa e etiqueta, bem mais forte que o simples destaque do mouse.
 func _marca_escolhido(rs: Array[Rect2], t: float) -> void:
@@ -556,13 +571,25 @@ func _chamine(t: float) -> void:
 		_r(548, 128 + k, 32, 4, Color(0.34, 0.16, 0.15))
 	_r(540, 104, 48, 12, C_CONTORNO)
 	_r(544, 108, 40, 8, Color(0.58, 0.3, 0.25))
-	# fumaça: subindo devagar, sempre abaixo da linha do texto do cabeçalho
-	for k in 3:
-		var fase: float = fposmod(t * 0.35 + k / 3.0, 1.0)
-		var tam: float = 8.0 + 4.0 * floorf(fase * 2.0)
-		var y: float = snappedf(100.0 - fase * 12.0, 4.0)
-		var x: float = snappedf(556.0 + fase * 12.0, 4.0)
-		_r(x, y, tam, tam, Color(0.85, 0.85, 0.92, 0.5 * (1.0 - fase)))
+	# fumaça: bolotas de pixel com contorno que saem da chaminé e o vento leva para a direita, subindo pouco
+	# (sempre abaixo da linha do texto do cabeçalho, y >= 80); no fim da vida viram pontilhado e somem
+	for k in 5:
+		var fase: float = fposmod(t * 0.22 + k / 5.0, 1.0)
+		var tam: float = 8.0 + 4.0 * floorf(minf(fase * 3.0, 2.0))
+		var y: float = snappedf(98.0 - fase * 16.0 - tam * 0.5, 4.0)
+		var x: float = snappedf(556.0 + fase * 96.0 + sin(fase * 9.0 + k) * 4.0, 4.0)
+		if fase > 0.78:
+			# pontilhado: só os quadradinhos em xadrez
+			for yy in range(0, int(tam), 4):
+				for xx in range(0, int(tam), 4):
+					if (xx + yy) % 8 == 0:
+						_r(x + xx, y + yy, 4, 4, Color(0.78, 0.78, 0.86))
+			continue
+		_r(x - 4, y, tam + 8, tam, Color(0.22, 0.2, 0.3))
+		_r(x, y - 4, tam, tam + 8, Color(0.22, 0.2, 0.3))
+		_r(x, y, tam, tam, Color(0.8, 0.8, 0.88))
+		_r(x, y + tam - 4, tam, 4, Color(0.62, 0.62, 0.74))
+		_r(x, y, 4, 4, Color(0.95, 0.95, 1.0))
 
 static func _meia(y: float) -> float:
 	return maxf(4.0, snappedf(MEIA_BASE * (y + 2.0 - TOPO_TELHADO) / (BASE_TELHADO - TOPO_TELHADO), 4.0))
@@ -844,9 +871,14 @@ func _mobilia(fi: int, t: float) -> void:
 ## Luz acesa (cômodo vencido): lâmpada pendurada com um halo quente.
 func _luz(fi: int) -> void:
 	var lx: float = LAMPADA_X[fi]
-	_l(0, 0, _iw, _ih, Color(1.0, 0.85, 0.4, 0.07))
-	_l(lx - 28, 0, 60, 44, Color(1.0, 0.9, 0.5, 0.08))
-	_l(lx - 16, 0, 36, 32, Color(1.0, 0.92, 0.55, 0.12))
+	# a lâmpada respira em 2 degraus e, de vez em quando, dá uma piscada (cada cômodo no seu tempo)
+	var ciclo: float = fposmod(p.t * 0.31 + fi * 0.237, 1.0)
+	var forte: float = 1.0 if sin(p.t * 1.7 + fi * 2.1) > 0.0 else 0.75
+	if ciclo > 0.955 and ciclo < 0.975:
+		forte = 0.3
+	_l(0, 0, _iw, _ih, Color(1.0, 0.85, 0.4, 0.07 * forte))
+	_l(lx - 28, 0, 60, 44, Color(1.0, 0.9, 0.5, 0.08 * forte))
+	_l(lx - 16, 0, 36, 32, Color(1.0, 0.92, 0.55, 0.12 * forte))
 	_l(lx, 0, 4, 12, C_CONTORNO)
 	_l(lx - 4, 12, 12, 8, Color(1.0, 0.95, 0.6))
 	_l(lx - 4, 20, 12, 4, Color(1.0, 0.8, 0.3))
@@ -1128,8 +1160,8 @@ func _casa_fora(t: float) -> void:
 	_r(284, 508, 320, 12, C_PEDRA_ESC)
 	_r(284, 508, 320, 4, C_PEDRA)
 	# janelas acesas (num canto da esquerda, a silhueta de um gato)
-	_janela_fora(316, 340, 56, 60, true)
-	_janela_fora(516, 340, 56, 60, false)
+	_janela_fora(316, 340, 56, 60, true, fposmod(t * 0.13, 1.0) < 0.86)
+	_janela_fora(516, 340, 56, 60, false, fposmod(t * 0.11 + 0.5, 1.0) < 0.8)
 	# porta com vidro aceso e lampião
 	_r(416, 424, 56, 88, C_CONTORNO)
 	_r(420, 428, 48, 84, C_MADEIRA)
@@ -1148,12 +1180,14 @@ func _casa_fora(t: float) -> void:
 	_r(392, 432, 8, 12, C_VIDRO)
 	_r(392, 444, 8, 4, C_CONTORNO)
 
-func _janela_fora(x: float, y: float, w: float, h: float, gato: bool) -> void:
-	_r(x - 16, y - 12, w + 32, h + 28, Color(1.0, 0.9, 0.5, 0.06))
+## Janela da casa vista de fora. `acesa` falso: alguém apagou a luz lá dentro (vidro escuro, sem brilho em volta).
+func _janela_fora(x: float, y: float, w: float, h: float, gato: bool, acesa: bool = true) -> void:
+	if acesa:
+		_r(x - 16, y - 12, w + 32, h + 28, Color(1.0, 0.9, 0.5, 0.06))
 	_r(x - 4, y - 4, w + 8, h + 8, C_CONTORNO)
 	_r(x, y, w, h, C_EXT_CL)
-	_r(x + 4, y + 4, w - 8, h - 8, C_VIDRO)
-	_r(x + 4, y + 4, w - 8, 8, Color(1.0, 0.94, 0.65))
+	_r(x + 4, y + 4, w - 8, h - 8, C_VIDRO if acesa else Color(0.16, 0.16, 0.26))
+	_r(x + 4, y + 4, w - 8, 8, Color(1.0, 0.94, 0.65) if acesa else Color(0.26, 0.26, 0.38))
 	_r(x + w * 0.5 - 2.0, y + 4, 4, h - 8, C_EXT_CL)
 	_r(x + 4, y + h * 0.5 - 2.0, w - 8, 4, C_EXT_CL)
 	_r(x + 4, y + 4, 8, h - 8, Color(0.85, 0.4, 0.5, 0.75))
@@ -1245,8 +1279,8 @@ func _painel_lateral(f: int) -> void:
 	var chefes: Array = p._chefes_mapa
 	var fundo_p := Color(0.1, 0.06, 0.1, 1.0)
 	cv.draw_rect(RETRATO, Color(0.16, 0.1, 0.17))
-	Desenho.boneco(cv, Vector2(RETRATO.position.x + 100.0, RETRATO.end.y - 6.0), RETRATO_ESCALA * Balanco.CHEFE_ESCALA_TIPO[li], -1.0, 1, chefes[fi], 0.0, anim, false, 0.0, al, false, -1, 0.0, 0, false, true, li, false, li)
-	Desenho.boneco(cv, Vector2(RETRATO.position.x + 30.0, RETRATO.end.y - 6.0), 0.6, -1.0, 1, VAZIO, 0.0, anim + 1.0, false, 0.0, al, false, -1, 0.0, 0, false, false, li, false, -1)
+	Desenho.boneco(cv, Vector2(RETRATO.position.x + 94.0, RETRATO.end.y - 8.0), RETRATO_ESCALA * Balanco.CHEFE_ESCALA_TIPO[li], -1.0, 1, chefes[fi], 0.0, anim, false, 0.0, al, false, -1, 0.0, 0, false, true, li, false, li)
+	Desenho.boneco(cv, Vector2(RETRATO.position.x + 28.0, RETRATO.end.y - 8.0), 0.5, -1.0, 1, VAZIO, 0.0, anim + 1.0, false, 0.0, al, false, -1, 0.0, 0, false, false, li, false, -1)
 	cv.draw_rect(Rect2(PAINEL.position.x + 8.0, PAINEL.position.y + 8.0, PAINEL.size.x - 16.0, RETRATO.position.y - PAINEL.position.y - 8.0), fundo_p)
 	cv.draw_rect(Rect2(RETRATO.end.x, RETRATO.position.y - 2.0, PAINEL.end.x - 8.0 - RETRATO.end.x, RETRATO.size.y + 4.0), fundo_p)
 	cv.draw_rect(Rect2(PAINEL.position.x + 8.0, RETRATO.end.y, PAINEL.size.x - 16.0, 366.0 - RETRATO.end.y), fundo_p)
