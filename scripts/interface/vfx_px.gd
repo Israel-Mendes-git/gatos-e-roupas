@@ -3,12 +3,16 @@
 ## círculos lisos. Cada forma recebe a cor de miolo e a cor do contorno escuro; o apagar é feito por
 ## encolhimento ou por pontilhado (`fade`), nunca por alfa sobre alfa, para os tons ficarem limpos.
 
-const Q := 3.0
+const Q := 4.0   # a grade da luta: a mesma dos sprites (Campo.PX_SPRITE) e do cenário
 const CONT := Color(0.1, 0.06, 0.14)
 const BRANCO := Color(1.0, 0.98, 0.9)
 
 static func sn(v: float, q: float = Q) -> float:
 	return floorf(v / q) * q
+
+## Lado em múltiplo inteiro da grade (mínimo 1 quadradinho; meio quadradinho arredonda para baixo).
+static func lado(v: float, q: float = Q) -> float:
+	return maxf(q, ceilf(v / q - 0.5) * q)
 
 ## Clareia/escurece uma cor mantendo o matiz (tons do efeito: escuro 0.45, médio 1, claro 1.6...).
 static func tom(c: Color, f: float) -> Color:
@@ -18,7 +22,7 @@ static func tom(c: Color, f: float) -> Color:
 	return Color(lerpf(c.r, 1.0, k), lerpf(c.g, 1.0, k), lerpf(c.b, 1.0, k), c.a)
 
 static func quadro(c: CanvasItem, x: float, y: float, w: float, h: float, cor: Color, q: float = Q) -> void:
-	c.draw_rect(Rect2(sn(x, q), sn(y, q), maxf(w, q), maxf(h, q)), cor)
+	c.draw_rect(Rect2(sn(x, q), sn(y, q), lado(w, q), lado(h, q)), cor)
 
 ## Disco cheio em faixas (sem contorno).
 static func disco(c: CanvasItem, ce: Vector2, r: float, cor: Color, q: float = Q) -> void:
@@ -64,7 +68,7 @@ static func aro(c: CanvasItem, ce: Vector2, rx: float, ry: float, cor: Color, fa
 	if fade <= 0.02 or rx < 1.0:
 		return
 	var n: int = clampi(int(TAU * maxf(rx, ry * 2.0) / q * 0.62), 8, 64)
-	var s: float = q * esp
+	var s: float = lado(q * esp, q)
 	for i in n:
 		if fposmod(i * 0.7548777, 1.0) >= fade:
 			continue
@@ -73,6 +77,7 @@ static func aro(c: CanvasItem, ce: Vector2, rx: float, ry: float, cor: Color, fa
 
 ## Linha de quadradinhos de lado `s` (passo = s): riscos, fios, rastros.
 static func linha(c: CanvasItem, a: Vector2, b: Vector2, cor: Color, s: float = Q, q: float = Q) -> void:
+	s = lado(s, q)
 	var d: float = a.distance_to(b)
 	var n: int = maxi(1, int(d / s))
 	for i in n + 1:
@@ -201,7 +206,7 @@ static func arco(c: CanvasItem, ce: Vector2, r: float, a0: float, a1: float, cor
 	if fade <= 0.02 or r < 1.0:
 		return
 	var n: int = clampi(int(absf(a1 - a0) * r / q * 0.8), 3, 60)
-	var s: float = q * esp
+	var s: float = lado(q * esp, q)
 	for i in n + 1:
 		if fposmod(i * 0.7548777, 1.0) >= fade:
 			continue
@@ -243,15 +248,20 @@ static func flor(c: CanvasItem, ce: Vector2, cor: Color, miolo: Color, cont: Col
 	c.draw_rect(Rect2(x, y, q, q), miolo)
 
 # ---------------------------------------------------------------- lote 2 da expansão: estruturas, sono e mudas
-## Letra "z" de sono em quadradinhos (3x3), com contorno.
+## Letra "z" de sono em quadradinhos de `q`: barra de cima, diagonal e barra de baixo. O escuro é só uma sombra
+## de 1 quadradinho embaixo e à direita de cada traço (contorno em volta inteira fechava o miolo e virava caixa).
+## `tam` < 2 dá um z de 4x4 quadradinhos; 2 ou mais, de 5x5. `ce` é o canto de cima à esquerda.
 static func zzz(c: CanvasItem, ce: Vector2, tam: float, cor: Color, cont: Color = CONT, q: float = Q) -> void:
 	var x: float = sn(ce.x, q)
 	var y: float = sn(ce.y, q)
-	var u: float = q * maxf(1.0, roundf(tam))
-	c.draw_rect(Rect2(x - q, y - q, u * 3.0 + q * 2.0, u * 3.0 + q * 2.0), cont)
-	c.draw_rect(Rect2(x, y, u * 3.0, u), cor)
-	c.draw_rect(Rect2(x + u, y + u, u, u), cor)
-	c.draw_rect(Rect2(x, y + u * 2.0, u * 3.0, u), cor)
+	var n: int = 5 if tam >= 2.0 else 4
+	for camada in 2:
+		var o: float = q if camada == 0 else 0.0
+		var cc: Color = cont if camada == 0 else cor
+		c.draw_rect(Rect2(x + o, y + o, n * q, q), cc)
+		c.draw_rect(Rect2(x + o, y + (n - 1) * q + o, n * q, q), cc)
+		for k in range(1, n - 1):
+			c.draw_rect(Rect2(x + (n - 1 - k) * q + o, y + k * q + o, q, q), cc)
 
 ## Torre de ervilha: caule, duas folhas, cabeça redonda e o cano que recua no tiro. `base` = pés; `dir` = para onde olha; `golpe` > 0 logo após atirar.
 static func torre_ervilha(c: CanvasItem, base: Vector2, esc: float, dir: float, golpe: float, frac: float, q: float = Q) -> void:

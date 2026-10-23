@@ -436,7 +436,7 @@ func _alvos(id: String) -> Array[Rect2]:
 
 func _caixa_previa(g: Dictionary) -> Rect2:
 	var pos: Vector2 = g["pos"]
-	var e: float = Campo.ESC * (g["u"] as Unidade).escala()
+	var e: float = Campo.esc_tela(g["u"] as Unidade)
 	return Rect2(pos.x - (Campo.CORPO_LARG + 6.0) * e, pos.y - (Campo.CORPO_ALT + 6.0) * e, (Campo.CORPO_LARG + 6.0) * 2.0 * e, (Campo.CORPO_ALT + 16.0) * e)
 
 # ------------------------------------------------------------------ ciclo

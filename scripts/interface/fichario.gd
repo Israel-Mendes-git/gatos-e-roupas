@@ -924,8 +924,8 @@ func _argolas() -> void:
 	for i in 5:
 		var y: float = _sn(118.0 + i * 108.0)
 		# furos nas duas folhas: discos de 3 células
-		V.disco(self, Vector2(PG_E.end.x - 12.0, y + 1.5), 4.0, FURO)
-		V.disco(self, Vector2(PG_D.position.x + 12.0, y + 1.5), 4.0, FURO)
+		V.disco(self, Vector2(PG_E.end.x - 12.0, y + 1.5), 4.0, FURO, Q)
+		V.disco(self, Vector2(PG_D.position.x + 12.0, y + 1.5), 4.0, FURO, Q)
 		# argola de metal atravessando a espinha: cinco fileiras (contorno, brilho, miolo, sombra, contorno)
 		draw_rect(Rect2(xe, y - Q * 2.0, Q * 15.0, Q * 5.0), ARGOLA_CONT)
 		draw_rect(Rect2(xe, y - Q, Q * 15.0, Q), ARGOLA_CL)
@@ -937,7 +937,7 @@ func _argolas() -> void:
 
 ## Ponta da argola: disco com contorno e um brilho em cima à esquerda.
 func _ponta_argola(px: float, y: float) -> void:
-	V.disco_c(self, Vector2(px, y + 1.5), 3.0, ARGOLA, ARGOLA_CONT)
+	V.disco_c(self, Vector2(px, y + 1.5), 3.0, ARGOLA, ARGOLA_CONT, Q)
 	draw_rect(Rect2(_sn(px) - Q, y - Q, Q, Q), ARGOLA_CL)
 
 func _faixa(r: Rect2, txt: String, tams: Array, cor: Color) -> void:
@@ -1088,7 +1088,7 @@ func _abas(e: Estado) -> void:
 		_txt(sub, Vector2(cx - larg_t * 0.5, rr.position.y + 44.0), 13, TINTA2, larg_t)
 		if i == ABA_METAS and not metas_novas.is_empty() and not em_metas:
 			var sn_c := Vector2(rr.position.x + 19.5, rr.position.y + 28.5)
-			V.disco_c(self, sn_c, 4.0, SELO_NOVO, TINTA)
+			V.disco_c(self, sn_c, 4.0, SELO_NOVO, TINTA, Q)
 			draw_rect(Rect2(_sn(sn_c.x) - Q, _sn(sn_c.y) - Q, Q, Q), SELO_NOVO.lightened(0.55))
 		if i > 0 and i < ABA_FORA and comodo_bloqueado(e, i - 1):
 			_cadeado(Vector2(rr.position.x + 18.0, rr.position.y + 28.0), Color(0.3, 0.2, 0.25))
@@ -1106,8 +1106,12 @@ func _botoes() -> void:
 		if id == "ant" or id == "prox":
 			_seta_nav(it["r"], -1.0 if id == "ant" else 1.0, it["on"], float(o["h"]), float(o["p"]))
 	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bestiário: gangues" if pagina == 1 else "Bicho %d de %d" % [pagina - 1, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Ateliê  ·  a sua fantasia" if pagina_do_atelie() else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
-	_txt(marca, Vector2(250.0, 672.0), 15 if marca.length() < 26 else 13, Color(1, 0.94, 0.8), 240.0, 4)
-	_txt("Setas ou A/D  |  Esc fecha", Vector2(696.0, 672.0), 12, Color(1, 0.94, 0.8, 0.7), 240.0, 3)
+	_txt(UIComum.caber(marca.replace("  ·  ", " · "), 15, 236.0) if UIComum.largura(marca, 15) > 236.0 else marca, Vector2(250.0, 672.0), 15, Color(1, 0.94, 0.8), 240.0, 4)
+	# entre o Fechar e o Avançar há ~230 px: o texto é medido no 19 em que é desenhado e encurta se não couber
+	var atalhos: String = "Setas, A/D ou PgUp/PgDn  |  Esc fecha"
+	if UIComum.largura(atalhos, 13) > 226.0:
+		atalhos = "Setas ou A/D  |  Esc fecha"
+	_txt(atalhos, Vector2(700.0, 672.0), 13, Color(1, 0.94, 0.8, 0.7), 230.0, 3)
 
 ## Seta em pixel dentro do botão Voltar/Avançar, junto da borda; acompanha o crescer e o afundar do botão.
 func _seta_nav(r: Rect2, dir: float, on: bool, h: float, pr: float) -> void:
@@ -1222,7 +1226,7 @@ func _tile(e: Estado, c: int, r: Rect2) -> void:
 	_moldura_px(r, Color(0.9, 0.68, 0.1) if completa else PAPEL_BORDA)
 	var cab: int = Pecas.CONJUNTO_PECAS[c][0]
 	var centro := r.position + Vector2(r.size.x * 0.5, TILE_ICO_Y)
-	V.disco(self, centro, 24.0, cor.lerp(PAPEL, 0.7))
+	V.disco(self, centro, 24.0, cor.lerp(PAPEL, 0.7), Q)
 	if e.ja_teve(cab):
 		Desenho.icone(self, cab, centro, 50.0)
 	# nome em até duas linhas
@@ -1272,9 +1276,10 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	draw_rect(pb, PAPEL_ESC)
 	draw_rect(pb, PAPEL_BORDA, false, 2.0)
 	_txt("Poder da fantasia completa", Vector2(pb.position.x + 12.0, pb.position.y + 19.0), 13, TINTA2)
-	_txt(Pecas.PODER_NOME[c], Vector2(pb.position.x + 12.0, pb.position.y + 44.0), tam_cabe(Pecas.PODER_NOME[c], [22, 20, 18], pb.size.x - 24.0), Color(0.62, 0.34, 0.02))
-	_bloco(_maiuscula(Pecas.PODER_DICA[c]) + ", a cada %d s" % int(Balanco.PODER_INTERVALO), Vector2(pb.position.x + 12.0, pb.position.y + 66.0), pb.size.x - 24.0, [14, 13, 12], 2, TINTA, 2.0)
-	_txt("Vale com as 4 peças vestidas" if not completa else "Fantasia completa: o poder é seu", Vector2(pb.position.x + 12.0, pb.end.y - 7.0), 12, TINTA2)
+	_txt(Pecas.PODER_NOME[c], Vector2(pb.position.x + 12.0, pb.position.y + 42.0), tam_cabe(Pecas.PODER_NOME[c], [22, 20, 18], pb.size.x - 24.0), Color(0.62, 0.34, 0.02))
+	# dica em até 2 linhas, no passo de 16 px: a fonte sai em 19, então a 2ª linha não pode descer até a legenda
+	_bloco(_maiuscula(Pecas.PODER_DICA[c]) + ", a cada %d s" % int(Balanco.PODER_INTERVALO), Vector2(pb.position.x + 12.0, pb.position.y + 61.0), pb.size.x - 24.0, [14], 2, TINTA, 2.0)
+	_txt("Vale com as 4 peças vestidas" if not completa else "Fantasia completa: o poder é seu", Vector2(pb.position.x + 12.0, pb.end.y - 4.0), 12, TINTA2)
 	# onde encontrar
 	var ob := Rect2(COL_E_X, 500.0, COL_W, 130.0)
 	draw_rect(ob, PAPEL_ESC)
@@ -1422,7 +1427,7 @@ func _linha_peca(e: Estado, c: int, s: int) -> void:
 	else:
 		# interrogação num selo no canto da caixa (o ícone em silhueta vem da camada filha)
 		var sc: Vector2 = cx.position + Vector2(cx.size.x - 6.0, 8.0)
-		V.disco_c(self, sc, 7.0, Color(0.62, 0.2, 0.2), Color(0.25, 0.08, 0.08))
+		V.disco_c(self, sc, 7.0, Color(0.62, 0.2, 0.2), Color(0.25, 0.08, 0.08), Q)
 		_txt("?", Vector2(_sn(sc.x) - 9.0, _sn(sc.y) + 8.0), 16, Color.WHITE, 21.0)
 	var x: float = r.position.x + 88.0
 	var larg: float = r.size.x - 88.0 - 10.0
@@ -1542,7 +1547,7 @@ func _linha_meta(e: Estado, m: Dictionary, y: float, trancada: bool) -> float:
 	if feita:
 		_selo_meta(Vector2(r.end.x - 34.0, y + 16.0), "FEITA", COR_TEM)
 	else:
-		_txt("pendente" if not trancada else "trancada", Vector2(r.end.x - 66.0, y + 20.0), 11, TINTA2, 60.0)
+		_txt("pendente" if not trancada else "trancada", Vector2(r.end.x - 72.0, y + 20.0), 11, TINTA2, 66.0)
 	return y + 34.0
 
 ## Segunda dupla de folhas das Metas: as metas do lado de fora e o andamento de cada lugar.
@@ -1624,30 +1629,33 @@ func _pagina_metas(e: Estado) -> void:
 		for m in ms:
 			y = _linha_meta(e, m, y, g == "Invasão" and not zerada)
 		y += 6.0
-	# página direita: as 25 fantasias (linhas baixas: 25 cabem em 118..630)
+	# página direita: as fantasias em duas colunas (são 42 desde a expansão: numa coluna só a lista vazava
+	# da página). O prêmio é o mesmo para todas, então vai na faixa do título e não em cada linha.
 	var fs: Array = todas.filter(func(m: Dictionary) -> bool: return m["grupo"] == "Fantasias")
 	var nf: int = 0
 	for m in fs:
 		if e.metas_pagas.has(m["id"]):
 			nf += 1
-	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), "Fantasias  ·  %d/%d  ·  junte as 4 peças" % [nf, fs.size()], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
-	var yy: float = 118.0
-	for m in fs:
+	var premio_f: int = int(fs[0]["premio"]) if not fs.is_empty() else 0
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), "Fantasias  ·  %d/%d  ·  +%d troféus cada" % [nf, fs.size(), premio_f], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
+	var por_col: int = ceili(fs.size() / 2.0)
+	var larg_c: float = floorf(COL_W * 0.5) - 3.0
+	for k in fs.size():
+		var m: Dictionary = fs[k]
 		var feita2: bool = e.metas_pagas.has(m["id"])
 		var c: int = int(String(m["id"]).substr(9))
-		var r2 := Rect2(COL_D_X, yy, COL_W, 19.0)
+		var yy: float = 118.0 + (k % por_col) * 22.0
+		var r2 := Rect2(COL_D_X + (k / por_col) * (larg_c + 6.0), yy, larg_c, 20.0)
 		draw_rect(r2, Color(0.86, 0.95, 0.8) if feita2 else PAPEL_ESC.lightened(0.25))
 		draw_rect(r2, COR_TEM if feita2 else PAPEL_BORDA, false, 1.5 if feita2 else 1.0)
 		draw_rect(Rect2(r2.position.x, r2.position.y, 5.0, r2.size.y), Pecas.CONJUNTO_COR[c].darkened(0.1))
-		_txt(cortar(m["nome"], 13, 230.0), Vector2(r2.position.x + 12.0, yy + 14.0), 13, TINTA)
+		_txt(UIComum.caber(Pecas.CONJUNTO_NOME[c], 13, larg_c - 62.0), Vector2(r2.position.x + 11.0, yy + 15.0), 13, TINTA)
 		if metas_novas.has(m["id"]):
-			_txt("NOVA", Vector2(r2.position.x + 296.0, yy + 14.0), 11, Color(0.85, 0.15, 0.15))
 			draw_rect(r2.grow(2.0), Color(1.0, 0.8, 0.2, 0.5 + 0.5 * sin(t * 6.0)), false, 2.0)
-		_txt("%d/%d" % [e.pecas_da_fantasia(c), Pecas.SLOTS], Vector2(r2.position.x + 250.0, yy + 14.0), 13, COR_TEM if feita2 else TINTA2, 36.0)
-		_premio(m, r2.end.x - 53.0, yy + 9.5, feita2)
 		if feita2:
-			_selo_meta(Vector2(r2.end.x - 34.0, yy + 9.5), "FEITA", COR_TEM, 11)
-		yy += 20.4
+			_selo_meta(Vector2(r2.end.x - 26.0, yy + 10.0), "FEITA", COR_TEM, 11)
+		else:
+			_txt("%d/%d" % [e.pecas_da_fantasia(c), Pecas.SLOTS], Vector2(r2.end.x - 46.0, yy + 15.0), 13, TINTA2, 40.0)
 
 
 # ------------------------------------------------------------------ aba "Bichos" (bestiário)
@@ -1863,7 +1871,7 @@ func _tile_bicho(e: Estado, k: int) -> void:
 	draw_rect(Rect2(r.position.x, r.position.y, r.size.x, Q * 2.0), cor.darkened(0.15) if viu else Color(0.5, 0.45, 0.42))
 	_moldura_px(r, Color(0.9, 0.68, 0.1) if der else PAPEL_BORDA)
 	var pe: Vector2 = r.position + Vector2(TILE_W * 0.5, TILE_H - 40.0)
-	V.disco(self, pe + Vector2(0, -22.0), 27.0, cor.lerp(PAPEL, 0.75) if viu else PAPEL_ESC)
+	V.disco(self, pe + Vector2(0, -22.0), 27.0, cor.lerp(PAPEL, 0.75) if viu else PAPEL_ESC, Q)
 	if en["k"] == "gangue":
 		EmblemaGangue.desenhar(self, int(en["i"]), pe + Vector2(0, -22.0), 48.0, viu)   # o brasão da gangue (silhueta com ? se ainda não vista)
 	elif viu:

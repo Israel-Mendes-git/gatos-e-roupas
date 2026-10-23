@@ -6,12 +6,14 @@ extends RefCounted
 ## ganha contorno quase preto de 1 px (`o`), o interior usa 3 tons (l m d) + brilho no olho, o quadro é recortado, guardado em cache
 ## por pose e desenhado com RoupaGato.sprite. A geometria (_geo) é a mesma para desenhar() e desloc(): as roupas acompanham o corpo.
 ## Cada chefe é a versão REI da espécie da família nova (mesma linguagem visual dos bichos comuns), maior e com adereço de identidade:
-##   0 Rei dos Ratos: rato cinza gordo, olhar rabugento, dentuço, coroa de ouro, manto vermelho com gola de arminho (voa ao andar).
-##   1 Guaxinim Glutão: barrigão imenso, bochechas cheias, guardanapo xadrez no pescoço, baba e migalhas (a barriga respira).
+##   0 Rei dos Ratos: rato cinza gordo de lombo em corcova, cabeça baixa de focinho comprido, olhar rabugento, dentuço, coroa de ouro
+##     e manto vermelho com barra de arminho cuja cauda arrasta no chão atrás dele (fica para trás ao andar).
+##   1 Guaxinim Glutão: uma bola de guaxinim, barrigão creme quase no chão (respira por ele), máscara preta, rabão anelado,
+##     guardanapo xadrez no pescoço, baba e migalhas.
 ##   2 Raposa Ligeira: esguia, pernas longas de meia preta, rabão de ponta branca, lenço vermelho ao vento e rastro de velocidade;
 ##     `parado` = sem fôlego: cabeça caída, língua de fora, peito arfando, pernas bambas, suor, lenço murcho.
-##   3 Corvo Velho: penas desgrenhadas e falhas de pele, cabeça grisalha, monóculo de ouro com correntinha e bengala (bate no chão
-##     ao andar, avança na bicada).
+##   3 Corvo Velho: corvo corcunda de ombros altos, cabeça grisalha esticada com sobrancelha branca, bico grosso, papo de penas
+##     arrepiadas, primárias falhadas, monóculo de ouro com correntinha e bengala de cabo curvo (bate no chão ao andar, avança na bicada).
 ##   4 Sapo-Rei: sapo imenso, olhos saltados, papo que infla, verrugas, coroa e colar de ouro; anda aos pulos pesados; língua no golpe.
 ## `parte` (sapinho do Sapo-Rei) NÃO chega aqui: vem com chefe_tipo = -1 e é desenhado por BichoPxSapo.
 
@@ -29,27 +31,32 @@ static var _cache: Dictionary = {}
 # ct/cy = coluna do meio e linha (relativa a hy) do alto da cabeça (âncora de chapéu; a coroa sai quando há chapéu, então a âncora
 # é o crânio, não a coroa); ex/ey = olho; mb = linha da boca/focinho
 const _CAB: Array = [
-	{"js": 7, "ms": 6, "ab": 3, "ct": 5.0, "cy": 0, "ex": 8, "ey": 4, "mb": 6, "rows": [   # Rei dos Ratos
-		"..llllllll.....",
-		".llllllllllmm..",
-		"lllllllmmmmmmm.",
-		"llllllkkkkmmmnn",
-		"mmmmmmmmkwmmmnn",
-		"mmmmmmmmkkmmmnn",
-		"mmmmmmmmmmmmmm.",
-		".dmmmmmmmmmmm..",
-		"..ddddddddddd..",
+	{"js": 8, "ms": 8, "ab": 3, "ct": 6.0, "cy": 0, "ex": 4, "ey": 5, "mb": 6, "rows": [   # Rei dos Ratos (desenhado à mão)
+		"....llllll........",
+		"..llllllllll......",
+		".llllllllllllm....",
+		"lllllllllllmmmm...",
+		"llddddddmmmmmmmm..",
+		"lllkkwkmmmmmmmmmmm",
+		"mmmmkkmmmmmmmmmmnn",
+		"mmmddmmmmmmmmmmmnn",
+		".dmmmmmmmmmvvvvvv.",
+		"..ddmmmvvvvvvvv...",
+		"....ddVVVVV.......",
 	]},
-	{"js": 7, "ms": 8, "ab": 3, "ct": 7.0, "cy": -1, "ex": 8, "ey": 3, "mb": 5, "rows": [   # Guaxinim Glutão
-		"...lllllll.......",
-		".llllfffffffff...",
-		"lllaaaaaffffffff.",
-		"llaaaaaawwaaffnnn",
-		"llaaaaaawyaaffnnn",
-		"lllaaaaaffffffff.",
-		"mmmmmmmffffffffff",
-		".mmmmmmmfffffffd.",
-		"..dddddddddddddd.",
+	{"js": 8, "ms": 11, "ab": 3, "ct": 7.0, "cy": 0, "ex": 5, "ey": 5, "mb": 7, "rows": [   # Guaxinim Glutão (desenhado à mão)
+		".....mmmmm..........",
+		"...mmlllllmm........",
+		"..mllllllllllm......",
+		".mlfffffffffflm.....",
+		"mlaaaaaaaaaaafm.....",
+		"mfaaawkaaaaaafffd...",
+		"mffaakkaaaafffffdann",
+		"mfffaaaaaffffffffffn",
+		"mfffffffffffffffff..",
+		".mffffffffffffff....",
+		"..mfffffffffffv.....",
+		"...vvvvvvvvvv.......",
 	]},
 	{"js": 6, "ms": 7, "ab": 2, "ct": 3.0, "cy": 0, "ex": 5, "ey": 3, "mb": 5, "rows": [   # Raposa Ligeira
 		"..lllll........",
@@ -61,16 +68,18 @@ const _CAB: Array = [
 		".mmvvvvvvvvvv..",
 		"..dvvvvvvvvv...",
 	]},
-	{"js": 6, "ms": 9, "ab": 3, "ct": 3.5, "cy": 0, "ex": 4, "ey": 4, "mb": 4, "rows": [   # Corvo Velho
-		"..sllll..........",
-		".hhhhhhllm.......",
-		"hhhhhhhmmaaaaaaa.",
-		"hhhddddmmaaaaaaaa",
-		"hhmmewemmbbbbbbbb",
-		"hhmmekemmbbbbbbb.",
-		"mmmmmmmmmcccccbb.",
-		".dmmmmmmmm.......",
-		"..dddddddd.......",
+	{"js": 8, "ms": 9, "ab": 3, "ct": 5.0, "cy": 0, "ex": 5, "ey": 4, "mb": 7, "rows": [   # Corvo Velho (desenhado à mão)
+		"...hhhhh...........",
+		".hhhhhhhhW.........",
+		"hhhWWWWWWWW........",
+		"hmmmmmmmmmsss......",
+		"mmmmmkkmmaaaaaaa...",
+		"mmmmmkwmaaaaaaaaaa.",
+		"mmmmmmmmaaaaaaaaaaa",
+		"dmmmmmmmccccccccaac",
+		"ddmmmmmaaaaaaaaa.c.",
+		".dddmmmmaaaaa......",
+		"..dddd.............",
 	]},
 	{"js": 9, "ms": 1, "ab": 3, "ct": 11.0, "cy": 0, "ex": 11, "ey": 2, "mb": 7, "rows": [   # Sapo-Rei (desenhado à mão)
 		"..........ggg....",
@@ -92,10 +101,10 @@ const _CAB: Array = [
 # pf/pt = x das patas de frente/trás (de perto; a de longe fica 3 ao lado); lw = grossura da perna; str/lift = passo e elevação;
 # dedo = cor do pé; socks = linhas de "meia" no pé
 const _ESP: Array = [
-	{"bx": -11, "bw": 22, "bh": 11, "pe": 4, "hx": 4, "hoff": -3, "pf": 6, "pt": -8, "lw": 3, "str": 2.5, "lift": 2.0, "dedo": "p", "socks": 0},
-	{"bx": -12, "bw": 24, "bh": 14, "pe": 3, "hx": 6, "hoff": -2, "pf": 8, "pt": -10, "lw": 3, "str": 2.0, "lift": 2.0, "dedo": "a", "socks": 0},
+	{"bx": -14, "bw": 26, "bh": 17, "pe": 3, "hx": 6, "hoff": 3, "pf": 5, "pt": -10, "lw": 3, "str": 2.5, "lift": 2.0, "dedo": "p", "socks": 0},
+	{"bx": -14, "bw": 27, "bh": 20, "pe": 2, "hx": 7, "hoff": 4, "pf": 6, "pt": -10, "lw": 4, "str": 2.0, "lift": 2.0, "dedo": "a", "socks": 0},
 	{"bx": -11, "bw": 21, "bh": 9, "pe": 8, "hx": 4, "hoff": -3, "pf": 5, "pt": -9, "lw": 2, "str": 3.5, "lift": 3.0, "dedo": "f", "socks": 4},
-	{"bx": -11, "bw": 21, "bh": 13, "pe": 5, "hx": 3, "hoff": -7, "pf": 2, "pt": -2, "lw": 1, "str": 3.0, "lift": 3.0, "dedo": "p", "socks": 0},
+	{"bx": -12, "bw": 22, "bh": 16, "pe": 5, "hx": 6, "hoff": -5, "pf": 1, "pt": -3, "lw": 1, "str": 3.0, "lift": 3.0, "dedo": "p", "socks": 0},
 	{"bx": -14, "bw": 26, "bh": 14, "pe": 2, "hx": 1, "hoff": -4, "pf": 0, "pt": 0, "lw": 2, "str": 0.0, "lift": 0.0, "dedo": "v", "socks": 0, "amp": 3},
 ]
 
@@ -109,7 +118,7 @@ static func _pal(ct: int, alfa: float) -> Dictionary:
 	match ct:
 		0:   # rato cinza-lilás de pelo gasto, barriga clara
 			P.merge({"o": Color("1e1a26"), "l": Color("d0d4e8"), "m": Color("a0a6c4"), "d": Color("646a8c"), "v": Color("e4e4f0"), "p": Color("f4aabc"),
-				"P": Color("c47c92"), "n": Color("e8788f"), "e": Color("f6f2f4"), "E": Color("c8c4d6")}, true)
+				"P": Color("c47c92"), "n": Color("e8788f"), "e": Color("f6f2f4"), "E": Color("c8c4d6"), "V": Color("c0c2d8")}, true)
 		1:   # guaxinim pardo, face e barriga cremes, máscara e patas quase pretas
 			P.merge({"o": Color("2a1a1c"), "l": Color("c8aa92"), "m": Color("927462"), "d": Color("584640"), "a": Color("1e1416"), "f": Color("f6ead4"),
 				"v": Color("e0c8a8"), "p": Color("d49a98"), "P": Color("9c6a68"), "n": Color("241a1e"), "s": Color("a8804a")}, true)
@@ -118,7 +127,7 @@ static func _pal(ct: int, alfa: float) -> Dictionary:
 				"f": Color("2a1814"), "u": Color("fffaf0"), "n": Color("241a1e")}, true)
 		3:   # corvo velho: carvão azulado, cabeça grisalha, bico de chifre, pele rosada nas falhas
 			P.merge({"o": Color("0a0a14"), "l": Color("66708c"), "m": Color("3e4660"), "d": Color("252a40"), "s": Color("a8b4d8"), "h": Color("8c90a4"),
-				"a": Color("e0d098"), "c": Color("8a7a48"), "e": Color("f0e8b0"), "p": Color("8a7c88"), "P": Color("5c5260"), "N": Color("e8b4a8")}, true)
+				"a": Color("5c5a68"), "c": Color("2a2834"), "e": Color("f0e8b0"), "p": Color("4c4656"), "P": Color("2e2a38"), "N": Color("e8b4a8")}, true)
 		_:   # sapo-rei verde-esmeralda, barriga amarelada, verrugas
 			P.merge({"o": Color("10281c"), "l": Color("a4e860"), "m": Color("4eae48"), "d": Color("2a7438"), "v": Color("f4eeb0"), "V": Color("c8c47c"),
 				"e": Color("f4c830"), "n": Color("1c4a2c"), "X": Color("3c8a34"), "g": Color("cdf08c")}, true)
@@ -219,9 +228,11 @@ static func _comp(G: PackedInt32Array, L: PackedInt32Array, borda: bool = true) 
 static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool) -> Dictionary:
 	ct = clampi(ct, 0, 4)
 	var t_ms: int = Time.get_ticks_msec()
-	var e: float = 0.0
-	if golpe > 0.0:
-		e = sin(PI * clampf(1.0 - golpe / _DUR_GOLPE, 0.0, 1.0))
+	var e: float = BichoPx.curva_golpe(golpe)   # contato logo no passo do dano, volta desacelerando
+	# o mesmo golpe um quadro antes (1/30 s): coroa, manto e guardanapo chegam atrasados
+	var e_ant: float = BichoPx.curva_golpe(golpe + 1.0 / 30.0) if golpe > 0.0 else 0.0
+	var pr: int = BichoPx.recuo(golpe)        # preparo: cabeça recua 1-2 px e o corpo agacha 1
+	var dor: int = 1 if BichoPx.dor else 0
 	var esp: Dictionary = _ESP[ct]
 	var q: int = 0
 	var bob: int = 0
@@ -276,6 +287,13 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 			sw = (t_ms / 300) % 2
 	var ei: int = roundi(4.0 * e)
 	var boca: bool = e > 0.4
+	# Rei dos Ratos e Glutão: no bote o corpo inteiro avança (os pés ficam) e a pata da frente sobe; manto, coroa e guardanapo
+	# chegam um quadro depois (só pose: a arte deles não muda)
+	var av: int = 0
+	var lag: int = 0
+	if ct == 0 or ct == 1:
+		av = roundi(3.0 * e) - pr
+		lag = clampi(roundi(3.0 * e) - roundi(3.0 * e_ant), -2, 2)
 	var tl: int = 0
 	if ct == 4 and e > 0.15:
 		tl = roundi(11.0 * e)
@@ -289,11 +307,11 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 	var bw: int = esp["bw"]
 	var bh: int = esp["bh"]
 	var pe: int = esp["pe"]
-	var by0: int = -pe - bh - salto + bob
+	var by0: int = -pe - bh - salto + bob + (1 if pr > 0 else 0)
 	if ct == 4:
 		bh -= sq
-		by0 = -pe - bh - salto
-	var hdx: int = ei
+		by0 = -pe - bh - salto + (1 if pr > 0 else 0)
+	var hdx: int = ei - pr - dor + av
 	var hdy: int = 0
 	if ct == 0:
 		hdy = ei / 2
@@ -306,8 +324,8 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 		if sem_folego:
 			hdx = -1
 			hdy = 5
-	by0 -= resp if ct != 4 else 0
-	if ct != 4:
+	if ct != 4 and ct != 1:   # o Glutão respira pelo barrigão (desenhado em _monta_glutao), não sobe o corpo
+		by0 -= resp
 		bh += resp
 	var hx: int = int(esp["hx"]) + hdx
 	var hy: int = by0 + int(esp["hoff"]) + hdy
@@ -317,8 +335,8 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 	if ct == 1:
 		hy -= 0
 	return {"ct": ct, "q": q, "e": e, "ei": ei, "boca": boca, "tl": tl, "ala": ala, "resp": resp, "bob": bob, "salto": salto, "aire": aire, "sq": sq,
-		"sw": sw, "dr": dr, "esp": esp, "ch": ch, "hw": hw, "hh": hh, "bx": int(esp["bx"]), "bw": bw, "bh": bh, "pe": pe, "by0": by0, "hx": hx, "hy": hy,
-		"andando": andando, "parado": sem_folego}
+		"sw": sw, "dr": dr, "esp": esp, "ch": ch, "hw": hw, "hh": hh, "bx": int(esp["bx"]) + av, "bw": bw, "bh": bh, "pe": pe, "by0": by0, "hx": hx, "hy": hy,
+		"andando": andando, "parado": sem_folego, "av": av, "lag": lag, "pr": pr, "dor": dor, "ol": BichoPx.modo_olho()}
 
 ## Quanto o lugar `onde` se desloca em relação à planta do gato parado (as roupas acompanham por aqui).
 static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parado: bool) -> Vector2:
@@ -350,7 +368,14 @@ static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: boo
 
 # ---------------------------------------------------------------- partes comuns
 ## Cabeça com a boca aberta: a mandíbula desce `ab` linhas e o vão fica vermelho (com presas na frente, exceto sapo e corvo).
+## Cabeça com o olho da pose (apertado na dor, X no nocaute: BichoPx.olhos) e a boca aberta ou fechada.
+## [letras do olho, fundo, traço, ajuste de coluna]: Glutão e Corvo Velho redesenhados à mão (olho no meio da máscara/da cabeça)
+const _OLHO: Array = [["kw", "m", "k", 0], ["wk", "a", "w", 0], ["kw", "m", "k", 0], ["kw", "m", "k", 0], ["ek", "l", "k", -1]]
 static func _cab_rows(ct: int, ch: Dictionary, boca: bool) -> Array:
+	var o: Array = _OLHO[clampi(ct, 0, 4)]
+	return BichoPx.olhos(_cab_rows0(ct, ch, boca), int(ch["ex"]) + int(o[3]), int(ch["ey"]), BichoPx.modo_olho(), o[0], o[1], o[2], 5)
+
+static func _cab_rows0(ct: int, ch: Dictionary, boca: bool) -> Array:
 	var rows: Array = ch["rows"]
 	if not boca:
 		return rows
@@ -398,24 +423,26 @@ static func _pernas4(L1: PackedInt32Array, L2: PackedInt32Array, g: Dictionary) 
 	var ei: int = g["ei"]
 	var dedo: String = esp["dedo"]
 	var tre: int = (Time.get_ticks_msec() / 110) % 2
+	var av: int = g["av"]   # bote: o quadril vai junto com o corpo, o pé fica onde estava
 	# [x do quadril, fase (as diagonais andam juntas), tom, camada]: as de longe (d) por baixo, as de perto (m) por cima
 	var defs: Array = [[pt + 3, 0.5, "d", L1], [pf + 3, 0.0, "d", L1], [pt, 0.0, "m", L2], [pf, 0.5, "m", L2]]
 	for k in defs.size():
 		var d: Array = defs[k]
-		var x: int = d[0]
-		var xf: int = x
+		var x: int = int(d[0]) + av
+		var xf: int = int(d[0])
 		var yf: int = -1
 		if g["andando"]:
 			var ph: float = fposmod(float(q) / 6.0 + float(d[1]), 1.0)
-			xf = x + roundi(float(esp["str"]) * cos(TAU * ph))
-			yf = -1 - maxi(0, roundi(float(esp["lift"]) * sin(TAU * ph)))
+			var pp: Vector2i = BichoPx.pe_passo(x, ph, float(esp["str"]), float(esp["lift"]))   # pé no ar vai para a frente
+			xf = pp.x
+			yf = pp.y
 		elif g["parado"]:
 			xf = x + (-2 if k % 2 == 0 else 2) + (tre if k < 2 else 1 - tre)   # pernas abertas e bambas
-		if ei > 0 and d[1] == 0.5 and d[2] == "m" and x == pf:
+		if ei > 0 and d[1] == 0.5 and d[2] == "m" and x == pf + av:
 			xf = x + 2 + ei   # golpe: pata dianteira de perto sobe e avança
 			yf = maxi(hip + 1, -2 - 2 * ei)
 		_pata(d[3], x, hip, xf, yf, w, d[2], dedo, int(esp["socks"]))
-		if ei > 0 and d[1] == 0.5 and d[2] == "m" and x == pf and w < 4:
+		if ei > 0 and d[1] == 0.5 and d[2] == "m" and x == pf + av and w < 4:
 			_rect(d[3], xf + w + 1, yf, 1, 1, "w")   # garras
 			_rect(d[3], xf + w, yf - 1, 1, 1, "w")
 
@@ -453,7 +480,7 @@ static func _orelha_c(L: PackedInt32Array, x: int, y: int, w: int, h: int, longe
 
 # ---------------------------------------------------------------- montagem do quadro
 static func _chave(g: Dictionary) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], int(g["andando"]), g["q"], g["ei"], int(g["boca"]), g["resp"], g["bob"], g["salto"], g["aire"], g["sq"], int(g["parado"]), g["sw"], g["dr"], g["ala"], g["tl"], int(BichoPx.cabeca_coberta) * 2 + int(BichoPx.corpo_coberto)]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], int(g["andando"]), g["q"], g["ei"], int(g["boca"]), g["resp"], g["bob"], g["salto"], g["aire"], g["sq"], int(g["parado"]), g["sw"], g["dr"], g["ala"], g["tl"], int(BichoPx.cabeca_coberta) * 2 + int(BichoPx.corpo_coberto)] + "|%d|%d|%d|%d|%d" % [g["av"], g["lag"], g["pr"], g["dor"], g["ol"]]
 
 ## Molde do tronco do quadro em montagem (cada _monta_* grava aqui o corpo antes do pescoço): as roupas de corpo se ajustam a ele.
 static var _tr: PackedInt32Array = PackedInt32Array()
@@ -496,197 +523,248 @@ static func _monta(g: Dictionary) -> Dictionary:
 		"c": BichoPx.cranio(Dictionary(g["ch"])["rows"], "abc" if int(g["ct"]) == 3 else ""), "cobre": 0.5}
 
 # ================================================================ 0. REI DOS RATOS
+## Desenhado à mão em camadas (rabo, patas de longe, orelha de longe, corpo, patas de perto, cabeça, orelha, manto, coroa, bigodes):
+## rato gordo de lombo alto em corcova, cabeça baixa e focinho comprido, olho rabugento de pálpebra pesada e dentões à mostra.
+const _RR_CORPO: Array = [
+	"........llllllll..........",
+	".....lllllllllllllll......",
+	"...llllllllmmmmmmlllll....",
+	"..lllllmmmmmmmmmmmmmlll...",
+	".llllmmmmmmmmmmmmmmmmmll..",
+	".lllmmmmmmmmmmmmmmmmmmmml.",
+	"lllmmmmmmmmmmmmmmmmmmmmmmm",
+	"llmmmmmmmmmmmmmmmmmmmmmmmm",
+	"lmmmmmmmmmmmmmmmmmmmmmmmmv",
+	"mmmmmmmmmmmmmmmmmmmmmmmmvv",
+	"mmmmmmmmmmmmmmmmmmmmmmmvvv",
+	"dmmmmmmmmmmmmmmmmmmmmvvvvv",
+	"dmmmmmmmmmmmmmmmmmmvvvvvvv",
+	".ddmmmmmmmmmmmmmvvvvvvvvv.",
+	"..dddmmmmmmmmvvvvvvvvvvv..",
+	"....dddddddddvvvvvvvvv....",
+	"......ddddddd.VVVVVV......",
+]
+## Manto de veludo por cima do lombo, caindo pelo flanco até a barra de arminho (sai quando o rei veste roupa de corpo).
+const _RR_MANTO: Array = [
+	"................jjjjjjjj........",
+	".............jjjjrrrrrrjjjj.....",
+	"...........jjjrrrrrrrrrrrrrjjj..",
+	"..........jrrrrrrrrrrrrrrrrrrrj.",
+	".........jrrrrrrrrrrrrrrrrrrrrRR",
+	"........jrrrrrRrrrrrrrrrrrrrrRR.",
+	".......jrrrrrrRrrrrrrrrrrrrRR...",
+	"......jrrrrrrrRrrrrrrrrrrrRR....",
+	".....jrrRrrrrrRRrrrrrrrrRRe.....",
+	"....jrrrRrrrrrRRrrrrrrRRee......",
+	"...jrrrrRrrrrRRRRrrRRReek.......",
+	"...rrrrrRRrrreekeeeekee.........",
+	"..rrrrrrRRre....................",
+	"..rrrrrRRRRe....................",
+	".rrrrrRRRRe.....................",
+	".rrrrRRRRRe.....................",
+	"rrrrRRRRRRe.....................",
+	"rrrRRRRRRe......................",
+	"eekeeekeee......................",
+	".eeeeeeee.......................",
+]
+const _RR_ORELHA: Array = ["..lll...", ".lpppl..", "lppPppl.", "lpPPPpm.", "lpPPPpm.", "mppPppm.", ".mpppm..", "..mmm..."]
+const _RR_COROA: Array = ["Y..Y..Y", "YY.Y.YY", "YYYYYYY", "yrYBYry", "yyyyyyy"]
+
 static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
 	var ch: Dictionary = g["ch"]
 	var bx: int = g["bx"]
-	var bw: int = g["bw"]
-	var bh: int = g["bh"]
 	var by0: int = g["by0"]
 	var hx: int = g["hx"]
 	var hy: int = g["hy"]
-	var hw: int = g["hw"]
-	var hh: int = g["hh"]
 	var ei: int = g["ei"]
 	var sw: int = g["sw"]
 	var q: int = g["q"]
-	# rabo
+	# rabo comprido e pelado
 	var L := _nova()
-	_rabo_fino(L, g, bx + 1, by0 + 8, 14, 3)
+	_rabo_fino(L, g, bx + 1, by0 + 11, 16, 3)
 	_comp(G, L)
-	# pernas
+	# patas de longe e orelha de longe
 	var L1 := _nova()
 	var L2 := _nova()
 	_pernas4(L1, L2, g)
 	_comp(G, L1)
-	_comp(G, L2)
-	# orelha de longe
 	var OL := _nova()
-	_orelha_c(OL, hx - 2, hy - 4, 7, 7, true)
+	var ol: Array = []
+	for r in _RR_ORELHA:
+		ol.append(String(r).replace("l", "d").replace("m", "d").replace("p", "P"))
+	var od: int = g["dor"]   # dor: orelhas baixas e para trás
+	_bmp(OL, hx - 5 - od, hy - 6 + od, ol)
 	_comp(G, OL)
-	# corpo + pescoço + cabeça
+	# corpo (o molde do tronco é ele inteiro) e patas de perto
 	var B := _nova()
-	_elip(B, bx, by0, bw, bh)
-	_elip(B, bx, by0 - 1, 17, bh + 1)   # anca alta
+	_bmp(B, bx, by0, _RR_CORPO)
 	_tr = B.duplicate()
-	var py0: int = hy + 3
-	_elip(B, hx - 3, py0, 11, maxi(5, by0 + bh - py0 - 1))
-	_bmp(B, hx, hy, _cab_rows(0, ch, g["boca"]))
-	_tinta(B, bx + 8, by0 + bh - 8, bw - 16, 8, "v")   # barriga clara de rei bem alimentado
-	if not g["boca"]:
-		_rect(B, hx + hw - 3, hy + 7, 2, 3, "w")       # dentes de roedor sempre à mostra
-		_px(B, hx + hw - 3, hy + 9, "E")
-		_px(B, hx + hw - 2, hy + 9, "E")
-	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
 	_comp(G, B)
-	# orelha de perto
+	_comp(G, L2)
+	# manto por cima do lombo; a ponta de trás voa ao andar e no bote
+	if not BichoPx.corpo_coberto:
+		var C := _nova()
+		# a cauda do manto arrasta no chão atrás do rei; ao andar e no bote ela fica para trás, e parado ondula de leve
+		var lag: int = g["lag"]   # o manto chega um quadro atrasado no bote
+		var vo: int = ([1, 2, 3, 3, 2, 1][q] if g["andando"] else sw % 2) + ei / 2 + (1 if lag > 0 else 0)
+		for j in _RR_MANTO.size():
+			var s: String = _RR_MANTO[j]
+			var dx: int = -(vo * maxi(0, j - 8)) / 6
+			for i in s.length():
+				if s[i] != ".":
+					_px(C, bx - 8 - lag + i + (dx if i < 12 else 0), by0 - 1 + j, s[i])
+		_comp(G, C)
+	# cabeça em camada própria (boca aberta no bote), dentões de roedor
+	var H := _nova()
+	var cab: Array = _cab_rows(0, ch, g["boca"])
+	_bmp(H, hx, hy, cab)
+	if not g["boca"]:
+		_rect(H, hx + 13, hy + 9, 2, 2, "w")
+		_rect(H, hx + 13, hy + 11, 2, 1, "E")
+	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy + _OY, cab)
+	_comp(G, H)
+	# orelha de perto, redonda e grande, atrás da coroa
 	var OP := _nova()
-	_orelha_c(OP, hx + 0, hy - 5, 8, 8, false)
+	_bmp(OP, hx - 2 - od, hy - 7 + od, _RR_ORELHA)
+	BichoPx.tirar(_tr, _W, _H, hx - 2 - od + _OX, hy - 7 + od + _OY, _RR_ORELHA)
 	_comp(G, OP)
-	# manto vermelho: do pescoço à anca, ponta voando atrás, bainha de arminho
-	var C := _nova()
-	var xl: int = bx - 4
-	var xr: int = hx - 2
-	var vento: int = -(ei / 2)
-	for x in range(xl, xr + 1):
-		var u: float = float(x - xl) / float(xr - xl)
-		var top: int = by0 - 1 + roundi((1.0 - u) * (1.0 - u) * 5.0)
-		var bot: int = by0 + bh - 5 - roundi((1.0 - u) * 2.0)
-		var flap: int = vento
-		if u < 0.5:
-			flap += roundi(sin(TAU * float(sw) / (6.0 if g["andando"] else 3.0) + u * 6.0) * 1.6 * (0.5 - u) / 0.5)
-		top += flap
-		bot += flap
-		for y in range(top, bot + 1):
-			var c: String = "r"
-			if y - top < 2:
-				c = "j"
-			elif bot - y < 1:
-				c = "k" if x % 3 == 0 else "e"
-			elif bot - y < 3:
-				c = "R"
-			_px(C, x, y, c)
-	_comp(G, C)
-	# gola de arminho e fecho de ouro
-	var GL := _nova()
-	_elip(GL, hx - 5, hy + hh - 5, 8, 5, "e", "e", "E")
-	_px(GL, hx - 3, hy + hh - 2, "k")
-	_px(GL, hx, hy + hh - 3, "k")
-	_comp(G, GL)
-	var FE := _nova()
-	_rect(FE, hx - 3, hy + hh - 2, 2, 2, "Y")
-	_comp(G, FE)
-	# coroa de ouro com rubi (sai quando o rei veste chapéu)
+	# fecho de ouro do manto no pescoço
+	if not BichoPx.corpo_coberto:
+		var FE := _nova()
+		_bmp(FE, hx - 1, hy + 6, [".Y.", "YyY", ".Y."])
+		_comp(G, FE)
+	# coroa de ouro com rubis
 	if not BichoPx.cabeca_coberta:
 		var CR := _nova()
-		_bmp(CR, hx + 6, hy - 4, [
-			"Y...Y...Y",
-			"YY.YYY.YY",
-			"YYYYYYYYY",
-			"yyyryyyry",
-		])
+		_bmp(CR, hx + 4 - int(g["lag"]), hy - 4 - (1 if int(g["lag"]) > 0 else 0), _RR_COROA)   # a coroa chega atrasada no bote
 		_comp(G, CR)
 	# bigodes longos e caídos (sem contorno)
 	var WB := _nova()
-	var tx: int = hx + hw
-	var ny: int = hy + 4
-	_rect(WB, tx, ny, 4, 1, "W")
-	_px(WB, tx + 4, ny + 1, "W")
-	_rect(WB, tx, ny + 2, 4, 1, "W")
-	_px(WB, tx + 4, ny + 3, "W")
-	_px(WB, tx + 5, ny + 4, "W")
-	_rect(WB, tx - 1, ny + 4, 3, 1, "W")
+	var wy: int = hy + 6 + (ei / 2)
+	_rect(WB, hx + 13, wy, 5, 1, "W")
+	_px(WB, hx + 18, wy + 1, "W")
+	_px(WB, hx + 19, wy + 2, "W")
+	_rect(WB, hx + 12, wy + 2, 5, 1, "W")
+	_px(WB, hx + 17, wy + 3, "W")
+	_px(WB, hx + 18, wy + 4, "W")
 	_comp(G, WB, false)
 
 # ================================================================ 1. GUAXINIM GLUTÃO
+## Desenhado à mão em camadas (rabo, patas de longe, corpo, patas de perto, cabeça, orelha, guardanapo): uma bola de guaxinim,
+## barrigão creme caído quase no chão sobre patinhas curtas, máscara preta, bochechas estufadas de comida e rabão anelado.
+const _GX_CORPO: Array = [
+	".........lllllllll.........",
+	"......lllllllllllllll......",
+	"....lllllllllllllllmmmm....",
+	"...lllmmmmmmmmmmmmmmmmmm...",
+	"..llmmmmmmmmmmmmmmmmmmmmm..",
+	".lmmmmmmmmmmmmmmmmmmmmmmmm.",
+	".lmmmmmmmmmmmmmmmmmmmmmmmm.",
+	"lmmmmmmmmmmmmmmffffffmmmmmm",
+	"mmmmmmmmmmmmfffffffffffmmmm",
+	"dmmmmmmmmmffffffffffffffmmm",
+	"dmmmmmmmmfffffffffffffffffm",
+	"dmmmmmmmffffffffffffffffffm",
+	"dmmmmmmmfffffffffffffffffff",
+	"ddmmmmmffffffffffffffffffff",
+	".ddmmmmffffffffffffffffffff",
+	".dddmmmfffffffffffffffffff.",
+	"..dddddvffffffffffffffffvv.",
+	"....dddvvvfffffffffffvvvv..",
+	"......dddvvvvvvvvvvvvvv....",
+	".........ddvvvvvvvvv.......",
+]
+## Rabão felpudo com anéis pretos e ponta preta.
+const _GX_RABO: Array = [
+	"..aa.ll.aa.ll.aa.ll.",
+	".aaaallaaallaaalllll",
+	"aaaalllaaalllaaallll",
+	"aaaammmaaammmaaammmm",
+	"aaaammmaaammmaaammmm",
+	"aaaammmaaammmaaammmm",
+	".aaadmmaaadmmaaadmmm",
+	"..aaddd.aaddd.aadd..",
+]
+const _GX_ORELHA: Array = ["..ff.", ".fmmf", "fmdmm", "fmdmm", "mmmmm"]
+
 static func _monta_glutao(G: PackedInt32Array, g: Dictionary) -> void:
 	var ch: Dictionary = g["ch"]
 	var bx: int = g["bx"]
-	var bw: int = g["bw"]
-	var bh: int = g["bh"]
 	var by0: int = g["by0"]
 	var hx: int = g["hx"]
 	var hy: int = g["hy"]
-	var hw: int = g["hw"]
 	var hh: int = g["hh"]
 	var ei: int = g["ei"]
 	var q: int = g["q"]
 	var dr: int = g["dr"]
-	# rabo grosso e listrado
+	var resp: int = g["resp"]
+	# rabão anelado: balança ao andar, encolhe no bote
 	var L := _nova()
-	var wag: int = roundi(2.0 * sin(TAU * float(q) / 6.0))
+	var wag: int = roundi(2.0 * sin(TAU * float(q) / 6.0)) if g["andando"] else 0
 	if ei > 1:
-		wag = -4
-	var comp: int = 12
-	var th: int = 6
-	for i in comp * 2 + 1:
-		var t: float = float(i) / float(comp * 2)
-		var px: int = bx + 3 - roundi(t * comp)
-		var py: int = by0 + 8 - roundi(5.0 * sin(t * PI * 0.5)) + roundi(float(wag) * t)
-		var banda: int = int(t * float(comp) / 2.6)
-		var claro: bool = banda % 2 == 0 and t < 0.88
-		var tc: String = "m" if claro else "a"
-		for k in th:
-			var c2: String = tc
-			if k == 0:
-				c2 = "l" if claro else "d"
-			elif k == th - 1:
-				c2 = "d" if claro else "k"
-			_px(L, px, py + k, c2)
+		wag = -2
+	for j in _GX_RABO.size():
+		var s: String = _GX_RABO[j]
+		for i in s.length():
+			if s[i] != ".":
+				_px(L, bx - 17 + i, by0 + 6 + j + roundi(float(wag) * float(19 - i) / 19.0), s[i])
 	_comp(G, L)
-	# pernas
+	# patas de longe
 	var L1 := _nova()
 	var L2 := _nova()
 	_pernas4(L1, L2, g)
 	_comp(G, L1)
-	_comp(G, L2)
-	# orelha de longe
-	var OL := _nova()
-	_orelha_c(OL, hx + 1, hy - 3, 6, 6, true)
-	_comp(G, OL)
-	# corpo + pescoço + cabeça
+	# corpo (o molde do tronco é ele inteiro); o barrigão estufa ao respirar
 	var B := _nova()
-	_elip(B, bx, by0, bw, bh)
-	_elip(B, bx, by0 - 1, 17, bh)   # anca alta: dorso arqueado de guaxinim
+	_bmp(B, bx, by0, _GX_CORPO)
+	if resp > 0:
+		for j in range(9, 16):
+			_rect(B, bx + 27, by0 + j, resp - (1 if j == 9 or j == 15 else 0), 1, "f")
 	_tr = B.duplicate()
-	var py0: int = hy + 2
-	_elip(B, hx - 3, py0, 10, maxi(5, by0 + bh - py0 - 1))
-	_bmp(B, hx, hy, _cab_rows(1, ch, g["boca"]))
-	BichoPx.manter_iguais(_tr, B, _W)   # só a cabeça fica por cima: o barrigão é o corpo dele, a manta cobre o alto e ele aparece embaixo
-	_tinta(B, bx + 7, by0 + bh - 15 - g["resp"], bw - 12, 15 + g["resp"], "f")   # barrigão imenso
-	_tinta(B, bx + 9, by0 + bh - 5, bw - 16, 5, "v")
-	_px(B, bx + bw / 2 + 3, by0 + bh - 6, "d")    # umbigo
-	_px(B, bx + bw / 2 + 4, by0 + bh - 6, "d")
+	_px(B, bx + 19, by0 + 14, "v")   # umbigo
+	_px(B, bx + 20, by0 + 14, "v")
 	_comp(G, B)
-	# orelha de perto (borda clara)
+	_comp(G, L2)
+	# orelha de longe, cabeça em camada própria (boca aberta no bote) e orelha de perto
+	var OL := _nova()
+	var od: int = g["dor"]   # dor: orelhas baixas e para trás
+	_bmp(OL, hx - od, hy - 3 + od, [".ddd.", "daaad", "dadad", "ddddd"])
+	BichoPx.tirar(_tr, _W, _H, hx - od + _OX, hy - 3 + od + _OY, [".ddd.", "daaad", "dadad", "ddddd"])
+	_comp(G, OL)
+	var H := _nova()
+	var cab: Array = _cab_rows(1, ch, g["boca"])
+	_bmp(H, hx, hy, cab)
+	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy + _OY, cab)
+	_comp(G, H)
 	var OP := _nova()
-	_orelha_c(OP, hx + 5, hy - 4, 6, 6, false, "f", "P")
+	_bmp(OP, hx + 3 - od, hy - 4 + od, _GX_ORELHA)
+	BichoPx.tirar(_tr, _W, _H, hx + 3 - od + _OX, hy - 4 + od + _OY, _GX_ORELHA)
 	_comp(G, OP)
-	# guardanapo xadrez no pescoço, com nó e migalhas
-	var N := _nova()
-	var nx: int = hx
-	var ny: int = hy + hh - 3
-	var wids: Array = [10, 10, 10, 10, 9, 8, 6, 4]
-	for j in wids.size():
-		var wj: int = wids[j]
-		for i in wj:
-			var cx: int = nx + i + (10 - wj) / 2
-			N[(ny + j + _OY) * _W + cx + _OX] = ("w" if (i / 2 + j / 2) % 2 == 0 else "r").unicode_at(0)
-	_rect(N, nx - 3, ny - 1, 3, 2, "r")           # nó atrás do pescoço
-	_rect(N, nx - 4, ny + 1, 2, 3, "R")
-	_comp(G, N)
-	var MG := _nova()
-	_px(MG, nx + 3, ny + 3, "y")
-	_px(MG, nx + 8, ny + 5, "b")
-	_px(MG, nx + 5, ny + 7, "y")
-	_px(MG, nx + 10, ny + 2, "b")
-	_comp(G, MG, false)
-	# baba pingando do queixo e migalhas na boca
+	# guardanapo xadrez amarrado no pescoço, com migalhas (sai quando o guaxinim veste roupa de corpo)
+	if not BichoPx.corpo_coberto:
+		var N := _nova()
+		var nx: int = hx - 1 - int(g["lag"])   # o guardanapo chega um quadro atrasado no bote
+		var ny: int = hy + hh - 3
+		var wids: Array = [12, 12, 11, 10, 9, 7, 5, 3]
+		for j in wids.size():
+			var wj: int = wids[j]
+			for i in wj:
+				_px(N, nx + i + (12 - wj) / 2, ny + j, "w" if (i / 2 + j / 2) % 2 == 0 else "r")
+		_rect(N, nx - 3, ny - 1, 3, 2, "r")   # nó atrás do pescoço
+		_rect(N, nx - 4, ny + 1, 2, 3, "R")
+		_comp(G, N)
+		var MG := _nova()
+		_px(MG, nx + 3, ny + 3, "y")
+		_px(MG, nx + 8, ny + 5, "b")
+		_px(MG, nx + 5, ny + 6, "y")
+		_comp(G, MG, false)
+	# baba pingando e migalhas no queixo
 	var DR := _nova()
-	var bxx: int = hx + hw - 7
+	var bxx: int = hx + 13
 	for k in dr + 1:
 		_px(DR, bxx, hy + hh - 1 + k, "u")
-	_px(DR, hx + hw - 3, hy + hh - 3, "y")
-	_px(DR, hx + hw - 9, hy + hh - 2, "b")
+	_px(DR, hx + 16, hy + 9, "y")
+	_px(DR, hx + 11, hy + hh - 2, "b")
 	_comp(G, DR, false)
 
 # ================================================================ 2. RAPOSA LIGEIRA
@@ -830,6 +908,56 @@ static func _asa_aberta(L: PackedInt32Array, sx: int, sy: int, nivel: int, tam: 
 		_rect(L, tx, ty, grosso, grosso, sh)
 	_elip(L, sx - 7, sy - 5, 12, 10, lit, mid, sh)
 
+## Desenhado à mão em camadas (cauda, perna de longe, corpo, perna de perto, asa, papo, cabeça, bengala, monóculo): corvo velho
+## corcunda, ombros mais altos que a cabeça, cabeça grisalha esticada para a frente com sobrancelha branca, bico grosso de chifre,
+## papo de penas arrepiadas, asa dobrada com as primárias falhadas e cauda comprida arrastando.
+const _CV_CORPO: Array = [
+	"..............llll....",
+	"...........lllllllll..",
+	".........llllllllllll.",
+	".......lllmmmmmmmmmlll",
+	"......llmmmmmmmmmmmmml",
+	".....lmmmmmmmmmmmmmmmm",
+	"....lmmmmmmmmmmmmmmmmm",
+	"...lmmmmmmmmmmmmmmmmmm",
+	"..lmmmmmmmmmmmmmmmmmmd",
+	".lmmmmmmmmmmmmmmmmmmdd",
+	"lmmmmmmmmmmmmmmmmmmdd.",
+	"mmmmmmmmmmmmmmmmmmdd..",
+	"dmmmmmmmmmmmmmmmddd...",
+	".dmmmmmmmmmmmddd......",
+	"..ddmmmmmmddd.........",
+	"...ddddddd............",
+]
+const _CV_ASA: Array = [
+	"...............sslll..",
+	".............lllllmmml",
+	"..........llllmmmmmmml",
+	"........lllmmmmmmmmmmm",
+	"......llmmmmdmmmmmmmmm",
+	".....lmmmmdmmmmmdmmmmd",
+	"....lmmmdmmmmmdmmmmmd.",
+	"...lmmdmmmmmdmmmmmmd..",
+	"..lmmmmmmmdmmmmmmdd...",
+	".mmmmmmdmmmmmmmdd.....",
+	"mmdmmmmmmmmdddd.......",
+	"dmmmmmdmmdd...........",
+	".dmdmdmdd.............",
+	"d.d.d.d...............",
+	"..d..d................",
+]
+const _CV_CAUDA: Array = [
+	".......mmm",
+	".....mmmmm",
+	"...mmmmmmd",
+	"..mmmdmmd.",
+	".mmdmmmd..",
+	"mmmmmdd...",
+	"dmdmd.....",
+	".d.d......",
+]
+const _CV_BARBA: Array = ["mmmmmmmmm", "mdmmdmmdm", "mm.dm.dm.", "d..d..d..", "...d....."]
+
 static func _monta_corvo(G: PackedInt32Array, g: Dictionary) -> void:
 	var esp: Dictionary = g["esp"]
 	var ch: Dictionary = g["ch"]
@@ -839,27 +967,23 @@ static func _monta_corvo(G: PackedInt32Array, g: Dictionary) -> void:
 	var by0: int = g["by0"]
 	var hx: int = g["hx"]
 	var hy: int = g["hy"]
-	var hw: int = g["hw"]
-	var hh: int = g["hh"]
 	var ei: int = g["ei"]
 	var q: int = g["q"]
 	var ala: int = g["ala"]
-	# cauda: três penas compridas e esfiapadas
+	# cauda comprida e esfiapada, caída para trás
 	var L := _nova()
 	var wag: int = 0
 	if g["andando"]:
 		wag = 1 if q % 3 == 1 else 0
 	if ei > 1:
-		wag = -3
-	for k in 3:
-		var ex: int = bx - 7 - k * 2
-		var ey: int = by0 + 5 + k * 2 + wag
-		_trazo(L, bx + 3, by0 + 2 + k, ex, ey, 2, "m")
-		_rect(L, ex - 1, ey, 2, 2, "d")
-		if k == 1:
-			_px(L, ex + 3, ey - 2, "d")   # farpa
+		wag = -2
+	for j in _CV_CAUDA.size():
+		var s: String = _CV_CAUDA[j]
+		for i in s.length():
+			if s[i] != ".":
+				_px(L, bx - 8 + i, by0 + 11 + j + (wag * (9 - i)) / 9, s[i])
 	_comp(G, L)
-	# pernas finas e escamosas
+	# pernas finas e escamosas, joelho ossudo, três dedos para a frente e um para trás
 	var L1 := _nova()
 	var L2 := _nova()
 	var hip: int = by0 + bh - 2
@@ -877,92 +1001,75 @@ static func _monta_corvo(G: PackedInt32Array, g: Dictionary) -> void:
 			yf = -1
 		var n: int = maxi(1, yf - hip)
 		for i in n + 1:
-			_px(d[3], roundi(lerpf(x, xf, float(i) / float(n))), hip + i, d[2])
-			_px(d[3], roundi(lerpf(x, xf, float(i) / float(n))) + 1, hip + i, d[2])
-		_rect(d[3], xf - 2, yf, 5, 1, d[2])
-		_px(d[3], xf - 3, yf - 1, d[2])
+			var lx: int = roundi(lerpf(x, xf, float(i) / float(n)))
+			_px(d[3], lx, hip + i, d[2])
+			_px(d[3], lx + 1, hip + i, d[2])
+		_px(d[3], roundi(lerpf(x, xf, 0.5)) - 1, hip + n / 2, d[2])   # joelho
+		_rect(d[3], xf - 1, yf, 5, 1, d[2])
+		_px(d[3], xf - 2, yf, d[2])
+		_px(d[3], xf + 4, yf - 1, d[2])
 	_comp(G, L1)
-	_comp(G, L2)
 	# asa de longe (só aberta)
 	if ala > 0:
 		var AL := _nova()
-		_asa_aberta(AL, bx + bw - 12, by0 + 4, ala, 15, "d", "d", "o", 2)
+		_asa_aberta(AL, bx + bw - 8, by0 + 3, ala, 15, "d", "d", "o", 2)
 		_comp(G, AL)
-	# corpo + peito + pescoço + cabeça numa camada só
+	# corpo de ombros altos (o molde do tronco é ele inteiro) e perna de perto
 	var B := _nova()
-	_elip(B, bx, by0, bw, bh)
-	_elip(B, bx + bw - 12, by0 - 1, 12, bh - 1)   # peito estufado
+	_bmp(B, bx, by0, _CV_CORPO)
 	_tr = B.duplicate()
-	var ny0: int = hy + 3
-	_elip(B, hx - 1, ny0, 9, maxi(5, by0 + bh - ny0 - 1))
-	# penas arrepiadas no dorso e no peito
-	for i in 9:
-		var sx: int = bx + 2 + i * 2 + (i % 2)
-		var sh: int = 1 + (i * 5) % 3
-		_rect(B, sx, by0 - sh + 1, 1, sh, "m")
-		_px(B, sx, by0 - sh, "d")
-	for i in 4:
-		_px(B, hx - 2 + i * 2, hy + hh - 1 + (i % 2), "d")
-		_px(B, hx - 1 + i * 2, hy + hh, "d")
-	_bmp(B, hx, hy, _cab_rows(3, ch, g["boca"]))
-	# falhas de pena: pele nua rosada
-	_tp(B, bx + 6, by0 + 5, "N")
-	_tp(B, bx + 7, by0 + 5, "N")
-	_tp(B, bx + 7, by0 + 6, "N")
-	_tp(B, bx + 15, by0 + 8, "N")
-	_tp(B, bx + bw - 5, by0 + 3, "N")
-	_tp(B, bx + bw - 4, by0 + 4, "N")
-	BichoPx.manter_iguais(_tr, B, _W)   # cabeça, marcas e barriga ficam por cima da roupa de corpo
+	for i in 4:   # falhas de pena: pele nua rosada
+		_tp(B, bx + [7, 8, 8, 12][i], by0 + [9, 9, 10, 12][i], "N")
 	_comp(G, B)
-	# asa de perto: dobrada, esfiapada nas pontas, ou aberta
+	_comp(G, L2)
+	# asa de perto: dobrada com as primárias esfiapadas passando da anca, ou aberta
 	var W := _nova()
+	if ala == 0 and int(g["dor"]) > 0:
+		ala = 1   # dor: a asa de perto se solta meio aberta
 	if ala > 0:
-		_asa_aberta(W, bx + bw - 10, by0 + 3, ala, 16, "l", "m", "d", 2)
+		_asa_aberta(W, bx + bw - 6, by0 + 2, ala, 16, "l", "m", "d", 2)
 	else:
-		var wx: int = bx + 1
-		var wy: int = by0 + 2
-		var ww: int = bw - 6
-		var whh: int = bh - 4
-		_elip(W, wx, wy, ww, whh, "l", "m", "m")
-		_rect(W, bx - 4, by0 + bh - 6, 6, 2, "m")      # pontas das penas passando da anca
-		_rect(W, bx - 7, by0 + bh - 5, 4, 1, "d")
-		_px(W, bx - 3, by0 + bh - 3, "d")
-		_rect(W, bx - 1, by0 + bh - 4, 3, 1, "d")
-		_rect(W, wx + 3, wy + whh - 2, ww - 7, 1, "d")   # linhas de pena
-		_rect(W, wx + 6, wy + whh - 4, ww - 12, 1, "d")
-		_rect(W, wx + 2, wy + 1, 6, 1, "s")             # brilho de pena
-		_px(W, wx + 11, wy + 2, "s")
+		_bmp(W, bx - 4, by0 + 2, _CV_ASA)
 	_comp(G, W)
-	# bengala: bate no chão ao andar, avança na bicada
-	var S := _nova()
-	var cx0: int = bx + bw + 3 + ei
+	# papo de penas arrepiadas (barba de corvo velho) e cabeça grisalha de sobrancelha branca
+	var BA := _nova()
+	_bmp(BA, hx, hy + 9, _CV_BARBA)
+	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy + 9 + _OY, _CV_BARBA)
+	_comp(G, BA)
+	var H := _nova()
+	var cab: Array = _cab_rows(3, ch, g["boca"])
+	_bmp(H, hx, hy, cab)
+	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy + _OY, cab)
+	_comp(G, H)
+	# bengala de cabo curvo, segura pela ponta da asa: bate no chão ao andar, avança na bicada
+	var cx0: int = bx + bw + 8 + ei
 	if g["andando"]:
 		cx0 += [0, 1, 2, 2, 1, 0][q]
 	var lift: int = 0
 	if g["andando"]:
 		lift = [0, 2, 2, 0, 0, 0][q]
-	var ctop: int = by0 + bh - 4
-	_trazo(S, cx0, -2 - lift, cx0 - 2 - ei / 2, ctop, 2, "z")
-	_comp(G, S)
-	var KN := _nova()
-	_elip(KN, cx0 - 5 - ei / 2, ctop - 4, 6, 5, "Y", "Y", "y")
-	_comp(G, KN)
-	# mão-asa que segura o castão
+	var ctop: int = by0 + 10
+	var cxt: int = cx0 - 1 - ei / 2
 	var MA := _nova()
-	_rect(MA, bx + bw - 3, by0 + bh - 5, cx0 - 2 - (bx + bw - 3) + 1 - ei / 2, 2, "m")
-	_rect(MA, cx0 - 4 - ei / 2, ctop - 1, 3, 2, "d")
+	_trazo(MA, bx + bw - 6, by0 + 9, cxt - 3, ctop - 1, 2, "m")
+	_rect(MA, cxt - 4, ctop - 2, 3, 3, "d")
 	_comp(G, MA)
+	var S := _nova()
+	_trazo(S, cx0, -2 - lift, cxt, ctop, 2, "z")
+	_bmp(S, cxt - 4, ctop - 3, [".zzzz.", "zZ..zz", "z....z"])
+	_rect(S, cxt, ctop + 1, 2, 1, "Y")   # anel de ouro
+	_comp(G, S)
 	# monóculo de ouro com correntinha (sem contorno)
 	var MO := _nova()
-	var mx: int = hx + 3
-	var my: int = hy + 3
-	for i in 5:
+	var mx: int = hx + int(ch["ex"]) - 1
+	var my: int = hy + int(ch["ey"]) - 1
+	for i in 4:
 		_px(MO, mx + i, my, "Y")
-		_px(MO, mx + i, my + 4, "y")
-		_px(MO, mx, my + i, "Y")
+		_px(MO, mx + i + 1, my + 4, "y")
+		_px(MO, mx, my + i + 1, "Y")
 		_px(MO, mx + 4, my + i, "y")
 	for i in 7:
-		_px(MO, mx + 1 - i / 3, my + 5 + i, "Y" if i % 2 == 0 else "y")
+		_px(MO, mx - 1 - i / 3, my + 5 + i, "Y" if i % 2 == 0 else "y")
 	_comp(G, MO, false)
 
 # ================================================================ 4. SAPO-REI
@@ -1117,7 +1224,7 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 		_cache[k] = _monta(g)
 	var s: Dictionary = _cache[k]
 	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
-	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(int(g["ct"]), alfa), f)
+	BichoPx.sprite(c, s, _pal(int(g["ct"]), alfa), f)
 
 ## Quadro em cache do chefe nesta pose (sprite "l", molde do tronco "t", crânio "c"), para as roupas acompanharem o desenho.
 static func quadro(chefe_tipo: int, anim: float, andando: bool, golpe: float, parado: bool) -> Dictionary:

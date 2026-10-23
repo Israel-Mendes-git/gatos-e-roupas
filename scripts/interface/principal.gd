@@ -7,8 +7,9 @@ enum Modo { GUARDA, COMBATE, FIM, MAPA, TITULO }
 
 # Mapa da casa: true = casa em corte (mapa_casa.gd); false = os cinco cartões de antes, intactos.
 const MAPA_EM_CORTE := true
+const V := preload("res://scripts/interface/vfx_px.gd")   # pedaços de pixel art dos efeitos (painel de fim)
 
-const ESC_G := 1.85
+const ESC_G := 1.875   # 6 px de tela por pixel do sprite (GATO_K 3,2): escala inteira, 2 quadradinhos da grade PX de 3 px
 const PE_Y := 418.0
 const TORRE_G := Vector2(24, 422)
 const PAINEL := Rect2(215, 466, 760, 250)
@@ -282,6 +283,9 @@ var _rect_heranca: Array = []       # [Rect2, índice do gato] das caixas "Heran
 var dicas_heranca: Array = []          # [id, texto] das heranças incorporadas na última onda (viram balão no guarda-roupa)
 var fim_invasao: bool = false         # o painel de fim em exibição é de uma invasão que acabou
 var fim_vitoria: bool = false         # ... e o último fim de fase foi vitória
+var fim_t: float = 0.0                # s desde que o painel de fim abriu (entrada animada)
+var fim_som_n: int = 0                # peças do painel de fim que já entraram (cada uma com som)
+const FIM_PECA_0 := 0.75              # s até a primeira peça entrar no painel de fim
 
 func _ready() -> void:
 	_c = self
@@ -1191,6 +1195,9 @@ func _fim_fase(vitoria: bool) -> void:
 	fim_info.text = "Peças ganhas: %d" % fim_pecas.size() if fim_pecas.size() > 0 else "Nenhuma peça nova desta vez."
 	_lista_suja = true
 	_ajustar_fim()
+	fim_t = 0.0
+	fim_som_n = 0
+	_animar_fim(0.0)
 
 ## Distribui título, textos, peças e botão do fim de fase de cima para baixo e
 ## encaixa a moldura na altura do conteúdo, centrada na tela.
@@ -2643,10 +2650,10 @@ func _pintar_botao_fichario(bt: BotaoArte) -> void:
 		# selo: há meta cumprida que o jogador ainda não viu na aba "Metas"
 		# disco de pixel: contorno escuro, miolo vermelho, sombra embaixo e um brilho em cima
 		var c: Vector2 = Vector2(bt.size.x - 8.0, 6.0)
-		VFX.disco(bt, c, 12.0, Color(0.2, 0.08, 0.08))
-		VFX.disco(bt, c, 9.0, Color(0.72, 0.16, 0.18))
-		VFX.disco(bt, c, 6.0, Color(0.95, 0.3, 0.3))
-		VFX.ponto(bt, c + Vector2(-PX * 2.0, -PX * 2.0), Color(1.0, 0.68, 0.62))
+		VFX.disco(bt, c, 12.0, Color(0.2, 0.08, 0.08), PX)
+		VFX.disco(bt, c, 9.0, Color(0.72, 0.16, 0.18), PX)
+		VFX.disco(bt, c, 6.0, Color(0.95, 0.3, 0.3), PX)
+		VFX.ponto(bt, c + Vector2(-PX * 2.0, -PX * 2.0), Color(1.0, 0.68, 0.62), PX)
 		Desenho.texto(bt, str(metas_selo.size()), Vector2(c.x - 12.0, c.y + 5.0), 14, Color.WHITE, 24.0)
 
 ## Botão do Ateliê: aparece no mapa e no guarda-roupa quando o fichário está completo.
@@ -2918,6 +2925,8 @@ func _process(delta: float) -> void:
 		if tv["t"] >= 1.0:
 			tijolos_voando.remove_at(i)
 	_atualizar_guarda(delta)
+	if modo == Modo.FIM:
+		_animar_fim(delta)
 	if modo != Modo.COMBATE:
 		# fichário ou oficina abertos: o fundo fica atrás de uma cortina preta de 74% e de um painel cheio,
 		# então basta redesenhá-lo nos quadros da abertura (o mapa e o guarda-roupa custam 15 a 30 ms por desenho);
@@ -3321,6 +3330,7 @@ func _draw() -> void:
 		draw_rect(Rect2(0, 0, 1280, 720), Color(0, 0, 0, 0.72))
 		_painel(fim_rect, Color(0.14, 0.09, 0.12, 0.98), 0.75)
 		_fim_icones()
+		_fim_gatos()
 		return
 	var n: int = estado.tijolos
 	var tremor: Vector2 = Vector2.ZERO
@@ -3603,7 +3613,7 @@ func _camada_voos() -> void:
 		_elipse_px(base + Vector2(0, 3), 40.0 + 90.0 * k, ry_c, _com_alfa(cor.lightened(0.3), 0.5 * (1.0 - k)))
 		_feixe_px(base.x, base.y + 3.0 - ry_c, 46.0, base.y - 150.0, 30.0, cor.lightened(0.4), 0.45 * (1.0 - k), 0.0, 4)
 		var rc: float = 30.0 + 110.0 * k
-		VFX.aro(_c, base + Vector2(0, -50), rc, rc, Color(1, 0.95, 0.7), 1.0 - k, 2.0 if k < 0.35 else 1.0)
+		VFX.aro(_c, base + Vector2(0, -50), rc, rc, Color(1, 0.95, 0.7), 1.0 - k, 2.0 if k < 0.35 else 1.0, PX)
 	for v in voos:
 		var k2: float = clampf(float(v["t"]), 0.0, 1.0)
 		var e: float = 1.0 - pow(1.0 - k2, 3.0)
@@ -4038,7 +4048,7 @@ func _bonecos() -> void:
 		_ellipse_sombra(base + Vector2(0, 3), 52.0, 11.0, Color(0, 0, 0, 0.4 if existe else 0.16))
 		if not existe:
 			var vazio: Array = [null, null, null, null]
-			Desenho.boneco(self, base, ESC_G, 1.0, 0, vazio, 0.0, 0.0, false, 0.0, 0.12)
+			Desenho.boneco(self, base.snapped(Vector2(PX, PX)), ESC_G, 1.0, 0, vazio, 0.0, 0.0, false, 0.0, 0.12)
 			var yv: float = 300.0
 			for l in _quebrar("Vença o próximo cômodo", 13, 120.0):
 				Desenho.texto(self, l, Vector2(base.x - 60, yv), 13, Color(1, 1, 1, 0.6), 120.0, 3)
@@ -4094,7 +4104,7 @@ func _bonecos() -> void:
 			var kp := Vector2i(i, s2)
 			if pulos.has(kp) and float(pulos[kp]) < 0.4:
 				pulo = maxf(pulo, sin(PI * float(pulos[kp]) / 0.4) * 14.0)
-		var pose: Vector2 = base + Vector2(0, bob - pulo)
+		var pose: Vector2 = (base + Vector2(0, bob - pulo)).snapped(Vector2(PX, PX))   # na grade de 3 px (pixel do gato = 6)
 		Desenho.boneco(self, pose, esc, 1.0, 0, mostradas, 0.0, t * 3.0, false, 0.0, alfa_gato, true, slot_dest, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
 		if tem:
 			_estrelas_treino(base, b.pontos)
@@ -4138,11 +4148,11 @@ func _estrelas_treino(base: Vector2, pontos: int) -> void:
 		_estrela4(p, 5.0 + 3.5 * sin(t * 6.0 + k * 1.7), Color(1.0, 0.95, 0.55))
 	# selo de moeda em pixel: contorno escuro, aro claro, miolo dourado com sombra embaixo e brilho em cima
 	var bp: Vector2 = Vector2(base.x + 54.0, _sn(base.y - 118.0 - absf(sin(t * 4.0)) * 9.0))
-	VFX.disco(self, bp, 22.0, Color(0.1, 0.05, 0.02))
-	VFX.disco(self, bp, 19.0, Color(1.0, 0.97, 0.7))
-	VFX.disco(self, bp, 16.0, Color(0.86, 0.58, 0.1))
-	VFX.disco(self, bp + Vector2(-PX, -PX), 13.0, Color(1.0, 0.8, 0.2))
-	VFX.ponto(self, bp + Vector2(-PX * 3.0, -PX * 3.0), Color(1.0, 0.97, 0.7))
+	VFX.disco(self, bp, 22.0, Color(0.1, 0.05, 0.02), PX)
+	VFX.disco(self, bp, 19.0, Color(1.0, 0.97, 0.7), PX)
+	VFX.disco(self, bp, 16.0, Color(0.86, 0.58, 0.1), PX)
+	VFX.disco(self, bp + Vector2(-PX, -PX), 13.0, Color(1.0, 0.8, 0.2), PX)
+	VFX.ponto(self, bp + Vector2(-PX * 3.0, -PX * 3.0), Color(1.0, 0.97, 0.7), PX)
 	Desenho.texto(self, "+%d" % pontos, bp + Vector2(-18, 7), 18, COR_TINTA_ESC, 40.0)
 
 ## Nome grande, nível e barra de experiência no alto do vão do boneco.
@@ -4603,10 +4613,7 @@ func _painel_guarda() -> void:
 		if p != oculta and not _em_voo(p):
 			_realce_fantasia(r, p)
 		if _pares.has(p.tipo) and p != oculta:
-			var sr := Rect2(r.position.x + 3, r.position.y + 10, 26, 15)
-			draw_rect(sr, Color(0.05, 0.14, 0.08, 0.88))
-			draw_rect(sr, Color(0.5, 1.0, 0.6, 0.7), false, 1.0)
-			Desenho.texto(self, "×%d" % int(_pares[p.tipo]), Vector2(sr.position.x, sr.end.y - 1), 13, Color(0.75, 1.0, 0.8), sr.size.x)
+			_selo_pares(r, int(_pares[p.tipo]))
 		if arrasto.has("peca") and p != arrasto["peca"] and estado.pode_fundir(p, arrasto["peca"]):
 			_destaque_fusao(r.get_center(), 25.0)
 		if p.nova:
@@ -4626,6 +4633,22 @@ func _painel_guarda() -> void:
 	# destaque quando arrastando um boneco ou peça usada para tirar
 	if (arrasto.has("peca") and arrasto["origem"] != null) or arrasto.has("boneco"):
 		draw_rect(PAINEL.grow(-10), Color(1, 0.9, 0.5, 0.16 + 0.1 * sin(t * 8.0)))
+
+## Selo "×N" (peças iguais que podem se fundir): pílula pequena no canto de cima à esquerda do ladrilho,
+## em fonte 3x5, para não cobrir a peça. A grade é a da arte do guarda-roupa (PX), um passo abaixo.
+func _selo_pares(r: Rect2, n: int) -> void:
+	var e: int = maxi(int(PX) - 1, 1)
+	var ef: float = float(e)
+	var txt: String = "x%d" % n
+	var w: float = float(txt.length() * 4 + 1) * ef   # miolo: 1 de folga, o texto, 1 de folga
+	var h: float = 7.0 * ef
+	var o := Vector2(floorf(r.position.x / ef) * ef + ef, floorf(r.position.y / ef) * ef + ef)
+	var cont := Color(0.05, 0.14, 0.08)
+	# pílula: retângulo com os quatro cantos cortados, contorno escuro de 1 pixel
+	draw_rect(Rect2(o.x + ef, o.y, w, h), cont)
+	draw_rect(Rect2(o.x, o.y + ef, w + 2.0 * ef, h - 2.0 * ef), cont)
+	draw_rect(Rect2(o.x + ef, o.y + ef, w, h - 2.0 * ef), Color(0.24, 0.62, 0.34))
+	IconesPoder.texto(self, txt, Vector2(o.x + ef, o.y), Color(0.97, 1.0, 0.9), e, false)
 
 ## Conjunto de fantasia mais frequente nas peças de um inimigo (-1 se ninguém passa de 1).
 func _fantasia_de(pecas: Array) -> int:
@@ -4853,8 +4876,8 @@ func _efeitos() -> void:
 				_elipse_px(pe, 24.0 * (1.0 - k / 0.6), 24.0 * (1.0 - k / 0.6), Color(1, 1, 0.8, 0.45))
 			var r1: float = 18.0 + 40.0 * k
 			var r2: float = 10.0 + 24.0 * k
-			VFX.aro(_c, pe, r1, r1, Color(1.0, 0.95, 0.6), 1.0 - k, 2.0 if k < 0.4 else 1.0)
-			VFX.aro(_c, pe, r2, r2, Color(0.6, 1.0, 0.75), 0.8 * (1.0 - k))
+			VFX.aro(_c, pe, r1, r1, Color(1.0, 0.95, 0.6), 1.0 - k, 2.0 if k < 0.4 else 1.0, PX)
+			VFX.aro(_c, pe, r2, r2, Color(0.6, 1.0, 0.75), 0.8 * (1.0 - k), 1.0, PX)
 			if k < 0.85:
 				_estrela4(pe + Vector2(0, -30.0 * k), 6.0 + 8.0 * (1.0 - k), Color(1.0, 0.95, 0.5), CONT_PX)
 	for tv in tijolos_voando:
@@ -5388,6 +5411,86 @@ func _dica() -> void:
 	_caixa_dica(itens, 320.0, cor_cj, cor_r if p.raridade > 0 else Desenho.DOURADO, mouse, Vector2(18, -92))
 
 # ------------------------------------------------------------------ fim de fase
+## Intervalo entre duas peças entrando no painel de fim: 0,14 s, encurtando se forem muitas (no máximo ~2,5 s ao todo).
+func _fim_gap() -> float:
+	return minf(0.14, 2.5 / maxf(1.0, float(mini(fim_pecas.size(), 48))))
+
+## Entrada do painel de fim: o título dá um pop, os textos aparecem em seguida e as peças entram uma a uma,
+## cada uma com o som de drop da sua raridade. O botão funciona desde o começo (ninguém espera a animação).
+func _animar_fim(delta: float) -> void:
+	fim_t += delta
+	# título: escondido 0,1 s, pop grande, encolhe um pouco e assenta (degraus, sem easing liso)
+	fim_titulo.pivot_offset = fim_titulo.size * 0.5
+	var esc_t: float = 1.0
+	if fim_t < 0.1:
+		esc_t = 0.0
+	elif fim_t < 0.18:
+		esc_t = 1.3
+	elif fim_t < 0.26:
+		esc_t = 0.9
+	elif fim_t < 0.32:
+		esc_t = 1.05
+	fim_titulo.scale = Vector2(esc_t, esc_t)
+	if fim_t >= 0.1 and fim_t - delta < 0.1:
+		Som.tocar("trofeu" if fim_vitoria else "bloco_perdido", 1.1 if fim_vitoria else 0.8)
+	# textos: aparecem em sequência, meio apagados por um instante antes de firmar
+	var ordem: Array = [fim_sub, fim_time, fim_torre, fim_info]
+	for i in ordem.size():
+		var l: Label = ordem[i]
+		var ti: float = fim_t - 0.3 - i * 0.1
+		l.modulate.a = 0.0 if ti < 0.0 else (0.5 if ti < 0.06 else 1.0)
+	# peças: som na hora em que cada uma entra (no máximo as 48 que aparecem)
+	var gap: float = _fim_gap()
+	while fim_som_n < mini(fim_pecas.size(), 48) and fim_t >= FIM_PECA_0 + fim_som_n * gap:
+		var rar: int = clampi(fim_pecas[fim_som_n].raridade, 0, 4)
+		Som.tocar(["drop", "drop_raro", "drop_raro", "drop_lendario", "drop_lendario"][rar], 1.0 + 0.03 * mini(fim_som_n, 10), 0.03, -4.0)
+		fim_som_n += 1
+
+## Time em cima da moldura do painel de fim: na vitória os gatos pulam (cada um no seu tempo); na derrota
+## dormem deitados, com um "z" cada, e blocos da torre caídos entre eles. Só quando sobra espaço acima do painel.
+func _fim_gatos() -> void:
+	if fim_invasao and fim_vitoria:
+		return
+	var topo: float = fim_rect.position.y
+	if topo < 64.0 or estado == null:
+		return
+	var n: int = estado.bonecos.size()
+	if n == 0:
+		return
+	var esp: float = minf(150.0, (fim_rect.size.x - 160.0) / maxf(1.0, n - 1.0))
+	var x0: float = 640.0 - esp * (n - 1) * 0.5
+	var y_pe: float = topo + 10.0
+	var entra: float = clampf((fim_t - 0.2) / 0.3, 0.0, 1.0)   # sobem de trás da moldura
+	if entra <= 0.0:
+		return
+	if not fim_vitoria:
+		# blocos da torre caídos no meio do time (um em pé, outro deitado, um terceiro meio de lado)
+		for k in mini(n - 1, 4):
+			var xb: float = floorf((x0 + esp * (k + 0.5)) / 4.0) * 4.0
+			var cor_b: Color = Desenho.cor_tijolo(k * 5 + 1)
+			if k % 2 == 0:
+				TorrePx._bloco(self, Vector2(xb - 20.0, y_pe - 20.0), cor_b, "", 0, true)
+			else:
+				TorrePx._bloco(self, Vector2(xb - 24.0, y_pe - 20.0), cor_b, "", 0, true)
+				TorrePx._bloco(self, Vector2(xb - 4.0, y_pe - 40.0), Desenho.cor_tijolo(k * 3 + 2), "", 0, true)
+	for i in n:
+		var bn: Boneco = estado.bonecos[i]
+		var x: float = x0 + esp * i
+		var dy: float = (1.0 - entra) * 40.0
+		if fim_vitoria:
+			# pulo em parábola, cada gato defasado; no chão um instante de "agachado"
+			var fase: float = fposmod(fim_t * 1.6 + i * 0.37, 1.0)
+			var alt: float = 0.0 if fase > 0.7 else sin(fase / 0.7 * PI) * 34.0
+			dy -= floorf(alt / PX) * PX
+			Desenho.boneco(self, Vector2(x, y_pe + dy), 0.8, 1.0 if i % 2 == 0 else -1.0, 0, bn.pecas, 0.0, t * 3.0 + i, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, i, false)
+			if fase > 0.72 and fase < 0.8:
+				V.brilho(self, Vector2(x + 26.0, y_pe - 46.0), 5.0, Desenho.DOURADO, Color(0.3, 0.18, 0.0))
+		else:
+			Desenho.boneco(self, Vector2(x, y_pe + dy), 0.8, 1.0, 0, bn.pecas, 0.0, 0.0, false, 0.0, 0.9, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, i, true)
+			var wz: float = fposmod(t * 0.5 + i * 0.29, 1.0)
+			if sin(wz * PI) > 0.25 and entra >= 1.0:
+				V.zzz(self, Vector2(x + 22.0 + wz * 10.0, y_pe - 40.0 - wz * 26.0), 2.0 if sin(wz * PI) > 0.7 else 1.0, Color(0.8, 0.9, 1.0))
+
 func _fim_icones() -> void:
 	var n: int = fim_pecas.size()
 	if n == 0:
@@ -5397,9 +5500,20 @@ func _fim_icones() -> void:
 	var mostrar: int = mini(n, maximo)
 	var passo: float = 56.0
 	var x0: float = 640.0 - (mini(mostrar, por_linha) * passo) / 2.0 + 3.0
+	var gap: float = _fim_gap()
 	for i in mostrar:
 		var r := Rect2(x0 + (i % por_linha) * passo, fim_ic_y + (i / por_linha) * passo, 50.0, 50.0)
-		_ladrilho(r, fim_pecas[i])
+		# entra uma a uma: cai de cima em degraus de PX, passa um pouco do lugar e assenta
+		var ti: float = fim_t - FIM_PECA_0 - i * gap
+		if ti < 0.0:
+			continue
+		var k: float = clampf(ti / 0.16, 0.0, 1.0)
+		var dy: float = -floorf(30.0 * (1.0 - k) * (1.0 - k) / PX) * PX
+		if ti >= 0.16 and ti < 0.24:
+			dy = PX   # quique de 1 pixel ao assentar
+		_ladrilho(Rect2(r.position + Vector2(0, dy), r.size), fim_pecas[i])
+		if ti < 0.1:
+			draw_rect(Rect2(r.position + Vector2(0, dy), r.size), Color(1, 1, 0.9, 0.5))
 	if n > maximo:
 		Desenho.texto(self, "+%d" % (n - maximo), Vector2(640, fim_ic_y + 3 * passo + 18.0), 22, Color(1, 0.92, 0.7), 0.0)
 

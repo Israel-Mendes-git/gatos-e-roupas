@@ -1257,19 +1257,60 @@ func _tela_creditos() -> void:
 	_botoes_pintar()
 
 # ------------------------------------------------------------------ transição: patinhas que fecham a tela
+## Íris em blocos de 4 px: a tela rosa fecha num círculo em degraus até o centro e abre de novo pelo mesmo
+## caminho. Cada faixa de 4 px de altura é o rosa à esquerda e à direita do furo; a borda do furo leva uma
+## linha mais escura. As patas, numa grade desencontrada, carimbam quando a íris passa por elas (grandes e
+## claras no 1º instante, depois assentadas e escuras). Sem alfa: o rosa é chapado, como o resto da arte.
+const CORT_B := 4.0
+const CORT_PATA: Array[String] = [
+	"..xx.xx..", "..xx.xx..", "xx.....xx", "xx.xxx.xx",
+	"..xxxxx..", ".xxxxxxx.", ".xxxxxxx.", "..xxxxx..",
+]
+
 func _cortina() -> void:
 	var f: float = clampf(tr_t, 0.0, 1.0)
 	var cob: float = 1.0 - absf(f * 2.0 - 1.0)
 	cob = cob * cob * (3.0 - 2.0 * cob)
-	draw_rect(Rect2(0, 0, 1280, 720), Color(C_ROSA.r, C_ROSA.g, C_ROSA.b, clampf(cob * 2.0 - 0.25, 0.0, 1.0)))
-	# cinco patas grandes batem no pico da cortina (em vez de uma grade de patinhas)
-	var cs: Array[Vector2] = [Vector2(250, 190), Vector2(640, 150), Vector2(1030, 190), Vector2(445, 500), Vector2(835, 500)]
-	for k in cs.size():
-		var s: float = clampf((cob - 0.35 - k * 0.07) / 0.3, 0.0, 1.0)
-		var esc: int = int(s * 8.99)
-		if esc <= 0:
-			continue
-		_pata(k * 2 % 9, cs[k] - Vector2(15.0, 14.0) * 0.5 * float(esc), esc)
+	if cob <= 0.0:
+		return
+	var ce := Vector2(640.0, 360.0)
+	var rmax: float = 760.0
+	var r: float = floorf(rmax * (1.0 - cob) / CORT_B) * CORT_B   # raio do furo, em degraus de 4 px
+	var borda: Color = C_ROSA.darkened(0.22)
+	var y: float = 0.0
+	while y < 720.0:
+		var dy: float = absf(y + CORT_B * 0.5 - ce.y)
+		if dy >= r:
+			draw_rect(Rect2(0.0, y, 1280.0, CORT_B), C_ROSA)
+		else:
+			var hw: float = floorf(sqrt(r * r - dy * dy) / CORT_B) * CORT_B
+			var xa: float = ce.x - hw
+			var xb: float = ce.x + hw
+			if xa > 0.0:
+				draw_rect(Rect2(0.0, y, xa, CORT_B), C_ROSA)
+				draw_rect(Rect2(xa - CORT_B, y, CORT_B, CORT_B), borda)
+			if xb < 1280.0:
+				draw_rect(Rect2(xb, y, 1280.0 - xb, CORT_B), C_ROSA)
+				draw_rect(Rect2(xb, y, CORT_B, CORT_B), borda)
+		y += CORT_B
+	# patas carimbadas: grade de 6 x 4, linhas alternadas meio passo deslocadas
+	for j in 4:
+		for i in 6:
+			var pc := Vector2(130.0 + i * 205.0 + (102.0 if j % 2 == 1 else 0.0), 95.0 + j * 178.0)
+			if pc.x > 1240.0:
+				continue
+			var d: float = pc.distance_to(ce) - r   # quanto o rosa já passou da pata
+			if d < 24.0:
+				continue
+			var batida: bool = d < 70.0
+			var cel: float = CORT_B * (2.0 if batida else 1.0)
+			var cor_p: Color = C_ROSA.darkened(0.12) if batida else C_ROSA.darkened(0.3)
+			var o := Vector2(floorf((pc.x - 4.5 * cel) / CORT_B) * CORT_B, floorf((pc.y - 4.0 * cel) / CORT_B) * CORT_B)
+			for yy in CORT_PATA.size():
+				var ln: String = CORT_PATA[yy]
+				for xx in ln.length():
+					if ln[xx] == "x":
+						draw_rect(Rect2(o.x + xx * cel, o.y + yy * cel, cel, cel), cor_p)
 
 # ------------------------------------------------------------------ dicas de primeira vez
 ## Ordem natural de um começo de jogo guiado: vestir, blocos, fantasia, queda, poder, troféu.

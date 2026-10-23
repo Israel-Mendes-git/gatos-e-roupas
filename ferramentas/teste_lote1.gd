@@ -103,12 +103,21 @@ func _tabelas_paralelas(nc: int, nt: int) -> void:
 		var m: Dictionary = sc.get_script_constant_map()
 		for k in m:
 			var v: Variant = m[k]
-			if v is Array and (v as Array).size() in antigos:
+			if v is Array and (v as Array).size() in antigos and not _eh_bitmap(v):
 				_ok(false, "%s.%s tem %d itens (tamanho antigo): falta o lote 1, 2, 3 ou 4" % [gc["class"], k, (v as Array).size()])
 	_ok(IconesPoder.BITS.size() >= Pecas.Poder.size(), "IconesPoder.BITS menor que Poder")
 	for c in nc:
 		_ok(Balanco.conj_valor(c, 0) != 0.0 and Balanco.conj_valor(c, 1) != 0.0, "conjunto %d sem valor de bônus" % c)
 		_ok(Pecas.PODER_TIPO[c] < Pecas.Poder.size(), "PODER_TIPO %d fora do enum" % c)
+
+## Desenho em texto (linhas de pixel do mesmo tamanho, como o rabo do Gambá): não é tabela por fantasia.
+func _eh_bitmap(v: Array) -> bool:
+	if v.is_empty() or not (v[0] is String):
+		return false
+	for l in v:
+		if not (l is String) or (l as String).length() != (v[0] as String).length():
+			return false
+	return (v[0] as String).length() >= 8
 
 ## Cenas montadas à mão para os poderes que dependem de uma situação (ferido, aviso, último poder).
 ## Milhau retirado: não cai, não conta, e o save antigo troca as peças dele por peças do Quintal.
