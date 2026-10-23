@@ -5468,7 +5468,7 @@ func _botao_poder(i: int) -> void:
 	var larg_t: float = dentro.end.x - tx - 1.0
 	var nome: String = str(b["nome"])
 	var tam_n: int = 19
-	nome = UIComum.caber(nome, tam_n, larg_t + 1.0)   # nome comprido abrevia (não há fonte nítida menor que 19)
+	nome = UIComum.caber(nome, tam_n, larg_t + 6.0)   # nome comprido abrevia (não há fonte nítida menor que 19); o vizinho pronto cresce por cima da borda
 	var cor_nome: Color = Color(1, 1, 1) if viva else Color(0.75, 0.75, 0.8)
 	Desenho.texto(self, nome, Vector2(tx, dentro.position.y + 17.0), tam_n, cor_nome, -1.0, 4)
 	var txt: String

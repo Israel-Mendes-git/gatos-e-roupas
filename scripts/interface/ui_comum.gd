@@ -43,20 +43,24 @@ static func tam_menor(t: int) -> int:
 static func largura(txt: String, t: float) -> float:
 	return FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam(t)).x
 
-## Texto que cabe em `larg`: inteiro se couber; senão abrevia a última palavra com ponto ("Aperto somb.");
-## se nem a primeira palavra couber, corta com reticências. Não há fonte nítida menor que 19 para encolher.
+## Texto que cabe em `larg`: inteiro se couber; senão abrevia a última palavra com ponto, tirando pelo menos
+## 3 letras ("Aperto somb.", não "Aperto sombri."); se nem assim couber, corta com reticências. Não há fonte
+## nítida menor que 19 para encolher.
 static func caber(txt: String, t: float, larg: float) -> String:
 	if largura(txt, t) <= larg:
 		return txt
+	var corte: int = txt.rfind(" ")
+	if corte > 0:
+		var antes: String = txt.substr(0, corte + 1)
+		var ult: String = txt.substr(corte + 1)
+		for fica in range(ult.length() - 3, 1, -1):
+			var cand: String = antes + ult.substr(0, fica) + "."
+			if largura(cand, t) <= larg:
+				return cand
 	var s: String = txt
-	while s.length() > 2:
-		s = s.substr(0, s.length() - 1).strip_edges()
-		var corte: int = s.rfind(" ")
-		if corte > 0 and s.length() - corte > 2 and largura(s + ".", t) <= larg:
-			return s + "."
-		if corte < 0 and largura(s + "…", t) <= larg:
-			return s + "…"
-	return s
+	while s.length() > 1 and largura(s + "…", t) > larg:
+		s = s.substr(0, s.length() - 1)
+	return s.strip_edges() + "…"
 
 ## Quebra em até `max_l` linhas que cabem em `larg` (a última é abreviada se ainda sobrar texto).
 static func linhas(txt: String, t: float, larg: float, max_l: int = 2) -> PackedStringArray:
