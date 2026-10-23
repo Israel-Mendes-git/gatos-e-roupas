@@ -1959,17 +1959,29 @@ func _indice_bichos(e: Estado) -> void:
 	_rotulo_bichos("Bandos de fora", rect_tile_bicho(5), COR_ABA[ABA_FORA], "todas as famílias juntas")
 	for k in BICHOS_CASA:
 		_tile_bicho(e, k)
-	var pl := Rect2(COL_E_X, 538.0, COL_W, 92.0)
+	# a legenda ganha altura (sobe até a folga abaixo da grade de tipos) para ter 3 fileiras de 6: com a fonte
+	# pixel cada nome precisa de ~75 px, e em 9 por fileira só cabiam 6 letras ("Atordo", "Sem fôl")
+	var pl := Rect2(COL_E_X, 506.0, COL_W, 124.0)
 	draw_rect(pl, PAPEL_ESC)
 	draw_rect(pl, PAPEL_BORDA, false, 2.0)
 	_txt("Ícones sobre os bichos e gatos na luta", Vector2(pl.position.x + 10.0, pl.position.y + 17.0), 13, TINTA)
-	# legenda dos estados: ícone e nome, 9 por fileira (passar o mouse num bicho na luta mostra o tempo de cada um)
-	var cw: float = (pl.size.x - 12.0) / 9.0
-	for q in IconesEstado.QTD:
-		var cx: float = pl.position.x + 6.0 + (q % 9) * cw + cw * 0.5
-		var cy: float = pl.position.y + 36.0 + (q / 9) * 32.0
-		IconesEstado.desenhar(self, q, Vector2(cx, cy))
-		_txt(IconesEstado.CURTO[q], Vector2(cx - cw * 0.5, cy + 16.0), 10, TINTA2, cw)
+	# legenda dos estados: ícone e nome, 6 por fileira (passar o mouse num bicho na luta mostra o tempo de cada um).
+	# Cada fileira reparte a folga entre os nomes pela largura real do texto, então nenhum encosta no vizinho.
+	for fil in 3:
+		var larguras: Array[float] = []
+		var soma: float = 0.0
+		for c in 6:
+			var w: float = maxf(UIComum.largura(IconesEstado.CURTO[fil * 6 + c], 10), 16.0)
+			larguras.append(w)
+			soma += w
+		var folga: float = (pl.size.x - 20.0 - soma) / 5.0
+		var x0: float = pl.position.x + 10.0
+		var cy: float = pl.position.y + 36.0 + fil * 30.0
+		for c in 6:
+			var q: int = fil * 6 + c
+			IconesEstado.desenhar(self, q, Vector2(roundf(x0 + larguras[c] * 0.5), cy))
+			_txt(IconesEstado.CURTO[q], Vector2(roundf(x0), cy + 16.0), 10, TINTA2, larguras[c] + 2.0)
+			x0 += larguras[c] + folga
 	var pr := Rect2(COL_D_X, 538.0, COL_W, 92.0)
 	draw_rect(pr, PAPEL_ESC)
 	draw_rect(pr, PAPEL_BORDA, false, 2.0)
