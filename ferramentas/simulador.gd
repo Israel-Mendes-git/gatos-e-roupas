@@ -641,6 +641,11 @@ func _modo_kits(n_jogos: int, pol: String) -> void:
 					sim.iniciar(e, 40000 + g * 31 + li * 7 + oi)
 					while not sim.terminada:
 						sim.passo(Balanco.DT)
+					for al in sim.aliados:
+						if al.poder >= 0 and al.poder_pronto and al.poder_conj >= 0:
+							var dpf: Dictionary = Simulacao.tele.get(al.poder_conj, {})
+							dpf["pronto_fim"] = float(dpf.get("pronto_fim", 0.0)) + 1.0   # acabou a luta com o poder carregado
+							Simulacao.tele[al.poder_conj] = dpf
 					var a: Dictionary = acc[c]
 					if OS.get_environment("DBG") != "":
 						print("DBG g%d kit%d li%d oi%d vit %s t %.3f vivos %d" % [g, c, li, oi, sim.vitoria, sim.tempo, sim.aliados.size()])

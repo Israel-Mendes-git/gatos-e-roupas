@@ -1486,6 +1486,8 @@ func _agir(u: Unidade, dt: float) -> void:
 			u.poder_armado = false
 			if not u.vivo:
 				return
+		elif medir and u.poder_pronto and u.equipe == 0:
+			_tele(u.poder_conj, "espera", dt)   # carregado e sem alvo (medição)
 	if not u.herancas.is_empty() and not _herancas_agem(u, dt):
 		return
 	if u.furia_k > 0.0:
