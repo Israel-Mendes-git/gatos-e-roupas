@@ -588,6 +588,13 @@ func _atualizar_juice(dtv: float, delta: float) -> void:
 			if dtv > 0.0:
 				var dir_u: float = 1.0 if uu.equipe == 0 else -1.0
 				var pe: Vector2 = Vector2(uu.vx, uu.vy)
+				if uu.equipe == 1 and uu.tipo == Unidade.Tipo.GIGANTE and not uu.chefe and uu.andando and uu.vivo:
+					# grandalhão: cada pisada (quadro de apoio do passo) levanta poeira dos dois lados do pé
+					var qp: int = posmod(int(uu.anim * BichoPx.PASSO_ANIM), BichoPx.QUADROS_PASSO)
+					if qp != int(j.get("qp", -1)) and qp % 3 == 0:
+						_poeira(pe + Vector2(dir_u * 8.0, 0), dir_u, 2, 0.7)
+						_poeira(pe - Vector2(dir_u * 8.0, 0), -dir_u, 1, 0.6)
+					j["qp"] = qp
 				if uu.andando and uu.vivo:
 					j["poeira"] = float(j["poeira"]) - dtv
 					if float(j["poeira"]) <= 0.0:
@@ -602,8 +609,19 @@ func _atualizar_juice(dtv: float, delta: float) -> void:
 	# bichos derrotados: voam para trás, esmagam e somem
 	for i in range(fantasmas.size() - 1, -1, -1):
 		var f: Dictionary = fantasmas[i]
+		var tf0: float = float(f["t"])
 		f["t"] = float(f["t"]) + dtv
 		f["x"] = float(f["x"]) + float(f["vx"]) * dtv
+		var pouso: float = float(f["dur"]) * (FANT_POUSO_CHEFE if bool(f.get("chefe", false)) else FANT_POUSO)
+		if tf0 < pouso and float(f["t"]) >= pouso:
+			# caiu de costas: poeira dos dois lados; o chefe solta o adereço, que sai rolando
+			_poeira(Vector2(float(f["x"]), float(f["y"])), 1.0, 3 if not bool(f.get("chefe", false)) else 6, 1.0 if not bool(f.get("chefe", false)) else 1.6)
+			_poeira(Vector2(float(f["x"]), float(f["y"])), -1.0, 2 if not bool(f.get("chefe", false)) else 5, 0.9 if not bool(f.get("chefe", false)) else 1.4)
+			if bool(f.get("chefe", false)):
+				f["vx"] = 0.0
+				f["rola"] = 0.0
+		if f.has("rola"):
+			f["rola"] = float(f["rola"]) + dtv
 		f["vx"] = float(f["vx"]) * (1.0 - minf(1.0, 3.5 * dtv))
 		if float(f["t"]) >= float(f["dur"]):
 			var pf: Vector2 = Vector2(float(f["x"]), float(f["y"]))
@@ -803,7 +821,7 @@ func _consumir() -> void:
 							break
 					var eh_chefe: bool = mu != null and mu.chefe
 					if mu != null:
-						fantasmas.append({"u": mu, "x": e["x"], "y": e["y"], "vx": 150.0 if not eh_chefe else 60.0, "t": 0.0, "dur": 0.38 if not eh_chefe else 0.7})
+						fantasmas.append({"u": mu, "x": e["x"], "y": e["y"], "vx": 150.0 if not eh_chefe else 20.0, "t": 0.0, "dur": 0.55 if not eh_chefe else 1.2, "chefe": eh_chefe})
 					if eh_chefe:
 						_pausa(4.0, true)
 						tremor = maxf(tremor, 14.0)
@@ -1515,6 +1533,16 @@ func _bolota(ce: Vector2, giro: int) -> void:
 ## Rasante do Esquilo Acrobata: a simulação só aplica o dano (o chefe não sai do lugar), então o salto é só de desenho —
 ## três cópias translúcidas do sprite em arco, indo por cima da faixa até `x_fim` e voltando (a de trás com atraso).
 ## `base` = pés do chefe quando o rasante saiu; `u` = 0..1 do efeito.
+## Preparo (0..1) da pose: na janela antes do golpe (recarga quase no fim) o boneco arma o golpe (BichoPx.preparo).
+func _pose_preparo(uu: Unidade) -> float:
+	if uu.vivo and uu.golpe <= 0.0 and not uu.andando and uu.cd > 0.0 and uu.cd < BichoPx.PREPARO_T and (uu.alvo != null or uu.equipe == 1):
+		return 1.0 - uu.cd / BichoPx.PREPARO_T
+	return 0.0
+
+## Dor da pose: os primeiros ~0,12 s do tranco de um golpe levado (BichoPx.dor).
+func _pose_dor(uu: Unidade) -> bool:
+	return tranco.has(uu) and Vector2(tranco[uu]).y > 0.04
+
 func _rasante_saltos(ue: Unidade, base: Vector2, x_fim: float, u: float) -> void:
 	var esc_g: float = esc_tela(ue)
 	var tp_g: int = Unidade.Tipo.GEMEO if ue.pequeno else ue.tipo
@@ -1527,7 +1555,7 @@ func _rasante_saltos(ue: Unidade, base: Vector2, x_fim: float, u: float) -> void
 		var x_g: float = lerpf(base.x, x_fim + 30.0, ida)
 		var y_g: float = base.y - absf(sin(w * TAU)) * 70.0  # um arco na ida e outro na volta, por cima dos gatos
 		var dir_g: float = -1.0 if w < 0.5 else 1.0
-		Desenho.boneco(self, px_grade(Vector2(x_g, y_g)), esc_g, dir_g, 1, ue.pecas, 0.0, ue.anim, false, 0.12, alfas[k], false, -1, 0.0, tp_g, false, ue.chefe, ue.familia, ue.elite, ue.chefe_tipo, ue.parte, false, 0)
+		Desenho.boneco(self, px_grade(Vector2(x_g, y_g)), esc_g, dir_g, 1, ue.pecas, 0.0, ue.anim, false, 0.12, alfas[k], false, -1, 0.0, tp_g, false, ue.chefe, ue.familia, ue.elite, ue.chefe_tipo, ue.parte, false, 0, false, _pose_preparo(ue), _pose_dor(ue))
 
 ## Bola de fogo em pixel: lóbulos com contorno vinho, laranja, amarelo e miolo claro. `calor` 1 = recém-explodiu
 ## (miolo branco), 0 = brasa apagando.
@@ -2760,6 +2788,68 @@ func _desenhar_tfx() -> void:
 					V.quadro(self, pl.x + dl.x * (rl + V.Q) - V.Q * 0.5, pl.y + dl.y * (rl + V.Q) - V.Q * 0.5, V.Q * (1.0 + absf(dl.x) * 2.0), V.Q * (1.0 + absf(dl.y) * 2.0), Color(1.0, 0.95, 0.6))
 				V.ponto(self, pl, Color(1, 1, 1))
 
+## Bicho derrotado ("fantasma"): voa para trás num arco girando de 90 em 90 graus (BichoPx.queda), cai de barriga para cima e some.
+## O chefe cambaleia, tomba de costas, levanta poeira e o adereço da cabeça sai rolando. Sem esticar: a escala é a da unidade.
+const FANT_POUSO := 0.62         # fração da duração em que o bicho comum toca o chão
+const FANT_POUSO_CHEFE := 0.5    # ...e o chefe
+const ADERECO_COROA: Array = ["Y.Y.Y", "YYYYY", "yyryy"]
+const ADERECO_CAPACETE: Array = [".YYY.", "YYYYY", "yyyyy"]
+
+func _desenhar_fantasma(fan: Dictionary) -> void:
+	var ug: Unidade = fan["u"]
+	var uf: float = clampf(float(fan["t"]) / float(fan["dur"]), 0.0, 1.0)
+	var esc_f: float = esc_tela(ug)
+	var px_f: float = Desenho.GATO_K * esc_f
+	var tp_f: int = Unidade.Tipo.GEMEO if ug.pequeno else ug.tipo
+	var x_f: float = float(fan["x"])
+	var y_f: float = float(fan["y"])
+	var queda: float
+	var alfa: float = 1.0
+	if bool(fan.get("chefe", false)):
+		var pc: float = FANT_POUSO_CHEFE
+		if uf < 0.32:
+			queda = 0.1   # cambaleia: olho apertado, balança de um lado para o outro em pixels inteiros
+			x_f += (1.0 if int(uf * 18.0) % 2 == 0 else -1.0) * px_f
+		elif uf < pc:
+			queda = 0.3   # tomba: 90 graus
+			y_f -= roundf(sin((uf - 0.32) / (pc - 0.32) * PI) * 3.0) * px_f
+		else:
+			queda = 0.8   # de costas no chão
+		if uf > 0.85:
+			alfa = 1.0 - (uf - 0.85) / 0.15
+		if fan.has("rola"):
+			_desenhar_adereco_rolando(ug, float(fan["x"]), float(fan["y"]), float(fan["rola"]), esc_f, alfa)
+	else:
+		var po: float = FANT_POUSO
+		var ua: float = minf(uf / po, 1.0)
+		y_f -= roundf(sin(ua * PI) * 26.0 / px_f) * px_f
+		# arco: dor (golpe que matou) -> 90 graus -> de barriga para cima no ar -> deitado no chão
+		queda = 0.1 if ua < 0.2 else (0.35 if ua < 0.5 else (0.6 if uf < po else 0.9))
+		if uf > 0.8:
+			alfa = 1.0 - (uf - 0.8) / 0.2
+	Desenho.boneco(self, px_grade(Vector2(x_f, y_f)), esc_f, -1.0, 1, ug.pecas, 0.35, 0.0, false, 0.0, alfa, false, -1, 0.0, tp_f, false, ug.chefe, ug.familia, ug.elite, ug.chefe_tipo, ug.parte, false, 0, false, 0.0, false, queda)
+
+func _desenhar_adereco_rolando(ug: Unidade, x0: float, y0: float, t: float, esc: float, alfa: float) -> void:
+	var ct: int = ug.chefe_tipo
+	if not BichoPx.coroa_fixa(ct):
+		return
+	var rows: Array = ADERECO_CAPACETE if ct == 5 else ADERECO_COROA
+	var d: float = 34.0 * (1.0 - exp(-t * 2.2))     # rola para trás e para
+	var giro: int = int(d / 6.0) % 4
+	var s: Dictionary = {"x": -2, "y": -3, "l": rows}
+	if giro == 1:
+		s = BichoPx.girar(s, 1, false)
+	elif giro == 2:
+		s = BichoPx.girar(s, 2, false)
+	elif giro == 3:
+		s = BichoPx.girar(BichoPx.girar(s, 2, false), 1, false)
+	var cor_y: Color = Color("f6c61f")
+	var pal: Dictionary = {"Y": Color(cor_y.r, cor_y.g, cor_y.b, alfa), "y": Color(0.72, 0.53, 0.06, alfa), "r": Color(0.85, 0.19, 0.24, alfa), "l": Color(0.72, 0.53, 0.06, alfa), "d": Color(cor_y.r, cor_y.g, cor_y.b, alfa), "o": Color(0.1, 0.07, 0.05, alfa)}
+	var px: float = Desenho.GATO_K * esc
+	Desenho._tr(self, px_grade(Vector2(x0 + d * esc * 1.5, y0 - 2.0 * px)), esc, 1.0, Vector2.ZERO, 0.0, Desenho.GATO_K)
+	RoupaGato.sprite(self, s["x"], s["y"], s["l"], pal, 0.0)
+	Desenho.resetar(self)
+
 func _atualizar_visual(dt: float, delta_real: float) -> void:
 	for lista in [sim.aliados, sim.inimigos]:
 		for u in lista:
@@ -2768,10 +2858,16 @@ func _atualizar_visual(dt: float, delta_real: float) -> void:
 				uu.vx = uu.x
 				uu.vy = uu.y
 			var k: float = 1.0 - exp(-delta_real * 22.0 * maxf(1.0, velocidade * 0.6))
+			var vx0: float = uu.vx
 			uu.vx += (uu.x - uu.vx) * k
 			uu.vy += (uu.y - uu.vy) * k
 			if uu.andando:
-				uu.anim += dt * 14.0 * uu.lento
+				if uu.estrutura or uu.cao:
+					uu.anim += dt * 14.0 * uu.lento
+				else:
+					# o passo avança pela distância andada (|dx| / (passada x escala)): o pé fica parado no chão, o grandalhão
+					# lento anda num ritmo pesado e o ladrão fugindo corre
+					uu.anim += absf(uu.vx - vx0) * Desenho.anim_por_px_tela(uu.equipe, esc_tela(uu), uu.chefe_tipo if uu.chefe else -1, uu.fugindo and uu.tipo == Unidade.Tipo.LADRAO and not uu.chefe)
 	for i in range(particulas.size() - 1, -1, -1):
 		var p: Dictionary = particulas[i]
 		p["vida"] -= dt
@@ -2935,50 +3031,42 @@ func _draw() -> void:
 			if vz > 0.25:
 				IconesPoder.texto(self, "z", Vector2(cd["x"] + 30.0 + zi * 12.0 + wz * 8.0, cd["y"] - 62.0 - wz * 26.0), Color(0.8, 0.9, 1.0), 3 if (vz < 0.7 or zi == 0) else 6)
 	for fa in fantasmas:
-		var fan: Dictionary = fa
-		var ug: Unidade = fan["u"]
-		var uf: float = clampf(float(fan["t"]) / float(fan["dur"]), 0.0, 1.0)
-		var pf: Vector2 = Vector2(float(fan["x"]), float(fan["y"]) - sin(uf * PI) * 26.0)
-		var esc_f: float = esc_tela(ug) * (1.0 + 0.1 * sin(uf * PI))
-		var tp_f: int = Unidade.Tipo.GEMEO if ug.pequeno else ug.tipo
-		Desenho.boneco(self, px_grade(pf), esc_f, -1.0 * (1.0 + 0.2 * (1.0 - uf)), 1, ug.pecas, 1.0 - uf * 0.5, 0.0, false, 0.0, 1.0 - uf * uf, false, -1, 0.0, tp_f, false, ug.chefe, ug.familia, ug.elite, ug.chefe_tipo, ug.parte, false, 0)
+		_desenhar_fantasma(fa)
 	var ico_max: int = 3 if todos.size() > 24 else 4   # luta pesada: menos ícones por unidade
 	for u in todos:
 		var uu2: Unidade = u
 		var dir: float = 1.0 if uu2.equipe == 0 else -1.0
 		var pos: Vector2 = Vector2(uu2.vx, uu2.vy)
-		if uu2.golpe > 0.0 and not uu2.distancia:
-			pos.x += dir * sin(uu2.golpe / 0.22 * PI) * 9.0
-		if tranco.has(uu2):
-			# tranco: recuo curto no sentido do golpe recebido
-			var trc: Vector2 = tranco[uu2]
-			pos.x += trc.x * sin(clampf(trc.y / 0.16, 0.0, 1.0) * PI) * 7.0
 		var esc_u: float = esc_tela(uu2)
+		var px_u: float = Desenho.GATO_K * esc_u   # um pixel do sprite na tela: os deslocamentos andam em pixels inteiros
+		if uu2.golpe > 0.0 and not uu2.distancia:
+			# bote: o corpo já está à frente no passo do dano (contato) e volta desacelerando (BichoPx.curva_golpe)
+			pos.x += dir * roundf(BichoPx.curva_golpe(uu2.golpe) * 6.0 / px_u) * px_u
+		var dor_u: bool = false
+		if tranco.has(uu2):
+			# tranco: recuo curto no sentido do golpe recebido; nos primeiros ~0,12 s, a pose de dor
+			var trc: Vector2 = tranco[uu2]
+			pos.x += trc.x * roundf(sin(clampf(trc.y / 0.16, 0.0, 1.0) * PI) * 7.0 / px_u) * px_u
+		dor_u = _pose_dor(uu2)
 		var tp: int = Unidade.Tipo.GEMEO if uu2.pequeno else uu2.tipo
-		# vida: antecipação (recuo curto antes do golpe corpo a corpo), respirar parado, esmaga-e-estica no golpe levado
-		if uu2.vivo and not uu2.distancia and uu2.golpe <= 0.0 and uu2.alvo != null and uu2.cd > 0.0 and uu2.cd < 0.16:
-			pos.x -= dir * 3.0 * (1.0 - uu2.cd / 0.16)
+		# preparo: na janela antes do golpe (recarga quase no fim) o boneco arma o golpe (cabeça recua, agacha, corda puxada)
+		var prep_u: float = _pose_preparo(uu2)
+		if prep_u > 0.0 and not uu2.distancia:
+			pos.x -= dir * roundf(prep_u * 4.0 / px_u) * px_u   # recua um pixel da grade antes do bote
 		pos.y -= _salto(uu2)
+		# sem esmaga-e-estica nem respiração por escala: escala fora do inteiro quebrava a grade de pixels e dobrava a respiração de
+		# 1 px que cada bicho já tem; o golpe levado virou a pose de dor
 		var sx_u: float = 1.0
 		var sy_u: float = 1.0
 		var fl_u: float = uu2.flash
 		if ju.has(uu2):
 			var jj: Dictionary = ju[uu2]
-			if float(jj["sq"]) >= 0.0:
-				var uq2: float = clampf(float(jj["sq"]) / 0.26, 0.0, 1.0)
-				var amp: float = (0.24 if bool(jj["forte"]) else 0.11) * (1.0 - uq2) * cos(uq2 * TAU * 1.25)
-				sx_u += amp
-				sy_u -= amp
 			if int(jj["clar"]) > 0:
 				fl_u = 1.0
 			if float(jj["antecip"]) > 0.0:
 				fl_u = maxf(fl_u, float(jj["antecip"]) / (ANTECIP_PODER * 1.5) * 0.8)
 				sx_u -= 0.06
 				sy_u += 0.1
-		if not uu2.andando and uu2.vivo:
-			var br: float = sin(rel * 2.6 + float(uu2.get_instance_id() % 7)) * 0.016
-			sy_u += br
-			sx_u -= br * 0.5
 		var esc_d: float = esc_u * sy_u
 		var dir_d: float = dir * sx_u / sy_u
 		if uu2.estrutura:
@@ -2987,7 +3075,7 @@ func _draw() -> void:
 			# cão de guarda da Casinha: sprite próprio, do tamanho de um bicho comum (a escala da unidade é a do desenho antigo do chefe)
 			CaoGuarda.desenhar(self, px_grade(pos), ESC_PX * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
-			Desenho.boneco(self, px_grade(pos), esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0))
+			Desenho.boneco(self, px_grade(pos), esc_d, dir_d, uu2.equipe, (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, uu2.parado, (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0), false, prep_u, dor_u)
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
 		if uu2.barreira_int > 0.0 and uu2.barreira_cd <= 0.0:

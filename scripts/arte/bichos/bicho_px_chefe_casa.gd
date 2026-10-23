@@ -228,9 +228,11 @@ static func _comp(G: PackedInt32Array, L: PackedInt32Array, borda: bool = true) 
 static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool) -> Dictionary:
 	ct = clampi(ct, 0, 4)
 	var t_ms: int = Time.get_ticks_msec()
-	var e: float = 0.0
-	if golpe > 0.0:
-		e = sin(PI * clampf(1.0 - golpe / _DUR_GOLPE, 0.0, 1.0))
+	var e: float = BichoPx.curva_golpe(golpe)   # contato logo no passo do dano, volta desacelerando
+	# o mesmo golpe um quadro antes (1/30 s): coroa, manto e guardanapo chegam atrasados
+	var e_ant: float = BichoPx.curva_golpe(golpe + 1.0 / 30.0) if golpe > 0.0 else 0.0
+	var pr: int = BichoPx.recuo(golpe)        # preparo: cabeça recua 1-2 px e o corpo agacha 1
+	var dor: int = 1 if BichoPx.dor else 0
 	var esp: Dictionary = _ESP[ct]
 	var q: int = 0
 	var bob: int = 0
@@ -285,6 +287,13 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 			sw = (t_ms / 300) % 2
 	var ei: int = roundi(4.0 * e)
 	var boca: bool = e > 0.4
+	# Rei dos Ratos e Glutão: no bote o corpo inteiro avança (os pés ficam) e a pata da frente sobe; manto, coroa e guardanapo
+	# chegam um quadro depois (só pose: a arte deles não muda)
+	var av: int = 0
+	var lag: int = 0
+	if ct == 0 or ct == 1:
+		av = roundi(3.0 * e) - pr
+		lag = clampi(roundi(3.0 * e) - roundi(3.0 * e_ant), -2, 2)
 	var tl: int = 0
 	if ct == 4 and e > 0.15:
 		tl = roundi(11.0 * e)
@@ -298,11 +307,11 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 	var bw: int = esp["bw"]
 	var bh: int = esp["bh"]
 	var pe: int = esp["pe"]
-	var by0: int = -pe - bh - salto + bob
+	var by0: int = -pe - bh - salto + bob + (1 if pr > 0 else 0)
 	if ct == 4:
 		bh -= sq
-		by0 = -pe - bh - salto
-	var hdx: int = ei
+		by0 = -pe - bh - salto + (1 if pr > 0 else 0)
+	var hdx: int = ei - pr - dor + av
 	var hdy: int = 0
 	if ct == 0:
 		hdy = ei / 2
@@ -326,8 +335,8 @@ static func _geo(ct: int, anim: float, andando: bool, golpe: float, parado: bool
 	if ct == 1:
 		hy -= 0
 	return {"ct": ct, "q": q, "e": e, "ei": ei, "boca": boca, "tl": tl, "ala": ala, "resp": resp, "bob": bob, "salto": salto, "aire": aire, "sq": sq,
-		"sw": sw, "dr": dr, "esp": esp, "ch": ch, "hw": hw, "hh": hh, "bx": int(esp["bx"]), "bw": bw, "bh": bh, "pe": pe, "by0": by0, "hx": hx, "hy": hy,
-		"andando": andando, "parado": sem_folego}
+		"sw": sw, "dr": dr, "esp": esp, "ch": ch, "hw": hw, "hh": hh, "bx": int(esp["bx"]) + av, "bw": bw, "bh": bh, "pe": pe, "by0": by0, "hx": hx, "hy": hy,
+		"andando": andando, "parado": sem_folego, "av": av, "lag": lag, "pr": pr, "dor": dor, "ol": BichoPx.modo_olho()}
 
 ## Quanto o lugar `onde` se desloca em relação à planta do gato parado (as roupas acompanham por aqui).
 static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: bool, golpe: float, chefe_tipo: int, parado: bool) -> Vector2:
@@ -359,7 +368,14 @@ static func desloc(onde: int, familia: int, tipo: int, anim: float, andando: boo
 
 # ---------------------------------------------------------------- partes comuns
 ## Cabeça com a boca aberta: a mandíbula desce `ab` linhas e o vão fica vermelho (com presas na frente, exceto sapo e corvo).
+## Cabeça com o olho da pose (apertado na dor, X no nocaute: BichoPx.olhos) e a boca aberta ou fechada.
+## [letras do olho, fundo, traço, ajuste de coluna]: Glutão e Corvo Velho redesenhados à mão (olho no meio da máscara/da cabeça)
+const _OLHO: Array = [["kw", "m", "k", 0], ["wk", "a", "w", 0], ["kw", "m", "k", 0], ["kw", "m", "k", 0], ["ek", "l", "k", -1]]
 static func _cab_rows(ct: int, ch: Dictionary, boca: bool) -> Array:
+	var o: Array = _OLHO[clampi(ct, 0, 4)]
+	return BichoPx.olhos(_cab_rows0(ct, ch, boca), int(ch["ex"]) + int(o[3]), int(ch["ey"]), BichoPx.modo_olho(), o[0], o[1], o[2], 5)
+
+static func _cab_rows0(ct: int, ch: Dictionary, boca: bool) -> Array:
 	var rows: Array = ch["rows"]
 	if not boca:
 		return rows
@@ -407,24 +423,26 @@ static func _pernas4(L1: PackedInt32Array, L2: PackedInt32Array, g: Dictionary) 
 	var ei: int = g["ei"]
 	var dedo: String = esp["dedo"]
 	var tre: int = (Time.get_ticks_msec() / 110) % 2
+	var av: int = g["av"]   # bote: o quadril vai junto com o corpo, o pé fica onde estava
 	# [x do quadril, fase (as diagonais andam juntas), tom, camada]: as de longe (d) por baixo, as de perto (m) por cima
 	var defs: Array = [[pt + 3, 0.5, "d", L1], [pf + 3, 0.0, "d", L1], [pt, 0.0, "m", L2], [pf, 0.5, "m", L2]]
 	for k in defs.size():
 		var d: Array = defs[k]
-		var x: int = d[0]
-		var xf: int = x
+		var x: int = int(d[0]) + av
+		var xf: int = int(d[0])
 		var yf: int = -1
 		if g["andando"]:
 			var ph: float = fposmod(float(q) / 6.0 + float(d[1]), 1.0)
-			xf = x + roundi(float(esp["str"]) * cos(TAU * ph))
-			yf = -1 - maxi(0, roundi(float(esp["lift"]) * sin(TAU * ph)))
+			var pp: Vector2i = BichoPx.pe_passo(x, ph, float(esp["str"]), float(esp["lift"]))   # pé no ar vai para a frente
+			xf = pp.x
+			yf = pp.y
 		elif g["parado"]:
 			xf = x + (-2 if k % 2 == 0 else 2) + (tre if k < 2 else 1 - tre)   # pernas abertas e bambas
-		if ei > 0 and d[1] == 0.5 and d[2] == "m" and x == pf:
+		if ei > 0 and d[1] == 0.5 and d[2] == "m" and x == pf + av:
 			xf = x + 2 + ei   # golpe: pata dianteira de perto sobe e avança
 			yf = maxi(hip + 1, -2 - 2 * ei)
 		_pata(d[3], x, hip, xf, yf, w, d[2], dedo, int(esp["socks"]))
-		if ei > 0 and d[1] == 0.5 and d[2] == "m" and x == pf and w < 4:
+		if ei > 0 and d[1] == 0.5 and d[2] == "m" and x == pf + av and w < 4:
 			_rect(d[3], xf + w + 1, yf, 1, 1, "w")   # garras
 			_rect(d[3], xf + w, yf - 1, 1, 1, "w")
 
@@ -462,7 +480,7 @@ static func _orelha_c(L: PackedInt32Array, x: int, y: int, w: int, h: int, longe
 
 # ---------------------------------------------------------------- montagem do quadro
 static func _chave(g: Dictionary) -> String:
-	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], int(g["andando"]), g["q"], g["ei"], int(g["boca"]), g["resp"], g["bob"], g["salto"], g["aire"], g["sq"], int(g["parado"]), g["sw"], g["dr"], g["ala"], g["tl"], int(BichoPx.cabeca_coberta) * 2 + int(BichoPx.corpo_coberto)]
+	return "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d" % [g["ct"], int(g["andando"]), g["q"], g["ei"], int(g["boca"]), g["resp"], g["bob"], g["salto"], g["aire"], g["sq"], int(g["parado"]), g["sw"], g["dr"], g["ala"], g["tl"], int(BichoPx.cabeca_coberta) * 2 + int(BichoPx.corpo_coberto)] + "|%d|%d|%d|%d|%d" % [g["av"], g["lag"], g["pr"], g["dor"], g["ol"]]
 
 ## Molde do tronco do quadro em montagem (cada _monta_* grava aqui o corpo antes do pescoço): as roupas de corpo se ajustam a ele.
 static var _tr: PackedInt32Array = PackedInt32Array()
@@ -574,7 +592,8 @@ static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
 	var ol: Array = []
 	for r in _RR_ORELHA:
 		ol.append(String(r).replace("l", "d").replace("m", "d").replace("p", "P"))
-	_bmp(OL, hx - 5, hy - 6, ol)
+	var od: int = g["dor"]   # dor: orelhas baixas e para trás
+	_bmp(OL, hx - 5 - od, hy - 6 + od, ol)
 	_comp(G, OL)
 	# corpo (o molde do tronco é ele inteiro) e patas de perto
 	var B := _nova()
@@ -586,13 +605,14 @@ static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
 	if not BichoPx.corpo_coberto:
 		var C := _nova()
 		# a cauda do manto arrasta no chão atrás do rei; ao andar e no bote ela fica para trás, e parado ondula de leve
-		var vo: int = ([1, 2, 3, 3, 2, 1][q] if g["andando"] else sw % 2) + ei / 2
+		var lag: int = g["lag"]   # o manto chega um quadro atrasado no bote
+		var vo: int = ([1, 2, 3, 3, 2, 1][q] if g["andando"] else sw % 2) + ei / 2 + (1 if lag > 0 else 0)
 		for j in _RR_MANTO.size():
 			var s: String = _RR_MANTO[j]
 			var dx: int = -(vo * maxi(0, j - 8)) / 6
 			for i in s.length():
 				if s[i] != ".":
-					_px(C, bx - 8 + i + (dx if i < 12 else 0), by0 - 1 + j, s[i])
+					_px(C, bx - 8 - lag + i + (dx if i < 12 else 0), by0 - 1 + j, s[i])
 		_comp(G, C)
 	# cabeça em camada própria (boca aberta no bote), dentões de roedor
 	var H := _nova()
@@ -605,8 +625,8 @@ static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
 	_comp(G, H)
 	# orelha de perto, redonda e grande, atrás da coroa
 	var OP := _nova()
-	_bmp(OP, hx - 2, hy - 7, _RR_ORELHA)
-	BichoPx.tirar(_tr, _W, _H, hx - 2 + _OX, hy - 7 + _OY, _RR_ORELHA)
+	_bmp(OP, hx - 2 - od, hy - 7 + od, _RR_ORELHA)
+	BichoPx.tirar(_tr, _W, _H, hx - 2 - od + _OX, hy - 7 + od + _OY, _RR_ORELHA)
 	_comp(G, OP)
 	# fecho de ouro do manto no pescoço
 	if not BichoPx.corpo_coberto:
@@ -616,7 +636,7 @@ static func _monta_rei(G: PackedInt32Array, g: Dictionary) -> void:
 	# coroa de ouro com rubis
 	if not BichoPx.cabeca_coberta:
 		var CR := _nova()
-		_bmp(CR, hx + 4, hy - 4, _RR_COROA)
+		_bmp(CR, hx + 4 - int(g["lag"]), hy - 4 - (1 if int(g["lag"]) > 0 else 0), _RR_COROA)   # a coroa chega atrasada no bote
 		_comp(G, CR)
 	# bigodes longos e caídos (sem contorno)
 	var WB := _nova()
@@ -707,8 +727,9 @@ static func _monta_glutao(G: PackedInt32Array, g: Dictionary) -> void:
 	_comp(G, L2)
 	# orelha de longe, cabeça em camada própria (boca aberta no bote) e orelha de perto
 	var OL := _nova()
-	_bmp(OL, hx, hy - 3, [".ddd.", "daaad", "dadad", "ddddd"])
-	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy - 3 + _OY, [".ddd.", "daaad", "dadad", "ddddd"])
+	var od: int = g["dor"]   # dor: orelhas baixas e para trás
+	_bmp(OL, hx - od, hy - 3 + od, [".ddd.", "daaad", "dadad", "ddddd"])
+	BichoPx.tirar(_tr, _W, _H, hx - od + _OX, hy - 3 + od + _OY, [".ddd.", "daaad", "dadad", "ddddd"])
 	_comp(G, OL)
 	var H := _nova()
 	var cab: Array = _cab_rows(1, ch, g["boca"])
@@ -716,13 +737,13 @@ static func _monta_glutao(G: PackedInt32Array, g: Dictionary) -> void:
 	BichoPx.tirar(_tr, _W, _H, hx + _OX, hy + _OY, cab)
 	_comp(G, H)
 	var OP := _nova()
-	_bmp(OP, hx + 3, hy - 4, _GX_ORELHA)
-	BichoPx.tirar(_tr, _W, _H, hx + 3 + _OX, hy - 4 + _OY, _GX_ORELHA)
+	_bmp(OP, hx + 3 - od, hy - 4 + od, _GX_ORELHA)
+	BichoPx.tirar(_tr, _W, _H, hx + 3 - od + _OX, hy - 4 + od + _OY, _GX_ORELHA)
 	_comp(G, OP)
 	# guardanapo xadrez amarrado no pescoço, com migalhas (sai quando o guaxinim veste roupa de corpo)
 	if not BichoPx.corpo_coberto:
 		var N := _nova()
-		var nx: int = hx - 1
+		var nx: int = hx - 1 - int(g["lag"])   # o guardanapo chega um quadro atrasado no bote
 		var ny: int = hy + hh - 3
 		var wids: Array = [12, 12, 11, 10, 9, 7, 5, 3]
 		for j in wids.size():
@@ -1003,6 +1024,8 @@ static func _monta_corvo(G: PackedInt32Array, g: Dictionary) -> void:
 	_comp(G, L2)
 	# asa de perto: dobrada com as primárias esfiapadas passando da anca, ou aberta
 	var W := _nova()
+	if ala == 0 and int(g["dor"]) > 0:
+		ala = 1   # dor: a asa de perto se solta meio aberta
 	if ala > 0:
 		_asa_aberta(W, bx + bw - 6, by0 + 2, ala, 16, "l", "m", "d", 2)
 	else:
@@ -1201,7 +1224,7 @@ static func desenhar(c: CanvasItem, familia: int, tipo: int, anim: float, andand
 		_cache[k] = _monta(g)
 	var s: Dictionary = _cache[k]
 	BichoPx.ultimo_quadro = s   # as roupas leem o molde deste quadro sem refazer a pose
-	RoupaGato.sprite(c, s["x"], s["y"], s["l"], _pal(int(g["ct"]), alfa), f)
+	BichoPx.sprite(c, s, _pal(int(g["ct"]), alfa), f)
 
 ## Quadro em cache do chefe nesta pose (sprite "l", molde do tronco "t", crânio "c"), para as roupas acompanharem o desenho.
 static func quadro(chefe_tipo: int, anim: float, andando: bool, golpe: float, parado: bool) -> Dictionary:
