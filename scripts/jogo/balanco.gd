@@ -631,6 +631,10 @@ const PODER_KIT_INTERVALO: Dictionary = {
 	Pecas.Conjunto.SUPER_MIAUJIN: 1.5, Pecas.Conjunto.TREINADOR: 0.6, Pecas.Conjunto.MIAU_NOIR: 0.7,
 	Pecas.Conjunto.ARTHUR_MIAURGON: 0.85, Pecas.Conjunto.MIAUZILLA: 0.6, Pecas.Conjunto.CATCHULLU: 1.45,
 }
+## Segundos de recarga do poder da fantasia `c` completa (o que a ficha mostra; sem marcas nem bônus de recarga).
+static func poder_recarga(c: int) -> int:
+	return int(round(PODER_INTERVALO * float(PODER_KIT_INTERVALO.get(c, 1.0))))
+
 const PODER_PRIMEIRO := 3.5         # segundos até o primeiro uso
 const PODER_DANO := 14.0            # dano de referência (x força média das peças)
 const PODER_RAIO_DANO := 2.5        # multiplicadores do dano de referência

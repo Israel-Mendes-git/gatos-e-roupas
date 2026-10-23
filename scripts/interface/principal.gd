@@ -5259,7 +5259,7 @@ func _dica_fantasia(c: int) -> void:
 		["sep"],
 		["t", "2 a 3 peças: " + Pecas.conjunto_bonus(c, 1), 13, cor.lightened(0.4)],
 		["t", "4 peças: " + Pecas.conjunto_bonus(c, 2), 13, cor.lightened(0.4)],
-		["t", "Poder: %s, %s (a cada %d s)" % [Pecas.PODER_NOME[c], Pecas.PODER_DICA[c], int(Balanco.PODER_INTERVALO)], 13, Color(1.0, 0.9, 0.5)],
+		["t", "Poder: %s, %s (a cada %d s)" % [Pecas.PODER_NOME[c], Pecas.PODER_DICA[c], Balanco.poder_recarga(c)], 13, Color(1.0, 0.9, 0.5)],
 		["sep"],
 	]
 	for i in Pecas.SLOTS:
@@ -5285,7 +5285,7 @@ func _dica_caixa_fantasia(c: int, bi: int) -> void:
 		["t", "%s  %d/%d" % [Pecas.CONJUNTO_NOME[c], n, Pecas.SLOTS], 22, cor.lightened(0.35)],
 		["t", "2 a 3 peças: " + Pecas.conjunto_bonus(c, 1), 13, Color(1, 1, 1) if n < Pecas.SLOTS else Color(1, 1, 1, 0.6)],
 		["t", "4 peças: " + Pecas.conjunto_bonus(c, 2), 13, Color(1, 1, 1) if n >= Pecas.SLOTS else Color(1, 1, 1, 0.6)],
-		["t", "Poder: %s, %s (a cada %d s)" % [Pecas.PODER_NOME[c], Pecas.PODER_DICA[c], int(Balanco.PODER_INTERVALO)], 13, Color(1.0, 0.9, 0.5)],
+		["t", "Poder: %s, %s (a cada %d s)" % [Pecas.PODER_NOME[c], Pecas.PODER_DICA[c], Balanco.poder_recarga(c)], 13, Color(1.0, 0.9, 0.5)],
 		["sep"],
 		["t", "Clique: mostra só as peças desta fantasia.", 13, Color(1, 1, 1, 0.6)],
 	]

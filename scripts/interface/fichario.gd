@@ -1279,7 +1279,7 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	_txt("Poder da fantasia completa", Vector2(pb.position.x + 12.0, pb.position.y + 19.0), 13, TINTA2)
 	_txt(Pecas.PODER_NOME[c], Vector2(pb.position.x + 12.0, pb.position.y + 42.0), tam_cabe(Pecas.PODER_NOME[c], [22, 20, 18], pb.size.x - 24.0), Color(0.62, 0.34, 0.02))
 	# dica em até 2 linhas, no passo de 16 px: a fonte sai em 19, então a 2ª linha não pode descer até a legenda
-	_bloco(_maiuscula(Pecas.PODER_DICA[c]) + ", a cada %d s" % int(Balanco.PODER_INTERVALO), Vector2(pb.position.x + 12.0, pb.position.y + 61.0), pb.size.x - 24.0, [14], 2, TINTA, 2.0)
+	_bloco(_maiuscula(Pecas.PODER_DICA[c]) + ", a cada %d s" % Balanco.poder_recarga(c), Vector2(pb.position.x + 12.0, pb.position.y + 61.0), pb.size.x - 24.0, [14], 2, TINTA, 2.0)
 	_txt("Vale com as 4 peças vestidas" if not completa else "Fantasia completa: o poder é seu", Vector2(pb.position.x + 12.0, pb.end.y - 4.0), 12, TINTA2)
 	# onde encontrar
 	var ob := Rect2(COL_E_X, 500.0, COL_W, 130.0)
