@@ -73,6 +73,7 @@ const ABA_GAP := 8.0
 const COL_E_X := 120.0     # texto da página esquerda
 const COL_D_X := 620.0     # texto da página direita
 const COL_W := 446.0
+const METAS_FIM_Y := 636.0  # pé da página nas Metas: a lista de fantasias não passa daqui
 const LIN_Y0 := 78.0       # primeira linha de peça (página direita)
 const LIN_H := 94.0
 const LIN_GAP := 4.0
@@ -1640,22 +1641,27 @@ func _pagina_metas(e: Estado) -> void:
 	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), "Fantasias  ·  %d/%d  ·  +%d troféus cada" % [nf, fs.size(), premio_f], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
 	var por_col: int = ceili(fs.size() / 2.0)
 	var larg_c: float = floorf(COL_W * 0.5) - 3.0
+	# com 54 fantasias, 22 px por linha passava do pé da página: o passo encolhe para caber até METAS_FIM_Y
+	var passo: float = minf(22.0, floorf((METAS_FIM_Y - 118.0) / maxf(1.0, por_col)))
+	var alt: float = passo - 2.0
+	var fonte: int = 13 if passo >= 21.0 else 12
 	for k in fs.size():
 		var m: Dictionary = fs[k]
 		var feita2: bool = e.metas_pagas.has(m["id"])
 		var c: int = int(String(m["id"]).substr(9))
-		var yy: float = 118.0 + (k % por_col) * 22.0
-		var r2 := Rect2(COL_D_X + (k / por_col) * (larg_c + 6.0), yy, larg_c, 20.0)
+		var yy: float = 118.0 + (k % por_col) * passo
+		var r2 := Rect2(COL_D_X + (k / por_col) * (larg_c + 6.0), yy, larg_c, alt)
 		draw_rect(r2, Color(0.86, 0.95, 0.8) if feita2 else PAPEL_ESC.lightened(0.25))
 		draw_rect(r2, COR_TEM if feita2 else PAPEL_BORDA, false, 1.5 if feita2 else 1.0)
 		draw_rect(Rect2(r2.position.x, r2.position.y, 5.0, r2.size.y), Pecas.CONJUNTO_COR[c].darkened(0.1))
-		_txt(UIComum.caber(Pecas.CONJUNTO_NOME[c], 13, larg_c - 62.0), Vector2(r2.position.x + 11.0, yy + 15.0), 13, TINTA)
+		var base_y: float = yy + roundf(alt * 0.5) + 5.0
+		_txt(UIComum.caber(Pecas.CONJUNTO_NOME[c], fonte, larg_c - 62.0), Vector2(r2.position.x + 11.0, base_y), fonte, TINTA)
 		if metas_novas.has(m["id"]):
 			draw_rect(r2.grow(2.0), Color(1.0, 0.8, 0.2, 0.5 + 0.5 * sin(t * 6.0)), false, 2.0)
 		if feita2:
-			_selo_meta(Vector2(r2.end.x - 26.0, yy + 10.0), "FEITA", COR_TEM, 11)
+			_selo_meta(Vector2(r2.end.x - 26.0, yy + alt * 0.5), "FEITA", COR_TEM, 11 if alt >= 18.0 else 10)
 		else:
-			_txt("%d/%d" % [e.pecas_da_fantasia(c), Pecas.SLOTS], Vector2(r2.end.x - 46.0, yy + 15.0), 13, TINTA2, 40.0)
+			_txt("%d/%d" % [e.pecas_da_fantasia(c), Pecas.SLOTS], Vector2(r2.end.x - 46.0, base_y), fonte, TINTA2, 40.0)
 
 
 # ------------------------------------------------------------------ aba "Bichos" (bestiário)
