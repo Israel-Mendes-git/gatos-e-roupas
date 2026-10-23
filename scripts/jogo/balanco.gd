@@ -55,6 +55,7 @@ const ESCUDO_REDUCAO_NIVEL := 0.07
 const ESCUDO_REDUCAO_MAX := 0.8
 const ESCUDO_PROVOCA_RAIO := 300.0
 const COLETE_VIDA := 32.0
+const CORPO_VIDA_MIN := 12.0   # vida mínima da peça de corpo do gato (x poder): Capa, Manto, Avental... deixavam a fantasia com a vida do gato pelado
 const CAPA_VEL := 1.4
 const CAPA_ESQUIVA := 0.40
 const CAPA_ESQUIVA_NIVEL := 0.05

@@ -164,6 +164,12 @@ func _ev(d: Dictionary) -> void:
 	if gerar_eventos:
 		eventos.append(d)
 
+## Vida própria das peças de corpo (x poder); as que dão menos que Balanco.CORPO_VIDA_MIN completam até ele.
+const CORPO_VIDA_PROPRIA: Dictionary = {
+	Pecas.Tipo.COLETE: Balanco.COLETE_VIDA, Pecas.Tipo.ESPINHOS: Balanco.ESPINHOS_VIDA, Pecas.Tipo.PELE: Balanco.PELE_VIDA,
+	Pecas.Tipo.PONCHO: Balanco.PONCHO_VIDA, Pecas.Tipo.CASACO: Balanco.CASACO_VIDA,
+}
+
 func calcular(u: Unidade) -> void:
 	var vida: float = Balanco.BASE_VIDA * u.esc_vida
 	var dano: float = Balanco.BASE_DANO * u.esc_dano
@@ -227,6 +233,8 @@ func calcular(u: Unidade) -> void:
 			continue
 		var m: float = p.poder()
 		var nv: int = p.nivel_efetivo()
+		if u.equipe == 0 and p.slot() == Pecas.SLOT_CORPO:
+			vida += maxf(0.0, Balanco.CORPO_VIDA_MIN - float(CORPO_VIDA_PROPRIA.get(p.molde(), 0.0))) * m   # todo corpo protege um pouco; a passiva da peça continua a mesma
 		match p.molde():
 			Pecas.Tipo.PORRETE:
 				dano = Balanco.PORRETE_DANO * m * u.esc_dano
