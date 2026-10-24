@@ -1466,7 +1466,7 @@ static var chefe_g: int = -1
 ## Chefe de gangue do 3º ato: o gato com pelagem, traços e marca próprios (ChefeGangue) e as poses dos chefes bichos:
 ## preparo (agacha 1 pixel antes do bote; o Campo já o recua), dor (recua e levanta o focinho) e queda
 ## (em pé -> focinho para cima -> de barriga para cima no ar -> deitado), girando em degraus de 90 graus.
-static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, g: int, preparo: float = 0.0, dor: bool = false, queda: float = -1.0) -> void:
+static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, _pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, g: int, preparo: float = 0.0, dor: bool = false, queda: float = -1.0) -> void:
 	g = clampi(g, 0, Fases.GANGUE_COR.size() - 1)
 	var px: float = GATO_K * esc   # um pixel do sprite na tela
 	var p: Vector2 = pos
@@ -1485,7 +1485,7 @@ static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, pec
 	elif preparo > 0.0:
 		p.y += px   # agacha antes do bote
 	chefe_g = g
-	_gato(c, p, esc, dir, pecas, f, anim, andando, golpe, alfa, false, -1, furia, 0, false, ChefeGangue.PELAGEM[g], Fases.GANGUE_COR[g], false)
+	_gato(c, p, esc, dir, [null, null, null, null], f, anim, andando, golpe, alfa, false, -1, furia, 0, false, ChefeGangue.PELAGEM[g], Fases.GANGUE_COR[g], false)   # sem fantasia no desenho: as peças valem na luta e caem de prêmio, mas o chefe aparece só com o que é dele
 	chefe_g = -1
 	_giro = 0.0
 	_pivo = Vector2.ZERO

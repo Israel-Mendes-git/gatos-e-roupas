@@ -1,10 +1,10 @@
 class_name ChefeGangue
 extends RefCounted
 ## Os cinco chefes de gangue do 3º ato (Fases.Chefe 10 a 14): o gato do jogo com pelagem, traços e marca próprios.
-## A fantasia que o chefe veste continua por cima (é o prêmio). O que é dele, na grade do sprite do gato
-## (1 unidade = 1 pixel do sprite):
+## O chefe não aparece de fantasia: as peças dele valem na luta e caem de prêmio, mas o desenho é só o que é dele,
+## na grade do sprite do gato (1 unidade = 1 pixel do sprite):
 ##   corpo_proprio(): o corpo inteiro, com silhueta, pelagem, capa, cabelo e disco (no lugar da folha do gato);
-##   marca(): por cima da roupa, para ela não esconder quem ele é (rosa, máscara, olho, crista, metais).
+##   marca(): por cima do corpo (rosa, máscara, olho, crista, metais).
 ## Gato virado para a direita: +x é a frente, -y é para cima.
 
 enum G { GATLEONE, IMORTAL, MESTRE, MIAUNIDAS, MAGNETO }
