@@ -1,11 +1,10 @@
 class_name ChefeGangue
 extends RefCounted
 ## Os cinco chefes de gangue do 3º ato (Fases.Chefe 10 a 14): o gato do jogo com pelagem, traços e marca próprios.
-## A fantasia que o chefe veste continua por cima (é o prêmio); o que é dele fica em três camadas, na grade do sprite
-## do gato (1 unidade = 1 pixel do sprite), com a origem já posta por Desenho em cada lugar do corpo (RoupaGato.origem):
-##   atras(): atrás do gato e das roupas (capa, cabelo, disco);
-##   corpo(): sobre o pelo e sob as roupas (bochechas, barba, circuitos);
-##   marca(): por cima de tudo, para a roupa não esconder quem ele é (rosa, máscara, olho, crista, metais).
+## A fantasia que o chefe veste continua por cima (é o prêmio). O que é dele, na grade do sprite do gato
+## (1 unidade = 1 pixel do sprite):
+##   corpo_proprio(): o corpo inteiro, com silhueta, pelagem, capa, cabelo e disco (no lugar da folha do gato);
+##   marca(): por cima da roupa, para ela não esconder quem ele é (rosa, máscara, olho, crista, metais).
 ## Gato virado para a direita: +x é a frente, -y é para cima.
 
 enum G { GATLEONE, IMORTAL, MESTRE, MIAUNIDAS, MAGNETO }
@@ -28,73 +27,6 @@ static func _p(c: CanvasItem, x: int, y: int, w: int, h: int, cor: Color, alfa: 
 static func _balanco(anim: float) -> int:
 	return 1 if posmod(int(anim * 1.3), 4) >= 2 else 0
 
-# ------------------------------------------------------------------ atrás
-## Origem: TRASEIRA (alto da anca). `onde` diz ao Desenho onde pôr a origem.
-const ATRAS_ONDE: Array[int] = [-1, -1, RoupaGato.Onde.TRASEIRA, RoupaGato.Onde.PESCOCO, RoupaGato.Onde.PESCOCO]
-
-static func atras(c: CanvasItem, g: int, anim: float, andando: bool, alfa: float) -> void:
-	var on: int = 1 if andando and posmod(int(anim * 1.3), 2) == 1 else 0   # capa e cabelo ondulam no passo
-	match g:
-		G.MESTRE:
-			# disco de luz preso nas costas: aparece por cima do lombo (origem: alto da anca)
-			var vm := Color(1.0, 0.18, 0.12)
-			_p(c, 2, -5, 7, 7, CONT, alfa)
-			_p(c, 3, -4, 5, 5, vm, alfa)
-			_p(c, 4, -3, 3, 3, Color(0.25, 0.04, 0.05), alfa)
-			_p(c, 5, -2, 1, 1, Color(1.0, 0.75, 0.6), alfa)
-		G.MIAUNIDAS, G.MAGNETO:
-			# capa presa no pescoço caindo para trás até perto do chão (origem: pescoço)
-			var ca: Color = Color(0.78, 0.1, 0.08) if g == G.MIAUNIDAS else Color(0.5, 0.18, 0.62)
-			var cs2: Color = ca.darkened(0.45)
-			var fim: int = 9 if g == G.MIAUNIDAS else 7   # a capa do rei é a mais comprida
-			_p(c, -13 - on, -2, 15, fim + 1, CONT, alfa)
-			_p(c, -12 - on, -1, 13, fim - 1, ca, alfa)
-			_p(c, -12 - on, fim - 3, 13, 1, cs2, alfa)
-			for k in 3:
-				_p(c, -10 + k * 4 - on, 0, 1, fim - 3, cs2, alfa)   # dobras
-
-# ------------------------------------------------------------------ sobre o corpo
-const CORPO_ONDE: Array[int] = [RoupaGato.Onde.CORPO, RoupaGato.Onde.PESCOCO, RoupaGato.Onde.PESCOCO, RoupaGato.Onde.BOCA, RoupaGato.Onde.ROSTO]
-
-static func corpo(c: CanvasItem, g: int, alfa: float) -> void:
-	match g:
-		G.GATLEONE:
-			# barriga caída de persa sob o tronco, peito e bochechas brancos (origem: centro do tronco)
-			var cz := Color(0.6, 0.6, 0.66)
-			var cl := Color(0.97, 0.96, 0.93)
-			_p(c, -6, 4, 12, 3, CONT, alfa)
-			_p(c, -5, 4, 10, 2, cz, alfa)
-			_p(c, -3, 5, 6, 1, cl, alfa)
-			_p(c, 6, -3, 3, 5, cl, alfa)    # peito
-			_p(c, 9, -2, 3, 3, CONT, alfa)  # papada sob o focinho
-			_p(c, 9, -2, 2, 2, cl, alfa)
-		G.IMORTAL:
-			# costelas pintadas no peito e o cabelo branco caindo da nuca pelas costas (origem: pescoço)
-			var cr := Color(0.55, 0.55, 0.58)
-			for k in 3:
-				_p(c, -1 + k * 2, 2, 1, 3, cr, alfa)
-			_p(c, -6, -4, 6, 3, CONT, alfa)
-			_p(c, -8, -2, 4, 4, CONT, alfa)
-			_p(c, -5, -3, 5, 1, Color(1, 1, 1), alfa)
-			_p(c, -7, -1, 3, 2, Color(1, 1, 1), alfa)
-			_p(c, -7, 0, 2, 1, Color(0.7, 0.7, 0.72), alfa)
-		G.MESTRE:
-			# circuitos vermelhos no pelo do peito e do flanco (origem: pescoço)
-			var vm := Color(1.0, 0.25, 0.15)
-			_p(c, -6, 3, 7, 1, vm, alfa)
-			_p(c, -6, 3, 1, 3, vm, alfa)
-			_p(c, 0, 1, 1, 3, vm, alfa)
-		G.MIAUNIDAS:
-			# barba castanha em ponta sob o focinho (origem: ponta do focinho)
-			var br := Color(0.28, 0.15, 0.07)
-			_p(c, -4, 1, 4, 3, CONT, alfa)
-			_p(c, -3, 1, 3, 2, br, alfa)
-			_p(c, -3, 3, 2, 2, CONT, alfa)
-			_p(c, -3, 3, 1, 1, br, alfa)
-		G.MAGNETO:
-			# sobrancelha grossa e branca de velho (origem: entre os olhos)
-			_p(c, -1, -1, 3, 1, Color(1, 1, 1), alfa)
-
 # ------------------------------------------------------------------ marca (por cima da roupa)
 const MARCA_ONDE: Array[int] = [RoupaGato.Onde.PESCOCO, RoupaGato.Onde.BOCA, RoupaGato.Onde.ROSTO, RoupaGato.Onde.CABECA, RoupaGato.Onde.CORPO]
 
@@ -104,12 +36,10 @@ static func marca(c: CanvasItem, g: int, anim: float, alfa: float) -> void:
 		G.GATLEONE:
 			# rosa vermelha na lapela (origem: pescoço), com o cabo e uma folha
 			var vr := Color(0.86, 0.1, 0.16)
-			var ve := Color(0.5, 0.04, 0.1)
-			_p(c, 2, 0, 5, 5, CONT, alfa)
-			_p(c, 3, 1, 3, 3, vr, alfa)
-			_p(c, 4, 2, 1, 1, ve, alfa)
-			_p(c, 3, 1, 1, 1, Color(1.0, 0.45, 0.45), alfa)
-			_p(c, 2, 5, 2, 1, Color(0.2, 0.55, 0.2), alfa)
+			_p(c, 3, 3, 4, 4, CONT, alfa)
+			_p(c, 4, 4, 2, 2, vr, alfa)
+			_p(c, 4, 4, 1, 1, Color(1.0, 0.5, 0.5), alfa)
+			_p(c, 3, 7, 1, 1, Color(0.2, 0.55, 0.2), alfa)
 		G.IMORTAL:
 			# máscara de respirar com a dentadura pintada (origem: ponta do focinho) e o tubo para o pescoço
 			var me := Color(0.62, 0.62, 0.66)
@@ -144,3 +74,230 @@ static func marca(c: CanvasItem, g: int, anim: float, alfa: float) -> void:
 				_p(c, x, y, 1, 1, Color(1, 1, 1), alfa)
 				if posmod(int(t * 6.0) + k, 3) == 0:
 					_p(c, x + 2, y - 2, 1, 1, Color(0.85, 0.5, 1.0), alfa)   # faísca magnética
+
+# ------------------------------------------------------------------ corpo próprio
+## Cada chefe tem o corpo desenhado à mão em formas de pixel, montado sobre o "esqueleto" do gato comum: as âncoras de
+## cabeça, rosto, focinho, pescoço, tronco e anca e as patas de cada quadro (GatoDados), para andar e golpear no mesmo
+## ritmo e as peças da fantasia continuarem encaixando. Grade local: x de -24 a 23, y de -34 a 3 (0 = chão).
+const _X0 := 24
+const _Y0 := 34
+const _W := 48
+const _H := 38
+
+## Proporções: tronco (meia-largura, meia-altura), cabeça (raio x, raio y), grossura da perna, subida (pernas mais
+## longas levantam corpo, cabeça e peças), rabo (grossura, comprimento).
+const FORMA: Array = [
+	{"tw": 9, "th": 6, "hx": 5, "hy": 5, "perna": 3, "sobe": 0, "rabo": 3, "rabo_n": 6},   # Dom Gatleone: persa gordo
+	{"tw": 6, "th": 3, "hx": 4, "hy": 4, "perna": 2, "sobe": 3, "rabo": 2, "rabo_n": 6},   # Imortal Miau: seco e pernalta
+	{"tw": 7, "th": 4, "hx": 4, "hy": 4, "perna": 2, "sobe": 1, "rabo": 2, "rabo_n": 9},   # Programa Mestre: liso e anguloso
+	{"tw": 8, "th": 5, "hx": 4, "hy": 4, "perna": 3, "sobe": 2, "rabo": 2, "rabo_n": 7},   # Rei Miaunidas: peito largo
+	{"tw": 6, "th": 4, "hx": 4, "hy": 4, "perna": 2, "sobe": 1, "rabo": 1, "rabo_n": 7},   # Magnetomiau: magro e velho
+]
+
+## Paleta: o contorno, l/m/d pelo claro, médio e escuro, w peito, e olho, n nariz, x detalhe próprio, y segundo detalhe,
+## c/k capa e a dobra dela.
+const PALETA: Array = [
+	{"o": Color(0.09, 0.06, 0.08), "l": Color(0.78, 0.78, 0.82), "m": Color(0.6, 0.6, 0.66), "d": Color(0.42, 0.42, 0.5), "w": Color(0.97, 0.96, 0.93), "e": Color(0.15, 0.1, 0.1), "n": Color(0.85, 0.5, 0.55), "x": Color(0.2, 0.2, 0.24), "y": Color(0.86, 0.1, 0.16)},
+	{"o": Color(0.09, 0.06, 0.08), "l": Color(1.0, 1.0, 0.98), "m": Color(0.9, 0.9, 0.88), "d": Color(0.7, 0.7, 0.72), "w": Color(1, 1, 1), "e": Color(0.6, 0.08, 0.08), "n": Color(0.45, 0.45, 0.5), "x": Color(0.55, 0.55, 0.6), "y": Color(0.95, 0.95, 0.9)},
+	{"o": Color(0.04, 0.03, 0.06), "l": Color(0.3, 0.32, 0.42), "m": Color(0.18, 0.19, 0.26), "d": Color(0.1, 0.1, 0.15), "w": Color(0.25, 0.27, 0.36), "e": Color(1.0, 0.2, 0.1), "n": Color(0.4, 0.4, 0.5), "x": Color(1.0, 0.25, 0.15), "y": Color(1.0, 0.7, 0.55)},
+	{"o": Color(0.12, 0.06, 0.04), "l": Color(1.0, 0.82, 0.5), "m": Color(0.88, 0.62, 0.3), "d": Color(0.66, 0.42, 0.18), "w": Color(1.0, 0.9, 0.7), "e": Color(0.15, 0.08, 0.05), "n": Color(0.6, 0.3, 0.25), "x": Color(0.3, 0.16, 0.07), "y": Color(0.8, 0.55, 0.2), "c": Color(0.78, 0.1, 0.08), "k": Color(0.5, 0.05, 0.05)},
+	{"o": Color(0.07, 0.06, 0.1), "l": Color(0.9, 0.9, 0.95), "m": Color(0.72, 0.73, 0.8), "d": Color(0.52, 0.53, 0.62), "w": Color(1, 1, 1), "e": Color(0.15, 0.1, 0.2), "n": Color(0.75, 0.55, 0.6), "x": Color(0.5, 0.18, 0.62), "y": Color(0.85, 0.2, 0.2), "c": Color(0.5, 0.18, 0.62), "k": Color(0.3, 0.08, 0.4)},
+]
+
+static func subida(g: int) -> int:
+	return int(FORMA[g]["sobe"]) if g >= 0 else 0
+
+static func _nova() -> PackedByteArray:
+	var L := PackedByteArray()
+	L.resize(_W * _H)
+	return L
+
+static func _px(L: PackedByteArray, x: int, y: int, ch: String) -> void:
+	var ix: int = x + _X0
+	var iy: int = y + _Y0
+	if ix >= 0 and ix < _W and iy >= 0 and iy < _H:
+		L[iy * _W + ix] = ch.unicode_at(0)
+
+static func _rect(L: PackedByteArray, x: int, y: int, w: int, h: int, ch: String) -> void:
+	for yy in h:
+		for xx in w:
+			_px(L, x + xx, y + yy, ch)
+
+## Elipse cheia; com `sombra` e cor "m", luz em cima e pelo escuro embaixo.
+static func _elip(L: PackedByteArray, cx: float, cy: float, rx: float, ry: float, ch: String, sombra: bool = true) -> void:
+	for y in range(int(floorf(cy - ry)), int(ceilf(cy + ry)) + 1):
+		for x in range(int(floorf(cx - rx)), int(ceilf(cx + rx)) + 1):
+			var dx: float = (x + 0.5 - cx) / maxf(rx, 0.5)
+			var dy: float = (y + 0.5 - cy) / maxf(ry, 0.5)
+			if dx * dx + dy * dy <= 1.0:
+				var c2: String = ch
+				if sombra and ch == "m":
+					c2 = "l" if dy < -0.45 else ("d" if dy > 0.5 else "m")
+				_px(L, x, y, c2)
+
+## Traço grosso de a até b (pernas, rabo).
+static func _traco(L: PackedByteArray, a: Vector2, b: Vector2, w: int, ch: String) -> void:
+	var n: int = maxi(1, int(ceilf(a.distance_to(b))))
+	for i in n + 1:
+		var p: Vector2 = a.lerp(b, float(i) / n)
+		_rect(L, int(floorf(p.x - w * 0.5 + 0.5)), int(floorf(p.y)), w, 1, ch)
+
+## Contorno: todo pixel vazio encostado (4 vizinhos) num pixel cheio vira contorno.
+static func _contorno(L: PackedByteArray) -> void:
+	var o: int = "o".unicode_at(0)
+	var M: PackedByteArray = L.duplicate()
+	for iy in _H:
+		for ix in _W:
+			if M[iy * _W + ix] != 0:
+				continue
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var jx: int = ix + d.x
+				var jy: int = iy + d.y
+				if jx >= 0 and jx < _W and jy >= 0 and jy < _H and M[jy * _W + jx] != 0 and M[jy * _W + jx] != o:
+					L[iy * _W + ix] = o
+					break
+
+static func _pintar(c: CanvasItem, L: PackedByteArray, pal: Dictionary, alfa: float, tinta: Color) -> void:
+	for iy in _H:
+		var ix: int = 0
+		while ix < _W:
+			var v: int = L[iy * _W + ix]
+			if v == 0:
+				ix += 1
+				continue
+			var fim: int = ix + 1
+			while fim < _W and L[iy * _W + fim] == v:
+				fim += 1
+			var cor: Color = pal.get(String.chr(v), Color.MAGENTA)
+			c.draw_rect(Rect2(ix - _X0, iy - _Y0, fim - ix, 1), Color(cor.r * tinta.r, cor.g * tinta.g, cor.b * tinta.b, cor.a * alfa * tinta.a))
+			ix = fim
+
+## Desenha o corpo do chefe `g` no quadro `q` do gato. Origem já no chão, sob o centro (grade do sprite).
+static func corpo_proprio(c: CanvasItem, g: int, q: int, anim: float, andando: bool, alfa: float, tinta: Color) -> void:
+	var F: Dictionary = FORMA[g]
+	var pal: Dictionary = PALETA[g]
+	var R: Vector2 = Desenho._origem(RoupaGato.Onde.ROSTO, q)
+	var B: Vector2 = Desenho._origem(RoupaGato.Onde.BOCA, q)
+	var N: Vector2 = Desenho._origem(RoupaGato.Onde.PESCOCO, q)
+	var C: Vector2 = Desenho._origem(RoupaGato.Onde.CORPO, q)
+	var T: Vector2 = Desenho._origem(RoupaGato.Onde.TRASEIRA, q)
+	var pes: Array = RoupaGato.patas(q)
+	if pes.is_empty():
+		pes = RoupaGato.PATAS_PADRAO
+	var L := _nova()
+	var tw: float = F["tw"]
+	var th: float = F["th"]
+	var cc := Vector2(C.x, C.y + 1.0)   # centro do tronco
+	var quadril_y: float = cc.y + th * 0.4
+	# patas de trás (de índice par, mais escuras) atrás do corpo
+	var perto: Array = []
+	for k in pes.size():
+		var pe: Vector2 = pes[k]
+		var topo := Vector2(clampf(pe.x, cc.x - tw + 2.0, cc.x + tw - 2.0), quadril_y)
+		if k % 2 == 0:
+			_traco(L, topo, pe + Vector2(0, -1), int(F["perna"]), "d")
+			_rect(L, int(pe.x) - 1, int(pe.y) - 1, int(F["perna"]) + 1, 1, "d")
+		else:
+			perto.append([topo, pe])
+	# rabo: da anca para trás e para cima, com a ponta virada
+	var rb: int = int(F["rabo"])
+	var rn: int = int(F["rabo_n"])
+	var ond: float = sin(anim * 2.0) if andando else 0.0
+	var r1 := T + Vector2(0.0, 1.0)
+	var r2 := T + Vector2(-3.0 - rn * 0.3, -rn * 0.6 + ond)
+	var r3 := r2 + Vector2(1.0 + ond, -rn * 0.4)
+	_traco(L, r1, r2, rb + 1, "m")
+	_traco(L, r2, r3, rb, "m")
+	if g == G.IMORTAL or g == G.MAGNETO:
+		_px(L, int(r3.x), int(r3.y), "l")
+	_extras_atras(L, g, T, N, anim, andando)
+	# tronco
+	_elip(L, cc.x, cc.y, tw, th, "m")
+	if g == G.MESTRE:
+		# tronco anguloso: cantos de baixo retos
+		_rect(L, int(cc.x - tw), int(cc.y + th - 2), 2, 2, "d")
+		_rect(L, int(cc.x + tw - 2), int(cc.y + th - 2), 2, 2, "d")
+	# peito e pescoço (ligam o tronco à cabeça)
+	_elip(L, N.x + 2.0, N.y + 2.0, 3.0 + (1.0 if g == G.MIAUNIDAS else 0.0), 3.5, "m")
+	# patas da frente por cima
+	for par in perto:
+		var topo2: Vector2 = par[0]
+		var pe2: Vector2 = par[1]
+		_traco(L, topo2, pe2 + Vector2(0, -1), int(F["perna"]), "m")
+		_rect(L, int(pe2.x) - 1, int(pe2.y) - 1, int(F["perna"]) + 1, 1, "l")
+	# cabeça: crânio, orelhas e focinho
+	var hx: float = F["hx"]
+	var hy: float = F["hy"]
+	var hc := Vector2(R.x - 1.0, R.y + 1.0)
+	_elip(L, hc.x, hc.y, hx, hy, "m")
+	var ox: int = int(hc.x)
+	var oy: int = int(hc.y - hy)
+	_rect(L, ox - 3, oy - 2, 2, 3, "m")
+	_px(L, ox - 3, oy - 3, "m")
+	_rect(L, ox + 1, oy - 2, 2, 3, "m")
+	_px(L, ox + 2, oy - 3, "m")
+	_px(L, ox + 2, oy - 1, "n")
+	_rect(L, int(B.x) - 3, int(B.y) - 1, 3, 3, "l")
+	_extras_corpo(L, g, cc, tw, th, hc, hx, hy, B, R, N)
+	_contorno(L)
+	# nariz e olho por cima do contorno
+	_px(L, int(B.x) - 1, int(B.y) - 1, "n")
+	_extras_rosto(L, g, R)
+	_pintar(c, L, pal, alfa, tinta)
+
+## Capa e disco: atrás do tronco, na mesma grade (ganham o contorno junto).
+static func _extras_atras(L: PackedByteArray, g: int, T: Vector2, N: Vector2, anim: float, andando: bool) -> void:
+	var on: int = 1 if andando and posmod(int(anim * 1.3), 2) == 1 else 0
+	match g:
+		G.MIAUNIDAS, G.MAGNETO:
+			# capa dos ombros para trás: cai pelas costas e abre para trás até perto do chão (a frente fica livre)
+			var fim: int = -2 if g == G.MIAUNIDAS else -4
+			var y0: int = int(N.y) - 1
+			for y in range(y0, fim + 1):
+				var desce: float = float(y - y0) / maxf(1.0, fim - y0)
+				var x0: int = int(lerpf(N.x, T.x + 3.0, desce))
+				var x1: int = int(T.x) - 2 - on - int(desce * 4.0)
+				_rect(L, x1, y, maxi(1, x0 - x1), 1, "c")
+				if (y - y0) % 3 == 2:
+					_px(L, x1 + 1, y, "k")
+					_px(L, x1 + 4, y, "k")
+		G.MESTRE:
+			# disco de luz preso nas costas
+			_elip(L, T.x + 4.0, T.y - 2.0, 3.5, 3.5, "x", false)
+			_elip(L, T.x + 4.0, T.y - 2.0, 1.5, 1.5, "d", false)
+
+## Traços no corpo e na cabeça (antes do contorno): bochechas, peito, barba, cabelo, circuitos.
+static func _extras_corpo(L: PackedByteArray, g: int, cc: Vector2, tw: float, th: float, hc: Vector2, hx: float, hy: float, B: Vector2, R: Vector2, N: Vector2) -> void:
+	match g:
+		G.GATLEONE:
+			# persa: bochechas largas, peito branco e pelo penteado para trás (topete escuro)
+			_elip(L, hc.x + 1.0, hc.y + 2.0, hx + 1.0, 2.5, "l", false)
+			_elip(L, N.x + 3.0, N.y + 3.0, 2.0, 3.0, "w", false)
+			_rect(L, int(hc.x) - 3, int(hc.y - hy), 6, 2, "x")
+		G.IMORTAL:
+			# cabelo branco comprido da nuca às costas e costelas pintadas
+			_traco(L, Vector2(hc.x - 2.0, hc.y - hy + 1.0), Vector2(cc.x - 2.0, cc.y - 2.0), 3, "y")
+			for k in 3:
+				_rect(L, int(cc.x) + k * 2, int(cc.y) - 1, 1, 3, "x")
+		G.MESTRE:
+			# linhas de luz vermelhas no tronco e na cabeça (traje do Tron)
+			_rect(L, int(cc.x - tw) + 2, int(cc.y), int(tw * 2) - 3, 1, "x")
+			_rect(L, int(cc.x) + 2, int(cc.y) - 2, 1, 3, "x")
+			_rect(L, int(hc.x) - 2, int(hc.y) - 1, 4, 1, "x")
+		G.MIAUNIDAS:
+			# barba castanha em ponta
+			_rect(L, int(B.x) - 4, int(B.y) + 1, 4, 2, "x")
+			_rect(L, int(B.x) - 3, int(B.y) + 3, 2, 1, "x")
+		G.MAGNETO:
+			# sobrancelha branca e corcunda de velho (pelo claro no lombo)
+			_rect(L, int(R.x) - 1, int(R.y) - 1, 3, 1, "w")
+			_rect(L, int(cc.x) - 3, int(cc.y - th) - 1, 5, 1, "l")
+
+## Olho (depois do contorno, para não ganhar borda).
+static func _extras_rosto(L: PackedByteArray, g: int, R: Vector2) -> void:
+	var ex: int = int(R.x) + 1
+	var ey: int = int(R.y)
+	if g == G.GATLEONE or g == G.MESTRE:
+		_rect(L, ex - 1, ey, 2, 1, "e")   # olho comprido: pálpebra pesada (Dom) ou visor (Mestre)
+	else:
+		_px(L, ex, ey, "e")

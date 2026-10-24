@@ -1312,6 +1312,13 @@ static func ponto_gato(s: int, quadro: int = -1, tipo: int = -1) -> Vector2:
 	var ajuste: Vector2 = [Vector2(0, -2), Vector2.ZERO, Vector2(3, 0), Vector2(0, -1)][s] if tipo < 0 else Vector2.ZERO
 	return (RoupaGato.origem(onde, q) + ajuste) * GATO_K
 
+## Origem de um lugar do gato (RoupaGato.origem); no chefe de gangue de pernas longas, tudo menos as patas sobe junto.
+static func _origem(onde: int, q: int) -> Vector2:
+	var o: Vector2 = RoupaGato.origem(onde, q)
+	if chefe_g >= 0 and onde != RoupaGato.Onde.PATAS and q < GatoDados.DORMIR:
+		o.y -= ChefeGangue.subida(chefe_g)
+	return o
+
 static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, fantasma_slots: bool, destaque_slot: int, furia: float, variante: int, nocaute: bool, pelagem: Array = [], gangue_cor: Color = Color(0, 0, 0, 0), aura: bool = false) -> void:
 	var q: int = gato_quadro(anim, andando, golpe, nocaute)
 	var lado: float = GatoDados.FONTE * GATO_K
@@ -1336,15 +1343,12 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 			_aura_px(c, gangue_cor, alfa)
 		_tr(c, pos, esc, dir)
 	if not nocaute:
-		if chefe_g >= 0 and ChefeGangue.ATRAS_ONDE[chefe_g] >= 0:
-			_tr(c, pos, esc, dir, RoupaGato.origem(ChefeGangue.ATRAS_ONDE[chefe_g], q) * GATO_K, 0.0, GATO_K)
-			ChefeGangue.atras(c, chefe_g, anim, andando, alfa)
 		# camadas que ficam ATRÁS do corpo (capa, aljava, roda): desenhadas antes do gato, só aparece o que sai da silhueta
 		for s in [1, 3, 0, 2]:
 			var pa: Peca = pecas[s]
 			if pa == null or not RoupaGato.tem_atras(pa.tipo):
 				continue
-			_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.onde(pa.tipo), q) * GATO_K, 0.0, GATO_K)
+			_tr(c, pos, esc, dir, _origem(RoupaGato.onde(pa.tipo), q) * GATO_K, 0.0, GATO_K)
 			RoupaGato.passo = 1
 			RoupaGato.desenhar(c, pa.tipo, f, anim)
 			RoupaGato.passo = 0
@@ -1355,10 +1359,11 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		_aura_px(c, Color.WHITE, alfa * 0.6)
 		_tr(c, pos, esc, dir)
 		tp = Color.WHITE
-	c.draw_texture_rect_region(_tex_gato(int(pel[0])), dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
 	if chefe_g >= 0 and not nocaute:
-		_tr(c, pos, esc, dir, RoupaGato.origem(ChefeGangue.CORPO_ONDE[chefe_g], q) * GATO_K, 0.0, GATO_K)
-		ChefeGangue.corpo(c, chefe_g, alfa)
+		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+		ChefeGangue.corpo_proprio(c, chefe_g, q, anim, andando, alfa, tinta)
+	else:
+		c.draw_texture_rect_region(_tex_gato(int(pel[0])), dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
 	if fantasma_slots:
 		# espaços vazios na grade de pixels do sprite
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
@@ -1386,7 +1391,7 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 				RoupaGato.desenhar(c, p.tipo, f, anim)
 			continue
 		var rot: float = -sin(golpe / 0.22 * PI) * 0.5 if (onde == RoupaGato.Onde.BOCA and golpe > 0.0) else 0.0
-		_tr(c, pos, esc, dir, RoupaGato.origem(onde, q) * GATO_K, rot, GATO_K)
+		_tr(c, pos, esc, dir, _origem(onde, q) * GATO_K, rot, GATO_K)
 		RoupaGato.passo = 2
 		RoupaGato.desenhar(c, p.tipo, f, anim)
 		RoupaGato.passo = 0
@@ -1403,7 +1408,7 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		_giro = giro0
 	if gangue_cor.a > 0.0 and chefe_g < 0:
 		# o chefe de gangue não usa a bandana: a marca dele (ChefeGangue) já diz quem é, e o bloco cobriria o corpo
-		_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.Onde.PESCOCO, q) * GATO_K, 0.0, GATO_K)
+		_tr(c, pos, esc, dir, _origem(RoupaGato.Onde.PESCOCO, q) * GATO_K, 0.0, GATO_K)
 		var cb := Color(gangue_cor.r, gangue_cor.g, gangue_cor.b, alfa)
 		var esc_b := Color(gangue_cor.r * 0.35, gangue_cor.g * 0.35, gangue_cor.b * 0.35, alfa)
 		c.draw_rect(Rect2(-5, -3, 10, 6), esc_b)
@@ -1411,7 +1416,7 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		c.draw_rect(Rect2(-7, 1, 4, 5), esc_b)
 		c.draw_rect(Rect2(-6, 2, 2, 3), cb)
 	if chefe_g >= 0:
-		_tr(c, pos, esc, dir, RoupaGato.origem(ChefeGangue.MARCA_ONDE[chefe_g], q) * GATO_K, 0.0, GATO_K)
+		_tr(c, pos, esc, dir, _origem(ChefeGangue.MARCA_ONDE[chefe_g], q) * GATO_K, 0.0, GATO_K)
 		ChefeGangue.marca(c, chefe_g, anim, alfa)
 	resetar(c)
 
