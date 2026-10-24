@@ -29,6 +29,11 @@ const BT_INVASAO := Rect2(1044, 332, 180, 34)
 const BT_FINAL := Rect2(20, 14, 92, 34)
 const BT_VISTA := Rect2(120, 14, 112, 34)      # "Ver a casa" / "Ver lá fora": alterna a vista (só no segundo ato)
 const BOTAO_VISTA := 4
+## "Lugar" da caixa do Sótão (luta secreta com o Gato de Schrödinger): vem depois dos cinco lugares de cada vista.
+const CAIXA := Fases.TOTAL + 1
+## Onde a caixa aparece nas vistas de fora e das ruas (na casa ela fica no Sótão).
+const CAIXA_FORA := Rect2(204, 516, 28, 24)
+const CAIXA_RUAS := Rect2(52, 262, 28, 24)
 const RETRATO := Rect2(880, 238, 160, 124)     # área própria do retrato do chefe no painel
 const RETRATO_ESCALA := 0.78   # recuado: no 1.0 o rabo e a arma dos chefes maiores saíam da caixa e eram cortados
 const BOTAO_NENHUM := 0
@@ -139,6 +144,7 @@ const LAMPADA_X: Array[float] = [112.0, 100.0, 216.0, 72.0, 232.0]
 static var _fora: bool = false
 static var _ato: int = 1
 static var _ruas: bool = false   # terceiro ato: a vista das ruas (sempre junto com `_fora`)
+var _caixa_casa: Rect2 = Rect2()   # onde fica a caixa no Sótão, em tela (anotada ao desenhar a mobília)
 
 var p                       # o `principal` (Control); sem tipo para não depender da ordem de carga
 var cv: CanvasItem
@@ -236,23 +242,48 @@ static func lugares() -> Array[Rect2]:
 ## (x, y) = canto da caixa dentro do cômodo.
 static var _caixa: Rect2 = Rect2()
 static func caixa_em(pos: Vector2) -> bool:
-	return _caixa.size.x > 0.0 and _caixa.grow(4.0).has_point(pos) and not _fora
+	return _caixa.size.x > 0.0 and _caixa.grow(8.0).has_point(pos)
 
-func _caixa_schro(x: float, y: float, t: float) -> void:
-	_l(x, y, 28, 24, Color(0.4, 0.28, 0.16))
-	_l(x + 4, y + 4, 24, 20, Color(0.72, 0.55, 0.34))
-	_l(x, y, 28, 4, Color(0.84, 0.68, 0.44))
-	_l(x + 12, y, 4, 8, Color(0.9, 0.82, 0.6))
-	var cx: float = _o.x + x + 14.0
-	var cy: float = _o.y + y + 14.0
+## Caixa do Sótão que chama o jogador (luta secreta liberada): treme de tempos em tempos, pisca a moldura e tem um
+## balão "?" em cima. `r` em coordenadas de tela; desenhada depois da cena, por cima dos bichos.
+func _caixa_chama(r: Rect2, t: float) -> void:
+	var escolhida: bool = escolhido == CAIXA
+	var sobre: bool = p.mouse != Vector2(-500, -500) and r.grow(8.0).has_point(p.mouse)
+	# tremida: 3 vezes rápidas a cada 2,5 s, de 4 px (a grade do mapa)
+	var ciclo: float = fmod(t, 2.5)
+	var dx: float = (4.0 if int(ciclo * 16.0) % 2 == 0 else -4.0) if ciclo < 0.4 else 0.0
+	var x: float = r.position.x + dx
+	var y: float = r.position.y
+	if escolhida or sobre or int(t * 2.0) % 2 == 0:
+		_moldura(Rect2(x - 4, y - 4, 36, 32), 4.0, Color(1.0, 0.95, 0.7) if escolhida else Color(1.0, 0.9, 0.4, 0.8))
+	_r(x, y, 28, 24, Color(0.4, 0.28, 0.16))
+	_r(x + 4, y + 4, 20, 16, Color(0.72, 0.55, 0.34))
+	_r(x, y, 28, 4, Color(0.84, 0.68, 0.44))
+	_r(x + 12, y, 4, 8, Color(0.9, 0.82, 0.6))
+	var cx: float = x + 14.0
+	var cy: float = y + 14.0
 	_disco(cx, cy, 8.0, Color(1.0, 0.88, 0.1))
 	_rr(Rect2(cx - 2, cy - 2, 4, 4), C_CONTORNO)
 	_rr(Rect2(cx - 6, cy - 6, 4, 4), C_CONTORNO)
 	_rr(Rect2(cx + 2, cy - 6, 4, 4), C_CONTORNO)
 	_rr(Rect2(cx - 2, cy + 2, 4, 4), C_CONTORNO)
-	if int(t * 2.0) % 2 == 0:
-		_moldura(Rect2(_o.x + x - 4, _o.y + y - 4, 36, 32), 4.0, Color(1.0, 0.9, 0.4, 0.8))
-	_caixa = Rect2(_o.x + x, _o.y + y, 28, 24)
+	# balão "?" que sobe e desce 4 px
+	if not p.estado.feitos.has("schro") or escolhida or sobre:
+		var by: float = y - 28.0 - (4.0 if fmod(t, 1.0) < 0.5 else 0.0)
+		var bx: float = r.position.x + 6.0
+		_r(bx - 4, by - 4, 24, 24, C_CONTORNO)
+		_r(bx, by, 16, 16, Color(1.0, 0.97, 0.88))
+		_r(bx + 4, by + 20, 4, 4, C_CONTORNO)
+		Desenho.texto(cv, "?", Vector2(bx, by + 14.0), 16, Color(0.55, 0.3, 0.05), 16.0)
+	_caixa = r
+
+## Clique na caixa: ela fica escolhida e o painel mostra o chefe secreto (o botão do painel abre a luta).
+func escolher_caixa() -> void:
+	escolhido = CAIXA
+	foco = 0
+	_ult = 0
+	usar_mouse = true
+	Som.tocar("clique", 1.1, 0.04, -6.0)
 
 ## Casa vista no segundo ato: dá para passar o mouse e ver os cômodos, mas não para iniciar um.
 static func _casa_so_para_ver() -> bool:
@@ -365,7 +396,7 @@ func destaque() -> int:
 			_ult = h
 			return h
 		if escolhido > 0:
-			return escolhido
+			return escolhido   # pode ser CAIXA
 		if _ult > 0 and (PAINEL.has_point(m) or PONTE.has_point(m)):
 			return _ult
 		_ult = 0
@@ -399,6 +430,8 @@ func tecla(k: int) -> int:
 		KEY_DOWN, KEY_S:
 			d = Vector2i(0, 1)
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+			if cur == CAIXA:
+				return CAIXA
 			return cur if cur <= est.fase_liberada and (not _ruas or est.lugar_aberto(3, cur)) else 0
 		_:
 			return 0
@@ -460,13 +493,17 @@ func desenhar() -> void:
 		if so and not _anim.get("so" + str(id), false):
 			Som.tocar("hover", 1.0, 0.05, -10.0)
 		_anim["so" + str(id)] = so
+	var dl: int = d if d <= Fases.TOTAL else 0   # a caixa não é um dos cinco lugares da cena
+	_caixa_casa = Rect2()
 	if _ruas:
-		_cena_ruas(t, est, d)
+		_cena_ruas(t, est, dl)
 	elif _fora:
-		_cena_fora(t, est, d)
+		_cena_fora(t, est, dl)
 	else:
-		_cena_casa(t, est, d)
-	_entrada_comodo(d)
+		_cena_casa(t, est, dl)
+	if est.schro_liberado():
+		_caixa_chama(CAIXA_RUAS if _ruas else (CAIXA_FORA if _fora else _caixa_casa), t)
+	_entrada_comodo(dl)
 	_cabecalho()
 	if est.campanha_vencida():
 		_botao_final()
@@ -474,13 +511,17 @@ func desenhar() -> void:
 		_botao_vista()
 	p._tabua_rodape()
 	p._rodape_mapa()
-	_painel_lateral(d)
+	if d == CAIXA:
+		_painel_caixa()
+	else:
+		_painel_lateral(d)
 	var kt: float = clampf((t - _troca_t) / 0.2, 0.0, 1.0)
 	if kt < 1.0:
 		# o painel troca de conteúdo com um fade curto e uma linha dourada varrendo de cima para baixo
 		cv.draw_rect(PAINEL.grow(-4.0), Color(0.1, 0.06, 0.1, (1.0 - kt) * 0.85))
 		cv.draw_rect(Rect2(PAINEL.position.x + 4.0, PAINEL.position.y + 4.0 + kt * (PAINEL.size.y - 12.0), PAINEL.size.x - 8.0, 3.0), Color(1.0, 0.82, 0.3, 1.0 - kt))
-	_dica_casa(d)
+	if d != CAIXA:
+		_dica_casa(d)
 
 ## A casa em corte, com os cinco cômodos (primeiro ato).
 func _cena_casa(t: float, est: Estado, d: int) -> void:
@@ -912,8 +953,7 @@ func _mobilia(fi: int, t: float) -> void:
 			_l(128, fy - 16, 28, 16, C_MADEIRA)
 			_l(128, fy - 12, 28, 4, C_MADEIRA_ESC)
 			_l(138, fy - 12, 8, 8, C_OURO)
-			if p.estado.schro_liberado():
-				_caixa_schro(64.0, fy - 24.0, t)
+			_caixa_casa = Rect2(_o.x + 64.0, _o.y + fy - 24.0, 28, 24)   # desenhada depois, por cima do bicho
 		4:  # Porão: canos, caldeira, barril
 			_l(0, 36, iw, 8, Color(0.46, 0.52, 0.6))
 			_l(0, 36, iw, 4, Color(0.62, 0.68, 0.76))
@@ -1681,6 +1721,48 @@ func _painel_lateral(f: int) -> void:
 		cv.draw_rect(chip_r, Color(0.3, 0.22, 0.08, 0.9) if rec > 0 else Color(0.15, 0.1, 0.12, 0.9))
 		cv.draw_rect(chip_r, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.2), false, 2.0)
 		Desenho.texto(cv, ("Invasão das ruas  ·  " if _ruas else "Invasão sem fim  ·  ") + txt_rec, Vector2(x0, 582), 15, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.6), larg, 3)
+
+## Painel da caixa do Sótão: o Gato de Schrödinger alternando entre vivo e morto, o que ele faz e o botão que abre a luta.
+func _painel_caixa() -> void:
+	var est: Estado = p.estado
+	var li: int = Fases.TOTAL * 3
+	p._painel(PAINEL, Color(0.1, 0.06, 0.1, 0.97), 0.5, Color.WHITE)
+	var x0: float = PAINEL.position.x + 24.0
+	var larg: float = PAINEL.size.x - 48.0
+	var morto: bool = fmod(p.t, 3.0) >= 1.5
+	cv.draw_rect(RETRATO, Color(0.12, 0.12, 0.18) if morto else Color(0.16, 0.1, 0.17))
+	Desenho.boneco(cv, Vector2(RETRATO.position.x + 100.0, RETRATO.end.y - 8.0), RETRATO_ESCALA, -1.0, 1, VAZIO, 0.0, p.t * 2.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, true, 0, false, Fases.Chefe.SCHRODINGER, false, morto)
+	cv.draw_rect(RETRATO, Color(1, 1, 1, 0.18), false, 1.0)
+	Desenho.texto(cv, "Caixa do Sótão", Vector2(x0, 156), 26, Color(1, 0.95, 0.8), -1.0, 5)
+	var venceu: bool = est.feitos.has("schro")
+	var chip := Rect2(x0 + larg - 120.0, 132.0, 120.0, 28.0)
+	p._botao_arte(chip, Color(0.6, 0.95, 0.6) if venceu else Color(0.85, 0.7, 1.0))
+	Desenho.texto(cv, "Aberta" if venceu else "Segredo", Vector2(chip.position.x, chip.position.y + 20), 16, p.COR_TINTA_ESC, chip.size.x)
+	Desenho.texto(cv, "Luta secreta · uma onda, só o chefe", Vector2(x0, 182), 16, Color(0.85, 0.75, 1.0))
+	var ld: Array[String] = p._quebrar("O bestiário está completo e algo se mexe dentro da caixa. Time descansado e torre cheia.", 13, larg)
+	for k in mini(ld.size(), 2):
+		Desenho.texto(cv, ld[k], Vector2(x0, 202.0 + 16.0 * k), 13, Color(1, 1, 1, 0.85))
+	_sep(x0, larg, 232.0)
+	var xr: float = 1044.0
+	var lr: float = PAINEL.end.x - 24.0 - xr
+	Desenho.texto(cv, "Chefe", Vector2(xr, 262), 13, Color(1, 1, 1, 0.65))
+	Desenho.texto(cv, Fases.nome_do_chefe(li), Vector2(xr, 288), p._tam_cabe(Fases.nome_do_chefe(li), [22, 20, 18, 16], lr), Desenho.DOURADO, -1.0, 4)
+	_botao_painel(BT_JOGAR, "Abrir a caixa" if not venceu else "Abrir de novo", UIComum.B_VERDE)
+	Desenho.texto(cv, "Vivo agora" if not morto else "Morto agora", Vector2(xr, 350), 13, Color(1, 0.95, 0.7, 0.8) if not morto else Color(0.7, 0.85, 1.0, 0.8))
+	_sep(x0, larg, 366.0)
+	Desenho.texto(cv, "Ataque do chefe", Vector2(x0, 386), 13, Color(1.0, 0.72, 0.55))
+	var la: Array[String] = p._quebrar(Fases.ataque_do_chefe(li), 13, larg)
+	for k in mini(la.size(), 3):
+		Desenho.texto(cv, la[k], Vector2(x0, 402.0 + 15.0 * k), 13, Color(1, 1, 1, 0.9))
+	Desenho.texto(cv, "Fraqueza", Vector2(x0, 449), 13, Color(0.75, 1.0, 0.8))
+	var lf: Array[String] = p._quebrar(Fases.fraqueza_do_chefe(li), 13, larg)
+	for k in mini(lf.size(), 2):
+		Desenho.texto(cv, lf[k], Vector2(x0, 465.0 + 15.0 * k), 13, Color(0.75, 1.0, 0.8))
+	_sep(x0, larg, 492.0)
+	Desenho.texto(cv, "Prêmio", Vector2(x0, 512), 13, Color(1, 1, 1, 0.65))
+	var lp: Array[String] = p._quebrar("Uma peça Miaujestosa, a raridade mais alta, e troféus.", 13, larg)
+	for k in mini(lp.size(), 2):
+		Desenho.texto(cv, lp[k], Vector2(x0, 530.0 + 15.0 * k), 13, Pecas.RARIDADE_COR[Pecas.Raridade.MIAUJESTOSA])
 
 ## O que falta vencer no 3º ato para abrir o lugar `f` (4 = Arena da Praça, 5 = Telhados e Antenas).
 static func _texto_bloqueio_ruas(f: int) -> String:

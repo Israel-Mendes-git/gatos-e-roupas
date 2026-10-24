@@ -719,6 +719,10 @@ func _entrar_mapa() -> void:
 	mouse_default_cursor_shape = Control.CURSOR_ARROW
 	if mapa_casa != null:
 		mapa_casa.reiniciar()
+		if estado.schro_liberado() and not estado.feitos.has("schro") and not Menus.dicas_vistas.get("schro_caixa", false):
+			# a primeira vez com o bestiário completo: a caixa já vem escolhida e o recado explica
+			mapa_casa.escolher_caixa()
+			menus.dica("schro_caixa", "Bestiário completo! Algo se mexe na caixa do Sótão. Clique na caixa que treme (ou aperte C) e depois em Abrir a caixa.", true)
 
 func _entrar_guarda(retomando: bool = false) -> void:
 	modo = Modo.GUARDA
@@ -2538,7 +2542,7 @@ func _entrada_mapa(ev: InputEvent) -> void:
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
 			if MAPA_EM_CORTE:
 				if estado.schro_liberado() and MapaCasa.caixa_em(mb.position):
-					menus.ir(_escolher_secreto)
+					mapa_casa.escolher_caixa()   # o painel mostra o chefe secreto; "Abrir a caixa" entra
 					return
 				var bt: int = MapaCasa.botao_em(mb.position, estado.campanha_vencida())
 				if bt != MapaCasa.BOTAO_NENHUM:
@@ -2561,6 +2565,10 @@ func _botao_do_mapa(bt: int) -> void:
 	if mapa_casa.botao_troca_vista(bt):   # segundo ato: "Ver a casa" / "Ver lá fora" / "Ir lá fora"
 		return
 	var f: int = mapa_casa.destaque()
+	if f == MapaCasa.CAIXA:
+		if bt == MapaCasa.BOTAO_JOGAR:
+			menus.ir(_escolher_secreto)
+		return
 	if f < 1 or f > estado.fase_liberada:
 		return
 	if bt == MapaCasa.BOTAO_INVASAO:
@@ -2601,7 +2609,7 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 	if k == null or not k.pressed or k.echo:
 		return
 	if k.keycode == KEY_C and estado.schro_liberado():
-		menus.ir(_escolher_secreto)   # atalho da caixa do Sótão
+		mapa_casa.escolher_caixa()   # atalho da caixa do Sótão: escolhe a caixa (Enter ou "Abrir a caixa" entram)
 		return
 	if k.keycode == KEY_I and estado.campanha_vencida():
 		if mapa_casa.vista_fora():
@@ -2615,6 +2623,9 @@ func _unhandled_key_input(ev: InputEvent) -> void:
 			menus.ir(_escolher_invasao.bind(fi_i))
 		return
 	var f: int = mapa_casa.tecla(k.keycode)
+	if f == MapaCasa.CAIXA:
+		menus.ir(_escolher_secreto)
+		return
 	if f >= 1 and f <= estado.fase_liberada:
 		menus.ir(_escolher_fase.bind(f, false, mapa_casa.casa_rejogo()))
 
