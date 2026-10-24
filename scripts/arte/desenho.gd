@@ -61,8 +61,15 @@ static func b(cor: Color, f: float) -> Color:
 static func resetar(c: CanvasItem) -> void:
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+## Giro do boneco inteiro em volta de `pos + _pivo` (queda do chefe de gangue); fica zero fora desse desenho.
+static var _giro: float = 0.0
+static var _pivo: Vector2 = Vector2.ZERO
+
 static func _tr(c: CanvasItem, pos: Vector2, esc: float, dir: float, local: Vector2 = Vector2.ZERO, rot: float = 0.0, extra: float = 1.0, alto: float = 1.0) -> void:
-	c.draw_set_transform(pos + Vector2(local.x * dir * esc, local.y * esc), rot * dir, Vector2(esc * dir * extra, esc * extra * alto))
+	var off := Vector2(local.x * dir * esc, local.y * esc)
+	if _giro != 0.0:
+		off = (off - _pivo).rotated(_giro) + _pivo
+	c.draw_set_transform(pos + off, rot * dir + _giro, Vector2(esc * dir * extra, esc * extra * alto))
 
 static func texto(c: CanvasItem, txt: String, pos: Vector2, tam: int, cor: Color, largura: float = -1.0, contorno: int = 0) -> void:
 	var fonte: Font = UIComum.FONTE
@@ -1037,7 +1044,7 @@ static func boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, equipe: 
 		_gato_schro(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, parado)
 		return
 	if chefe and chefe_tipo >= Fases.Chefe.DOM_GATLEONE:
-		_gato_chefe(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, chefe_tipo - Fases.Chefe.DOM_GATLEONE)
+		_gato_chefe(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, chefe_tipo - Fases.Chefe.DOM_GATLEONE, preparo, dor, queda)
 		return
 	if gangue >= 0 and not chefe and not parte:
 		# gato rival (3º ato): o mesmo desenho do gato, virado para a esquerda, com a pelagem e a bandana da gangue
@@ -1314,9 +1321,12 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 	var tinta := Color(1.0, 1.0 - 0.45 * f, 1.0 - 0.45 * f, alfa)
 	if furia > 0.0:
 		tinta = tinta.lerp(Color(1.0, 0.35, 0.3, alfa), clampf(furia, 0.0, 1.0) * 0.7)
+	var giro0: float = _giro
+	_giro = 0.0   # sombra e anel ficam no chão mesmo com o boneco girando (queda do chefe de gangue)
 	if _com_sombra(c, nocaute):
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
 		_sombra_px(c, alfa)
+	_giro = giro0
 	_tr(c, pos, esc, dir)
 	var pel: Array = pelagem if not pelagem.is_empty() else PELAGENS[posmod(variante, PELAGENS.size())]
 	var tp: Color = pel[1]
@@ -1326,6 +1336,9 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 			_aura_px(c, gangue_cor, alfa)
 		_tr(c, pos, esc, dir)
 	if not nocaute:
+		if chefe_g >= 0 and ChefeGangue.ATRAS_ONDE[chefe_g] >= 0:
+			_tr(c, pos, esc, dir, RoupaGato.origem(ChefeGangue.ATRAS_ONDE[chefe_g], q) * GATO_K, 0.0, GATO_K)
+			ChefeGangue.atras(c, chefe_g, anim, andando, alfa)
 		# camadas que ficam ATRÁS do corpo (capa, aljava, roda): desenhadas antes do gato, só aparece o que sai da silhueta
 		for s in [1, 3, 0, 2]:
 			var pa: Peca = pecas[s]
@@ -1343,6 +1356,9 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		_tr(c, pos, esc, dir)
 		tp = Color.WHITE
 	c.draw_texture_rect_region(_tex_gato(int(pel[0])), dest, src, Color(tinta.r * tp.r, tinta.g * tp.g, tinta.b * tp.b, tinta.a))
+	if chefe_g >= 0 and not nocaute:
+		_tr(c, pos, esc, dir, RoupaGato.origem(ChefeGangue.CORPO_ONDE[chefe_g], q) * GATO_K, 0.0, GATO_K)
+		ChefeGangue.corpo(c, chefe_g, alfa)
 	if fantasma_slots:
 		# espaços vazios na grade de pixels do sprite
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
@@ -1381,8 +1397,12 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 			c.draw_rect(Rect2(-6.0, -9.0 - roundf(tw), 1.0, 1.0), Color(cr.r, cr.g, cr.b, 0.5 + 0.5 * tw))
 	if gangue_cor.a > 0.0:
 		# marca da gangue por cima da roupa (a fantasia de corpo inteiro cobriria a bandana): bandana grande no pescoço e anel no chão
+		_giro = 0.0
 		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
 		_anel_gangue(c, gangue_cor, alfa)
+		_giro = giro0
+	if gangue_cor.a > 0.0 and chefe_g < 0:
+		# o chefe de gangue não usa a bandana: a marca dele (ChefeGangue) já diz quem é, e o bloco cobriria o corpo
 		_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.Onde.PESCOCO, q) * GATO_K, 0.0, GATO_K)
 		var cb := Color(gangue_cor.r, gangue_cor.g, gangue_cor.b, alfa)
 		var esc_b := Color(gangue_cor.r * 0.35, gangue_cor.g * 0.35, gangue_cor.b * 0.35, alfa)
@@ -1390,6 +1410,9 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 		c.draw_rect(Rect2(-4, -2, 8, 4), cb)
 		c.draw_rect(Rect2(-7, 1, 4, 5), esc_b)
 		c.draw_rect(Rect2(-6, 2, 2, 3), cb)
+	if chefe_g >= 0:
+		_tr(c, pos, esc, dir, RoupaGato.origem(ChefeGangue.MARCA_ONDE[chefe_g], q) * GATO_K, 0.0, GATO_K)
+		ChefeGangue.marca(c, chefe_g, anim, alfa)
 	resetar(c)
 
 ## Gato de Schrödinger (chefe secreto). Duas paletas, sem alfa: VIVO (cinza-chumbo, contorno cheio) e MORTO/fantasma (cinza claro azulado,
@@ -1432,24 +1455,35 @@ static func _cabeca_monstro(tipo: int) -> bool:
 
 ## Chefe de gangue (3º ato): o gato grande da gangue (pelagem, bandana e aura na cor dela), vestindo a fantasia-assinatura,
 ## com a coroa de líder (a pedra da coroa leva a cor da gangue).
-static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, g: int) -> void:
+## Chefe de gangue sendo desenhado agora (ChefeGangue.G; -1 = nenhum): _gato põe as camadas dele.
+static var chefe_g: int = -1
+
+## Chefe de gangue do 3º ato: o gato com pelagem, traços e marca próprios (ChefeGangue) e as poses dos chefes bichos:
+## preparo (agacha 1 pixel antes do bote; o Campo já o recua), dor (recua e levanta o focinho) e queda
+## (em pé -> focinho para cima -> de barriga para cima no ar -> deitado), girando em degraus de 90 graus.
+static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, g: int, preparo: float = 0.0, dor: bool = false, queda: float = -1.0) -> void:
 	g = clampi(g, 0, Fases.GANGUE_COR.size() - 1)
-	var cg: Color = Fases.GANGUE_COR[g]
-	_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, false, -1, furia, 0, false, Fases.GANGUE_PELAGEM[g], cg, true)
-	var q: int = gato_quadro(anim, andando, golpe, false)
-	_tr(c, pos, esc, dir, RoupaGato.origem(RoupaGato.Onde.CABECA, q) * GATO_K, 0.0, GATO_K)
-	var ouro := Color(0.98, 0.8, 0.2, alfa)
-	var sombra := Color(0.45, 0.28, 0.0, alfa)
-	# cabeças de Miauzilla e King-Miau são baixas no sprite: a coroa desce 2 px para ficar logo acima delas
-	var dy: int = 0
-	if pecas[0] != null and (pecas[0].tipo == Pecas.CONJUNTO_PECAS[Pecas.Conjunto.MIAUZILLA][0] or pecas[0].tipo == Pecas.CONJUNTO_PECAS[Pecas.Conjunto.KING_MIAU][0]):
-		dy = 2
-	c.draw_rect(Rect2(-5, -11 + dy, 10, 3), sombra)
-	c.draw_rect(Rect2(-4, -10 + dy, 8, 1), ouro)
-	for dx in [-5, -1, 3]:
-		c.draw_rect(Rect2(dx, -14 + dy, 2, 3), sombra)
-		c.draw_rect(Rect2(dx, -13 + dy, 2, 2), ouro)
-	c.draw_rect(Rect2(-1, -10 + dy, 2, 2), Color(cg.r, cg.g, cg.b, alfa))
+	var px: float = GATO_K * esc   # um pixel do sprite na tela
+	var p: Vector2 = pos
+	if queda >= 0.25:
+		var etapa: int = 0 if queda < 0.5 else (1 if queda < 0.75 else 2)
+		_pivo = Vector2(0.0, -9.0 * px)
+		_giro = -PI * 0.5 * dir if etapa == 0 else PI
+		if etapa == 1:
+			p.y -= 4.0 * px   # no ar
+		elif etapa == 2:
+			p.y += 1.0 * px   # deitado de costas
+		andando = false
+		golpe = 0.0
+	elif dor or queda >= 0.0:
+		p.x -= dir * px   # recua um pixel (o clarão do golpe já vem do Campo em `f`)
+	elif preparo > 0.0:
+		p.y += px   # agacha antes do bote
+	chefe_g = g
+	_gato(c, p, esc, dir, pecas, f, anim, andando, golpe, alfa, false, -1, furia, 0, false, ChefeGangue.PELAGEM[g], Fases.GANGUE_COR[g], false)
+	chefe_g = -1
+	_giro = 0.0
+	_pivo = Vector2.ZERO
 	resetar(c)
 
 ## Sombra, aura e fantasma em pixel: valem para a grade de pixels do sprite do gato/bicho (transform com GATO_K).
