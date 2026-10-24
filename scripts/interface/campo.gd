@@ -1202,6 +1202,32 @@ func _consumir() -> void:
 				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Color(0.6, 0.9, 1.0), 6, 160.0, 0.3, 2.5)
 			"fala":
 				_numero(Vector2(e["x"], e["y"] - 110 * ESC), String(e["txt"]), Color(1.0, 0.35, 0.35), 26, 1.4, 220.0)
+			"schro_caixa":
+				# Schrödinger fecha a caixa: nuvem de papelão e o frasco que quebra
+				var pc_s: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
+				_som("poder_explosao", 0.8, -8.0, true)
+				_faisca(pc_s, Color(0.75, 0.58, 0.36), 14, 220.0, 0.5, 4.0)
+				_faisca(pc_s, Color(0.55, 1.0, 0.35), 10, 160.0, 0.6, 3.0)
+				_numero(pc_s + Vector2(0, -70), "Caixa fechada!", Color(0.7, 1.0, 0.5), 22, 1.2, 180.0)
+			"veneno":
+				# veneno do frasco: bolhas verdes no raio, a cada pulso
+				var pv: Vector2 = Vector2(e["x"], e["y"] - 10 * ESC)
+				var rv: float = float(e["raio"])
+				for k in 6:
+					var a_v: float = randf() * TAU
+					var d_v: float = randf() * rv
+					particulas.append({"p": pv + Vector2(cos(a_v) * d_v, sin(a_v) * d_v * 0.45), "v": Vector2(0, -40), "vida": 0.6, "max": 0.6, "cor": Color(0.45, 1.0, 0.3, 0.8), "r": 5.0, "g": 0.0, "tipo": 0})
+				particulas.append({"p": pv, "v": Vector2.ZERO, "vida": 0.4, "max": 0.4, "cor": Color(0.35, 0.9, 0.25, 0.22), "r": rv * 0.5, "g": 0.0, "tipo": 1})
+			"schro_divide":
+				# superposição: chiado azul entre as duas posições e o aviso
+				var p1: Vector2 = Vector2(e["x"], float(e["y"]) - 30 * ESC)
+				var p2: Vector2 = Vector2(e["x"], float(e["y2"]) - 30 * ESC)
+				_som("poder_raio", 1.4, -6.0, true)
+				_faisca(p1, Color(0.4, 0.9, 1.0), 12, 200.0, 0.5, 3.0)
+				_faisca(p2, Color(0.4, 0.9, 1.0), 12, 200.0, 0.5, 3.0)
+				_numero(p1.lerp(p2, 0.5) + Vector2(0, -80), "Superposição!", Color(0.5, 0.9, 1.0), 24, 1.4, 220.0)
+			"schro_some":
+				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Color(0.6, 0.9, 1.0), 14, 160.0, 0.5, 3.0)
 			"muda":
 				var pm: Vector2 = Vector2(e["x"], e["y"] - 10 * ESC)
 				match int(e["res"]):
@@ -3579,7 +3605,12 @@ func _draw() -> void:
 			CaoGuarda.desenhar(self, px_grade(pos), ESC_PX * sy_u, dir_d, uu2.anim, uu2.andando, uu2.golpe, fl_u)
 		else:
 			Desenho.noir = uu2.noir_t > 0.0   # Modo Noir: gato e roupa em preto e branco
+			# Schrödinger: caixa fechada e cópia falsa vêm da unidade (ChefeGangue lê durante o desenho)
+			ChefeGangue.schro_caixa = uu2.caixa_t
+			ChefeGangue.schro_ilusao = uu2.ilusao
 			Desenho.boneco(self, px_grade(pos), esc_d, dir_d, (1 if uu2.capturado else uu2.equipe), (uu2.pecas_visuais if uu2.clone else uu2.pecas), fl_u, uu2.anim, uu2.andando, uu2.golpe, (0.6 if uu2.clone else (0.4 if uu2.oculto_t > 0.0 else 1.0)), false, -1, uu2.furia, tp, uu2.pequeno or uu2.fugindo, uu2.chefe, uu2.familia, uu2.elite, uu2.chefe_tipo, uu2.parte, (uu2.parado or uu2.morto), (estado.bonecos.find(uu2.dono.boneco if uu2.dono != null else uu2.boneco) if uu2.equipe == 0 else 0), false, uu2.gangue, prep_u, dor_u)
+			ChefeGangue.schro_caixa = 0.0
+			ChefeGangue.schro_ilusao = false
 			Desenho.noir = false
 		_estados(uu2, pos, esc_u, dir)
 		_icone_poder_gato(uu2, pos, esc_u)
@@ -7171,7 +7202,7 @@ func _hud() -> void:
 	# barra grande do chefe com nome, no topo
 	for u in sim.inimigos:
 		var ub: Unidade = u
-		if ub.chefe and ub.vida_max > 0.0:
+		if ub.chefe and ub.vida_max > 0.0 and not ub.ilusao:
 			var fr_b: float = clampf(ub.vida / ub.vida_max, 0.0, 1.0)
 			var nome_b: String = Fases.nome_do_chefe(estado.lugar_chefe())
 			Desenho.texto(self, nome_b, Vector2(632, 42), 22, Color(1.0, 0.85, 0.8), 424.0, 4)

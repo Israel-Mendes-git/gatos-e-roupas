@@ -103,16 +103,12 @@ const PALETA: Array = [
 	{"o": Color(0.04, 0.03, 0.06), "l": Color(0.3, 0.32, 0.42), "m": Color(0.18, 0.19, 0.26), "d": Color(0.1, 0.1, 0.15), "w": Color(0.25, 0.27, 0.36), "e": Color(1.0, 0.2, 0.1), "n": Color(0.4, 0.4, 0.5), "x": Color(1.0, 0.25, 0.15), "y": Color(1.0, 0.7, 0.55)},
 	{"o": Color(0.12, 0.06, 0.04), "l": Color(1.0, 0.82, 0.5), "m": Color(0.88, 0.62, 0.3), "d": Color(0.66, 0.42, 0.18), "w": Color(1.0, 0.9, 0.7), "e": Color(0.15, 0.08, 0.05), "n": Color(0.6, 0.3, 0.25), "x": Color(0.3, 0.16, 0.07), "y": Color(0.8, 0.55, 0.2), "c": Color(0.78, 0.1, 0.08), "k": Color(0.5, 0.05, 0.05)},
 	{"o": Color(0.07, 0.06, 0.1), "l": Color(0.9, 0.9, 0.95), "m": Color(0.72, 0.73, 0.8), "d": Color(0.52, 0.53, 0.62), "w": Color(1, 1, 1), "e": Color(0.15, 0.1, 0.2), "n": Color(0.75, 0.55, 0.6), "x": Color(0.5, 0.18, 0.62), "y": Color(0.85, 0.2, 0.2), "c": Color(0.5, 0.18, 0.62), "k": Color(0.3, 0.08, 0.4)},
-	{"o": Color(0.05, 0.04, 0.07), "l": Color(0.36, 0.36, 0.42), "m": Color(0.22, 0.22, 0.27), "d": Color(0.13, 0.13, 0.17), "w": Color(0.5, 0.5, 0.56), "e": Color(1.0, 0.86, 0.15), "n": Color(0.85, 0.5, 0.55), "x": Color(0.6, 0.62, 0.7), "y": Color(0.9, 0.9, 0.95)},
+	{"o": Color(0.04, 0.03, 0.08), "l": Color(0.3, 0.34, 0.5), "m": Color(0.16, 0.17, 0.26), "d": Color(0.09, 0.09, 0.15), "w": Color(0.4, 0.45, 0.62), "e": Color(0.45, 0.95, 1.0), "n": Color(0.5, 0.55, 0.75), "x": Color(0.45, 0.95, 1.0), "y": Color(0.9, 0.9, 0.95)},
 ]
-## Metade fantasma do Gato de Schrödinger: azul-claro translúcido, costelas e olho em X.
-const PALETA_FANTASMA: Dictionary = {
-	"o": Color(0.45, 0.62, 0.8, 0.85), "l": Color(0.92, 0.97, 1.0, 0.7), "m": Color(0.8, 0.9, 1.0, 0.62), "d": Color(0.66, 0.78, 0.92, 0.6),
-	"w": Color(0.95, 0.98, 1.0, 0.7), "e": Color(0.3, 0.45, 0.65, 0.95), "n": Color(0.7, 0.8, 0.95, 0.7), "x": Color(0.5, 0.65, 0.85, 0.8),
-	"y": Color(0.9, 0.95, 1.0, 0.7), "r": Color(0.55, 0.7, 0.88, 0.85),
-}
-## Gato de Schrödinger morto agora (o desenho troca qual metade domina). Vale só durante o desenho dele.
+## Estado do Gato de Schrödinger durante o desenho dele (o Campo põe antes de desenhar cada um e tira depois).
 static var schro_morto: bool = false
+static var schro_caixa: float = 0.0     # > 0: dentro da caixa fechada
+static var schro_ilusao: bool = false   # a cópia falsa da superposição
 
 static func subida(g: int) -> int:
 	return int(FORMA[g]["sobe"]) if g >= 0 else 0
@@ -184,6 +180,9 @@ static func _pintar(c: CanvasItem, L: PackedByteArray, pal: Dictionary, alfa: fl
 
 ## Desenha o corpo do chefe `g` no quadro `q` do gato. Origem já no chão, sob o centro (grade do sprite).
 static func corpo_proprio(c: CanvasItem, g: int, q: int, anim: float, andando: bool, alfa: float, tinta: Color) -> void:
+	if g == G.SCHRO and schro_caixa > 0.0:
+		_schro_caixa(c, alfa)
+		return
 	var F: Dictionary = FORMA[g]
 	var pal: Dictionary = PALETA[g]
 	var R: Vector2 = Desenho._origem(RoupaGato.Onde.ROSTO, q)
@@ -258,58 +257,103 @@ static func corpo_proprio(c: CanvasItem, g: int, q: int, anim: float, andando: b
 	_extras_rosto(L, g, R)
 	_pintar(c, L, pal, alfa, tinta)
 
-## Gato de Schrödinger: um corpo só, cortado por uma costura em zigue-zague. À frente do corte ele está vivo
-## (preto, olho amarelo); atrás, fantasma (translúcido, contorno pontilhado, costelas). Vivo, a frente domina;
-## morto, o corte avança até o focinho e a cabeça ganha o olho em X.
+## Gato de Schrödinger, o gato quântico: corpo preto com olhos de psi acesos e três elétrons orbitando, que "chia"
+## como TV fora do ar. Vivo: nítido, só umas linhas tremem. Morto: quase tudo é chiado azul translúcido, com furos e uma
+## cópia tremida ao lado. A cópia falsa da superposição tem só dois elétrons (a pista para quem presta atenção).
 static func _schro(c: CanvasItem, L: PackedByteArray, pal: Dictionary, alfa: float, tinta: Color, cc: Vector2, R: Vector2, B: Vector2, anim: float) -> void:
-	var corte: int = int(B.x) - 3 if schro_morto else int(cc.x) - 2
-	var ex: int = int(R.x) + 1
-	var ey: int = int(R.y)
-	var o: int = "o".unicode_at(0)
-	# costelas na parte fantasma do tronco (3 riscos)
-	for k in 3:
-		var rx: int = int(cc.x) - 4 + k * 2
-		if rx < corte:
-			for dy in 3:
-				var iy: int = int(cc.y) - 1 + dy + _Y0
-				var ix: int = rx + _X0
-				if ix >= 0 and ix < _W and iy >= 0 and iy < _H and L[iy * _W + ix] != 0 and L[iy * _W + ix] != o:
-					L[iy * _W + ix] = "r".unicode_at(0)
+	var t: float = Time.get_ticks_msec() / 1000.0
+	var quadro: int = int(t * 12.0)   # o chiado muda 12 vezes por segundo
+	var morto: bool = schro_morto
+	var a_corpo: float = alfa * (0.7 if morto else 1.0)
+	# elétrons de trás (atrás do corpo)
+	_eletrons(c, cc, t, alfa, false)
+	if morto:
+		_schro_camada(c, L, pal, a_corpo * 0.35, tinta, Vector2i(2 if posmod(quadro, 2) == 0 else -2, 0), quadro + 7, true)   # cópia tremida
+	_schro_camada(c, L, pal, a_corpo, tinta, Vector2i.ZERO, quadro, morto)
+	# olhos de psi (3x3) acesos, piscando de leve
+	var ex: int = int(R.x)
+	var ey: int = int(R.y) - 1
+	var brilho: Color = Color(0.45, 0.95, 1.0, alfa) if not morto else Color(0.75, 1.0, 1.0, alfa)
+	for d in [Vector2i(0, 0), Vector2i(2, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(1, 2)]:
+		c.draw_rect(Rect2(ex + d.x, ey + d.y, 1, 1), brilho)
+	# elétrons da frente
+	_eletrons(c, cc, t, alfa, true)
+
+## Uma passada do corpo com chiado: cada linha pode escorregar 1-2 pixels; morto, também some pixel ao acaso e
+## a cor puxa para o azul do fantasma.
+static func _schro_camada(c: CanvasItem, L: PackedByteArray, pal: Dictionary, alfa: float, tinta: Color, desl: Vector2i, semente: int, morto: bool) -> void:
 	for iy in _H:
+		var h: int = _hash(iy * 31 + semente * 7)
+		var dx: int = 0
+		if morto:
+			dx = (h % 5) - 2 if h % 3 == 0 else 0
+		elif h % 11 == 0:
+			dx = 1 if h % 2 == 0 else -1
 		for ix in _W:
 			var v: int = L[iy * _W + ix]
 			if v == 0:
 				continue
-			var x: int = ix - _X0
-			var y: int = iy - _Y0
-			var morto_px: bool = x < corte + (1 if posmod(y, 2) == 0 else 0)   # zigue-zague
-			var ch: String = String.chr(v)
-			if morto_px and ch == "o" and posmod(x + y, 2) == 1:
-				continue   # contorno pontilhado do fantasma
-			var cor: Color
-			if morto_px:
-				cor = PALETA_FANTASMA.get(ch, PALETA_FANTASMA["m"])
-			else:
-				cor = pal.get(ch, Color.MAGENTA)
-			c.draw_rect(Rect2(x, y, 1, 1), Color(cor.r * tinta.r, cor.g * tinta.g, cor.b * tinta.b, cor.a * alfa * tinta.a))
-	# costura: pontos claros ao longo do corte, no corpo
-	for iy in _H:
-		var x2: int = corte + (1 if posmod(iy - _Y0, 2) == 0 else 0)
-		var ix2: int = x2 + _X0
-		if ix2 >= 0 and ix2 < _W and L[iy * _W + ix2] != 0 and L[iy * _W + ix2] != o and posmod(iy, 3) != 0:
-			c.draw_rect(Rect2(x2, iy - _Y0, 1, 1), Color(0.95, 0.98, 1.0, 0.9 * alfa))
-	# olho: amarelo e vivo, ou X de fantasma quando a cabeça passou para o lado morto
-	if ex < corte:
-		var cx := Color(0.25, 0.4, 0.62, alfa)
-		c.draw_rect(Rect2(ex - 1, ey - 1, 1, 1), cx)
-		c.draw_rect(Rect2(ex + 1, ey - 1, 1, 1), cx)
-		c.draw_rect(Rect2(ex, ey, 1, 1), cx)
-		c.draw_rect(Rect2(ex - 1, ey + 1, 1, 1), cx)
-		c.draw_rect(Rect2(ex + 1, ey + 1, 1, 1), cx)
-	else:
-		var pisca: bool = fmod(Time.get_ticks_msec() / 1000.0, 3.0) < 0.12
-		c.draw_rect(Rect2(ex, ey, 1, 1 if not pisca else 1), Color(1.0, 0.86, 0.15, alfa) if not pisca else Color(0.05, 0.04, 0.07, alfa))
-		c.draw_rect(Rect2(ex - 1, ey, 1, 1), Color(0.05, 0.04, 0.07, alfa))
+			if morto and _hash(ix * 17 + iy * 131 + semente * 3) % 4 == 0:
+				continue   # furos do chiado
+			var cor: Color = pal.get(String.chr(v), Color.MAGENTA)
+			if morto:
+				cor = cor.lerp(Color(0.55, 0.85, 1.0), 0.55)
+			c.draw_rect(Rect2(ix - _X0 + dx + desl.x, iy - _Y0 + desl.y, 1, 1), Color(cor.r * tinta.r, cor.g * tinta.g, cor.b * tinta.b, cor.a * alfa * tinta.a))
+
+static func _hash(n: int) -> int:
+	var x: int = (n * 1103515245 + 12345) & 0x7fffffff
+	x = x ^ (x >> 13)
+	return absi(x)
+
+## Elétrons em órbitas inclinadas em volta do tronco; `frente` desenha só a metade da órbita que passa na frente.
+static func _eletrons(c: CanvasItem, cc: Vector2, t: float, alfa: float, frente: bool) -> void:
+	var n: int = 2 if schro_ilusao else 3
+	var cores: Array = [Color(0.45, 0.95, 1.0), Color(1.0, 0.45, 0.95), Color(0.75, 1.0, 0.45)]
+	for k in n:
+		var fase: float = t * (2.2 + k * 0.4) + k * TAU / 3.0
+		var inc: float = [0.0, 0.9, -0.9][k]
+		var cor: Color = cores[k]
+		# anel pontilhado da órbita (um pixel a cada três)
+		for i in 24:
+			var ai: float = TAU * i / 24.0
+			if (sin(ai) > 0.0) != frente or i % 3 != 0:
+				continue
+			var oxi: float = cos(ai) * 16.0
+			c.draw_rect(Rect2(int(roundf(cc.x + oxi)), int(roundf(cc.y - 3.0 + sin(ai) * 6.0 + oxi * inc * 0.35)), 1, 1), Color(cor.r, cor.g, cor.b, alfa * 0.35))
+		for rastro in 4:
+			var a: float = fase - rastro * 0.16
+			var ox: float = cos(a) * 16.0
+			var x: float = cc.x + ox
+			var y: float = cc.y - 3.0 + sin(a) * 6.0 + ox * inc * 0.35
+			if (sin(a) > 0.0) != frente:
+				continue
+			var lado: int = 3 if rastro == 0 else 1
+			c.draw_rect(Rect2(int(roundf(x)) - lado / 2, int(roundf(y)) - lado / 2, lado, lado), Color(cor.r, cor.g, cor.b, alfa * (1.0 - rastro * 0.22)))
+			if rastro == 0:
+				c.draw_rect(Rect2(int(roundf(x)), int(roundf(y)), 1, 1), Color(1, 1, 1, alfa))
+
+## Caixa fechada (troca de estado): o gato some dentro da caixa com o psi, que treme e solta bolhas de veneno.
+static func _schro_caixa(c: CanvasItem, alfa: float) -> void:
+	var t: float = Time.get_ticks_msec() / 1000.0
+	var tr: int = 1 if posmod(int(t * 20.0), 2) == 0 else -1
+	var x0: int = -8 + tr
+	var y0: int = -15
+	var esc := Color(0.4, 0.28, 0.16, alfa)
+	var pap := Color(0.72, 0.55, 0.34, alfa)
+	var cla := Color(0.86, 0.7, 0.46, alfa)
+	c.draw_rect(Rect2(x0 - 1, y0 - 1, 18, 17), Color(0.09, 0.06, 0.08, alfa))
+	c.draw_rect(Rect2(x0, y0, 16, 15), pap)
+	c.draw_rect(Rect2(x0, y0, 16, 3), cla)
+	c.draw_rect(Rect2(x0 + 7, y0, 2, 15), esc)   # fita da tampa
+	c.draw_rect(Rect2(x0, y0 + 13, 16, 2), esc)
+	# psi grande na lateral
+	var ps := Color(0.2, 0.75, 0.95, alfa)
+	for d in [Vector2i(0, 0), Vector2i(4, 0), Vector2i(0, 1), Vector2i(4, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2), Vector2i(3, 2), Vector2i(4, 2), Vector2i(2, 0), Vector2i(2, 1), Vector2i(2, 3), Vector2i(2, 4)]:
+		c.draw_rect(Rect2(x0 + 3 + d.x, y0 + 5 + d.y, 1, 1), ps)
+	# bolhas verdes pela fresta da tampa
+	for k in 3:
+		var fy: float = fmod(t * 1.5 + k * 0.33, 1.0)
+		c.draw_rect(Rect2(x0 + 4 + k * 4, y0 - 2 - int(fy * 8.0), 2, 2), Color(0.45, 1.0, 0.3, alfa * (1.0 - fy)))
 
 ## Capa e disco: atrás do tronco, na mesma grade (ganham o contorno junto).
 static func _extras_atras(L: PackedByteArray, g: int, T: Vector2, N: Vector2, anim: float, andando: bool) -> void:
