@@ -7,7 +7,7 @@ extends RefCounted
 ##   marca(): por cima do corpo (rosa, máscara, olho, crista, metais).
 ## Gato virado para a direita: +x é a frente, -y é para cima.
 
-enum G { GATLEONE, IMORTAL, MESTRE, MIAUNIDAS, MAGNETO }
+enum G { GATLEONE, IMORTAL, MESTRE, MIAUNIDAS, MAGNETO, SCHRO }   # SCHRO: o chefe secreto usa o mesmo esqueleto
 
 ## Pelagem de cada chefe ([textura, tinta]): diferente da dos rivais da gangue (Fases.GANGUE_PELAGEM).
 const PELAGEM: Array = [
@@ -28,7 +28,7 @@ static func _balanco(anim: float) -> int:
 	return 1 if posmod(int(anim * 1.3), 4) >= 2 else 0
 
 # ------------------------------------------------------------------ marca (por cima da roupa)
-const MARCA_ONDE: Array[int] = [RoupaGato.Onde.PESCOCO, RoupaGato.Onde.BOCA, RoupaGato.Onde.ROSTO, RoupaGato.Onde.CABECA, RoupaGato.Onde.CORPO]
+const MARCA_ONDE: Array[int] = [RoupaGato.Onde.PESCOCO, RoupaGato.Onde.BOCA, RoupaGato.Onde.ROSTO, RoupaGato.Onde.CABECA, RoupaGato.Onde.CORPO, RoupaGato.Onde.CORPO]
 
 static func marca(c: CanvasItem, g: int, anim: float, alfa: float) -> void:
 	var t: float = Time.get_ticks_msec() / 1000.0
@@ -92,6 +92,7 @@ const FORMA: Array = [
 	{"tw": 7, "th": 4, "hx": 4, "hy": 4, "perna": 2, "sobe": 1, "rabo": 2, "rabo_n": 9},   # Programa Mestre: liso e anguloso
 	{"tw": 8, "th": 5, "hx": 4, "hy": 4, "perna": 3, "sobe": 2, "rabo": 2, "rabo_n": 7},   # Rei Miaunidas: peito largo
 	{"tw": 6, "th": 4, "hx": 4, "hy": 4, "perna": 2, "sobe": 1, "rabo": 1, "rabo_n": 7},   # Magnetomiau: magro e velho
+	{"tw": 7, "th": 4, "hx": 4, "hy": 4, "perna": 2, "sobe": 1, "rabo": 2, "rabo_n": 8},   # Gato de Schrödinger
 ]
 
 ## Paleta: o contorno, l/m/d pelo claro, médio e escuro, w peito, e olho, n nariz, x detalhe próprio, y segundo detalhe,
@@ -102,7 +103,16 @@ const PALETA: Array = [
 	{"o": Color(0.04, 0.03, 0.06), "l": Color(0.3, 0.32, 0.42), "m": Color(0.18, 0.19, 0.26), "d": Color(0.1, 0.1, 0.15), "w": Color(0.25, 0.27, 0.36), "e": Color(1.0, 0.2, 0.1), "n": Color(0.4, 0.4, 0.5), "x": Color(1.0, 0.25, 0.15), "y": Color(1.0, 0.7, 0.55)},
 	{"o": Color(0.12, 0.06, 0.04), "l": Color(1.0, 0.82, 0.5), "m": Color(0.88, 0.62, 0.3), "d": Color(0.66, 0.42, 0.18), "w": Color(1.0, 0.9, 0.7), "e": Color(0.15, 0.08, 0.05), "n": Color(0.6, 0.3, 0.25), "x": Color(0.3, 0.16, 0.07), "y": Color(0.8, 0.55, 0.2), "c": Color(0.78, 0.1, 0.08), "k": Color(0.5, 0.05, 0.05)},
 	{"o": Color(0.07, 0.06, 0.1), "l": Color(0.9, 0.9, 0.95), "m": Color(0.72, 0.73, 0.8), "d": Color(0.52, 0.53, 0.62), "w": Color(1, 1, 1), "e": Color(0.15, 0.1, 0.2), "n": Color(0.75, 0.55, 0.6), "x": Color(0.5, 0.18, 0.62), "y": Color(0.85, 0.2, 0.2), "c": Color(0.5, 0.18, 0.62), "k": Color(0.3, 0.08, 0.4)},
+	{"o": Color(0.05, 0.04, 0.07), "l": Color(0.36, 0.36, 0.42), "m": Color(0.22, 0.22, 0.27), "d": Color(0.13, 0.13, 0.17), "w": Color(0.5, 0.5, 0.56), "e": Color(1.0, 0.86, 0.15), "n": Color(0.85, 0.5, 0.55), "x": Color(0.6, 0.62, 0.7), "y": Color(0.9, 0.9, 0.95)},
 ]
+## Metade fantasma do Gato de Schrödinger: azul-claro translúcido, costelas e olho em X.
+const PALETA_FANTASMA: Dictionary = {
+	"o": Color(0.45, 0.62, 0.8, 0.85), "l": Color(0.92, 0.97, 1.0, 0.7), "m": Color(0.8, 0.9, 1.0, 0.62), "d": Color(0.66, 0.78, 0.92, 0.6),
+	"w": Color(0.95, 0.98, 1.0, 0.7), "e": Color(0.3, 0.45, 0.65, 0.95), "n": Color(0.7, 0.8, 0.95, 0.7), "x": Color(0.5, 0.65, 0.85, 0.8),
+	"y": Color(0.9, 0.95, 1.0, 0.7), "r": Color(0.55, 0.7, 0.88, 0.85),
+}
+## Gato de Schrödinger morto agora (o desenho troca qual metade domina). Vale só durante o desenho dele.
+static var schro_morto: bool = false
 
 static func subida(g: int) -> int:
 	return int(FORMA[g]["sobe"]) if g >= 0 else 0
@@ -242,8 +252,64 @@ static func corpo_proprio(c: CanvasItem, g: int, q: int, anim: float, andando: b
 	_contorno(L)
 	# nariz e olho por cima do contorno
 	_px(L, int(B.x) - 1, int(B.y) - 1, "n")
+	if g == G.SCHRO:
+		_schro(c, L, pal, alfa, tinta, cc, R, B, anim)
+		return
 	_extras_rosto(L, g, R)
 	_pintar(c, L, pal, alfa, tinta)
+
+## Gato de Schrödinger: um corpo só, cortado por uma costura em zigue-zague. À frente do corte ele está vivo
+## (preto, olho amarelo); atrás, fantasma (translúcido, contorno pontilhado, costelas). Vivo, a frente domina;
+## morto, o corte avança até o focinho e a cabeça ganha o olho em X.
+static func _schro(c: CanvasItem, L: PackedByteArray, pal: Dictionary, alfa: float, tinta: Color, cc: Vector2, R: Vector2, B: Vector2, anim: float) -> void:
+	var corte: int = int(B.x) - 3 if schro_morto else int(cc.x) - 2
+	var ex: int = int(R.x) + 1
+	var ey: int = int(R.y)
+	var o: int = "o".unicode_at(0)
+	# costelas na parte fantasma do tronco (3 riscos)
+	for k in 3:
+		var rx: int = int(cc.x) - 4 + k * 2
+		if rx < corte:
+			for dy in 3:
+				var iy: int = int(cc.y) - 1 + dy + _Y0
+				var ix: int = rx + _X0
+				if ix >= 0 and ix < _W and iy >= 0 and iy < _H and L[iy * _W + ix] != 0 and L[iy * _W + ix] != o:
+					L[iy * _W + ix] = "r".unicode_at(0)
+	for iy in _H:
+		for ix in _W:
+			var v: int = L[iy * _W + ix]
+			if v == 0:
+				continue
+			var x: int = ix - _X0
+			var y: int = iy - _Y0
+			var morto_px: bool = x < corte + (1 if posmod(y, 2) == 0 else 0)   # zigue-zague
+			var ch: String = String.chr(v)
+			if morto_px and ch == "o" and posmod(x + y, 2) == 1:
+				continue   # contorno pontilhado do fantasma
+			var cor: Color
+			if morto_px:
+				cor = PALETA_FANTASMA.get(ch, PALETA_FANTASMA["m"])
+			else:
+				cor = pal.get(ch, Color.MAGENTA)
+			c.draw_rect(Rect2(x, y, 1, 1), Color(cor.r * tinta.r, cor.g * tinta.g, cor.b * tinta.b, cor.a * alfa * tinta.a))
+	# costura: pontos claros ao longo do corte, no corpo
+	for iy in _H:
+		var x2: int = corte + (1 if posmod(iy - _Y0, 2) == 0 else 0)
+		var ix2: int = x2 + _X0
+		if ix2 >= 0 and ix2 < _W and L[iy * _W + ix2] != 0 and L[iy * _W + ix2] != o and posmod(iy, 3) != 0:
+			c.draw_rect(Rect2(x2, iy - _Y0, 1, 1), Color(0.95, 0.98, 1.0, 0.9 * alfa))
+	# olho: amarelo e vivo, ou X de fantasma quando a cabeça passou para o lado morto
+	if ex < corte:
+		var cx := Color(0.25, 0.4, 0.62, alfa)
+		c.draw_rect(Rect2(ex - 1, ey - 1, 1, 1), cx)
+		c.draw_rect(Rect2(ex + 1, ey - 1, 1, 1), cx)
+		c.draw_rect(Rect2(ex, ey, 1, 1), cx)
+		c.draw_rect(Rect2(ex - 1, ey + 1, 1, 1), cx)
+		c.draw_rect(Rect2(ex + 1, ey + 1, 1, 1), cx)
+	else:
+		var pisca: bool = fmod(Time.get_ticks_msec() / 1000.0, 3.0) < 0.12
+		c.draw_rect(Rect2(ex, ey, 1, 1 if not pisca else 1), Color(1.0, 0.86, 0.15, alfa) if not pisca else Color(0.05, 0.04, 0.07, alfa))
+		c.draw_rect(Rect2(ex - 1, ey, 1, 1), Color(0.05, 0.04, 0.07, alfa))
 
 ## Capa e disco: atrás do tronco, na mesma grade (ganham o contorno junto).
 static func _extras_atras(L: PackedByteArray, g: int, T: Vector2, N: Vector2, anim: float, andando: bool) -> void:

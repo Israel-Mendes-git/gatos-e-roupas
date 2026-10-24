@@ -1041,7 +1041,7 @@ static func boneco(c: CanvasItem, pos: Vector2, esc: float, dir: float, equipe: 
 		_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, fantasma_slots, destaque_slot, furia, variante, nocaute)
 		return
 	if chefe and chefe_tipo == Fases.Chefe.SCHRODINGER:
-		_gato_schro(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, parado)
+		_gato_schro(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, parado, preparo, dor, queda)
 		return
 	if chefe and chefe_tipo >= Fases.Chefe.DOM_GATLEONE:
 		_gato_chefe(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, chefe_tipo - Fases.Chefe.DOM_GATLEONE, preparo, dor, queda)
@@ -1424,18 +1424,14 @@ static func _gato(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Ar
 ## contorno pontilhado). `morto` chega pelo parâmetro `parado` de boneco(). A caixa de papelão com o símbolo de radiação fica ao lado.
 const SCHRO_VIVO: Array = [0, Color(0.55, 0.57, 0.62)]
 const SCHRO_MORTO: Array = [0, Color(0.86, 0.9, 0.95)]
-static func _gato_schro(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, morto: bool) -> void:
-	_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
-	caixa_schro(c, Vector2(-16, 0), alfa, morto)
-	var cor: Color = Color(0.7, 0.85, 1.0, alfa) if morto else Color(0.25, 0.26, 0.3, alfa)
-	# contorno: cheio (vivo) ou pontilhado (morto), em elipse de 1 pixel em volta do gato
-	var passos: int = 40
-	for i in passos:
-		if morto and i % 2 == 1:
-			continue
-		var ang: float = TAU * i / passos
-		c.draw_rect(Rect2(roundf(cos(ang) * 10.0), roundf(-10.0 + sin(ang) * 14.0), 1, 1), cor)
-	_gato(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, false, -1, furia, 0, false, SCHRO_MORTO if morto else SCHRO_VIVO, Color(0, 0, 0, 0), false)
+static func _gato_schro(c: CanvasItem, pos: Vector2, esc: float, dir: float, pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, morto: bool, preparo: float = 0.0, dor: bool = false, queda: float = -1.0) -> void:
+	if queda < 0.25:
+		_tr(c, pos, esc, dir, Vector2.ZERO, 0.0, GATO_K)
+		caixa_schro(c, Vector2(-18, 0), alfa, morto)
+	# corpo meio vivo e meio fantasma (ChefeGangue._schro), no esqueleto do gato, com as poses dos chefes
+	ChefeGangue.schro_morto = morto
+	_gato_chefe(c, pos, esc, dir, pecas, f, anim, andando, golpe, alfa, furia, ChefeGangue.G.SCHRO, preparo, dor, queda)
+	ChefeGangue.schro_morto = false
 
 ## Caixa de papelão com o símbolo de radiação, na grade de pixels do sprite (base em `base`).
 static func caixa_schro(c: CanvasItem, base: Vector2, alfa: float, morto: bool) -> void:
@@ -1467,7 +1463,7 @@ static var chefe_g: int = -1
 ## preparo (agacha 1 pixel antes do bote; o Campo já o recua), dor (recua e levanta o focinho) e queda
 ## (em pé -> focinho para cima -> de barriga para cima no ar -> deitado), girando em degraus de 90 graus.
 static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, _pecas: Array, f: float, anim: float, andando: bool, golpe: float, alfa: float, furia: float, g: int, preparo: float = 0.0, dor: bool = false, queda: float = -1.0) -> void:
-	g = clampi(g, 0, Fases.GANGUE_COR.size() - 1)
+	g = clampi(g, 0, ChefeGangue.FORMA.size() - 1)
 	var px: float = GATO_K * esc   # um pixel do sprite na tela
 	var p: Vector2 = pos
 	if queda >= 0.25:
@@ -1485,7 +1481,7 @@ static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, _pe
 	elif preparo > 0.0:
 		p.y += px   # agacha antes do bote
 	chefe_g = g
-	_gato(c, p, esc, dir, [null, null, null, null], f, anim, andando, golpe, alfa, false, -1, furia, 0, false, ChefeGangue.PELAGEM[g], Fases.GANGUE_COR[g], false)   # sem fantasia no desenho: as peças valem na luta e caem de prêmio, mas o chefe aparece só com o que é dele
+	_gato(c, p, esc, dir, [null, null, null, null], f, anim, andando, golpe, alfa, false, -1, furia, 0, false, ChefeGangue.PELAGEM[mini(g, ChefeGangue.PELAGEM.size() - 1)], Fases.GANGUE_COR[g] if g < Fases.GANGUE_COR.size() else Color(0, 0, 0, 0), false)   # sem fantasia no desenho: as peças valem na luta e caem de prêmio, mas o chefe aparece só com o que é dele
 	chefe_g = -1
 	_giro = 0.0
 	_pivo = Vector2.ZERO
