@@ -555,9 +555,10 @@ func _spawnar(item: Dictionary) -> void:
 	u.esc_dano = (1.0 + Balanco.INIMIGO_DANO_ONDA * (p - 1)) * estado.mult_dano() * estado.forca_dano()
 	if chefe:
 		u.chefe_tipo = Fases.chefe_base(estado.lugar_chefe())
+		u.truque_cd = Balanco.TOUPEIRA_FORA_T if u.chefe_tipo == Fases.Chefe.TOUPEIRA else 5.0
 		if u.chefe_tipo == Fases.Chefe.SCHRODINGER:
 			u.truque_cd = Balanco.SCHRO_T
-		u.truque_cd = Balanco.TOUPEIRA_FORA_T if u.chefe_tipo == Fases.Chefe.TOUPEIRA else 5.0
+			u.super_cd = Balanco.SCHRO_SUPER_PRIMEIRO
 		if u.chefe_tipo >= Fases.Chefe.DOM_GATLEONE and u.chefe_tipo <= Fases.Chefe.MAGNETOMIAU:
 			u.gangue = u.chefe_tipo - Fases.Chefe.DOM_GATLEONE   # gato grande da gangue (só desenho e identidade; não é "rival" da Disputa)
 			u.esc_vida *= Balanco.CHEFE_GANGUE_VIDA[u.gangue]
@@ -1037,16 +1038,84 @@ func _chefe_age(u: Unidade, dt: float) -> bool:
 		Fases.Chefe.DOM_GATLEONE, Fases.Chefe.IMORTAL_MIAU, Fases.Chefe.PROGRAMA_MESTRE, Fases.Chefe.REI_MIAUNIDAS, Fases.Chefe.MAGNETOMIAU:
 			return _chefe_gangue(u, dt)
 		Fases.Chefe.SCHRODINGER:
-			# alterna entre vivo e morto a cada SCHRO_T segundos; o aviso aparece nos últimos SCHRO_AVISO
-			u.truque_cd -= dt
-			u.troca_t = u.truque_cd if u.truque_cd <= Balanco.SCHRO_AVISO else 0.0   # o campo desenha o aviso enquanto > 0
-			if u.truque_cd <= 0.0:
-				u.morto = not u.morto
-				u.truque_cd = Balanco.SCHRO_T
-				u.troca_t = 0.0
-				_cont("schro_morto" if u.morto else "schro_vivo")
-				_ev({"t": "schro", "x": u.x, "y": u.y, "morto": u.morto})
+			return _schro_age(u, dt)
 	return true
+
+## Gato de Schrödinger: alterna entre vivo e morto a cada SCHRO_T segundos (aviso nos últimos SCHRO_AVISO). Na troca
+## fecha a caixa (invulnerável e parado, com veneno em volta) e, de tempos em tempos, entra em superposição: aparece
+## uma cópia falsa ao lado, igual a ele, que ataca mas não apanha de verdade. Devolve false enquanto não age.
+func _schro_age(u: Unidade, dt: float) -> bool:
+	if u.ilusao:
+		u.ilusao_t -= dt
+		if u.ilusao_t <= 0.0 or u.ilusao_de == null or not u.ilusao_de.vivo:
+			u.vivo = false   # some sem cair: não larga peça nem conta abate
+			_ev({"t": "schro_some", "x": u.x, "y": u.y})
+			return false
+		u.morto = u.ilusao_de.morto
+		u.caixa_t = u.ilusao_de.caixa_t
+		return u.caixa_t <= 0.0
+	if u.caixa_t > 0.0:
+		u.caixa_t -= dt
+		u.andando = false
+		u.veneno_cd -= dt
+		if u.veneno_cd <= 0.0:
+			u.veneno_cd = Balanco.SCHRO_VENENO_PULSO
+			_ev({"t": "veneno", "x": u.x, "y": u.y, "raio": Balanco.SCHRO_VENENO_RAIO})
+			for v in aliados:
+				if v.vivo and _dentro(v, u.x, u.y, Balanco.SCHRO_VENENO_RAIO):
+					_dano(null, v, u.dano * Balanco.SCHRO_VENENO, false, true)
+		if u.caixa_t <= 0.0:
+			_ev({"t": "schro", "x": u.x, "y": u.y, "morto": u.morto})
+		return false
+	u.truque_cd -= dt
+	u.troca_t = u.truque_cd if u.truque_cd <= Balanco.SCHRO_AVISO else 0.0   # o campo desenha o aviso enquanto > 0
+	if u.truque_cd <= 0.0:
+		u.morto = not u.morto
+		u.truque_cd = Balanco.SCHRO_T
+		u.troca_t = 0.0
+		u.caixa_t = Balanco.SCHRO_CAIXA_T
+		u.veneno_cd = 0.0
+		_cont("schro_morto" if u.morto else "schro_vivo")
+		_ev({"t": "schro_caixa", "x": u.x, "y": u.y, "morto": u.morto})
+		return false
+	u.super_cd -= dt
+	if u.super_cd <= 0.0:
+		u.super_cd = Balanco.SCHRO_SUPER_T
+		_schro_divide(u)
+	return true
+
+## Superposição: nasce uma cópia falsa; as duas trocam de lugar ao acaso, para o jogador não saber qual é qual.
+func _schro_divide(u: Unidade) -> void:
+	var f := Unidade.new()
+	f.equipe = 1
+	f.tipo = u.tipo
+	f.pecas = u.pecas
+	f.chefe = true
+	f.chefe_tipo = u.chefe_tipo
+	f.familia = u.familia
+	f.esc_vida = u.esc_vida
+	f.esc_dano = u.esc_dano
+	calcular(f)
+	f.vida = f.vida_max
+	f.ilusao = true
+	f.ilusao_de = u
+	f.ilusao_t = Balanco.SCHRO_SUPER_DUR
+	f.morto = u.morto
+	f.cd = 0.3
+	f.poder_cd = 999.0   # a cópia não solta o poder
+	var y0: float = u.y
+	var lado: float = 1.0 if y0 < (Balanco.CHAO_Y0 + Balanco.CHAO_Y1) * 0.5 else -1.0
+	var y1: float = clampf(y0 + lado * Balanco.SCHRO_SUPER_DIST, Balanco.CHAO_Y0, Balanco.CHAO_Y1)
+	var troca: bool = rng.randf() < 0.5
+	f.x = u.x
+	f.y = y0 if troca else y1
+	u.y = y1 if troca else y0
+	u.vx = -9999.0
+	u.alvo = null
+	u.retarget = 0.0
+	nascidos.append(f)
+	_cont("schro_super")
+	_ev({"t": "schro_divide", "x": u.x, "y": y0, "y2": y1})
 
 ## Magnetomiau: o bônus de conjunto suspenso volta quando o tempo acaba.
 func _sem_conjunto_tick(dt: float) -> void:
@@ -1780,6 +1849,9 @@ func _golpe_em_area(u: Unidade, centro: Unidade, dano: float) -> void:
 
 func _dano(atk: Unidade, alvo: Unidade, dano: float, corpo_a_corpo: bool, em_area: bool = false) -> void:
 	if not alvo.vivo or alvo.sequestro_t > 0.0:
+		return
+	if alvo.ilusao or alvo.caixa_t > 0.0:
+		_ev({"t": "esquiva", "x": alvo.x, "y": alvo.y})   # Schrödinger: cópia falsa ou caixa fechada
 		return
 	if alvo.morto and not (atk != null and atk.perfura):
 		_ev({"t": "esquiva", "x": alvo.x, "y": alvo.y})   # Schrödinger morto: golpes atravessam (só poder e Varinha ferem)
@@ -4512,6 +4584,9 @@ func _zonas(dt: float) -> void:
 ## Dano direto de um poder (ignora armadura e esquiva). Devolve o dano causado.
 func _dano_poder(u: Unidade, v: Unidade, dano: float) -> float:
 	if not v.vivo or v.sequestro_t > 0.0:
+		return 0.0
+	if v.ilusao or v.caixa_t > 0.0:
+		_ev({"t": "esquiva", "x": v.x, "y": v.y})   # Schrödinger: cópia falsa ou caixa fechada
 		return 0.0
 	var d: float = dano * _vul(v) * (Balanco.PODER_PROTEGE_DANO if v.protegido_t > 0.0 else 1.0) * (Balanco.PODER_COCHILO_DANO if v.cochilo_t > 0.0 else 1.0) * ((1.0 - Balanco.PODER_LOBO_REDUCAO) if v.lobo_t > 0.0 and v.lobo_prov else 1.0)
 	if v.resist_t > 0.0:

@@ -555,6 +555,14 @@ const SCHRO_VIDA := 22.0            # multiplicador de vida do chefe (calibrar c
 const SCHRO_DANO := 5.0
 const SCHRO_ATORDOA := 0.6          # morto: a pata atordoa o gato atingido
 const SCHRO_TROFEUS := 20           # troféus extras na primeira vitória
+const SCHRO_CAIXA_T := 2.0          # na troca de estado ele fecha a caixa: invulnerável e parado por este tempo
+const SCHRO_VENENO_RAIO := 120.0    # o frasco quebra dentro da caixa: veneno em volta enquanto ela está fechada
+const SCHRO_VENENO := 0.45          # x o dano do golpe dele, em cada gato no raio, a cada pulso
+const SCHRO_VENENO_PULSO := 0.4
+const SCHRO_SUPER_PRIMEIRO := 9.0   # superposição: ele se divide em dois; só um é o verdadeiro
+const SCHRO_SUPER_T := 14.0
+const SCHRO_SUPER_DUR := 6.0        # a cópia falsa dura isto (ou até a verdadeira cair)
+const SCHRO_SUPER_DIST := 70.0      # distância (y) entre as duas cópias
 # ---- Chefes de gangue (3º ato, etapa 5; notas/ato3_proposta.md, seção 2)
 # acerto por chefe de gangue (Dom Gatleone, Imortal Miau, Programa Mestre, Rei Miaunidas, Magnetomiau), sobre a vida e o dano do chefe
 const CHEFE_GANGUE_VIDA: Array[float] = [1.0, 1.0, 1.0, 1.0, 1.4]

@@ -81,11 +81,30 @@ func _alternancia() -> void:
 	var ult: bool = false
 	var vivo_atingido: bool = false
 	var imune_ok: bool = true
+	var caixa_ok: bool = true
+	var viu_caixa: bool = false
+	var ilusao_ok: bool = true
+	var viu_ilusao: bool = false
 	while sim.tempo < 40.0 and not sim.terminada:
 		sim.passo(Balanco.DT)
 		for u in sim.inimigos:
-			if u.chefe:
+			if u.chefe and not u.ilusao:
 				ch = u
+			elif u.ilusao:
+				# superposição: a cópia falsa não apanha de golpe nem de poder
+				viu_ilusao = true
+				var vi: float = u.vida
+				sim._dano(Unidade.new(), u, 50.0, true)
+				sim._dano_poder(Unidade.new(), u, 5.0)
+				if u.vida < vi:
+					ilusao_ok = false
+		if ch != null and ch.caixa_t > 0.0:
+			# caixa fechada: nem poder fere
+			viu_caixa = true
+			var vc: float = ch.vida
+			sim._dano_poder(Unidade.new(), ch, 5.0)
+			if ch.vida < vc:
+				caixa_ok = false
 		if ch != null:
 			if ch.morto != ult:
 				t_troca.append(sim.tempo)
@@ -101,11 +120,14 @@ func _alternancia() -> void:
 					imune_ok = imune_ok and true
 	_ok(t_troca.size() >= 2, "alternou (%d trocas)" % t_troca.size())
 	if t_troca.size() >= 2:
-		_ok(absf((t_troca[1] - t_troca[0]) - Balanco.SCHRO_T) < 0.2, "troca a cada 6 s (%.2f)" % (t_troca[1] - t_troca[0]))
+		_ok(absf((t_troca[1] - t_troca[0]) - Balanco.SCHRO_T - Balanco.SCHRO_CAIXA_T) < 0.2, "troca a cada 6 s mais a caixa (%.2f)" % (t_troca[1] - t_troca[0]))
+	_ok(viu_caixa and caixa_ok, "caixa fechada na troca e sem dano dentro dela")
+	_ok(viu_ilusao and ilusao_ok, "superposição: a cópia falsa aparece e não apanha")
 	_ok(imune_ok, "morto: golpe não fere")
 	# poder fere morto
 	if ch != null:
 		ch.morto = true
+		ch.caixa_t = 0.0
 		var v1: float = ch.vida
 		sim._dano_poder(Unidade.new(), ch, 5.0)
 		_ok(ch.vida < v1, "morto: poder fere")
