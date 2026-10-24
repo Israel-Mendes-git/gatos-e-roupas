@@ -109,6 +109,7 @@ const PALETA: Array = [
 static var schro_morto: bool = false
 static var schro_caixa: float = 0.0     # > 0: dentro da caixa fechada
 static var schro_ilusao: bool = false   # a cópia falsa da superposição
+static var schro_queda: float = -1.0    # >= 0: caindo (0,25 colapso, 0,5 tombando, 0,75 deitado)
 
 static func subida(g: int) -> int:
 	return int(FORMA[g]["sobe"]) if g >= 0 else 0
@@ -182,6 +183,9 @@ static func _pintar(c: CanvasItem, L: PackedByteArray, pal: Dictionary, alfa: fl
 static func corpo_proprio(c: CanvasItem, g: int, q: int, anim: float, andando: bool, alfa: float, tinta: Color) -> void:
 	if g == G.SCHRO and schro_caixa > 0.0:
 		_schro_caixa(c, alfa)
+		return
+	if g == G.SCHRO and schro_queda >= 0.5:
+		_schro_caido(c, alfa, tinta, schro_queda >= 0.75)
 		return
 	var F: Dictionary = FORMA[g]
 	var pal: Dictionary = PALETA[g]
@@ -264,6 +268,8 @@ static func _schro(c: CanvasItem, L: PackedByteArray, pal: Dictionary, alfa: flo
 	var t: float = Time.get_ticks_msec() / 1000.0
 	var quadro: int = int(t * 12.0)   # o chiado muda 12 vezes por segundo
 	var morto: bool = schro_morto
+	if schro_queda >= 0.25:
+		morto = posmod(quadro, 3) != 0   # colapso: pisca forte entre vivo e chiado antes de tombar
 	var a_corpo: float = alfa * (0.7 if morto else 1.0)
 	# elétrons de trás (atrás do corpo)
 	_eletrons(c, cc, t, alfa, false)
@@ -331,6 +337,56 @@ static func _eletrons(c: CanvasItem, cc: Vector2, t: float, alfa: float, frente:
 			c.draw_rect(Rect2(int(roundf(x)) - lado / 2, int(roundf(y)) - lado / 2, lado, lado), Color(cor.r, cor.g, cor.b, alfa * (1.0 - rastro * 0.22)))
 			if rastro == 0:
 				c.draw_rect(Rect2(int(roundf(x)), int(roundf(y)), 1, 1), Color(1, 1, 1, alfa))
+
+## Caído: de barriga para cima, com as quatro patas duras para o alto, olhos em X e a língua de fora; os elétrons apagados no chão e um fiapo de fantasma subindo.
+## `no_chao` false = ainda tombando (2 pixels acima do chão, com chiado).
+static func _schro_caido(c: CanvasItem, alfa: float, tinta: Color, no_chao: bool) -> void:
+	var pal: Dictionary = PALETA[G.SCHRO]
+	var L := _nova()
+	var dy: float = 0.0 if no_chao else -3.0
+	# de barriga para cima: rabo estirado, tronco no chão, as quatro patas duras para o alto e a cabeça de ponta-cabeça
+	_traco(L, Vector2(-8, -3 + dy), Vector2(-17, -2 + dy), 2, "m")
+	for k in 4:
+		var px: float = [-7.0, -2.0, 3.0, 8.0][k]
+		var pt: float = px + (k - 1.5) * 1.2   # as patas abrem para os lados
+		_traco(L, Vector2(px, -6 + dy), Vector2(pt, -12 + dy), 2, "d" if k % 2 == 0 else "m")
+		_rect(L, int(pt) - 1, int(-13 + dy), 2, 1, "l")   # almofadinha da pata
+	_elip(L, 0.0, -4.0 + dy, 8.5, 3.5, "m")
+	_elip(L, 0.0, -3.0 + dy, 5.0, 1.5, "w", false)   # barriga clara virada para cima
+	_elip(L, 11.0, -4.0 + dy, 4.0, 3.5, "m")
+	_rect(L, 9, int(-1 + dy), 2, 2, "m")    # orelhas viradas para baixo, no chão
+	_rect(L, 13, int(-1 + dy), 2, 2, "m")
+	_rect(L, 14, int(-7 + dy), 2, 2, "l")   # focinho para cima
+	_contorno(L)
+	_px(L, 15, int(-8 + dy), "n")           # língua de fora
+	var t: float = Time.get_ticks_msec() / 1000.0
+	if no_chao:
+		_pintar(c, L, pal, alfa, tinta)
+	else:
+		_schro_camada(c, L, pal, alfa, tinta, Vector2i.ZERO, int(t * 12.0), true)
+	# olhos em X
+	var cx := Color(0.45, 0.95, 1.0, alfa * 0.8)
+	var ex: int = 10
+	var ey: int = int(-5 + dy)
+	for d in [Vector2i(0, 0), Vector2i(2, 0), Vector2i(1, 1), Vector2i(0, 2), Vector2i(2, 2)]:
+		c.draw_rect(Rect2(ex + d.x, ey + d.y, 1, 1), cx)
+	if not no_chao:
+		return
+	# elétrons apagados no chão
+	var cores: Array = [Color(0.45, 0.95, 1.0), Color(1.0, 0.45, 0.95), Color(0.75, 1.0, 0.45)]
+	for k in 3:
+		var cor: Color = cores[k]
+		c.draw_rect(Rect2(-14 + k * 11, -1, 2, 1), Color(cor.r, cor.g, cor.b, alfa * 0.45))
+	# fiapo de fantasma subindo: cabecinha translúcida com orelhas, sobe 10 pixels e recomeça
+	var sobe: float = fmod(t * 0.8, 1.0)
+	var fy: int = int(-16 - sobe * 10.0)
+	var fa: float = alfa * 0.55 * (1.0 - sobe)
+	var fc := Color(0.75, 0.92, 1.0, fa)
+	c.draw_rect(Rect2(9, fy, 5, 3), fc)
+	c.draw_rect(Rect2(9, fy - 1, 1, 1), fc)
+	c.draw_rect(Rect2(13, fy - 1, 1, 1), fc)
+	c.draw_rect(Rect2(10, fy + 3, 1, 2), fc)
+	c.draw_rect(Rect2(12, fy + 3, 1, 1), fc)
 
 ## Caixa fechada (troca de estado): o gato some dentro da caixa com o psi, que treme e solta bolhas de veneno.
 static func _schro_caixa(c: CanvasItem, alfa: float) -> void:

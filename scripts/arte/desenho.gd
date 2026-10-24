@@ -1446,6 +1446,15 @@ static func _gato_chefe(c: CanvasItem, pos: Vector2, esc: float, dir: float, _pe
 	g = clampi(g, 0, ChefeGangue.FORMA.size() - 1)
 	var px: float = GATO_K * esc   # um pixel do sprite na tela
 	var p: Vector2 = pos
+	if g == ChefeGangue.G.SCHRO and queda >= 0.0:
+		# Schrödinger tem queda própria (colapso, tomba e deita de lado), sem girar o corpo
+		ChefeGangue.schro_queda = queda
+		chefe_g = g
+		_gato(c, p, esc, dir, [null, null, null, null], f, anim, false, 0.0, alfa, false, -1, furia, 0, false, ChefeGangue.PELAGEM[ChefeGangue.PELAGEM.size() - 1], Color(0, 0, 0, 0), false)
+		chefe_g = -1
+		ChefeGangue.schro_queda = -1.0
+		resetar(c)
+		return
 	if queda >= 0.25:
 		var etapa: int = 0 if queda < 0.5 else (1 if queda < 0.75 else 2)
 		_pivo = Vector2(0.0, -9.0 * px)
