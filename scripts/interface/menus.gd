@@ -18,8 +18,9 @@ static var tremor_tela: bool = true
 static var numeros_dano: bool = true
 ## true: os poderes de fantasia dos gatos disparam sozinhos; false (padrão): o jogador dispara na luta.
 static var poder_automatico: bool = false
+static var preparacao_onda: bool = true   # desligada: a onda começa direto, com os postos e ordens gravados
 ## Altura de cada linha da tela de Opções (a do "Poder automático" é mais alta: tem três linhas de explicação).
-const OPC_Y: Array[float] = [0.0, 52.0, 104.0, 156.0, 208.0, 260.0, 312.0, 394.0]
+const OPC_Y: Array[float] = [0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0, 380.0, 432.0]
 static var tela_cheia: bool = false
 static var velocidade_padrao: int = 1
 static var dicas_vistas: Dictionary = {}
@@ -99,6 +100,7 @@ static func carregar_opcoes() -> void:
 	numeros_dano = bool(cfg.get_value("opcoes", "numeros_dano", true))
 	tela_cheia = bool(cfg.get_value("opcoes", "tela_cheia", false))
 	poder_automatico = bool(cfg.get_value("opcoes", "poder_automatico", false))
+	preparacao_onda = bool(cfg.get_value("opcoes", "preparacao", true))
 	Som.volume = clampf(snappedf(float(cfg.get_value("opcoes", "volume", 0.7)), 0.1), 0.0, 1.0)
 	Som.mudo = not bool(cfg.get_value("opcoes", "som", true))
 	velocidade_padrao = clampi(int(cfg.get_value("opcoes", "velocidade", 1)), 1, 3)
@@ -118,6 +120,7 @@ static func gravar_opcoes() -> void:
 	cfg.set_value("opcoes", "numeros_dano", numeros_dano)
 	cfg.set_value("opcoes", "tela_cheia", tela_cheia)
 	cfg.set_value("opcoes", "poder_automatico", poder_automatico)
+	cfg.set_value("opcoes", "preparacao", preparacao_onda)
 	cfg.set_value("opcoes", "volume", Som.volume)
 	cfg.set_value("opcoes", "som", not Som.mudo)
 	cfg.set_value("opcoes", "velocidade", velocidade_padrao)
@@ -386,7 +389,7 @@ func _montar() -> void:
 			for k in itens.size():
 				_bt(itens[k][0], itens[k][1], Rect2(490, painel.position.y + 88.0 + k * 62.0, 300, 52), itens[k][2])
 		Tela.OPCOES:
-			painel = Rect2(290, 30, 700, 664)
+			painel = Rect2(290, 14, 700, 692)
 			var xr: float = painel.end.x - 48.0
 			var y0: float = painel.position.y + 100.0
 			_bt("o_tela", "Tela cheia" if tela_cheia else "Janela", Rect2(xr - 230, y0 + OPC_Y[0], 230, 50), B_AZUL)
@@ -398,7 +401,8 @@ func _montar() -> void:
 			_bt("o_tremor", "Ligado" if tremor_tela else "Desligado", Rect2(xr - 230, y0 + OPC_Y[4], 230, 50), B_VERDE if tremor_tela else B_CINZA, 22, {"icone": "ok" if tremor_tela else "x"})
 			_bt("o_dano", "Ligado" if numeros_dano else "Desligado", Rect2(xr - 230, y0 + OPC_Y[5], 230, 50), B_VERDE if numeros_dano else B_CINZA, 22, {"icone": "ok" if numeros_dano else "x"})
 			_bt("o_poder", "Ligado" if poder_automatico else "Desligado", Rect2(xr - 230, y0 + OPC_Y[6], 230, 50), B_VERDE if poder_automatico else B_CINZA, 22, {"icone": "ok" if poder_automatico else "x"})
-			_bt("o_apagar", "Apagar...", Rect2(xr - 230, y0 + OPC_Y[7], 230, 50), B_VERMELHO, 22, {"on": tem_save})
+			_bt("o_prep", "Ligada" if preparacao_onda else "Desligada", Rect2(xr - 230, y0 + OPC_Y[7], 230, 50), B_VERDE if preparacao_onda else B_CINZA, 22, {"icone": "ok" if preparacao_onda else "x"})
+			_bt("o_apagar", "Apagar...", Rect2(xr - 230, y0 + OPC_Y[8], 230, 50), B_VERMELHO, 22, {"on": tem_save})
 			_bt("o_voltar", "Voltar", Rect2(640 - 130, painel.end.y - 82, 260, 56), B_MARROM)
 			_bt("o_voltar", "", Rect2(painel.end.x - 72, painel.position.y + 24, 42, 42), Color.WHITE, 22, {"icone": "x"})
 		Tela.CREDITOS:
@@ -512,6 +516,9 @@ func _acionar(id: String) -> void:
 			_opcao_mudou()
 		"o_poder":
 			poder_automatico = not poder_automatico
+			_opcao_mudou()
+		"o_prep":
+			preparacao_onda = not preparacao_onda
 			_opcao_mudou()
 		"o_apagar":
 			confirmar("Apagar a campanha?", "Isso apaga o progresso, o guarda-roupa e os gatos treinados.", "Sim, apagar", "Cancelar", Callable(self, "_apagar_etapa2"))
@@ -1145,6 +1152,7 @@ func _tela_opcoes() -> void:
 		["Tremor de tela", "Sacudidas nos golpes fortes. Agora: %s" % lig.call(tremor_tela)],
 		["Números de dano", "Valores que sobem dos golpes. Agora: %s" % lig.call(numeros_dano)],
 		["Poderes automáticos", poder_txt],
+		["Preparação da onda", "Arrumar o time antes da onda. Agora: %s" % ("ligada" if preparacao_onda else "começa direto")],
 		["Campanha", "Apaga o progresso gravado" if tem_save else "Nenhuma campanha gravada"],
 	]
 	for k in rot.size():

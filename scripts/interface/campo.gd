@@ -7247,7 +7247,8 @@ func _entrada_ok() -> bool:
 
 ## Põe os gatos nos postos e monta a prévia da onda (um bicho por tipo, com a quantidade).
 func _montar_preparacao() -> void:
-	prep = preparacao
+	# a opção "Preparação da onda" pode pular esta etapa; até a aula da preparação ser vista, ela sempre aparece
+	prep = preparacao and (Menus.preparacao_onda or not Menus.dicas_vistas.get("tut_a_prep", false))
 	prep_sel = null
 	prep_arr = null
 	prep_previa.clear()
