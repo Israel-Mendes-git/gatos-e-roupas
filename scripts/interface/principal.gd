@@ -363,6 +363,7 @@ func _ready() -> void:
 	menus.iniciar(self)
 	if Menus.gravar:
 		Som.iniciar(self)   # nos testes (Menus.gravar = false) o jogo fica mudo
+		Musica.iniciar(self)
 	# oficina da torre: depois dos menus, para receber o teclado (Esc) antes deles
 	btn_torre = _botao("", TORRE_BT_MAPA, Color(1.0, 0.82, 0.4), 20)
 	btn_torre.pintar = _pintar_botao_torre
@@ -2886,6 +2887,7 @@ func _soltar(p: Vector2) -> void:
 # ------------------------------------------------------------------ atualização
 func _process(delta: float) -> void:
 	t += delta
+	Musica.atualizar(self, delta)   # a faixa segue a tela (título, mapa, luta por ato, chefe, fim, final)
 	# posição real do ponteiro a cada quadro: um botão filho captura o movimento e a posição guardada ficava velha;
 	# com menu, oficina ou cortina por cima o ponteiro "some" para a tela de baixo (sem dicas nem destaques fantasmas)
 	if menus.ativo() or menus.em_transicao() or (oficina != null and oficina.aberta) or (atelie_tela != null and atelie_tela.aberta):
