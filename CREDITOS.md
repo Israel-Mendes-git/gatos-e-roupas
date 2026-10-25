@@ -27,6 +27,14 @@ https://github.com/scfried/soft-type-jersey
 - Usado em: `assets/fontes/Jersey10-Regular.ttf`, a fonte de todo o jogo (texto da interface e logotipo). A licença está em `assets/fontes/OFL.txt`.
 - Licença: SIL Open Font License 1.1. Uso comercial permitido; pode ir no repositório e no jogo, desde que a licença acompanhe a fonte e o nome não seja vendido sozinho.
 
+## Feito para o jogo
+
+**Música**: trilha chiptune original, composta e sintetizada para o jogo.
+- Arquivos: `assets/musica/*.wav` (título, mapa e guarda-roupa, luta dos três atos, chefe, chefe secreto, tela de final e os jingles de vitória e derrota).
+- Gerada por código em `ferramentas/gera_musica.py` (ondas quadrada, triângulo e ruído; nenhuma amostra, melodia ou pacote de terceiros). Para refazer: `python ferramentas/gera_musica.py` e reimportar no Godot.
+
+**Efeitos sonoros**: `assets/som/*.wav`, sintetizados para o jogo.
+
 ## Baixado, sem uso
 
 **Cat Pack - Mochi** (pacote gratuito `CatPackFree.zip`), de ToffeeCraft
