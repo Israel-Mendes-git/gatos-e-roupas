@@ -20,7 +20,9 @@ static var numeros_dano: bool = true
 static var poder_automatico: bool = false
 static var preparacao_onda: bool = true   # desligada: a onda começa direto, com os postos e ordens gravados
 ## Altura de cada linha da tela de Opções (a do "Poder automático" é mais alta: tem três linhas de explicação).
-const OPC_Y: Array[float] = [0.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0, 380.0, 432.0]
+const OPC_Y: Array[float] = [0.0, 48.0, 96.0, 144.0, 192.0, 240.0, 288.0, 336.0, 410.0, 458.0]
+const OPC_TOPO := 96.0   # da borda do painel até a primeira linha
+const OPC_H := 46.0      # altura dos botões de cada linha
 static var tela_cheia: bool = false
 static var velocidade_padrao: int = 1
 static var dicas_vistas: Dictionary = {}
@@ -103,6 +105,7 @@ static func carregar_opcoes() -> void:
 	preparacao_onda = bool(cfg.get_value("opcoes", "preparacao", true))
 	Som.volume = clampf(snappedf(float(cfg.get_value("opcoes", "volume", 0.7)), 0.1), 0.0, 1.0)
 	Som.mudo = not bool(cfg.get_value("opcoes", "som", true))
+	Musica.volume = clampf(snappedf(float(cfg.get_value("opcoes", "musica", 0.5)), 0.1), 0.0, 1.0)
 	velocidade_padrao = clampi(int(cfg.get_value("opcoes", "velocidade", 1)), 1, 3)
 	final_visto = bool(cfg.get_value("ui", "final_visto", false))
 	final_atos = int(cfg.get_value("ui", "final_atos", 0))
@@ -123,6 +126,7 @@ static func gravar_opcoes() -> void:
 	cfg.set_value("opcoes", "preparacao", preparacao_onda)
 	cfg.set_value("opcoes", "volume", Som.volume)
 	cfg.set_value("opcoes", "som", not Som.mudo)
+	cfg.set_value("opcoes", "musica", Musica.volume)
 	cfg.set_value("opcoes", "velocidade", velocidade_padrao)
 	cfg.set_value("ui", "final_visto", final_visto)
 	cfg.set_value("ui", "final_atos", final_atos)
@@ -391,18 +395,22 @@ func _montar() -> void:
 		Tela.OPCOES:
 			painel = Rect2(290, 14, 700, 692)
 			var xr: float = painel.end.x - 48.0
-			var y0: float = painel.position.y + 100.0
-			_bt("o_tela", "Tela cheia" if tela_cheia else "Janela", Rect2(xr - 230, y0 + OPC_Y[0], 230, 50), B_AZUL)
+			var y0: float = painel.position.y + OPC_TOPO
+			var h: float = OPC_H
+			var lig_som: bool = not Som.mudo
+			_bt("o_tela", "Tela cheia" if tela_cheia else "Janela", Rect2(xr - 230, y0 + OPC_Y[0], 230, h), B_AZUL)
 			for k in 3:
-				_bt("o_v%d" % (k + 1), "%dx" % (k + 1), Rect2(xr - 230 + k * 80, y0 + OPC_Y[1], 70, 50), B_OURO if velocidade_padrao == k + 1 else B_CINZA, 22, {"marcado": velocidade_padrao == k + 1})
-			_bt("o_som", "Ligado" if not Som.mudo else "Desligado", Rect2(xr - 230, y0 + OPC_Y[2], 230, 50), B_VERDE if not Som.mudo else B_CINZA, 22, {"icone": "ok" if not Som.mudo else "x"})
-			_bt("o_vm", "", Rect2(xr - 230, y0 + OPC_Y[3] + 4.0, 42, 42), Color.WHITE, 22, {"icone": "menos", "on": not Som.mudo and Som.volume > 0.05})
-			_bt("o_vp", "", Rect2(xr - 42, y0 + OPC_Y[3] + 4.0, 42, 42), Color.WHITE, 22, {"icone": "mais", "on": not Som.mudo and Som.volume < 0.95})
-			_bt("o_tremor", "Ligado" if tremor_tela else "Desligado", Rect2(xr - 230, y0 + OPC_Y[4], 230, 50), B_VERDE if tremor_tela else B_CINZA, 22, {"icone": "ok" if tremor_tela else "x"})
-			_bt("o_dano", "Ligado" if numeros_dano else "Desligado", Rect2(xr - 230, y0 + OPC_Y[5], 230, 50), B_VERDE if numeros_dano else B_CINZA, 22, {"icone": "ok" if numeros_dano else "x"})
-			_bt("o_poder", "Ligado" if poder_automatico else "Desligado", Rect2(xr - 230, y0 + OPC_Y[6], 230, 50), B_VERDE if poder_automatico else B_CINZA, 22, {"icone": "ok" if poder_automatico else "x"})
-			_bt("o_prep", "Ligada" if preparacao_onda else "Desligada", Rect2(xr - 230, y0 + OPC_Y[7], 230, 50), B_VERDE if preparacao_onda else B_CINZA, 22, {"icone": "ok" if preparacao_onda else "x"})
-			_bt("o_apagar", "Apagar...", Rect2(xr - 230, y0 + OPC_Y[8], 230, 50), B_VERMELHO, 22, {"on": tem_save})
+				_bt("o_v%d" % (k + 1), "%dx" % (k + 1), Rect2(xr - 230 + k * 80, y0 + OPC_Y[1], 70, h), B_OURO if velocidade_padrao == k + 1 else B_CINZA, 22, {"marcado": velocidade_padrao == k + 1})
+			_bt("o_som", "Ligado" if lig_som else "Desligado", Rect2(xr - 230, y0 + OPC_Y[2], 230, h), B_VERDE if lig_som else B_CINZA, 22, {"icone": "ok" if lig_som else "x"})
+			_bt("o_vm", "", Rect2(xr - 230, y0 + OPC_Y[3] + 2.0, 42, 42), Color.WHITE, 22, {"icone": "menos", "on": lig_som and Som.volume > 0.05})
+			_bt("o_vp", "", Rect2(xr - 42, y0 + OPC_Y[3] + 2.0, 42, 42), Color.WHITE, 22, {"icone": "mais", "on": lig_som and Som.volume < 0.95})
+			_bt("o_mm", "", Rect2(xr - 230, y0 + OPC_Y[4] + 2.0, 42, 42), Color.WHITE, 22, {"icone": "menos", "on": lig_som and Musica.volume > 0.05})
+			_bt("o_mp", "", Rect2(xr - 42, y0 + OPC_Y[4] + 2.0, 42, 42), Color.WHITE, 22, {"icone": "mais", "on": lig_som and Musica.volume < 0.95})
+			_bt("o_tremor", "Ligado" if tremor_tela else "Desligado", Rect2(xr - 230, y0 + OPC_Y[5], 230, h), B_VERDE if tremor_tela else B_CINZA, 22, {"icone": "ok" if tremor_tela else "x"})
+			_bt("o_dano", "Ligado" if numeros_dano else "Desligado", Rect2(xr - 230, y0 + OPC_Y[6], 230, h), B_VERDE if numeros_dano else B_CINZA, 22, {"icone": "ok" if numeros_dano else "x"})
+			_bt("o_poder", "Ligado" if poder_automatico else "Desligado", Rect2(xr - 230, y0 + OPC_Y[7], 230, h), B_VERDE if poder_automatico else B_CINZA, 22, {"icone": "ok" if poder_automatico else "x"})
+			_bt("o_prep", "Ligada" if preparacao_onda else "Desligada", Rect2(xr - 230, y0 + OPC_Y[8], 230, h), B_VERDE if preparacao_onda else B_CINZA, 22, {"icone": "ok" if preparacao_onda else "x"})
+			_bt("o_apagar", "Apagar...", Rect2(xr - 230, y0 + OPC_Y[9], 230, h), B_VERMELHO, 22, {"on": tem_save})
 			_bt("o_voltar", "Voltar", Rect2(640 - 130, painel.end.y - 82, 260, 56), B_MARROM)
 			_bt("o_voltar", "", Rect2(painel.end.x - 72, painel.position.y + 24, 42, 42), Color.WHITE, 22, {"icone": "x"})
 		Tela.CREDITOS:
@@ -451,7 +459,7 @@ func _acionar(id: String) -> void:
 		Som.tocar("fechar")
 	elif id in ["opcoes", "creditos", "f_creditos"]:
 		Som.tocar("abrir")
-	elif not (id in ["o_vm", "o_vp", "o_som"]):
+	elif not (id in ["o_vm", "o_vp", "o_mm", "o_mp", "o_som"]):
 		Som.tocar("clique")
 	if id in ["continuar", "nova"]:
 		for k in pulo_gato.size():
@@ -503,6 +511,10 @@ func _acionar(id: String) -> void:
 		"o_vm", "o_vp":
 			Som.volume = clampf(snappedf(Som.volume + (0.1 if id == "o_vp" else -0.1), 0.1), 0.0, 1.0)
 			Som.tocar("clique")   # o clique já sai no volume novo
+			_opcao_mudou()
+		"o_mm", "o_mp":
+			Musica.volume = clampf(snappedf(Musica.volume + (0.1 if id == "o_mp" else -0.1), 0.1), 0.0, 1.0)
+			Som.tocar("clique")
 			_opcao_mudou()
 		"o_v1", "o_v2", "o_v3":
 			velocidade_padrao = int(id.substr(3))
@@ -1140,15 +1152,17 @@ func _tela_opcoes() -> void:
 	_cabecalho("Opções", painel, 70.0)
 	var x: float = painel.position.x + 48.0
 	var xr: float = painel.end.x - 48.0
-	var y0: float = painel.position.y + 100.0
+	var y0: float = painel.position.y + OPC_TOPO
 	var lig := func(v: bool) -> String: return "ligado" if v else "desligado"
 	var poder_txt: String = "Ligado: os gatos usam o poder da fantasia sozinhos. Desligado: você dispara na luta. Agora: %s." % lig.call(poder_automatico)
 	var pct: int = int(round(Som.volume * 100.0))
+	var pct_m: int = int(round(Musica.volume * 100.0))
 	var rot: Array = [
 		["Tela", "Agora: %s. Clique para trocar" % ("tela cheia" if tela_cheia else "em janela")],
 		["Velocidade da luta", "Ao começar uma luta. Agora: %dx" % velocidade_padrao],
-		["Efeitos sonoros", "Agora: %s" % ("desligados" if Som.mudo else "ligados")],
-		["Volume dos efeitos", "Agora: %d%% (de 10 em 10)" % pct if not Som.mudo else "Ligue os efeitos para ajustar"],
+		["Som", "Efeitos e música. Agora: %s" % ("desligados" if Som.mudo else "ligados")],
+		["Volume dos efeitos", "Agora: %d%% (de 10 em 10)" % pct if not Som.mudo else "Ligue o som para ajustar"],
+		["Volume da música", "Agora: %d%% (de 10 em 10)" % pct_m if not Som.mudo else "Ligue o som para ajustar"],
 		["Tremor de tela", "Sacudidas nos golpes fortes. Agora: %s" % lig.call(tremor_tela)],
 		["Números de dano", "Valores que sobem dos golpes. Agora: %s" % lig.call(numeros_dano)],
 		["Poderes automáticos", poder_txt],
@@ -1158,7 +1172,7 @@ func _tela_opcoes() -> void:
 	for k in rot.size():
 		var y: float = y0 + OPC_Y[k]
 		_pata(k % 9, Vector2(x, y + 8.0), 2)
-		if k == 6:
+		if k == 7:
 			_t(rot[k][0], Vector2(x + 42.0, y + 22.0), 22, C_TEXTO)
 			var ly: float = y + 41.0
 			for l in _quebra(poder_txt, 13, 290.0):
@@ -1170,13 +1184,14 @@ func _tela_opcoes() -> void:
 			var ys: float = y0 + OPC_Y[k + 1] - 8.0
 			for d in int((painel.size.x - 96.0) / 14.0):
 				draw_rect(Rect2(x + d * 14.0, ys, 6, 3), Color(0.9, 0.62, 0.6, 0.7))
-	# régua do volume: dez quadradinhos entre o menos e o mais
-	var yv: float = y0 + OPC_Y[3]
-	var cheios: int = 0 if Som.mudo else int(round(Som.volume * 10.0))
-	for q in 10:
-		var rq := Rect2(xr - 230.0 + 56.0 + q * 12.0, yv + 13.0, 10.0, 24.0)
-		draw_rect(rq, C_CONT)
-		draw_rect(rq.grow(-2.0), Color(1.0, 0.7, 0.72) if q < cheios else Color(0.92, 0.86, 0.82))
+	# réguas de volume (efeitos e música): dez quadradinhos entre o menos e o mais
+	for linha in [[3, Som.volume], [4, Musica.volume]]:
+		var yv: float = y0 + OPC_Y[linha[0]]
+		var cheios: int = 0 if Som.mudo else int(round(float(linha[1]) * 10.0))
+		for q in 10:
+			var rq := Rect2(xr - 230.0 + 56.0 + q * 12.0, yv + 11.0, 10.0, 24.0)
+			draw_rect(rq, C_CONT)
+			draw_rect(rq.grow(-2.0), Color(1.0, 0.7, 0.72) if q < cheios else Color(0.92, 0.86, 0.82))
 	_botoes_pintar()
 
 ## Quebra o texto em linhas que cabem em `larg` pixels.
