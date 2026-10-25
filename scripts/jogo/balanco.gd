@@ -480,8 +480,8 @@ const ATO_DANO: Array[float] = [1.0, 1.3, 1.3]
 const ATO_VIDA_DEGRAU := 0.10       # cada cômodo já vencido no ato deixa os que faltam mais fortes
 const ATO_DANO_DEGRAU := 0.05
 # acerto por lugar, uma lista por ato (o 1º ato não usa); chefe e família pesam diferente; 2º ato refeito com as listas novas (onde_cai_final.md)
-const ATO_COMODO_VIDA: Array = [[1.0, 1.0, 1.0, 1.0, 1.0], [1.15, 0.95, 1.0, 1.45, 1.38], [0.64, 0.74, 0.42, 0.70, 0.40]]
-const ATO_COMODO_DANO: Array = [[1.0, 1.0, 1.0, 1.0, 1.0], [1.1, 0.86, 0.96, 1.4, 1.32], [0.69, 0.77, 0.47, 0.76, 0.52]]
+const ATO_COMODO_VIDA: Array = [[1.0, 1.0, 1.0, 1.0, 1.0], [1.45, 1.15, 1.15, 1.50, 1.48], [0.64, 0.74, 0.42, 0.70, 0.40]]
+const ATO_COMODO_DANO: Array = [[1.0, 1.0, 1.0, 1.0, 1.0], [1.34, 1.03, 1.05, 1.44, 1.40], [0.69, 0.77, 0.47, 0.76, 0.52]]
 const RIVAL_FRACAO_DO_LUGAR := 0.6  # 3º ato: fração das peças vestidas pelos rivais comuns que vem da lista do lugar (o resto, dos atos anteriores)
 const MORAL_T := 6.0                # 3º ato, Moral simples: segundos que os rivais ficam abalados quando o líder cai
 const MORAL_DANO := 0.30            # abalado: -30% de dano
