@@ -135,9 +135,9 @@ static func aplicar_janela() -> void:
 
 # ------------------------------------------------------------------ registro de entrada (diagnóstico)
 ## Com true, cada clique, tecla de menu e troca de tela é anotado em user://registro_menu.log,
-## para achar defeitos de menu que só aparecem com o mouse de verdade. Desligue quando não precisar.
+## para achar defeitos de menu que só aparecem com o mouse de verdade. Só liga fora do build de lançamento.
 var tr_fila: Callable = Callable()   # troca de tela pedida enquanto outra cortina rodava
-static var registrar_entrada: bool = true
+static var registrar_entrada: bool = OS.is_debug_build()
 static var _reg_arq: FileAccess = null
 static var _reg_linhas: int = 0
 
