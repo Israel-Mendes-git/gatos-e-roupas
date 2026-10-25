@@ -61,6 +61,8 @@ func _tudo_vencido(e: Estado) -> void:
 func _mapa(e: Estado) -> void:
 	p._entrar_mapa()
 	await _quadros()
+	Musica.atualizar(p, 0.016)
+	_ok(Musica.pedida() == "calma", "o mapa pede a música calma")
 	var m = p.mapa_casa
 	_ok(e.schro_liberado(), "bestiário completo libera a caixa")
 	for v in 3:
@@ -122,6 +124,11 @@ func _opcoes() -> void:
 	mn._acionar("o_prep")
 	_ok(Menus.preparacao_onda != antes, "opção da preparação liga e desliga")
 	mn._acionar("o_prep")
+	var vm: float = Musica.volume
+	mn._acionar("o_mm")
+	_ok(is_equal_approx(Musica.volume, maxf(0.0, vm - 0.1)), "o volume da música desce sem mexer nos efeitos")
+	mn._acionar("o_mp")
+	_ok(is_equal_approx(Musica.volume, vm), "o volume da música sobe de volta")
 	mn.tela = Menus.Tela.NENHUMA
 	mn._montar()
 	await _quadros()
@@ -137,6 +144,8 @@ func _luta(e: Estado) -> void:
 		p._lutar()
 		await _quadros(4)
 		_ok(p.modo == p.Modo.COMBATE, "a luta começa (preparação %s)" % op)
+		Musica.atualizar(p, 0.016)
+		_ok(Musica.pedida() == "luta%d" % e.ato, "a luta pede a música do ato %d" % e.ato)
 		_ok(p.campo.prep == op, "preparação %s: o campo %s" % [op, "espera o jogador" if op else "começa direto"])
 		p.menus.abrir_pausa()
 		await _quadros()
