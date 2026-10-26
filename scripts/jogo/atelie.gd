@@ -163,7 +163,7 @@ static func limpar_nome(s: String) -> String:
 
 static func sugerir_nome(rng: RandomNumberGenerator) -> String:
 	var p: String = _PREFIXOS[rng.randi() % _PREFIXOS.size()]
-	var f: String = ["Miau", "Gato", "Felino", "Bigode"][rng.randi() % 4]
+	var f: String = ["Miau", "Gato", "Felino", "Bigode"][rng.randi() % 4] # i18n-ok: vira nome digitado/guardado
 	return limpar_nome(p + " " + f)
 
 ## Lê as escolhas do save com tudo conferido; devolve {} se não servem (save antigo, editado ou de outra versão).
@@ -194,7 +194,7 @@ static func ler(d: Variant) -> Dictionary:
 static func aplicar(c: Dictionary) -> void:
 	cfg = c
 	var cj: int = Pecas.Conjunto.ATELIE
-	Pecas.CONJUNTO_NOME[cj] = nome() if criada() else "Ateliê"
+	Pecas.CONJUNTO_NOME[cj] = nome() if criada() else "Ateliê" # i18n-ok: identidade de CONJUNTO_NOME, traduzida ao desenhar
 	var base: Color = Color(0.95, 0.55, 0.85)
 	if criada():
 		var h: int = matiz(Pecas.Tipo.ATELIE_CABECA)
@@ -204,7 +204,7 @@ static func aplicar(c: Dictionary) -> void:
 	Pecas.CONJUNTO_COR[cj] = base
 	for s in Pecas.SLOTS:
 		var t: int = Pecas.Tipo.ATELIE_CABECA + s
-		Pecas.NOME[t] = Pecas.NOME[forma(t)] if criada() else Pecas.SLOT_NOME[s] + " do Ateliê"
+		Pecas.NOME[t] = Pecas.NOME[forma(t)] if criada() else Pecas.SLOT_NOME[s] + " do Ateliê" # i18n-ok: identidade de NOME, traduzida ao desenhar
 
 ## Confirma a criação (ou a refação): guarda as escolhas no estado e garante as 4 peças (Raras, na primeira vez)
 ## no guarda-roupa. Quem já tem as peças as mantém, com nível, raridade e marcas. Devolve false se estourar o orçamento

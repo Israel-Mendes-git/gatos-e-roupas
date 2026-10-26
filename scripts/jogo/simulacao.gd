@@ -1170,10 +1170,10 @@ func _chefe_gangue(u: Unidade, dt: float) -> bool:
 	var nome: String = ""
 	match u.chefe_tipo:
 		Fases.Chefe.DOM_GATLEONE:
-			nome = "Mensageiro!" if not fase2 else "Capangas!"
+			nome = Idioma.t("Mensageiro!") if not fase2 else Idioma.t("Capangas!")
 			forma = {"circ": [Vector3(u.x, u.y, 80.0)]}
 		Fases.Chefe.IMORTAL_MIAU:
-			nome = "Comboio!"
+			nome = Idioma.t("Comboio!")
 			var ys: Array = []
 			var cand: Array[Unidade] = gatos.duplicate()
 			cand.shuffle()
@@ -1184,14 +1184,14 @@ func _chefe_gangue(u: Unidade, dt: float) -> bool:
 			u.habil_dados_y = ys
 			forma = {"ret": rets}
 		Fases.Chefe.PROGRAMA_MESTRE:
-			nome = "Disco!"
+			nome = Idioma.t("Disco!")
 			var alvo: Unidade = _mais_perto(u, gatos, 1e5)
 			u.alvo_habil = alvo
 			forma = {"lin": [[Vector2(u.x, u.y), Vector2(alvo.x, alvo.y)]], "alvos": [Vector2(alvo.x, alvo.y)]}
 		Fases.Chefe.REI_MIAUNIDAS:
 			if fase2 and u.habil_n % 2 == 1:
 				h2 = 1
-				nome = "Flechas!"
+				nome = Idioma.t("Flechas!")
 				var cs: Array = _aglomerados(gatos, Balanco.REI_FLECHAS_RAIO, Balanco.REI_FLECHAS_N)
 				var circ: Array = []
 				for c in cs:
@@ -1199,7 +1199,7 @@ func _chefe_gangue(u: Unidade, dt: float) -> bool:
 				u.habil_dados_p = cs
 				forma = {"circ": circ}
 			else:
-				nome = "Chute!"
+				nome = Idioma.t("Chute!")
 				var frente: Unidade = gatos[0]
 				for v in gatos:
 					if v.x > frente.x:
@@ -1209,7 +1209,7 @@ func _chefe_gangue(u: Unidade, dt: float) -> bool:
 		Fases.Chefe.MAGNETOMIAU:
 			if frac < Balanco.CHEFE_FASE3 and u.habil_n % 2 == 1:
 				h2 = 1
-				nome = "Carro!"
+				nome = Idioma.t("Carro!")
 				var forte: Unidade = gatos[0]
 				for v in gatos:
 					if v.vida > forte.vida:
@@ -1217,7 +1217,7 @@ func _chefe_gangue(u: Unidade, dt: float) -> bool:
 				u.alvo_habil = forte
 				forma = {"circ": [Vector3(forte.x, forte.y, Balanco.MAGNETO_CARRO_RAIO)], "alvos": [Vector2(forte.x, forte.y)]}
 			else:
-				nome = "Ímã!"
+				nome = Idioma.t("Ímã!")
 				forma = {"circ": [Vector3(u.x, u.y, Balanco.MAGNETO_RAIO)]}
 	u.habil = h2
 	u.habil_t = Balanco.PODER_AVISO_T
@@ -3171,7 +3171,7 @@ func _poder_objecao(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 			if v.vivo and not v.clone:
 				v.buff_dano = Balanco.PODER_OBJECAO_BONUS * fr
 				v.buff_dano_t = maxf(v.buff_dano_t, Balanco.PODER_OBJECAO_BONUS_T * fr)
-		extra["texto"] = "Contra-prova!" if com_aviso else "Protesto!"
+		extra["texto"] = Idioma.t("Contra-prova!") if com_aviso else Idioma.t("Protesto!")
 	_dano_poder(u, alvo, base * Balanco.PODER_OBJECAO_DANO * fr)
 	return true
 
@@ -3197,7 +3197,7 @@ func _poder_imitar(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], bas
 		u.protegido_t = maxf(u.protegido_t, Balanco.DISFARCE_REFAZ_PROTEGE)
 	u.vida = minf(u.vida_max, u.vida + u.vida_max * (Balanco.DISFARCE_RASGA_CURA_HER if em_heranca else Balanco.DISFARCE_RASGA_CURA))
 	pontos.append(Vector2(u.x, u.y))
-	extra["texto"] = "Disfarce refeito!"
+	extra["texto"] = Idioma.t("Disfarce refeito!")
 	_ev({"t": "disfarce_refaz", "x": u.x, "y": u.y})
 	return true
 
@@ -3213,7 +3213,7 @@ func _poder_poquer(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], bas
 		if v.vivo and _dentro(v, cc.x, cc.y, Balanco.PODER_POQUER_RAIO):
 			_dano_poder(u, v, base * Balanco.PODER_POQUER_DANO[mao])
 	extra["raio"] = Balanco.PODER_POQUER_RAIO
-	extra["texto"] = Poquer.NOME[mao] + "!"
+	extra["texto"] = Idioma.t(Poquer.NOME[mao]) + "!"
 	extra["mao"] = mao
 	_tele(u.poder_conj, "mao", float(mao))
 	return true
@@ -3429,7 +3429,7 @@ func _poder_reviver(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 	if not aliados.has(g):
 		nascidos_aliados.append(g)
 	pontos.append(Vector2(g.x, g.y))
-	extra["texto"] = "Reviveu!"
+	extra["texto"] = Idioma.t("Reviveu!")
 	_tele(u.poder_conj, "revividos", 1.0)
 	return true
 
@@ -3708,7 +3708,7 @@ func _poder_esforco(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 	u.esforco_base = base * Balanco.PODER_ESFORCO_EXPLODE
 	u.esforco_conj = u.poder_conj
 	pontos.append(Vector2(u.x, u.y))
-	extra["texto"] = _PIADAS_ESFORCO[rng.randi_range(0, _PIADAS_ESFORCO.size() - 1)]
+	extra["texto"] = Idioma.t(_PIADAS_ESFORCO[rng.randi_range(0, _PIADAS_ESFORCO.size() - 1)])
 	extra["dur"] = u.esforco_t
 	return true
 
@@ -3719,7 +3719,7 @@ func _esforco_levanta(u: Unidade) -> void:
 	u.atordoado_t = 0.0
 	u.queima_t = 0.0
 	_ev({"t": "explosao", "x": u.x, "y": u.y, "raio": Balanco.PODER_ESFORCO_RAIO, "eq": u.equipe})
-	_ev({"t": "fala", "x": u.x, "y": u.y, "txt": "Ainda não!", "eq": u.equipe})
+	_ev({"t": "fala", "x": u.x, "y": u.y, "txt": Idioma.t("Ainda não!"), "eq": u.equipe})
 	var c0: int = _conj_tele
 	var e0: int = _eq_tele
 	_conj_tele = u.esforco_conj
@@ -3931,7 +3931,7 @@ func _kameha_feixe(u: Unidade, dano: float, baixa: bool) -> void:
 			_dano_poder(u, v, dano)
 	_ev({"t": "kameha", "x": u.x, "y": u.y, "x1": x1, "eq": u.equipe, "baixa": baixa})
 	if baixa:
-		_ev({"t": "fala", "x": u.x, "y": u.y, "txt": "O nível de poder é mais de 8 mil!", "eq": u.equipe})
+		_ev({"t": "fala", "x": u.x, "y": u.y, "txt": Idioma.t("O nível de poder é mais de 8 mil!"), "eq": u.equipe})
 
 ## Pedra rolante (O Arqueólogo): onda viajante; cada alvo é atingido uma vez.
 func _poder_pedra(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], base: float, pontos: Array, extra: Dictionary) -> bool:
@@ -3995,18 +3995,18 @@ func _poder_captura(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], ba
 			return false
 		pontos.append(Vector2(forte.x, forte.y))
 		_dano_poder(u, forte, base * Balanco.PODER_CAPTURA_CHEFE)
-		extra["texto"] = "Não é muito eficaz..."
+		extra["texto"] = Idioma.t("Não é muito eficaz...")
 		return true
 	pontos.append(Vector2(alvo.x, alvo.y))
 	if alvo.vida <= alvo.vida_max * Balanco.PODER_CAPTURA_LIMIAR:
 		_capturar(u, alvo)
 		extra["captura"] = true
-		extra["texto"] = "Capturado!"
+		extra["texto"] = Idioma.t("Capturado!")
 		_tele(u.poder_conj, "capturas", 1.0)
 	else:
 		alvo.frio_t = maxf(alvo.frio_t, Balanco.PODER_CAPTURA_LENTO_T)
 		_dano_poder(u, alvo, base * Balanco.PODER_CAPTURA_BOLA)
-		extra["texto"] = "A bola balançou..."
+		extra["texto"] = Idioma.t("A bola balançou...")
 	return true
 
 ## O bicho vira aliado temporário (cópia pelo caminho do clone) e some da onda sem largar peça.
@@ -4788,61 +4788,61 @@ static func pct(v: float) -> String:
 static func ficha_linhas(u: Unidade) -> Array:
 	var gps: float = 1.0 / maxf(u.intervalo, 0.01)
 	var l: Array = [
-		["Vida", "%d / %d" % [int(ceil(maxf(u.vida, 0.0))), int(round(u.vida_max))] if u.vida < u.vida_max - 0.5 else str(int(round(u.vida_max)))],
-		["Dano por golpe", num(u.dano)],
-		["Golpes por segundo", num(gps, 2)],
-		["Dano por segundo", num(u.dano * gps)],
-		["Alcance", "%d%s" % [int(round(u.alcance)), " (atira)" if u.distancia else ""]],
-		["Velocidade", str(int(round(u.vel)))],
+		[Idioma.t("Vida"), "%d / %d" % [int(ceil(maxf(u.vida, 0.0))), int(round(u.vida_max))] if u.vida < u.vida_max - 0.5 else str(int(round(u.vida_max)))],
+		[Idioma.t("Dano por golpe"), num(u.dano)],
+		[Idioma.t("Golpes por segundo"), num(gps, 2)],
+		[Idioma.t("Dano por segundo"), num(u.dano * gps)],
+		[Idioma.t("Alcance"), (Idioma.t("%d (atira)") % int(round(u.alcance))) if u.distancia else str(int(round(u.alcance)))],
+		[Idioma.t("Velocidade"), str(int(round(u.vel)))],
 	]
 	if u.armadura > 0.0:
-		l.append(["Armadura", "-%s por golpe" % num(u.armadura)])
+		l.append([Idioma.t("Armadura"), Idioma.t("-%s por golpe") % num(u.armadura)])
 	if u.reducao > 0.0:
-		l.append(["Redução de dano", pct(u.reducao)])
+		l.append([Idioma.t("Redução de dano"), pct(u.reducao)])
 	if u.esquiva > 0.0:
-		l.append(["Esquiva", pct(u.esquiva)])
+		l.append([Idioma.t("Esquiva"), pct(u.esquiva)])
 	if u.critico > 0.0:
-		l.append(["Golpe crítico", pct(u.critico)])
+		l.append([Idioma.t("Golpe crítico"), pct(u.critico)])
 	if u.regen > 0.0:
-		l.append(["Regeneração", "%s de vida/s" % num(u.regen)])
+		l.append([Idioma.t("Regeneração"), Idioma.t("%s de vida/s") % num(u.regen)])
 	if u.espinho > 0.0:
-		l.append(["Espinhos", "%s por golpe levado" % num(u.espinho)])
+		l.append([Idioma.t("Espinhos"), Idioma.t("%s por golpe levado") % num(u.espinho)])
 	if u.roubo > 0.0:
-		l.append(["Roubo de vida", pct(u.roubo)])
+		l.append([Idioma.t("Roubo de vida"), pct(u.roubo)])
 	if u.cura > 0.0:
-		l.append(["Cura em aliado", "%s de vida/s" % num(u.cura)])
+		l.append([Idioma.t("Cura em aliado"), Idioma.t("%s de vida/s") % num(u.cura)])
 	if u.tocha_dps > 0.0:
-		l.append(["Queimadura", "%s de dano/s" % num(u.tocha_dps)])
+		l.append([Idioma.t("Queimadura"), Idioma.t("%s de dano/s") % num(u.tocha_dps)])
 	if u.aura_dano > 0.0:
-		l.append(["Aura de dano", "%s de dano/s" % num(u.aura_dano)])
+		l.append([Idioma.t("Aura de dano"), Idioma.t("%s de dano/s") % num(u.aura_dano)])
 	if u.regen_aura > 0.0:
-		l.append(["Aura de cura", "%s de vida/s" % num(u.regen_aura)])
+		l.append([Idioma.t("Aura de cura"), Idioma.t("%s de vida/s") % num(u.regen_aura)])
 	if u.coroa_bonus > 0.0:
-		l.append(["Aura de força", "+%s de dano" % pct(u.coroa_bonus)])
+		l.append([Idioma.t("Aura de força"), Idioma.t("+%s de dano") % pct(u.coroa_bonus)])
 	if u.aura_raio > 0.0:
-		l.append(["Aura de lentidão", "bichos a %s" % pct(u.aura_lentidao)])
+		l.append([Idioma.t("Aura de lentidão"), Idioma.t("bichos a %s") % pct(u.aura_lentidao)])
 	if u.furia_k > 0.0:
-		l.append(["Fúria", "até +%s de dano ferido" % pct(u.furia_k)])
+		l.append([Idioma.t("Fúria"), Idioma.t("até +%s de dano ferido") % pct(u.furia_k)])
 	if u.cerco > 0.0:
-		l.append(["Golpe em área", "%s nos vizinhos" % pct(u.cerco)])
+		l.append([Idioma.t("Golpe em área"), Idioma.t("%s nos vizinhos") % pct(u.cerco)])
 	if u.barril_dano > 0.0:
-		l.append(["Explosão ao cair", num(u.barril_dano)])
+		l.append([Idioma.t("Explosão ao cair"), num(u.barril_dano)])
 	if u.barreira_int > 0.0:
-		l.append(["Barreira", "a cada %s s" % num(u.barreira_int)])
+		l.append([Idioma.t("Barreira"), Idioma.t("a cada %s s") % num(u.barreira_int)])
 	if u.atordoa_chance > 0.0:
-		l.append(["Atordoar no golpe", pct(u.atordoa_chance)])
+		l.append([Idioma.t("Atordoar no golpe"), pct(u.atordoa_chance)])
 	if u.gelo_chance > 0.0:
-		l.append(["Deixar lento no golpe", pct(u.gelo_chance)])
+		l.append([Idioma.t("Deixar lento no golpe"), pct(u.gelo_chance)])
 	if u.tiro_duplo > 0.0:
-		l.append(["Tiro duplo", pct(u.tiro_duplo)])
+		l.append([Idioma.t("Tiro duplo"), pct(u.tiro_duplo)])
 	return l
 
 ## Nome da herança: o poder e a fantasia de onde veio.
 static func heranca_nome(conj: int, grau: int = 1) -> String:
 	var c: int = clampi(conj, 0, Pecas.PODER_NOME.size() - 1)
-	return "%s (%s)" % [heranca_nome_curto(c, grau), Pecas.CONJUNTO_NOME[c]]
+	return "%s (%s)" % [heranca_nome_curto(c, grau), Idioma.t(Pecas.CONJUNTO_NOME[c])]
 
 ## "Relâmpago" no grau I, "Relâmpago II" a partir do grau II.
 static func heranca_nome_curto(conj: int, grau: int = 1) -> String:
 	var c: int = clampi(conj, 0, Pecas.PODER_NOME.size() - 1)
-	return Pecas.PODER_NOME[c] + ("" if grau <= 1 else " " + Balanco.heranca_grau_romano(grau))
+	return Idioma.t(Pecas.PODER_NOME[c]) + ("" if grau <= 1 else " " + Balanco.heranca_grau_romano(grau))

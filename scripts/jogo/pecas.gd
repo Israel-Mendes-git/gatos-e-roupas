@@ -672,14 +672,14 @@ static func marca_linha(m: int, n: int) -> String:
 		Marca.CICATRIZ:
 			extra = "+%d" % int(round(Balanco.MARCA_CICATRIZ_VIDA * n))
 		Marca.CERCO:
-			extra = "%d%% do dano" % int(round(Balanco.MARCA_CERCO_DANO * n * 100.0))
+			extra = Idioma.t("%d%% do dano") % int(round(Balanco.MARCA_CERCO_DANO * n * 100.0))
 		Marca.FURO:
 			extra = "-%d%%" % int(round(minf(Balanco.MARCA_FURO_MAX, Balanco.MARCA_FURO_REDUCAO * n) * 100.0))
 		Marca.BRASA:
 			extra = "+%d/s" % int(round(Balanco.MARCA_BRASA_DPS * n))
 		Marca.POLVORA:
 			extra = "+%d" % int(round(Balanco.MARCA_POLVORA_DANO * n))
-	return "%s ×%d: %s (%s)" % [MARCA_NOME[m], n, MARCA_DICA[m], extra]
+	return "%s ×%d: %s (%s)" % [Idioma.t(MARCA_NOME[m]), n, Idioma.t(MARCA_DICA[m]), extra]
 
 ## Quantas peças de cada fantasia estão vestidas (índice = Conjunto).
 static func contar_conjuntos(pecas: Array) -> Array[int]:
@@ -703,65 +703,65 @@ static func conjunto_bonus(c: int, grau: int) -> String:
 	var v: float = Balanco.conj_valor(c, g)
 	match molde_kit(c):
 		Conjunto.CAVALEIRO:
-			return "+%d de armadura" % int(v)
+			return Idioma.t("+%d de armadura") % int(v)
 		Conjunto.GUARDIAO:
-			return "+%d%% de vida" % int(round(v * 100.0))
+			return Idioma.t("+%d%% de vida") % int(round(v * 100.0))
 		Conjunto.REI:
-			return "aliados por perto: +%d%% de dano" % int(round(v * 100.0))
+			return Idioma.t("aliados por perto: +%d%% de dano") % int(round(v * 100.0))
 		Conjunto.CIRCO:
-			return "explode ao morrer (+%d)" % int(v)
+			return Idioma.t("explode ao morrer (+%d)") % int(v)
 		Conjunto.VIKING:
-			return "+%d%% de dano" % int(round(v * 100.0))
+			return Idioma.t("+%d%% de dano") % int(round(v * 100.0))
 		Conjunto.JARDINEIRO:
-			return "regenera +%d de vida por segundo" % int(v)
+			return Idioma.t("regenera +%d de vida por segundo") % int(v)
 		Conjunto.CAUBOI:
-			return "ataca %d%% mais rápido" % int(round(v * 100.0))
+			return Idioma.t("ataca %d%% mais rápido") % int(round(v * 100.0))
 		Conjunto.PIRATA:
-			return "golpes devolvem %d%% do dano em vida" % int(round(v * 100.0))
+			return Idioma.t("golpes devolvem %d%% do dano em vida") % int(round(v * 100.0))
 		Conjunto.MAGO:
-			return "golpes queimam (+%d/s)" % int(v)
+			return Idioma.t("golpes queimam (+%d/s)") % int(v)
 		BONUS_CANTIL:
-			return "cantil: cura %d%% da vida uma vez, abaixo de %d%%" % [int(round(v * 100.0)), int(round(Balanco.CANTIL_LIMIAR * 100.0))]
+			return Idioma.t("cantil: cura %d%% da vida uma vez, abaixo de %d%%") % [int(round(v * 100.0)), int(round(Balanco.CANTIL_LIMIAR * 100.0))]
 		BONUS_CRITICO:
-			return "+%d%% de chance de golpe crítico" % int(round(v * 100.0))
+			return Idioma.t("+%d%% de chance de golpe crítico") % int(round(v * 100.0))
 		BONUS_BARREIRA:
 			if g == 1 and c == Conjunto.MIMIAU:
-				return "Disfarce anula o 1º golpe, atordoa %s s; +%d%% dano; Furioso" % [Simulacao.num(v), int(round(Balanco.DISFARCE_KIT_DANO * 100.0))]
-			return "anula um golpe a cada %d s" % int(v)
+				return Idioma.t("Disfarce anula o 1º golpe, atordoa %s s; +%d%% dano; Furioso") % [Simulacao.num(v), int(round(Balanco.DISFARCE_KIT_DANO * 100.0))]
+			return Idioma.t("anula um golpe a cada %d s") % int(v)
 		BONUS_CARGA:
-			return "o poder recarrega %d%% mais depressa" % int(round(v * 100.0))
+			return Idioma.t("o poder recarrega %d%% mais depressa") % int(round(v * 100.0))
 		BONUS_TIRO_DUPLO:
-			return "%d%% de chance de atirar duas vezes" % int(round(v * 100.0))
+			return Idioma.t("%d%% de chance de atirar duas vezes") % int(round(v * 100.0))
 		BONUS_ESCORREGA:
-			return "golpes deixam o alvo lento (%d%% de chance)" % int(round(v * 100.0))
+			return Idioma.t("golpes deixam o alvo lento (%d%% de chance)") % int(round(v * 100.0))
 		BONUS_AURA_REGEN:
-			return "aliados em volta regeneram +%s de vida por segundo" % Simulacao.num(v)
+			return Idioma.t("aliados em volta regeneram +%s de vida por segundo") % Simulacao.num(v)
 		BONUS_SEMENTES:
-			return "ao cair, cura os aliados em %d%% da vida" % int(round(v * 100.0))
+			return Idioma.t("ao cair, cura os aliados em %d%% da vida") % int(round(v * 100.0))
 		BONUS_ATORDOA:
-			return "golpes atordoam o alvo (%d%% de chance)" % int(round(v * 100.0))
+			return Idioma.t("golpes atordoam o alvo (%d%% de chance)") % int(round(v * 100.0))
 		BONUS_CHIFRES:
-			return "mais dano com menos vida (até +%d%%)" % int(round(v * 100.0))
+			return Idioma.t("mais dano com menos vida (até +%d%%)") % int(round(v * 100.0))
 		BONUS_VELOCIDADE:
-			return "anda %d%% mais rápido" % int(round(v * 100.0))
+			return Idioma.t("anda %d%% mais rápido") % int(round(v * 100.0))
 		BONUS_APARA:
-			return "Apara %d%% dos golpes de perto; tiro na perna atordoa" % int(round(v * 100.0))
+			return Idioma.t("Apara %d%% dos golpes de perto; tiro na perna atordoa") % int(round(v * 100.0))
 		BONUS_EMBOSCADA:
-			return "o 1º golpe em cada inimigo fere ×%s" % Simulacao.num(v)
+			return Idioma.t("o 1º golpe em cada inimigo fere ×%s") % Simulacao.num(v)
 		BONUS_ALCANCE:
-			return "+%d de alcance" % int(v)
+			return Idioma.t("+%d de alcance") % int(v)
 		BONUS_CERCO:
-			return "golpes ferem em volta (%d%% do dano)" % int(round(v * 100.0))
+			return Idioma.t("golpes ferem em volta (%d%% do dano)") % int(round(v * 100.0))
 		BONUS_EXECUCAO:
-			return "+%d%% de dano em quem tem menos de %d%% de vida" % [int(round(v * 100.0)), int(round(Balanco.EXECUCAO_LIMIAR * 100.0))]
+			return Idioma.t("+%d%% de dano em quem tem menos de %d%% de vida") % [int(round(v * 100.0)), int(round(Balanco.EXECUCAO_LIMIAR * 100.0))]
 		BONUS_ESQUIVA:
-			return "%d%% de chance de esquivar" % int(round(v * 100.0))
+			return Idioma.t("%d%% de chance de esquivar") % int(round(v * 100.0))
 		BONUS_CURA_ABATE:
-			return "cura %d%% da vida a cada abate" % int(round(v * 100.0))
+			return Idioma.t("cura %d%% da vida a cada abate") % int(round(v * 100.0))
 		BONUS_ESPINHO:
-			return "espinhos: devolve %d de dano a quem bate de perto" % int(v)
+			return Idioma.t("espinhos: devolve %d de dano a quem bate de perto") % int(v)
 		BONUS_FOLEGO:
-			return "segundo fôlego: levanta uma vez com %d%% da vida" % int(round(v * 100.0))
+			return Idioma.t("segundo fôlego: levanta uma vez com %d%% da vida") % int(round(v * 100.0))
 		BONUS_SUSTO:
-			return "golpes assustam o alvo (%d%% de chance)" % int(round(v * 100.0))
+			return Idioma.t("golpes assustam o alvo (%d%% de chance)") % int(round(v * 100.0))
 	return ""

@@ -46,6 +46,7 @@ var x_sobre: bool = false
 var x_press: bool = false
 var _foco_som: int = -1
 var digitando: bool = false
+var _idioma_montado: String = ""
 var rng := RandomNumberGenerator.new()
 
 # ---- rascunho (o que o jogador está montando; só vira fantasia ao confirmar) ----
@@ -194,6 +195,7 @@ func _indice_de(id: String) -> int:
 	return maxi(0, itens.size() - 1)
 
 func _montar() -> void:
+	_idioma_montado = Idioma.atual
 	var id_foco: String = ""
 	if foco >= 0 and foco < itens.size():
 		id_foco = itens[foco]["id"]
@@ -208,11 +210,11 @@ func _montar() -> void:
 	_quatro_setas("p", 5)
 	_quatro_setas("b", 6)
 	itens.append({"id": "nome", "r": NOME_R, "on": true, "txt": "", "cor": azul, "tam": 16, "vazio": true})
-	itens.append({"id": "sug", "r": SUGERIR_R, "on": true, "txt": "Sugerir nome", "cor": UIComum.B_LARANJA, "tam": 16})
+	itens.append({"id": "sug", "r": SUGERIR_R, "on": true, "txt": Idioma.t("Sugerir nome"), "cor": UIComum.B_LARANJA, "tam": 16})
 	var igual: bool = (dono.estado.atelie == Atelie.ler(rascunho()))
-	itens.append({"id": "ok", "r": BTN_OK, "on": _custo() <= Atelie.ORCAMENTO, "txt": "Salvar a fantasia" if not dono.estado.atelie.is_empty() else "Criar a fantasia",
+	itens.append({"id": "ok", "r": BTN_OK, "on": _custo() <= Atelie.ORCAMENTO, "txt": Idioma.t("Salvar a fantasia") if not dono.estado.atelie.is_empty() else Idioma.t("Criar a fantasia"),
 		"cor": UIComum.B_VERDE if not igual else UIComum.B_CINZA, "tam": 18})
-	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true, "txt": "Fechar", "cor": UIComum.B_MARROM, "tam": 20})
+	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true, "txt": Idioma.t("Fechar"), "cor": UIComum.B_MARROM, "tam": 20})
 	foco = itens.size() - 1
 	for k in itens.size():
 		if itens[k]["id"] == id_foco:
@@ -260,13 +262,13 @@ func acionar(id: String) -> void:
 	if id == "ok":
 		var r: Dictionary = rascunho()
 		if Atelie.confirmar(e, r):
-			_avisar("Pronto! As peças estão no guarda-roupa.")
+			_avisar(Idioma.t("Pronto! As peças estão no guarda-roupa."))
 			Som.tocar("nivel")
 			if dono.has_method("atelie_salvo"):
 				dono.atelie_salvo()
 		else:
 			_recusar(id)
-			_avisar("Passou do orçamento: tire %d ponto(s)." % maxi(1, Atelie.custo(r) - Atelie.ORCAMENTO))
+			_avisar(Idioma.t("Passou do orçamento: tire %d ponto(s).") % maxi(1, Atelie.custo(r) - Atelie.ORCAMENTO))
 		_aplicar()
 		_montar()
 		return
@@ -418,6 +420,8 @@ func _process(delta: float) -> void:
 	t += delta
 	if not aberta:
 		return
+	if _idioma_montado != Idioma.atual:
+		_montar()
 	abrir_t += delta
 	aviso_t = maxf(0.0, aviso_t - delta)
 	UIComum.anim_passo(anim, "x", x_sobre, x_sobre and x_press, delta)
@@ -459,10 +463,10 @@ func _draw() -> void:
 	draw_rect(PAINEL.grow(-18.0), COR_FUNDO)
 	draw_rect(PAINEL.grow(-30.0), Color(0, 0, 0, 0.18), false, 2.0)
 	dono.nove(self, GUI_TEX, R_MADEIRA, M_MADEIRA, PAINEL, 0.75, Color.WHITE, false)
-	UIComum.titulo(self, "Ateliê", 640.0, 76.0, 34, COR_OURO, Color(0.16, 0.07, 0.05, 0.95), t, false)
-	_texto("Crie a sua fantasia: escolha formas, cores, um poder e um bônus, sem passar dos pontos.", Vector2(PAINEL.position.x, 112), 16, Color(1, 1, 1, 0.8), PAINEL.size.x, 3)
-	_texto("Peças", Vector2(COL_E_X, 146), 18, COR_TINTA, -1.0, 4)
-	_texto("Sua fantasia", Vector2(COL_D_X, 146), 18, COR_TINTA, -1.0, 4)
+	UIComum.titulo(self, Idioma.t("Ateliê"), 640.0, 76.0, 34, COR_OURO, Color(0.16, 0.07, 0.05, 0.95), t, false)
+	_texto(Idioma.t("Crie a sua fantasia: escolha formas, cores, um poder e um bônus, sem passar dos pontos."), Vector2(PAINEL.position.x, 112), 16, Color(1, 1, 1, 0.8), PAINEL.size.x, 3)
+	_texto(Idioma.t("Peças"), Vector2(COL_E_X, 146), 18, COR_TINTA, -1.0, 4)
+	_texto(Idioma.t("Sua fantasia"), Vector2(COL_D_X, 146), 18, COR_TINTA, -1.0, 4)
 	for i in 7:
 		UIComum.ini_cascata(self, UIComum.cascata(abrir_t, i), -1.0)
 		_linha(i)
@@ -472,7 +476,7 @@ func _draw() -> void:
 	UIComum.fim_cascata(self)
 	if aviso != "" and aviso_t > 0.0:
 		UIComum.aviso(self, aviso, 640.0, 134.0, clampf(aviso_t / 0.5, 0.0, 1.0), UIComum.C_NOME)
-	_texto("Setas e Enter  |  Esc fecha", Vector2(COL_E_X, 700 - 30), 13, Color(1, 1, 1, 0.45), -1.0, 3)
+	_texto(Idioma.t("Setas e Enter  |  Esc fecha"), Vector2(COL_E_X, 700 - 30), 13, Color(1, 1, 1, 0.45), -1.0, 3)
 	for k in itens.size():
 		_botao(k)
 	UIComum.fechar(self, BTN_X, {"on": true, "foco": x_sobre, "h": UIComum.anim_h(anim, "x"), "p": UIComum.anim_p(anim, "x")}, t)
@@ -488,38 +492,38 @@ func _linha(i: int) -> void:
 	if i < 4:
 		var s: int = i
 		var tipo: int = int((formas_ok[s] as Array)[fi[s]])
-		_texto(Pecas.SLOT_NOME[s], Vector2(r.position.x + 8.0, r.position.y + 24.0), 17, COR_TINTA, 70.0, 4)
+		_texto(Idioma.t(Pecas.SLOT_NOME[s]), Vector2(r.position.x + 8.0, r.position.y + 24.0), 17, COR_TINTA, 70.0, 4)
 		var rn: Rect2 = rect_nome_forma(i)
-		var nm: String = "%s (%d pt)" % [Pecas.NOME[tipo], Atelie.custo_forma(tipo)]
+		var nm: String = Idioma.t("%s (%d pt)") % [Idioma.t(Pecas.NOME[tipo]), Atelie.custo_forma(tipo)]
 		var tm: int = Oficina.tam_cabe(nm, [15, 14, 13, 12, 11, 10], rn.size.x)
 		_texto(nm, Vector2(rn.position.x, rn.position.y + 19.0), tm, COR_TINTA, rn.size.x, 3)
-		var info: String = Pecas.dica(tipo)
+		var info: String = Idioma.t(Pecas.dica(tipo))
 		_texto(info, Vector2(r.position.x + 82.0, r.position.y + 51.0), Oficina.tam_cabe(info, [13, 12, 11, 10], 300.0), Color(1, 1, 1, 0.65), 300.0, 3)
 		# miniatura da peça com a cor escolhida
 		_cor_linha(rect_nome_cor(i), mi[s], r)
 		# peça pronta (com cor e estampa) ao lado do rótulo
 		Desenho.icone(self, Pecas.Tipo.ATELIE_CABECA + s, Vector2(r.end.x - 70.0, r.position.y + 48.0), 22.0)
 	elif i == 4:
-		_texto("Estampa", Vector2(r.position.x + 8.0, r.position.y + 26.0), 17, COR_TINTA, 70.0, 4)
-		_texto("Vale para as 4 peças. Não custa pontos.", Vector2(r.position.x + 82.0, r.position.y + 26.0), 12, Color(1, 1, 1, 0.6), 290.0, 3)
+		_texto(Idioma.t("Estampa"), Vector2(r.position.x + 8.0, r.position.y + 26.0), 17, COR_TINTA, 70.0, 4)
+		_texto(Idioma.t("Vale para as 4 peças. Não custa pontos."), Vector2(r.position.x + 82.0, r.position.y + 26.0), 12, Color(1, 1, 1, 0.6), 290.0, 3)
 		var rn2: Rect2 = rect_nome_cor(i)
-		_texto(Atelie.ESTAMPA_NOME[est], Vector2(rn2.position.x, rn2.position.y + 19.0), 14, COR_TINTA, rn2.size.x, 3)
+		_texto(Idioma.t(Atelie.ESTAMPA_NOME[est]), Vector2(rn2.position.x, rn2.position.y + 19.0), 14, COR_TINTA, rn2.size.x, 3)
 	elif i == 5:
 		var c: int = poderes_ok[pi]
-		_texto("Poder", Vector2(r.position.x + 8.0, r.position.y + 24.0), 17, COR_TINTA, 70.0, 4)
+		_texto(Idioma.t("Poder"), Vector2(r.position.x + 8.0, r.position.y + 24.0), 17, COR_TINTA, 70.0, 4)
 		var rn3: Rect2 = rect_nome_forma(i)
-		var nome_p: String = "%s (%s)" % [Pecas.PODER_NOME[c], Pecas.CONJUNTO_NOME[c]]
+		var nome_p: String = "%s (%s)" % [Idioma.t(Pecas.PODER_NOME[c]), Idioma.t(Pecas.CONJUNTO_NOME[c])]
 		_texto(nome_p, Vector2(rn3.position.x, rn3.position.y + 19.0), Oficina.tam_cabe(nome_p, [15, 14, 13, 12, 11, 10], rn3.size.x), COR_OURO.lightened(0.2), rn3.size.x, 3)
 		_pontos(r, Atelie.custo_poder(c))
-		_bloco(Pecas.PODER_DICA[c], Vector2(r.position.x + 82.0, r.position.y + 45.0), 400.0, [13, 12, 11, 10], 2, Color(1, 1, 1, 0.65))
+		_bloco(Idioma.t(Pecas.PODER_DICA[c]), Vector2(r.position.x + 82.0, r.position.y + 45.0), 400.0, [13, 12, 11, 10], 2, Color(1, 1, 1, 0.65))
 	else:
 		var cb: int = bonus_ok[bi]
-		_texto("Bônus", Vector2(r.position.x + 8.0, r.position.y + 24.0), 17, COR_TINTA, 70.0, 4)
+		_texto(Idioma.t("Bônus"), Vector2(r.position.x + 8.0, r.position.y + 24.0), 17, COR_TINTA, 70.0, 4)
 		var rn4: Rect2 = rect_nome_forma(i)
-		var nome_b: String = Pecas.CONJUNTO_NOME[cb]
+		var nome_b: String = Idioma.t(Pecas.CONJUNTO_NOME[cb])
 		_texto(nome_b, Vector2(rn4.position.x, rn4.position.y + 19.0), Oficina.tam_cabe(nome_b, [15, 14, 13, 12, 11, 10], rn4.size.x), COR_BOM, rn4.size.x, 3)
 		_pontos(r, Atelie.custo_bonus(cb))
-		_bloco("2 peças: " + Pecas.conjunto_bonus(cb, 1) + "; 4 peças: " + Pecas.conjunto_bonus(cb, 2), Vector2(r.position.x + 82.0, r.position.y + 45.0), 410.0, [13, 12, 11, 10], 2, Color(1, 1, 1, 0.65))
+		_bloco(Idioma.t("2 peças: %s; 4 peças: %s") % [Pecas.conjunto_bonus(cb, 1), Pecas.conjunto_bonus(cb, 2)], Vector2(r.position.x + 82.0, r.position.y + 45.0), 410.0, [13, 12, 11, 10], 2, Color(1, 1, 1, 0.65))
 
 ## Quadradinho de cor com o nome do matiz escolhido.
 func _cor_linha(rn: Rect2, m: int, _linha: Rect2) -> void:
@@ -527,11 +531,11 @@ func _cor_linha(rn: Rect2, m: int, _linha: Rect2) -> void:
 	var q := Rect2(rn.position.x, rn.position.y + 5.0, 18.0, 18.0)
 	draw_rect(q, Color(0.07, 0.04, 0.06))
 	draw_rect(q.grow(-2.0), amostra)
-	_texto(Atelie.MATIZ_NOME[m], Vector2(q.end.x + 5.0, rn.position.y + 19.0), 13, COR_TINTA, rn.size.x - 24.0, 3)
+	_texto(Idioma.t(Atelie.MATIZ_NOME[m]), Vector2(q.end.x + 5.0, rn.position.y + 19.0), 13, COR_TINTA, rn.size.x - 24.0, 3)
 
 ## "N pt" à direita da linha.
 func _pontos(r: Rect2, n: int) -> void:
-	var txt: String = "%d %s" % [n, "ponto" if n == 1 else "pontos"]
+	var txt: String = Idioma.t("%d ponto") % n if n == 1 else Idioma.t("%d pontos") % n
 	var w: float = Oficina.largura(txt, 14)
 	_texto(txt, Vector2(r.end.x - w - 10.0, r.position.y + 24.0), 14, COR_OURO, -1.0, 3)
 
@@ -558,8 +562,8 @@ func _lado_direito(e: Estado) -> void:
 	var custo: int = _custo()
 	var resto: int = Atelie.ORCAMENTO - custo
 	var y0: float = 452.0
-	_texto("Pontos: %d de %d" % [custo, Atelie.ORCAMENTO], Vector2(COL_D_X, y0 + 12.0), 20, COR_OURO if resto >= 0 else COR_RUIM, -1.0, 4)
-	var msg: String = "Sobram %d" % resto if resto > 0 else ("No limite" if resto == 0 else "Faltam %d pontos (tire %d)" % [-resto, -resto])
+	_texto(Idioma.t("Pontos: %d de %d") % [custo, Atelie.ORCAMENTO], Vector2(COL_D_X, y0 + 12.0), 20, COR_OURO if resto >= 0 else COR_RUIM, -1.0, 4)
+	var msg: String = Idioma.t("Sobram %d") % resto if resto > 0 else (Idioma.t("No limite") if resto == 0 else Idioma.t("Faltam %d pontos (tire %d)") % [-resto, -resto])
 	var wm: float = Oficina.largura(msg, 16)
 	_texto(msg, Vector2(COL_D_X + COL_D_W - wm, y0 + 12.0), 16, COR_BOM if resto >= 0 else COR_RUIM, -1.0, 3)
 	var barra := Rect2(COL_D_X, y0 + 20.0, COL_D_W, 18.0)
@@ -575,13 +579,13 @@ func _lado_direito(e: Estado) -> void:
 			c2 = Color(0.3, 0.12, 0.12)
 		draw_rect(q, c2)
 	draw_rect(Rect2(barra.position.x + 2.0 + Atelie.ORCAMENTO * passo, barra.position.y, 2.0, barra.size.y), Color(1, 1, 1, 0.8))
-	var detalhe: String = "Moldes %d + poder %d + bônus %d" % [_custo_moldes(), Atelie.custo_poder(poderes_ok[pi]), Atelie.custo_bonus(bonus_ok[bi])]
+	var detalhe: String = Idioma.t("Moldes %d + poder %d + bônus %d") % [_custo_moldes(), Atelie.custo_poder(poderes_ok[pi]), Atelie.custo_bonus(bonus_ok[bi])]
 	_texto(detalhe, Vector2(COL_D_X, barra.end.y + 17.0), 14, Color(1, 1, 1, 0.65), -1.0, 3)
 	var recarga: int = int(round(Balanco.PODER_INTERVALO * float(Balanco.PODER_KIT_INTERVALO.get(poderes_ok[pi], 1.0)) * Atelie.PODER_RECARGA_FATOR))
-	_bloco("Poder do kit completo: solta a cada %d s, com %d%% da força da fantasia de origem (o bônus vale com 2 peças e com as 4)." % [recarga, int(round(Atelie.PODER_FORCA_FATOR * 100.0))],
+	_bloco(Idioma.t("Poder do kit completo: solta a cada %d s, com %d%% da força da fantasia de origem (o bônus vale com 2 peças e com as 4).") % [recarga, int(round(Atelie.PODER_FORCA_FATOR * 100.0))],
 		Vector2(COL_D_X, barra.end.y + 36.0), COL_D_W, [13, 12, 11], 3, Color(0.6, 0.85, 1.0, 0.85))
 	if not e.atelie.is_empty():
-		_texto("Mudar é de graça; as peças mantêm nível, raridade e marcas.", Vector2(COL_D_X, barra.end.y + 82.0), 13, Color(1, 1, 1, 0.5), COL_D_W, 3)
+		_texto(Idioma.t("Mudar é de graça; as peças mantêm nível, raridade e marcas."), Vector2(COL_D_X, barra.end.y + 82.0), 13, Color(1, 1, 1, 0.5), COL_D_W, 3)
 
 func _botao(i: int) -> void:
 	var b: Dictionary = itens[i]
@@ -597,7 +601,7 @@ func _botao(i: int) -> void:
 		draw_rect(r, COR_OURO if ativo else (Color(1, 1, 1, 0.7) if sobre else Color(1, 1, 1, 0.25)), false, 2.0)
 		var txt: String = nome_txt
 		if txt == "" and not ativo:
-			_texto("Clique para dar um nome (até %d letras)" % Atelie.NOME_MAX, Vector2(r.position.x + 10.0, r.position.y + 25.0), 14, Color(1, 1, 1, 0.4), r.size.x - 16.0, 3)
+			_texto(Idioma.t("Clique para dar um nome (até %d letras)") % Atelie.NOME_MAX, Vector2(r.position.x + 10.0, r.position.y + 25.0), 14, Color(1, 1, 1, 0.4), r.size.x - 16.0, 3)
 		else:
 			var cur: String = "_" if ativo and int(t * 2.0) % 2 == 0 else ""
 			_texto(txt + cur, Vector2(r.position.x + 10.0, r.position.y + 26.0), 20, COR_TINTA, r.size.x - 16.0, 3)

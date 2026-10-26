@@ -150,6 +150,7 @@ var foco: int = 0
 var apertado_id: String = ""
 var apertado_fora: bool = false
 var t: float = 0.0
+var _idioma_montado: String = ""
 var aviso: String = ""
 var aviso_t: float = 0.0
 var flash_id: String = ""
@@ -225,13 +226,13 @@ static func num(v: float) -> String:
 static func valores(m: int, n: int) -> Array:
 	match m:
 		Torre.Melhoria.ESTRUTURA:
-			return ["Blocos", str(Balanco.TIJOLOS_INICIAIS + Torre.ESTRUTURA_BLOCOS * n), str(Balanco.TIJOLOS_INICIAIS + Torre.ESTRUTURA_BLOCOS * (n + 1))]
+			return [Idioma.t("Blocos"), str(Balanco.TIJOLOS_INICIAIS + Torre.ESTRUTURA_BLOCOS * n), str(Balanco.TIJOLOS_INICIAIS + Torre.ESTRUTURA_BLOCOS * (n + 1))]
 		Torre.Melhoria.CANHAO:
-			return ["Dano do tiro", num(Balanco.TORRE_TIRO_DANO * (1.0 + Torre.CANHAO_DANO * n)), num(Balanco.TORRE_TIRO_DANO * (1.0 + Torre.CANHAO_DANO * (n + 1)))]
+			return [Idioma.t("Dano do tiro"), num(Balanco.TORRE_TIRO_DANO * (1.0 + Torre.CANHAO_DANO * n)), num(Balanco.TORRE_TIRO_DANO * (1.0 + Torre.CANHAO_DANO * (n + 1)))]
 		Torre.Melhoria.CADENCIA:
-			return ["Tiros por segundo", "+%d%%" % int(round(Torre.CADENCIA_RAPIDEZ * n * 100.0)), "+%d%%" % int(round(Torre.CADENCIA_RAPIDEZ * (n + 1) * 100.0))]
+			return [Idioma.t("Tiros por segundo"), "+%d%%" % int(round(Torre.CADENCIA_RAPIDEZ * n * 100.0)), "+%d%%" % int(round(Torre.CADENCIA_RAPIDEZ * (n + 1) * 100.0))]
 		Torre.Melhoria.ENFERMARIA:
-			return ["Cura entre ondas", "%d%%" % int(round((Balanco.CURA_MAX + Torre.enfermaria_cura(n)) * 100.0)), "%d%%" % int(round((Balanco.CURA_MAX + Torre.enfermaria_cura(n + 1)) * 100.0))]
+			return [Idioma.t("Cura entre ondas"), "%d%%" % int(round((Balanco.CURA_MAX + Torre.enfermaria_cura(n)) * 100.0)), "%d%%" % int(round((Balanco.CURA_MAX + Torre.enfermaria_cura(n + 1)) * 100.0))]
 	return ["", "", ""]
 
 static func _maiuscula(s: String) -> String:
@@ -240,21 +241,25 @@ static func _maiuscula(s: String) -> String:
 ## Por que o botão está apagado ("" se pode comprar).
 static func motivo_melhoria(e: Estado, m: int) -> String:
 	if e.melhorias[m] >= Torre.MELHORIA_NIVEL_MAX:
-		return "Máximo"
+		return Idioma.t("Máximo")
 	if e.melhorias[m] >= e.nivel_max_melhoria():
-		return "Libera no 3º ato"
+		return Idioma.t("Libera no 3º ato")
 	var falta: int = Torre.custo_melhoria(e.melhorias[m]) - e.trofeus
 	if falta > 0:
-		return "Falta 1 troféu" if falta == 1 else "Faltam %d troféus" % falta
+		return Idioma.t("Falta 1 troféu") if falta == 1 else Idioma.t("Faltam %d troféus") % falta
 	return ""
 
 static func requisito_modulo(m: int) -> String:
-	var pre: String = "no "
+	var lugar: String = Idioma.t(Fases.nome_do_lugar(m))
+	var onde: String = Idioma.t("no %s") % lugar
 	if m in [1, 2, 6, 8, 9, 13]:
-		pre = "na "
+		onde = Idioma.t("na %s") % lugar
 	elif m == 14:
-		pre = "nos "
-	return "Vença o chefe %s, %s%s" % [Fases.nome_do_chefe(m), pre + Fases.nome_do_lugar(m), "" if m < Torre.MODULOS_POR_ABA else (" (2º ato)" if m < 2 * Torre.MODULOS_POR_ABA else " (3º ato)")]
+		onde = Idioma.t("nos %s") % lugar
+	var base: String = Idioma.t("Vença o chefe %s, %s") % [Idioma.t(Fases.nome_do_chefe(m)), onde]
+	if m < Torre.MODULOS_POR_ABA:
+		return base
+	return Idioma.t("%s (2º ato)") % base if m < 2 * Torre.MODULOS_POR_ABA else Idioma.t("%s (3º ato)") % base
 
 # ------------------------------------------------------------------ ícones em pixel
 ## Desenha uma arte de letras: cada letra é uma célula `cel` x `cel`; runs da mesma cor viram um retângulo só.
@@ -400,6 +405,7 @@ func _foco_inicial() -> int:
 	return itens.size() - 1
 
 func _montar() -> void:
+	_idioma_montado = Idioma.atual
 	var id_foco: String = ""
 	if foco >= 0 and foco < itens.size():
 		id_foco = itens[foco]["id"]
@@ -407,10 +413,10 @@ func _montar() -> void:
 	itens.clear()
 	for m in Torre.MELHORIA_NOME.size():
 		var maximo: bool = e.melhorias[m] >= e.nivel_max_melhoria()
-		itens.append({"id": "m%d" % m, "r": rect_melhorar(m), "on": e.pode_melhorar(m), "txt": "Máximo" if maximo else "Melhorar (%d)" % Torre.custo_melhoria(e.melhorias[m]),
+		itens.append({"id": "m%d" % m, "r": rect_melhorar(m), "on": e.pode_melhorar(m), "txt": Idioma.t("Máximo") if maximo else Idioma.t("Melhorar (%d)") % Torre.custo_melhoria(e.melhorias[m]),
 			"cor": Color(1.0, 0.82, 0.4), "tam": 16, "custo": not maximo})
 	for a in ABAS_NOME.size():
-		itens.append({"id": "a%d" % a, "r": rect_aba(a), "on": true, "txt": ABAS_NOME[a] + "  (%d/%d)" % [_montados_na_aba(e, a), Torre.MODULOS_POR_ABA],
+		itens.append({"id": "a%d" % a, "r": rect_aba(a), "on": true, "txt": Idioma.t(ABAS_NOME[a]) + "  (%d/%d)" % [_montados_na_aba(e, a), Torre.MODULOS_POR_ABA],
 			"cor": Color(1.0, 0.82, 0.4) if a == aba else Color(0.55, 0.5, 0.5), "tam": 15, "custo": false})
 	for m in range(aba * Torre.MODULOS_POR_ABA, (aba + 1) * Torre.MODULOS_POR_ABA):
 		if not e.modulo_liberado(m):
@@ -418,9 +424,9 @@ func _montar() -> void:
 		var monta: bool = e.tem_modulo(m)
 		var cheio: bool = not monta and e.modulos.size() >= e.vagas_modulos()
 		var cor: Color = Color(0.95, 0.55, 0.4) if monta else (Color(0.55, 0.65, 0.55) if cheio else Color(0.55, 0.9, 0.5))
-		itens.append({"id": "d%d" % m, "r": rect_btn_modulo(m), "on": true, "txt": "Desmontar" if monta else "Montar", "cor": cor, "tam": 16, "custo": false})
+		itens.append({"id": "d%d" % m, "r": rect_btn_modulo(m), "on": true, "txt": Idioma.t("Desmontar") if monta else Idioma.t("Montar"), "cor": cor, "tam": 16, "custo": false})
 	itens.append({"id": "ajuda", "r": BTN_AJUDA, "on": true, "txt": "?", "cor": Color(0.62, 0.8, 1.0), "tam": 22, "custo": false})
-	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true, "txt": "Fechar", "cor": UIComum.B_MARROM, "tam": 22, "custo": false})
+	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true, "txt": Idioma.t("Fechar"), "cor": UIComum.B_MARROM, "tam": 22, "custo": false})
 	foco = itens.size() - 1
 	for k in itens.size():
 		if itens[k]["id"] == id_foco:
@@ -476,12 +482,13 @@ func acionar(id: String) -> void:
 			Som.tocar("promover")
 		else:
 			var mot: String = motivo_melhoria(e, m)
-			if mot == "Máximo":
-				_avisar("%s já está no nível máximo" % Torre.MELHORIA_NOME[m])
-			elif mot.begins_with("Libera"):
-				_avisar("%s: os níveis 9 e 10 chegam no 3º ato" % Torre.MELHORIA_NOME[m])
+			var nome_m: String = Idioma.t(Torre.MELHORIA_NOME[m])
+			if mot == Idioma.t("Máximo"):
+				_avisar(Idioma.t("%s já está no nível máximo") % nome_m)
+			elif mot == Idioma.t("Libera no 3º ato"):
+				_avisar(Idioma.t("%s: os níveis 9 e 10 chegam no 3º ato") % nome_m)
 			else:
-				_avisar("%s: %s para melhorar" % [Torre.MELHORIA_NOME[m], mot.to_lower()])
+				_avisar(Idioma.t("%s: %s para melhorar") % [nome_m, mot.to_lower()])
 			_recusar(id)
 	elif id.begins_with("d"):
 		var m: int = int(id.substr(1))
@@ -495,7 +502,7 @@ func acionar(id: String) -> void:
 			_avisar(requisito_modulo(m))
 			_recusar(id)
 		elif e.modulos.size() >= e.vagas_modulos():
-			_avisar("Desmonte um módulo primeiro" if e.vagas_modulos() >= Torre.MODULOS_EQUIPADOS_MAX else "Sem vaga: desmonte um módulo (mais vagas ao vencer o ato)")
+			_avisar(Idioma.t("Desmonte um módulo primeiro") if e.vagas_modulos() >= Torre.MODULOS_EQUIPADOS_MAX else Idioma.t("Sem vaga: desmonte um módulo (mais vagas ao vencer o ato)"))
 			_recusar(id)
 		else:
 			e.alternar_modulo(m)
@@ -607,6 +614,8 @@ func _process(delta: float) -> void:
 	t += delta
 	if not aberta:
 		return
+	if _idioma_montado != Idioma.atual:
+		_montar()
 	abrir_t += delta
 	aviso_t = maxf(0.0, aviso_t - delta)
 	flash_t = maxf(0.0, flash_t - delta)
@@ -681,15 +690,15 @@ func _draw() -> void:
 	draw_rect(PAINEL.grow(-18.0), COR_FUNDO)
 	draw_rect(PAINEL.grow(-30.0), Color(0, 0, 0, 0.18), false, 2.0)
 	_nove(R_MADEIRA, PAINEL, 0.75, Color.WHITE, false, GUI_TEX, M_MADEIRA)
-	UIComum.titulo(self, "Oficina da torre", 640.0, 76.0, 34, COR_OURO, Color(0.16, 0.07, 0.05, 0.95), t, false)
+	UIComum.titulo(self, Idioma.t("Oficina da torre"), 640.0, 76.0, 34, COR_OURO, Color(0.16, 0.07, 0.05, 0.95), t, false)
 	# troféus em destaque: contam até o valor
 	centro_cont = UIComum.contador_trofeus(self, 640.0, 88.0, int(round(tr_exib)), pulso_tr)
 	if aviso == "" or aviso_t <= 0.0:
 		_texto(explicacao_trofeus(), Vector2(PAINEL.position.x, 148), 16, Color(1, 1, 1, 0.8), PAINEL.size.x, 3)
 	_previa_torre(e)
 	# cabeçalhos das colunas
-	_texto("Melhorias da torre", Vector2(COL_E_X, 172), 18, COR_TINTA, -1.0, 4)
-	_texto("Módulos montados: %d de %d vagas" % [e.modulos.size(), e.vagas_modulos()], Vector2(COL_D_X, 172), 18, COR_TINTA, -1.0, 4)
+	_texto(Idioma.t("Melhorias da torre"), Vector2(COL_E_X, 172), 18, COR_TINTA, -1.0, 4)
+	_texto(Idioma.t("Módulos montados: %d de %d vagas") % [e.modulos.size(), e.vagas_modulos()], Vector2(COL_D_X, 172), 18, COR_TINTA, -1.0, 4)
 	_vagas(e)
 	_sep_px(COL_E_X, COL_E_W, 177.0)
 	_sep_px(COL_D_X, COL_D_W, 177.0)
@@ -714,7 +723,7 @@ func _draw() -> void:
 	# aviso curto (sobe no lugar da explicação dos troféus) e dica de teclado
 	if aviso != "" and aviso_t > 0.0:
 		UIComum.aviso(self, aviso, 640.0, 134.0, clampf(aviso_t / 0.5, 0.0, 1.0), UIComum.C_NOME)
-	_texto("Setas e Enter  |  Esc fecha", Vector2(COL_E_X, 652), 13, Color(1, 1, 1, 0.45), -1.0, 3)
+	_texto(Idioma.t("Setas e Enter  |  Esc fecha"), Vector2(COL_E_X, 652), 13, Color(1, 1, 1, 0.45), -1.0, 3)
 	if e.vagas_modulos() < Torre.MODULOS_EQUIPADOS_MAX:
 		_texto(proxima_vaga(e), Vector2(COL_D_X + 150.0, 652), 13, Color(1.0, 0.85, 0.55, 0.8), COL_D_W - 150.0, 3)
 	for k in itens.size():
@@ -729,7 +738,7 @@ func _previa_torre(e: Estado) -> void:
 	draw_rect(cx, Color(0.08, 0.05, 0.07))
 	draw_rect(cx, Color(1, 0.85, 0.5, 0.35), false, 2.0)
 	draw_rect(Rect2(cx.position.x + 2.0, cx.end.y - 22.0, cx.size.x - 4.0, 20.0), Color(0.2, 0.14, 0.1))
-	_texto("Sua torre", Vector2(cx.position.x + 8.0, cx.position.y + 15.0), 12, Color(1, 1, 1, 0.7), -1.0, 3)
+	_texto(Idioma.t("Sua torre"), Vector2(cx.position.x + 8.0, cx.position.y + 15.0), 12, Color(1, 1, 1, 0.7), -1.0, 3)
 	var esc: float = clampf(96.0 / maxf(TorrePx.altura(Vector2.ZERO, e.tijolos_max()), 1.0), 0.2, 0.4)   # torre alta encolhe para caber
 	var prev_base := Vector2(cx.position.x + 26.0, cx.end.y - 8.0)
 	var base_ant: Transform2D = UIComum.base
@@ -740,12 +749,12 @@ func _previa_torre(e: Estado) -> void:
 		draw_rect(cx, Color(1.0, 0.92, 0.5, 0.25 * prev_pulso), false, 3.0)
 
 static func explicacao_trofeus() -> String:
-	return "Chefes dão %d (%d no 2º ato, %d no 3º), bichos fantasiados dão %d" % [Torre.TROFEU_CHEFE_ATO[0], Torre.TROFEU_CHEFE_ATO[1], Torre.TROFEU_CHEFE_ATO[2], Torre.TROFEU_ELITE]
+	return Idioma.t("Chefes dão %d (%d no 2º ato, %d no 3º), bichos fantasiados dão %d") % [Torre.TROFEU_CHEFE_ATO[0], Torre.TROFEU_CHEFE_ATO[1], Torre.TROFEU_CHEFE_ATO[2], Torre.TROFEU_ELITE]
 
 ## Texto de como ganhar a próxima vaga de módulo.
 static func proxima_vaga(e: Estado) -> String:
 	var v: int = e.vagas_modulos()
-	return "%dª vaga: vença o %dº ato inteiro" % [v + 1, v]
+	return Idioma.t("%dª vaga: vença o %dº ato inteiro") % [v + 1, v]
 
 ## Separador em pixel: pontilhado de quadradinhos de 3 px na grade (um a cada dois).
 func _sep_px(x0: float, larg: float, y: float) -> void:
@@ -785,7 +794,7 @@ func _linha_melhoria(e: Estado, m: int) -> void:
 	draw_rect(box, Color(1, 0.85, 0.5, 0.35), false, 2.0)
 	icone_melhoria(self, m, box.position + Vector2(8, 8), 4.0)
 	var x: float = r.position.x + TEXTO_DESLOC
-	_texto(Torre.MELHORIA_NOME[m], Vector2(x, r.position.y + 30.0), 22, COR_TINTA, -1.0, 4)
+	_texto(Idioma.t(Torre.MELHORIA_NOME[m]), Vector2(x, r.position.y + 30.0), 22, COR_TINTA, -1.0, 4)
 	for k in Torre.MELHORIA_NIVEL_MAX:
 		var q: Rect2 = rect_quadrado(m, k)
 		var cheio: bool = k < n_exib
@@ -811,7 +820,8 @@ func _linha_melhoria(e: Estado, m: int) -> void:
 	var lw: float = larg_texto_linha()
 	var y: float = r.position.y + 58.0
 	if maximo:
-		_texto("%s: %s (máximo)" % [v[0], v[1]], Vector2(x, y), tam_cabe("%s: %s (máximo)" % [v[0], v[1]], [17, 16, 15, 14, 13], lw), Color(0.7, 1.0, 0.75), -1.0, 3)
+		var txt_max: String = Idioma.t("%s: %s (máximo)") % [v[0], v[1]]
+		_texto(txt_max, Vector2(x, y), tam_cabe(txt_max, [17, 16, 15, 14, 13], lw), Color(0.7, 1.0, 0.75), -1.0, 3)
 	else:
 		var a: String = "%s: %s" % [v[0], v[1]]
 		var b: String = v[2]
@@ -822,10 +832,10 @@ func _linha_melhoria(e: Estado, m: int) -> void:
 		_texto(b, Vector2(xa + SETA_W + 6.0, y), tm, Color(0.7, 1.0, 0.75), -1.0, 3)
 	_texto(_maiuscula(Torre.melhoria_dica(m)), Vector2(x, r.position.y + 78.0), 13, Color(1, 1, 1, 0.65), -1.0, 3)
 	if m == Torre.Melhoria.ESTRUTURA:
-		_texto("Vale a partir do próximo cômodo", Vector2(x, r.position.y + 94.0), 12, Color(0.6, 0.85, 1.0, 0.8), -1.0, 3)
+		_texto(Idioma.t("Vale a partir do próximo cômodo"), Vector2(x, r.position.y + 94.0), 12, Color(0.6, 0.85, 1.0, 0.8), -1.0, 3)
 	# o porquê do botão apagado
 	var mot: String = motivo_melhoria(e, m)
-	if mot != "" and (not maximo or mot.begins_with("Libera")):
+	if mot != "" and (not maximo or mot == Idioma.t("Libera no 3º ato")):
 		var br: Rect2 = rect_melhorar(m)
 		_texto(mot, Vector2(br.position.x, br.end.y + 20.0), 13, Color(1.0, 0.6, 0.5), br.size.x, 3)
 
@@ -874,15 +884,16 @@ func _card_modulo(e: Estado, m: int) -> void:
 	icone_modulo(self, m, box.position + Vector2(3, 3), 4.0, not lib, 1.0 if lib else 0.55)
 	var x: float = r.position.x + 72.0
 	var cor_nome: Color = COR_TINTA if lib else Color(1, 1, 1, 0.45)
-	_texto(Torre.MODULO_NOME[m], Vector2(x, r.position.y + 24.0), 18, cor_nome, -1.0, 4 if lib else 0)
-	var dica: Array[String] = _quebrar_estatico(Torre.MODULO_DICA[m], 13, larg_texto_card(lib))
+	var nome_mod: String = Idioma.t(Torre.MODULO_NOME[m])
+	_texto(nome_mod, Vector2(x, r.position.y + 24.0), 18, cor_nome, -1.0, 4 if lib else 0)
+	var dica: Array[String] = _quebrar_estatico(Idioma.t(Torre.MODULO_DICA[m]), 13, larg_texto_card(lib))
 	var cor_dica: Color = Color(1, 1, 1, 0.8) if lib else Color(1, 1, 1, 0.38)
 	for k in mini(dica.size(), 3 if lib else 2):
 		_texto(dica[k], Vector2(x, r.position.y + 42.0 + 15.0 * k), 13, cor_dica)
 	if monta:
-		var tag := Rect2(x + largura(Torre.MODULO_NOME[m], 18) + 10.0, r.position.y + 9.0, 70.0, 20.0)
+		var tag := Rect2(x + largura(nome_mod, 18) + 10.0, r.position.y + 9.0, 70.0, 20.0)
 		draw_rect(tag, Color(1.0, 0.82, 0.25))
-		_texto("Montado", Vector2(tag.position.x, tag.position.y + 15.0), 13, Color(0.22, 0.12, 0.06), tag.size.x)
+		_texto(Idioma.t("Montado"), Vector2(tag.position.x, tag.position.y + 15.0), 13, Color(0.22, 0.12, 0.06), tag.size.x)
 	if not lib:
 		var yq: float = r.position.y + 72.0
 		cadeado(self, Vector2(x + 6.0, yq - 5.0), Color(0.85, 0.78, 0.9))

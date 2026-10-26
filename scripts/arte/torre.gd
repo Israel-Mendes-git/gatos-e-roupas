@@ -86,13 +86,13 @@ const IMA_CHEFE := 0.25              # fração disso que vale para chefes
 static func melhoria_dica(m: int) -> String:
 	match m:
 		Melhoria.ESTRUTURA:
-			return "+%d blocos no começo de cada cômodo" % ESTRUTURA_BLOCOS
+			return Idioma.t("+%d blocos no começo de cada cômodo") % ESTRUTURA_BLOCOS
 		Melhoria.CANHAO:
-			return "+%d%% de dano no tiro da torre" % int(round(CANHAO_DANO * 100.0))
+			return Idioma.t("+%d%% de dano no tiro da torre") % int(round(CANHAO_DANO * 100.0))
 		Melhoria.CADENCIA:
-			return "a torre atira %d%% mais rápido" % int(round(CADENCIA_RAPIDEZ * 100.0))
+			return Idioma.t("a torre atira %d%% mais rápido") % int(round(CADENCIA_RAPIDEZ * 100.0))
 		Melhoria.ENFERMARIA:
-			return "+%d%% de cura entre ondas (do nível 6: +%s%%)" % [int(round(ENFERMARIA_CURA * 100.0)), ("%.1f" % (ENFERMARIA_CURA_ALTO * 100.0)).replace(".", ",")]
+			return Idioma.t("+%d%% de cura entre ondas (do nível 6: +%s%%)") % [int(round(ENFERMARIA_CURA * 100.0)), ("%.1f" % (ENFERMARIA_CURA_ALTO * 100.0)).replace(".", ",")]
 	return ""
 
 ## Troféus do próximo nível da melhoria que está no nível `n`.

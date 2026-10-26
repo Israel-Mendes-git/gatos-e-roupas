@@ -466,7 +466,7 @@ static func heranca_mult(grau: int) -> float:
 
 ## Texto curto de como a herança age (igual para todo poder: ele dispara sozinho).
 static func heranca_efeito(_tipo: int) -> String:
-	return "ele solta sozinho a cada %d s, mais fraco que o da roupa" % int(HERANCA_INTERVALO)
+	return Idioma.t("ele solta sozinho a cada %d s, mais fraco que o da roupa") % int(HERANCA_INTERVALO)
 
 const XP_BASE := 2                  # experiência para o 1º nível; +1 a cada nível
 const XP_ONDA_DE_PE := 2            # por onda vencida terminando de pé
