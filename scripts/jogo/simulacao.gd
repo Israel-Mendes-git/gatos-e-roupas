@@ -3213,7 +3213,7 @@ func _poder_poquer(u: Unidade, meus: Array[Unidade], outros: Array[Unidade], bas
 		if v.vivo and _dentro(v, cc.x, cc.y, Balanco.PODER_POQUER_RAIO):
 			_dano_poder(u, v, base * Balanco.PODER_POQUER_DANO[mao])
 	extra["raio"] = Balanco.PODER_POQUER_RAIO
-	extra["texto"] = Idioma.t(Poquer.NOME[mao]) + "!"
+	extra["texto"] = Idioma.t("%s!") % Idioma.t(Poquer.NOME[mao])
 	extra["mao"] = mao
 	_tele(u.poder_conj, "mao", float(mao))
 	return true
