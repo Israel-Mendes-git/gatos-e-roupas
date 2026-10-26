@@ -23,6 +23,8 @@ func _initialize() -> void:
 	Menus.transicoes = false
 	p = load("res://cenas/principal.tscn").instantiate()
 	root.add_child(p)
+	for i in 6:
+		await process_frame   # a cena monta os menus nos primeiros quadros
 	for cod in ["pt", "en"]:
 		Idioma.definir(cod)
 		p.menus.tela = Menus.Tela.TITULO
