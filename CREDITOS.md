@@ -19,7 +19,7 @@ https://paperhatlizard.itch.io/cryos-mini-gui
 
 **Cat User Interface**, de ToffeeCraft
 https://toffeecraft.itch.io/cat-user-interface
-- Usado em: `assets/terceiros/gui/gato_ui.png` (gatinho dos balões e ícones dos menus).
+- Usado em: `assets/terceiros/gui/gato_ui.png` (gatinho dos balões e ícones dos menus) e no ícone do jogo (`icone.png`/`icone.ico`, recortados do gato dormindo).
 - Permite: uso pessoal e comercial, editar. Só pode ser distribuído como parte de um jogo ou produto, nunca avulso.
 
 **Jersey 10**, de Sarah Cadigan-Fried (The Soft Type Project)
