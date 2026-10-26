@@ -42,5 +42,5 @@ Pelo caminho:
 ## Créditos
 
 Gatos: **Last tick**. Interface: **PaperHatLizard** e **ToffeeCraft**. Fonte: **Jersey 10**,
-de Sarah Cadigan-Fried (The Soft Type Project). Os efeitos sonoros foram sintetizados para
-o jogo.
+de Sarah Cadigan-Fried (The Soft Type Project). A música e os efeitos sonoros foram
+compostos e sintetizados para o jogo.
