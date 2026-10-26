@@ -322,11 +322,12 @@ static func aviso(c: CanvasItem, txt: String, cx: float, y: float, alfa: float =
 
 ## Contador de troféus: ícone + número + legenda. `pulso` (0..1) dá um soco no número quando ele muda.
 ## Devolve o centro do ícone (destino dos troféus que voam).
-static func contador_trofeus(c: CanvasItem, cx: float, y: float, valor: int, pulso: float = 0.0, legenda: String = "troféus", tam: int = 34) -> Vector2:
+static func contador_trofeus(c: CanvasItem, cx: float, y: float, valor: int, pulso: float = 0.0, legenda: String = "", tam: int = 34) -> Vector2:
 	var fonte: Font = UIComum.FONTE
+	var legenda_t: String = legenda if legenda != "" else Idioma.t("troféus")   # a legenda recebida já vem traduzida
 	var txt: String = str(valor)
 	var wn: float = fonte.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam)).x
-	var wl: float = fonte.get_string_size(legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18)).x
+	var wl: float = fonte.get_string_size(legenda_t, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18)).x
 	var x0: float = cx - (40.0 + 10.0 + wn + 8.0 + wl) * 0.5
 	Oficina.trofeu(c, Vector2(x0, y), 4.0)
 	var esc: float = 1.0 + 0.28 * pulso
@@ -335,8 +336,8 @@ static func contador_trofeus(c: CanvasItem, cx: float, y: float, valor: int, pul
 	c.draw_string_outline(fonte, base, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), 6, Color(0.16, 0.07, 0.05, 0.95))
 	c.draw_string(fonte, base, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color(1.0, 0.92, 0.5).lerp(Color.WHITE, pulso))
 	trans_fim(c)
-	c.draw_string_outline(fonte, Vector2(x0 + 58.0 + wn, y + 32.0), legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18), 4, Color(0.16, 0.07, 0.05, 0.95))
-	c.draw_string(fonte, Vector2(x0 + 58.0 + wn, y + 32.0), legenda, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18), Color(1.0, 0.94, 0.8))
+	c.draw_string_outline(fonte, Vector2(x0 + 58.0 + wn, y + 32.0), legenda_t, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18), 4, Color(0.16, 0.07, 0.05, 0.95))
+	c.draw_string(fonte, Vector2(x0 + 58.0 + wn, y + 32.0), legenda_t, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(18), Color(1.0, 0.94, 0.8))
 	return Vector2(x0 + 20.0, y + 20.0)
 
 ## Dica do mouse. `linhas`: [[texto, tamanho, cor], ...]. Fica sempre dentro da tela de 1280 x 720.

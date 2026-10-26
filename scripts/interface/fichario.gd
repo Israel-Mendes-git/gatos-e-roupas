@@ -339,7 +339,7 @@ static func pecas_possiveis() -> int:
 	return Pecas.n_ativas() * Pecas.SLOTS
 
 static func texto_totais(e: Estado) -> String:
-	return "Fantasias completas: %d de %d  ·  Peças: %d de %d" % [e.fantasias_completas(), Pecas.n_ativas(), pecas_obtidas(e), pecas_possiveis()]
+	return Idioma.t("Fantasias completas: %d de %d  ·  Peças: %d de %d") % [e.fantasias_completas(), Pecas.n_ativas(), pecas_obtidas(e), pecas_possiveis()]
 
 ## Quantas fantasias completas há no cômodo `i`.
 static func completas_do_comodo(e: Estado, i: int) -> int:
@@ -352,7 +352,7 @@ static func completas_do_comodo(e: Estado, i: int) -> int:
 ## Rótulo da seção da fantasia: o cômodo onde cai, ou "Lado de fora".
 static func nome_secao(c: int) -> String:
 	var i: int = comodo_da_fantasia(c)
-	return Fases.NOME[i] if i >= 0 else "Lado de fora"
+	return Idioma.t(Fases.NOME[i]) if i >= 0 else Idioma.t("Lado de fora")
 
 ## Quantas das fantasias que só caem fora da casa estão completas.
 static func completas_so_de_fora(e: Estado) -> int:
@@ -383,16 +383,21 @@ static func posse(e: Estado, tipo: int) -> Dictionary:
 static func texto_onde(c: int) -> String:
 	var i: int = Fases.casa_final(c)
 	if i < 0:
-		return "Não cai em nenhum lugar"
-	var fam: String = (Fases.FAMILIA_NOME[i].to_lower() + " e ") if i < Fases.FAMILIA_NOME.size() else ""
-	return "Cai %s: %s%s" % [_em(i), fam, Fases.nome_do_chefe(i)]
+		return Idioma.t("Não cai em nenhum lugar")
+	var chefe: String = Idioma.t(Fases.nome_do_chefe(i))
+	if i < Fases.FAMILIA_NOME.size():
+		return Idioma.t("Cai %s: %s e %s") % [_em(i), Idioma.t(Fases.FAMILIA_NOME[i]).to_lower(), chefe]
+	return Idioma.t("Cai %s: %s") % [_em(i), chefe]
 
 ## "Chefe: Rei dos Ratos (assinatura)" quando o chefe do lugar veste esta fantasia em 60% das lutas; senão só o nome do chefe.
 static func texto_chefe(c: int) -> String:
 	var i: int = Fases.casa_final(c)
 	if i < 0:
 		return ""
-	return "Chefe: %s%s" % [Fases.nome_do_chefe(i), " (assinatura)" if Fases.CHEFE_ASSINATURA[i] == c else ""]
+	var nome_chefe: String = Idioma.t(Fases.nome_do_chefe(i))
+	if Fases.CHEFE_ASSINATURA[i] == c:
+		return Idioma.t("Chefe: %s (assinatura)") % nome_chefe
+	return Idioma.t("Chefe: %s") % nome_chefe
 
 ## Aviso das fantasias provisórias (3º ato ainda não existe): "por enquanto cai no Quintal". Vazio se já cai na casa final.
 static func texto_provisorio(c: int) -> String:
@@ -400,17 +405,22 @@ static func texto_provisorio(c: int) -> String:
 	var ag: int = Fases.lugar_atual(c)
 	if fin < 0 or ag < 0 or ag == fin:
 		return ""
-	return "por enquanto cai %s" % _em(ag)
+	return Idioma.t("por enquanto cai %s") % _em(ag)
 
 static func comodo_bloqueado(e: Estado, i: int) -> bool:
 	return i + 1 > e.fase_liberada
 
 static func texto_bloqueio(i: int) -> String:
-	return "Cômodo bloqueado: vença o chefe %s, %s" % [Fases.CHEFE_NOME[i - 1], _em(i - 1)] if i >= 1 else ""
+	return Idioma.t("Cômodo bloqueado: vença o chefe %s, %s") % [Idioma.t(Fases.CHEFE_NOME[i - 1]), _em(i - 1)] if i >= 1 else ""
 
 ## "no Quarto", "na Sala", "na Cozinha", "no Sótão", "no Porão", "no Quintal", "na Garagem", "no Telhado", "na Rua", "na Toca".
 static func _em(i: int) -> String:
-	return ("na " if i in [1, 2, 6, 8, 9, 13] else "nos " if i == 14 else "no ") + Fases.nome_do_lugar(i)
+	var lugar: String = Idioma.t(Fases.nome_do_lugar(i))
+	if i in [1, 2, 6, 8, 9, 13]:
+		return Idioma.t("na %s") % lugar
+	if i == 14:
+		return Idioma.t("nos %s") % lugar
+	return Idioma.t("no %s") % lugar
 
 ## Lugares de fora (índices de Fases.NOME, 5 a 9) onde a fantasia cai, em texto: "no Quintal" ou "no Quintal e na Rua".
 static func texto_fora(c: int) -> String:
@@ -420,7 +430,7 @@ static func texto_fora(c: int) -> String:
 			l.append(_em(i))
 	if l.is_empty():
 		return ""
-	return l[0] if l.size() == 1 else ", ".join(l.slice(0, l.size() - 1)) + " e " + l[l.size() - 1]
+	return l[0] if l.size() == 1 else Idioma.t("%s e %s") % [", ".join(l.slice(0, l.size() - 1)), l[l.size() - 1]]
 
 static func _maiuscula(s: String) -> String:
 	return s.substr(0, 1).to_upper() + s.substr(1)
@@ -1016,7 +1026,7 @@ func _draw() -> void:
 	draw_rect(Rect2(placa.position.x + Q, placa.position.y + Q, placa.size.x - Q * 2.0, placa.size.y - Q * 2.0), Color(0.95, 0.78, 0.3))
 	draw_rect(Rect2(placa.position.x + Q * 2.0, placa.position.y + Q, placa.size.x - Q * 4.0, Q), Color(1.0, 0.92, 0.6))
 	draw_rect(Rect2(placa.position.x + Q, placa.end.y - Q * 2.0, placa.size.x - Q * 2.0, Q), Color(0.8, 0.6, 0.2))
-	_txt("Fichário de fantasias", Vector2(placa.position.x, placa.position.y + 17.0), 16, Color(0.3, 0.17, 0.04), placa.size.x)
+	_txt(Idioma.t("Fichário de fantasias"), Vector2(placa.position.x, placa.position.y + 17.0), 16, Color(0.3, 0.17, 0.04), placa.size.x)
 	UIComum.pata(self, 0, Vector2(placa.position.x + 8.0, placa.position.y + 2.0), 1)
 	UIComum.pata(self, 2, Vector2(placa.end.x - 23.0, placa.position.y + 2.0), 1)
 	# as duas folhas e as argolas
@@ -1071,7 +1081,7 @@ func _abas(e: Estado) -> void:
 		_papel_px(Rect2(rr.position + Vector2(Q, Q), rr.size), 4, false, true, true, false, Color(0, 0, 0, 0.3))
 		_papel_borda(rr, 4, false, true, true, false, cor, TINTA)
 		draw_rect(Rect2(rr.position.x + Q, rr.position.y + Q, _sn(rr.end.x) - rr.position.x - Q * 5.0, Q), cor.lightened(0.3))
-		var nome: String = "Índice" if i == 0 else ("Bichos" if i == ABA_BICHOS else "Metas" if i == ABA_METAS else ("De fora" if i == ABA_FORA else Fases.NOME[i - 1]))
+		var nome: String = Idioma.t("Índice") if i == 0 else (Idioma.t("Bichos") if i == ABA_BICHOS else Idioma.t("Metas") if i == ABA_METAS else (Idioma.t("De fora") if i == ABA_FORA else Idioma.t(Fases.NOME[i - 1])))
 		var sub: String = ""
 		if i == ABA_BICHOS:
 			sub = "%d/%d" % [e.bichos_vistos_total(), Estado.BICHOS_TOTAL]
@@ -1100,18 +1110,18 @@ func _botoes() -> void:
 		var id: String = it["id"]
 		if id.begins_with("aba") or _eh_tile(id) or id.begins_with("pgf"):
 			continue
-		var txt: String = "?" if id == "ajuda" else ("Fechar" if id == "fechar" else ("Voltar" if id == "ant" else "Avançar"))
+		var txt: String = "?" if id == "ajuda" else (Idioma.t("Fechar") if id == "fechar" else (Idioma.t("Voltar") if id == "ant" else Idioma.t("Avançar")))
 		var cor: Color = UIComum.B_AZUL if id == "ajuda" else (UIComum.B_MARROM if id == "fechar" else UIComum.B_OURO)
 		var o: Dictionary = {"on": it["on"], "foco": i == foco and it["on"], "h": UIComum.anim_h(anim, id), "p": UIComum.anim_p(anim, id), "tam": 17}
 		UIComum.botao(self, it["r"], txt, cor, o, t)
 		if id == "ant" or id == "prox":
 			_seta_nav(it["r"], -1.0 if id == "ant" else 1.0, it["on"], float(o["h"]), float(o["p"]))
-	var marca: String = ("Metas %d/2" % (metas_pag + 1)) if em_metas else ("Bestiário" if pagina == 0 else "Bestiário: gangues" if pagina == 1 else "Bicho %d de %d" % [pagina - 1, entradas().size()]) if em_bichos else "Índice" if pagina == 0 else "Ateliê  ·  a sua fantasia" if pagina_do_atelie() else "Fantasia %d de %d  ·  %s" % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
+	var marca: String = (Idioma.t("Metas %d/2") % (metas_pag + 1)) if em_metas else (Idioma.t("Bestiário") if pagina == 0 else Idioma.t("Bestiário: gangues") if pagina == 1 else Idioma.t("Bicho %d de %d") % [pagina - 1, entradas().size()]) if em_bichos else Idioma.t("Índice") if pagina == 0 else Idioma.t("Ateliê  ·  a sua fantasia") if pagina_do_atelie() else Idioma.t("Fantasia %d de %d  ·  %s") % [pagina, _ordem.size(), nome_secao(fantasia_da_pagina(pagina))]
 	_txt(UIComum.caber(marca.replace("  ·  ", " · "), 15, 236.0) if UIComum.largura(marca, 15) > 236.0 else marca, Vector2(250.0, 672.0), 15, Color(1, 0.94, 0.8), 240.0, 4)
 	# entre o Fechar e o Avançar há ~230 px: o texto é medido no 19 em que é desenhado e encurta se não couber
-	var atalhos: String = "Setas, A/D ou PgUp/PgDn  |  Esc fecha"
+	var atalhos: String = Idioma.t("Setas, A/D ou PgUp/PgDn  |  Esc fecha")
 	if UIComum.largura(atalhos, 13) > 226.0:
-		atalhos = "Setas ou A/D  |  Esc fecha"
+		atalhos = Idioma.t("Setas ou A/D  |  Esc fecha")
 	_txt(atalhos, Vector2(700.0, 672.0), 13, Color(1, 0.94, 0.8, 0.7), 230.0, 3)
 
 ## Seta em pixel dentro do botão Voltar/Avançar, junto da borda; acompanha o crescer e o afundar do botão.
@@ -1135,7 +1145,7 @@ func _dica_tile() -> void:
 		var en: Dictionary = entradas()[int(String(itens[foco]["id"]).substr(1))]
 		var rb: Rect2 = itens[foco]["r"]
 		var vis: bool = estado.viu_bicho(en["chave"])
-		var st: String = "Ainda não visto" if not vis else ("Derrotado" if _derrotado(estado, en) else "Visto")
+		var st: String = Idioma.t("Ainda não visto") if not vis else (Idioma.t("Derrotado") if _derrotado(estado, en) else Idioma.t("Visto"))
 		UIComum.dica_mouse(self, [[en["nome"] if vis else "???", 16, TINTA], [st, 13, TINTA2]], _mouse if rb.has_point(_mouse) else rb.get_center(), en["cor"])
 		return
 	if pagina != 0 or em_metas or em_bichos or not _foco_e_tile():
@@ -1143,16 +1153,16 @@ func _dica_tile() -> void:
 	var c: int = int(String(itens[foco]["id"]).substr(1))
 	var r: Rect2 = itens[foco]["r"]
 	var pos: Vector2 = _mouse if r.has_point(_mouse) else r.get_center()
-	UIComum.dica_mouse(self, [[Pecas.CONJUNTO_NOME[c], 16, TINTA], ["%d de %d peças" % [estado.pecas_da_fantasia(c), Pecas.SLOTS], 13, TINTA2]], pos, Pecas.CONJUNTO_COR[c])
+	UIComum.dica_mouse(self, [[Idioma.t(Pecas.CONJUNTO_NOME[c]), 16, TINTA], [Idioma.t("%d de %d peças") % [estado.pecas_da_fantasia(c), Pecas.SLOTS], 13, TINTA2]], pos, Pecas.CONJUNTO_COR[c])
 
 # ------------------------------------------------------------------ página do índice
 func _pagina_indice(e: Estado) -> void:
-	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), "Índice", [30, 26], COR_OURO)
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), Idioma.t("Índice"), [30, 26], COR_OURO)
 	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), texto_totais(e), [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
 	for i in Fases.TOTAL:
 		var sala: Array = Fases.CONJUNTOS[i]
 		var r0: Rect2 = rect_tile(i, 0)
-		var lbl: String = "%s  ·  %d/%d completas" % [Fases.NOME[i], completas_do_comodo(e, i), sala.size()]
+		var lbl: String = Idioma.t("%s  ·  %d/%d completas") % [Idioma.t(Fases.NOME[i]), completas_do_comodo(e, i), sala.size()]
 		var ax: float = r0.position.x
 		var ay: float = r0.position.y - 8.0
 		draw_rect(Rect2(ax, ay - 16.0, 5.0, 16.0), COR_ABA[i + 1].darkened(0.1))
@@ -1160,21 +1170,21 @@ func _pagina_indice(e: Estado) -> void:
 		if comodo_bloqueado(e, i):
 			var wl: float = largura(lbl, 16)
 			_cadeado(Vector2(ax + 11.0 + wl + 16.0, ay - 6.0), Color(0.45, 0.32, 0.3))
-			_txt("bloqueado", Vector2(ax + 11.0 + wl + 28.0, ay - 2.0), 12, TINTA2)
+			_txt(Idioma.t("bloqueado"), Vector2(ax + 11.0 + wl + 28.0, ay - 2.0), 12, TINTA2)
 		for k in sala.size():
 			_tile(e, sala[k], rect_tile(i, k))
 	# seção "Lado de fora": fantasias que só caem fora da casa (página direita, terceira fileira)
 	var fo2: Array[int] = fantasias_so_de_fora()
 	if not fo2.is_empty():
 		var rf0: Rect2 = rect_tile_fora(0)
-		var lblf: String = "Lado de fora  ·  %d/%d completas" % [completas_so_de_fora(e), fo2.size()]
+		var lblf: String = Idioma.t("Lado de fora  ·  %d/%d completas") % [completas_so_de_fora(e), fo2.size()]
 		draw_rect(Rect2(rf0.position.x, rf0.position.y - 24.0, 5.0, 16.0), COR_ABA[ABA_FORA].darkened(0.1))
 		_txt(lblf, Vector2(rf0.position.x + 11.0, rf0.position.y - 10.0), 16, TINTA)
 		var np_i: int = fora_paginas(fo2.size())
 		if np_i <= 1:
-			_txt("só caem fora da casa", Vector2(rf0.position.x + 11.0 + largura(lblf, 16) + 10.0, rf0.position.y - 10.0), 12, TINTA2)
+			_txt(Idioma.t("só caem fora da casa"), Vector2(rf0.position.x + 11.0 + largura(lblf, 16) + 10.0, rf0.position.y - 10.0), 12, TINTA2)
 		else:
-			_txt("pág. %d/%d" % [fora_pag + 1, np_i], Vector2(rect_seta_fora(-1).position.x - 58.0, rf0.position.y - 10.0), 12, TINTA2)
+			_txt(Idioma.t("pág. %d/%d") % [fora_pag + 1, np_i], Vector2(rect_seta_fora(-1).position.x - 58.0, rf0.position.y - 10.0), 12, TINTA2)
 			for it_f in itens:
 				var id_f: String = it_f["id"]
 				if id_f == "pgf_ant" or id_f == "pgf_prox":
@@ -1186,19 +1196,19 @@ func _pagina_indice(e: Estado) -> void:
 	var pl := Rect2(COL_E_X, 538.0, COL_W, 92.0)
 	draw_rect(pl, PAPEL_ESC)
 	draw_rect(pl, PAPEL_BORDA, false, 2.0)
-	_txt("Como ler o índice", Vector2(pl.position.x + 14.0, pl.position.y + 24.0), 16, TINTA)
-	_bloco("Clique numa fantasia para abrir a página dela. Fantasias completas ganham uma estrela dourada; peça que ainda não apareceu fica em silhueta.", Vector2(pl.position.x + 14.0, pl.position.y + 44.0), pl.size.x - 28.0, [13, 12], 3, TINTA2, 2.0)
+	_txt(Idioma.t("Como ler o índice"), Vector2(pl.position.x + 14.0, pl.position.y + 24.0), 16, TINTA)
+	_bloco(Idioma.t("Clique numa fantasia para abrir a página dela. Fantasias completas ganham uma estrela dourada; peça que ainda não apareceu fica em silhueta."), Vector2(pl.position.x + 14.0, pl.position.y + 44.0), pl.size.x - 28.0, [13, 12], 3, TINTA2, 2.0)
 	var pr := Rect2(COL_D_X, 538.0, COL_W, 92.0)
 	draw_rect(pr, PAPEL_ESC)
 	draw_rect(pr, PAPEL_BORDA, false, 2.0)
-	_txt("Seu progresso", Vector2(pr.position.x + 14.0, pr.position.y + 24.0), 16, TINTA)
-	_txt("Gangues do 3º ato: na próxima página", Vector2(pr.position.x + 120.0, pr.position.y + 24.0), 12, TINTA2, pr.size.x - 134.0)
+	_txt(Idioma.t("Seu progresso"), Vector2(pr.position.x + 14.0, pr.position.y + 24.0), 16, TINTA)
+	_txt(Idioma.t("Gangues do 3º ato: na próxima página"), Vector2(pr.position.x + 120.0, pr.position.y + 24.0), 12, TINTA2, pr.size.x - 134.0)
 	var comp: int = e.fantasias_completas()
 	var nf: int = Pecas.n_ativas()
 	var po: int = pecas_obtidas(e)
 	var lb: float = (pr.size.x - 28.0 - 14.0) * 0.5
-	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(comp) / nf, "Completas: %d de %d" % [comp, nf], Color(0.95, 0.72, 0.15))
-	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(po) / pecas_possiveis(), "Peças encontradas: %d de %d" % [po, pecas_possiveis()], Color(0.4, 0.7, 0.45))
+	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(comp) / nf, Idioma.t("Completas: %d de %d") % [comp, nf], Color(0.95, 0.72, 0.15))
+	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(po) / pecas_possiveis(), Idioma.t("Peças encontradas: %d de %d") % [po, pecas_possiveis()], Color(0.4, 0.7, 0.45))
 
 func _barra(r: Rect2, frac: float, rotulo: String, cor: Color) -> void:
 	_txt(rotulo, Vector2(r.position.x, r.position.y - 6.0), 14, TINTA)
@@ -1231,7 +1241,7 @@ func _tile(e: Estado, c: int, r: Rect2) -> void:
 	if e.ja_teve(cab):
 		Desenho.icone(self, cab, centro, 50.0)
 	# nome em até duas linhas
-	var aj: Dictionary = ajustar(Pecas.CONJUNTO_NOME[c], [12, 11, 10, 9, 8], r.size.x - 8.0, 2)
+	var aj: Dictionary = ajustar(Idioma.t(Pecas.CONJUNTO_NOME[c]), [12, 11, 10, 9, 8], r.size.x - 8.0, 2)
 	var yy: float = r.position.y + 70.0
 	for ln in aj["linhas"]:
 		_txt(ln, Vector2(r.position.x + 4.0, yy), aj["tam"], TINTA, r.size.x - 8.0)
@@ -1251,7 +1261,7 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	var completa: bool = n >= Pecas.SLOTS
 	var sala: int = comodo_da_fantasia(c)
 	# ---------------- página da esquerda
-	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), Pecas.CONJUNTO_NOME[c], [30, 28, 26, 24, 22, 20, 18], cor)
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), Idioma.t(Pecas.CONJUNTO_NOME[c]), [30, 28, 26, 24, 22, 20, 18], cor)
 	var cb: Rect2 = _cabine_gato()
 	draw_rect(Rect2(cb.position.x + 3, cb.position.y + 4, cb.size.x, cb.size.y), Color(0, 0, 0, 0.16))
 	draw_rect(cb, cor.lerp(PAPEL, 0.78))
@@ -1260,7 +1270,7 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, Q), cor.darkened(0.2).lerp(PAPEL, 0.4))
 	_moldura_px(cb, PAPEL_BORDA)
 	_cantoneiras(cb, Color(0.3, 0.17, 0.15))
-	_txt("Ficha nº %02d" % (pagina), Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
+	_txt(Idioma.t("Ficha nº %02d") % pagina, Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
 	# o gato: as peças já tidas aqui; as que faltam saem em silhueta pela camada filha
 	_gato(self, c, false)
 	# quatro marcadores de peça na foto
@@ -1269,24 +1279,24 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 		var mk := Rect2(cb.end.x - 22.0 - (3 - s) * 20.0, cb.end.y - 22.0, 14.0, 14.0)
 		draw_rect(mk, Color(0.2, 0.12, 0.12))
 		draw_rect(mk.grow(-2.0), cor if e.ja_teve(tp) else Color(0.45, 0.4, 0.4))
-	_txt("%d/%d peças" % [n, Pecas.SLOTS], Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, TINTA)
+	_txt(Idioma.t("%d/%d peças") % [n, Pecas.SLOTS], Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, TINTA)
 	if completa:
 		_carimbo(Vector2(cb.end.x - 96.0, cb.end.y - 100.0))
 	# poder da fantasia completa
 	var pb := Rect2(COL_E_X, 392.0, COL_W, 100.0)
 	draw_rect(pb, PAPEL_ESC)
 	draw_rect(pb, PAPEL_BORDA, false, 2.0)
-	_txt("Poder da fantasia completa", Vector2(pb.position.x + 12.0, pb.position.y + 19.0), 13, TINTA2)
-	_txt(Pecas.PODER_NOME[c], Vector2(pb.position.x + 12.0, pb.position.y + 42.0), tam_cabe(Pecas.PODER_NOME[c], [22, 20, 18], pb.size.x - 24.0), Color(0.62, 0.34, 0.02))
+	_txt(Idioma.t("Poder da fantasia completa"), Vector2(pb.position.x + 12.0, pb.position.y + 19.0), 13, TINTA2)
+	_txt(Idioma.t(Pecas.PODER_NOME[c]), Vector2(pb.position.x + 12.0, pb.position.y + 42.0), tam_cabe(Idioma.t(Pecas.PODER_NOME[c]), [22, 20, 18], pb.size.x - 24.0), Color(0.62, 0.34, 0.02))
 	# dica em até 2 linhas, no passo de 16 px: a fonte sai em 19, então a 2ª linha não pode descer até a legenda
-	_bloco(_maiuscula(Pecas.PODER_DICA[c]) + ", a cada %d s" % Balanco.poder_recarga(c), Vector2(pb.position.x + 12.0, pb.position.y + 61.0), pb.size.x - 24.0, [14], 2, TINTA, 2.0)
-	_txt("Vale com as 4 peças vestidas" if not completa else "Fantasia completa: o poder é seu", Vector2(pb.position.x + 12.0, pb.end.y - 4.0), 12, TINTA2)
+	_bloco(Idioma.t("%s, a cada %d s") % [_maiuscula(Idioma.t(Pecas.PODER_DICA[c])), Balanco.poder_recarga(c)], Vector2(pb.position.x + 12.0, pb.position.y + 61.0), pb.size.x - 24.0, [14], 2, TINTA, 2.0)
+	_txt(Idioma.t("Vale com as 4 peças vestidas") if not completa else Idioma.t("Fantasia completa: o poder é seu"), Vector2(pb.position.x + 12.0, pb.end.y - 4.0), 12, TINTA2)
 	# onde encontrar
 	var ob := Rect2(COL_E_X, 500.0, COL_W, 130.0)
 	draw_rect(ob, PAPEL_ESC)
 	draw_rect(ob, PAPEL_BORDA, false, 2.0)
 	draw_rect(Rect2(ob.position.x, ob.position.y, 8.0, ob.size.y), COR_ABA[sala + 1 if sala >= 0 else ABA_FORA].darkened(0.05))
-	_txt("Onde encontrar", Vector2(ob.position.x + 18.0, ob.position.y + 19.0), 13, TINTA2)
+	_txt(Idioma.t("Onde encontrar"), Vector2(ob.position.x + 18.0, ob.position.y + 19.0), 13, TINTA2)
 	var xo: float = ob.position.x + 18.0
 	var wo: float = ob.size.x - 30.0
 	var yy: float = _bloco(texto_onde(c), Vector2(xo, ob.position.y + 42.0), wo, [18, 16, 15, 14], 2, TINTA, 3.0)
@@ -1301,9 +1311,9 @@ func _pagina_fantasia(e: Estado, c: int) -> void:
 	var outras: Array[String] = []
 	for o in Fases.CONJUNTOS[sala if sala >= 0 else lugar_de_fora(c)]:
 		if o != c:
-			outras.append(Pecas.CONJUNTO_NOME[o])
+			outras.append(Idioma.t(Pecas.CONJUNTO_NOME[o]))
 	var linhas_livres: int = clampi(int(floor((ob.end.y - 6.0 - yy) / 14.0)), 1, 2)
-	_bloco("Também cai aqui: " + ", ".join(outras), Vector2(xo, yy + 6.0), wo, [12, 11], linhas_livres, TINTA2, 2.0)
+	_bloco(Idioma.t("Também cai aqui: %s") % ", ".join(outras), Vector2(xo, yy + 6.0), wo, [12, 11], linhas_livres, TINTA2, 2.0)
 	# ---------------- página da direita
 	for s in Pecas.SLOTS:
 		_linha_peca(e, c, s)
@@ -1314,7 +1324,7 @@ func _pagina_atelie(e: Estado) -> void:
 	var C = Pecas.Conjunto
 	var cor: Color = Pecas.CONJUNTO_COR[C.ATELIE]
 	var criada: bool = not e.atelie.is_empty()
-	var nome: String = str(e.atelie.get("nome", "Ateliê")) if criada else "Ateliê"
+	var nome: String = str(e.atelie.get("nome", Idioma.t("Ateliê"))) if criada else Idioma.t("Ateliê")
 	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), nome, [30, 28, 26, 24, 22, 20, 18], cor)
 	var cb: Rect2 = _cabine_gato()
 	draw_rect(Rect2(cb.position.x + 3, cb.position.y + 4, cb.size.x, cb.size.y), Color(0, 0, 0, 0.16))
@@ -1323,7 +1333,7 @@ func _pagina_atelie(e: Estado) -> void:
 	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, Q), cor.darkened(0.2).lerp(PAPEL, 0.4))
 	_moldura_px(cb, PAPEL_BORDA)
 	_cantoneiras(cb, Color(0.3, 0.17, 0.15))
-	_txt("Ficha secreta", Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
+	_txt(Idioma.t("Ficha secreta"), Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
 	var pr := Rect2(COL_D_X, 122.0, COL_W, 508.0)
 	var pb := Rect2(COL_E_X, 392.0, COL_W, 238.0)
 	draw_rect(pb, PAPEL_ESC)
@@ -1331,29 +1341,29 @@ func _pagina_atelie(e: Estado) -> void:
 	if not criada:
 		_estrela(cb.get_center() + Vector2(0.0, -20.0), COR_OURO if Atelie.liberado(e) else Color(0.6, 0.55, 0.5))
 		_txt("?", Vector2(cb.position.x, cb.get_center().y + 50.0), 40, TINTA2, cb.size.x)
-		var msg: String = "Fichário completo! Abra o Ateliê (botão no mapa ou no guarda-roupa) e crie a sua fantasia." if Atelie.liberado(e) else "Complete o fichário para abrir o Ateliê"
-		_txt("Fantasia do Ateliê", Vector2(pb.position.x + 12.0, pb.position.y + 24.0), 16, TINTA)
+		var msg: String = Idioma.t("Fichário completo! Abra o Ateliê (botão no mapa ou no guarda-roupa) e crie a sua fantasia.") if Atelie.liberado(e) else Idioma.t("Complete o fichário para abrir o Ateliê")
+		_txt(Idioma.t("Fantasia do Ateliê"), Vector2(pb.position.x + 12.0, pb.position.y + 24.0), 16, TINTA)
 		_bloco(msg, Vector2(pb.position.x + 12.0, pb.position.y + 54.0), pb.size.x - 24.0, [20, 18, 16], 3, Color(0.62, 0.34, 0.02), 4.0)
-		_bloco("Lá você escolhe as formas, as cores, a estampa, um poder, um bônus e o nome, dentro de um orçamento de pontos.", Vector2(pb.position.x + 12.0, pb.position.y + 140.0), pb.size.x - 24.0, [14, 13, 12], 3, TINTA2, 3.0)
-		_txt("Completas: %d de %d" % [e.fantasias_completas(), Pecas.n_ativas()], Vector2(pb.position.x + 12.0, pb.end.y - 12.0), 14, TINTA2)
+		_bloco(Idioma.t("Lá você escolhe as formas, as cores, a estampa, um poder, um bônus e o nome, dentro de um orçamento de pontos."), Vector2(pb.position.x + 12.0, pb.position.y + 140.0), pb.size.x - 24.0, [14, 13, 12], 3, TINTA2, 3.0)
+		_txt(Idioma.t("Completas: %d de %d") % [e.fantasias_completas(), Pecas.n_ativas()], Vector2(pb.position.x + 12.0, pb.end.y - 12.0), 14, TINTA2)
 		draw_rect(pr, PAPEL_ESC)
 		draw_rect(pr, PAPEL_BORDA, false, 2.0)
-		_txt("Peças", Vector2(pr.position.x + 12.0, pr.position.y + 24.0), 16, TINTA)
-		_txt("Ainda não existem", Vector2(pr.position.x + 12.0, pr.position.y + 54.0), 16, TINTA2)
+		_txt(Idioma.t("Peças"), Vector2(pr.position.x + 12.0, pr.position.y + 24.0), 16, TINTA)
+		_txt(Idioma.t("Ainda não existem"), Vector2(pr.position.x + 12.0, pr.position.y + 54.0), 16, TINTA2)
 		return
 	# gato vestindo a fantasia criada
 	var pecas: Array = []
 	for s in Pecas.SLOTS:
 		pecas.append(Peca.new(Pecas.Tipo.ATELIE_CABECA + s, 5, Pecas.Raridade.RARA))
 	Desenho.boneco(self, _pos_gato(), 3.0, 1.0, 0, pecas, 0.0, t, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, true, 0, false)
-	_txt("4/4 peças", Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, TINTA)
+	_txt(Idioma.t("4/4 peças"), Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, TINTA)
 	var cp: int = Pecas.conj_do_poder(C.ATELIE)
-	_txt("Poder da fantasia completa", Vector2(pb.position.x + 12.0, pb.position.y + 19.0), 13, TINTA2)
-	_txt(Pecas.PODER_NOME[cp], Vector2(pb.position.x + 12.0, pb.position.y + 44.0), tam_cabe(Pecas.PODER_NOME[cp], [22, 20, 18], pb.size.x - 24.0), Color(0.62, 0.34, 0.02))
-	_bloco(_maiuscula(Pecas.PODER_DICA[cp]), Vector2(pb.position.x + 12.0, pb.position.y + 66.0), pb.size.x - 24.0, [14, 13, 12], 3, TINTA, 2.0)
+	_txt(Idioma.t("Poder da fantasia completa"), Vector2(pb.position.x + 12.0, pb.position.y + 19.0), 13, TINTA2)
+	_txt(Idioma.t(Pecas.PODER_NOME[cp]), Vector2(pb.position.x + 12.0, pb.position.y + 44.0), tam_cabe(Idioma.t(Pecas.PODER_NOME[cp]), [22, 20, 18], pb.size.x - 24.0), Color(0.62, 0.34, 0.02))
+	_bloco(_maiuscula(Idioma.t(Pecas.PODER_DICA[cp])), Vector2(pb.position.x + 12.0, pb.position.y + 66.0), pb.size.x - 24.0, [14, 13, 12], 3, TINTA, 2.0)
 	var recarga: int = int(round(Balanco.PODER_INTERVALO * float(Balanco.PODER_KIT_INTERVALO.get(cp, 1.0)) * Atelie.PODER_RECARGA_FATOR))
-	_bloco("Solta a cada %d s, com %d%% da força da fantasia de origem (%s)." % [recarga, int(round(Atelie.PODER_FORCA_FATOR * 100.0)), Pecas.CONJUNTO_NOME[cp]], Vector2(pb.position.x + 12.0, pb.position.y + 134.0), pb.size.x - 24.0, [13, 12, 11], 3, TINTA2, 2.0)
-	_txt("Estampa: %s" % Atelie.ESTAMPA_NOME[clampi(int(e.atelie.get("estampa", 0)), 0, Atelie.ESTAMPA_NOME.size() - 1)], Vector2(pb.position.x + 12.0, pb.end.y - 12.0), 14, TINTA2)
+	_bloco(Idioma.t("Solta a cada %d s, com %d%% da força da fantasia de origem (%s).") % [recarga, int(round(Atelie.PODER_FORCA_FATOR * 100.0)), Idioma.t(Pecas.CONJUNTO_NOME[cp])], Vector2(pb.position.x + 12.0, pb.position.y + 134.0), pb.size.x - 24.0, [13, 12, 11], 3, TINTA2, 2.0)
+	_txt(Idioma.t("Estampa: %s") % Idioma.t(Atelie.ESTAMPA_NOME[clampi(int(e.atelie.get("estampa", 0)), 0, Atelie.ESTAMPA_NOME.size() - 1)]), Vector2(pb.position.x + 12.0, pb.end.y - 12.0), 14, TINTA2)
 	# página da direita: as quatro peças e o bônus
 	var ms: Array = e.atelie.get("matizes", [])
 	for s in Pecas.SLOTS:
@@ -1370,21 +1380,21 @@ func _pagina_atelie(e: Estado) -> void:
 		Desenho.icone(self, tp, cx.get_center(), 56.0)
 		var x: float = r.position.x + 88.0
 		var larg: float = r.size.x - 88.0 - 10.0
-		var tag: String = Pecas.SLOT_NOME[s]
+		var tag: String = Idioma.t(Pecas.SLOT_NOME[s])
 		var wtag: float = largura(tag, 12)
 		_txt(tag, Vector2(r.end.x - 10.0 - wtag, r.position.y + 20.0), 12, TINTA2)
-		_txt(cortar(Pecas.NOME[forma], 19, larg - wtag - 10.0), Vector2(x, r.position.y + 24.0), 19, TINTA)
-		_bloco(_maiuscula(Pecas.dica(forma)), Vector2(x, r.position.y + 43.0), larg, [13, 12, 11], 2, TINTA2, 2.0)
+		_txt(cortar(Idioma.t(Pecas.NOME[forma]), 19, larg - wtag - 10.0), Vector2(x, r.position.y + 24.0), 19, TINTA)
+		_bloco(_maiuscula(Idioma.t(Pecas.dica(forma))), Vector2(x, r.position.y + 43.0), larg, [13, 12, 11], 2, TINTA2, 2.0)
 		var mz: int = int(ms[s]) if s < ms.size() else 0
-		_txt("Cor: %s" % Atelie.MATIZ_NOME[clampi(mz, 0, Atelie.MATIZ_NOME.size() - 1)], Vector2(x, r.end.y - 8.0), 13, COR_TEM)
+		_txt(Idioma.t("Cor: %s") % Idioma.t(Atelie.MATIZ_NOME[clampi(mz, 0, Atelie.MATIZ_NOME.size() - 1)]), Vector2(x, r.end.y - 8.0), 13, COR_TEM)
 	var bx := Rect2(COL_D_X, 474.0, COL_W, 156.0)
 	draw_rect(bx, PAPEL_ESC)
 	draw_rect(bx, PAPEL_BORDA, false, 2.0)
 	draw_rect(Rect2(bx.position.x, bx.position.y, bx.size.x, 5.0), cor.darkened(0.15))
 	var cbn: int = Pecas.conj_do_bonus(C.ATELIE)
-	_txt("Bônus: %s" % Pecas.CONJUNTO_NOME[cbn], Vector2(bx.position.x + 12.0, bx.position.y + 24.0), 16, TINTA)
+	_txt(Idioma.t("Bônus: %s") % Idioma.t(Pecas.CONJUNTO_NOME[cbn]), Vector2(bx.position.x + 12.0, bx.position.y + 24.0), 16, TINTA)
 	var y: float = bx.position.y + 44.0
-	for g in [["2 ou 3 peças", 1], ["4 peças", 2]]:
+	for g in [[Idioma.t("2 ou 3 peças"), 1], [Idioma.t("4 peças"), 2]]:
 		_txt(g[0] + ":", Vector2(bx.position.x + 12.0, y), 14, Color(0.62, 0.34, 0.02))
 		y = _bloco(_maiuscula(Pecas.conjunto_bonus(C.ATELIE, g[1])), Vector2(bx.position.x + 24.0, y + 17.0), bx.size.x - 36.0, [14, 13, 12, 11], 2, TINTA, 2.0) + 4.0
 
@@ -1396,13 +1406,14 @@ func _carimbo(centro: Vector2) -> void:
 	if carimbo_t < 0.25:
 		pul = 1.0 + 2.2 * pow(1.0 - carimbo_t / 0.25, 2.0)   # desce de grande e bate
 	UIComum.trans(self, centro, -0.2, Vector2(pul, pul))
-	var w: float = largura("COMPLETA", 28) + 22.0
+	var rotulo: String = Idioma.t("COMPLETA")
+	var w: float = largura(rotulo, 28) + 22.0
 	var r := Rect2(-w * 0.5, -22.0, w, 40.0)
 	var tinta := Color(0.78, 0.12, 0.12, 0.9)
 	draw_rect(r, Color(1, 1, 1, 0.35))
 	draw_rect(r, tinta, false, 4.0)
 	draw_rect(r.grow(-6.0), tinta, false, 1.5)
-	draw_string(f, Vector2(-w * 0.5 + 11.0, 9.0), "COMPLETA", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(28), tinta)
+	draw_string(f, Vector2(-w * 0.5 + 11.0, 9.0), rotulo, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(28), tinta)
 	UIComum.trans_fim(self)
 
 func _linha_peca(e: Estado, c: int, s: int) -> void:
@@ -1432,26 +1443,28 @@ func _linha_peca(e: Estado, c: int, s: int) -> void:
 		_txt("?", Vector2(_sn(sc.x) - 9.0, _sn(sc.y) + 8.0), 16, Color.WHITE, 21.0)
 	var x: float = r.position.x + 88.0
 	var larg: float = r.size.x - 88.0 - 10.0
-	var tag: String = Pecas.SLOT_NOME[s]
+	var tag: String = Idioma.t(Pecas.SLOT_NOME[s])
 	var wtag: float = largura(tag, 12)
 	_txt(tag, Vector2(r.end.x - 10.0 - wtag, r.position.y + 20.0), 12, TINTA2)
-	_txt(cortar(Pecas.NOME[tp], 19, larg - wtag - 10.0), Vector2(x, r.position.y + 24.0), 19, TINTA if teve else Color(0.3, 0.22, 0.2))
-	_bloco(_maiuscula(Pecas.dica(tp)), Vector2(x, r.position.y + 43.0), larg, [13, 12, 11], 2, TINTA2 if teve else Color(0.5, 0.42, 0.38), 2.0)
+	_txt(cortar(Idioma.t(Pecas.NOME[tp]), 19, larg - wtag - 10.0), Vector2(x, r.position.y + 24.0), 19, TINTA if teve else Color(0.3, 0.22, 0.2))
+	_bloco(_maiuscula(Idioma.t(Pecas.dica(tp))), Vector2(x, r.position.y + 43.0), larg, [13, 12, 11], 2, TINTA2 if teve else Color(0.5, 0.42, 0.38), 2.0)
 	# estado
 	var txt: String = ""
 	var cs: Color = COR_FALTA
 	if tem:
-		txt = "Tem agora ×%d" % pos["n"]
+		txt = Idioma.t("Tem agora ×%d") % pos["n"]
 		if melhor != null:
-			txt += "  ·  melhor: %s" % Pecas.RARIDADE_NOME[melhor.raridade].to_lower()
+			var raro: String = Idioma.t(Pecas.RARIDADE_NOME[melhor.raridade]).to_lower()
 			if melhor.nivel > 0:
-				txt += ", nível %d" % melhor.nivel
+				txt = Idioma.t("Tem agora ×%d  ·  melhor: %s, nível %d") % [pos["n"], raro, melhor.nivel]
+			else:
+				txt = Idioma.t("Tem agora ×%d  ·  melhor: %s") % [pos["n"], raro]
 		cs = COR_TEM
 	elif teve:
-		txt = "Já teve (não tem agora)"
+		txt = Idioma.t("Já teve (não tem agora)")
 		cs = COR_TEVE
 	else:
-		txt = "Falta: ainda não apareceu"
+		txt = Idioma.t("Falta: ainda não apareceu")
 	var ty: float = r.end.y - 8.0
 	var tam_s: int = tam_cabe(txt, [14, 13, 12, 11], larg - 20.0)
 	_bolinha(Vector2(x, ty - 13.0), cs, tem or teve)
@@ -1463,9 +1476,9 @@ func _bonus(c: int) -> void:
 	draw_rect(bx, PAPEL_ESC)
 	draw_rect(bx, PAPEL_BORDA, false, 2.0)
 	draw_rect(Rect2(bx.position.x, bx.position.y, bx.size.x, 5.0), cor.darkened(0.15))
-	_txt("Bônus de fantasia", Vector2(bx.position.x + 12.0, bx.position.y + 24.0), 16, TINTA)
+	_txt(Idioma.t("Bônus de fantasia"), Vector2(bx.position.x + 12.0, bx.position.y + 24.0), 16, TINTA)
 	var y: float = bx.position.y + 44.0
-	var grupos: Array = [["2 ou 3 peças", 1], ["4 peças", 2]]
+	var grupos: Array = [[Idioma.t("2 ou 3 peças"), 1], [Idioma.t("4 peças"), 2]]
 	for g in grupos:
 		_txt(g[0] + ":", Vector2(bx.position.x + 12.0, y), 14, Color(0.62, 0.34, 0.02))
 		y = _bloco(_maiuscula(Pecas.conjunto_bonus(c, g[1])), Vector2(bx.position.x + 24.0, y + 17.0), bx.size.x - 36.0, [14, 13, 12, 11], 2, TINTA, 2.0) + 4.0
@@ -1538,18 +1551,28 @@ func _linha_meta(e: Estado, m: Dictionary, y: float, trancada: bool) -> float:
 	if trancada:
 		_cadeado(Vector2(r.position.x + 16.0, y + 16.0), Color(0.45, 0.32, 0.3))
 		xt += 14.0
-	_txt(cortar(m["nome"], 15, 240.0), Vector2(xt, y + 14.0), 15, TINTA2 if trancada else TINTA)
+	_txt(cortar(Idioma.t(str(m["nome"])), 15, 240.0), Vector2(xt, y + 14.0), 15, TINTA2 if trancada else TINTA)
 	if metas_novas.has(m["id"]):
-		_txt("NOVA", Vector2(r.position.x + 270.0, y + 13.0), 11, Color(0.85, 0.15, 0.15))
+		_txt(Idioma.t("NOVA"), Vector2(r.position.x + 270.0, y + 13.0), 11, Color(0.85, 0.15, 0.15))
 		draw_rect(r.grow(2.0), Color(1.0, 0.8, 0.2, 0.5 + 0.5 * sin(t * 6.0)), false, 3.0)
-	var det: String = "Vença a campanha para liberar" if trancada else str(m["texto"])
+	var det: String = Idioma.t("Vença a campanha para liberar") if trancada else Idioma.t(str(m["texto"]))
 	_txt(cortar(det, 11, 285.0), Vector2(xt, y + 27.0), 11, TINTA2)
 	_premio(m, r.end.x - 90.0, y + 16.0, feita)
 	if feita:
-		_selo_meta(Vector2(r.end.x - 34.0, y + 16.0), "FEITA", COR_TEM)
+		_selo_meta(Vector2(r.end.x - 34.0, y + 16.0), Idioma.t("FEITA"), COR_TEM)
 	else:
-		_txt("pendente" if not trancada else "trancada", Vector2(r.end.x - 72.0, y + 20.0), 11, TINTA2, 66.0)
+		_txt(Idioma.t("pendente") if not trancada else Idioma.t("trancada"), Vector2(r.end.x - 72.0, y + 20.0), 11, TINTA2, 66.0)
 	return y + 34.0
+
+## Título das ruas do 3º ato: progresso e, se houver, o recorde da invasão (cada parte é uma frase completa).
+static func _titulo_ruas(e: Estado) -> String:
+	var tit: String = Idioma.t("Ruas do bairro  ·  %d/%d vencidas no 3º ato") % [e.vencidos_no_ato(3), Fases.TOTAL]
+	var rec: int = e.recordes[Fases.TOTAL * 2]
+	if rec > 0:
+		return tit + " · " + Idioma.t("Invasão: onda %d") % rec
+	if e.tudo_vencido():
+		return tit + " · " + Idioma.t("Invasão: sem recorde")
+	return tit
 
 ## Segunda dupla de folhas das Metas: as metas do lado de fora e o andamento de cada lugar.
 func _metas_fora(e: Estado, todas: Array) -> void:
@@ -1559,13 +1582,13 @@ func _metas_fora(e: Estado, todas: Array) -> void:
 		if e.metas_pagas.has(m["id"]):
 			feitas += 1
 	var y: float = 120.0
-	_emblema_grupo("Lado de fora", Vector2(COL_E_X, y))
-	_txt("Lado de fora  ·  %d/%d" % [feitas, ms.size()], Vector2(COL_E_X + 27.0, y + 17.0), 16, TINTA)
+	_emblema_grupo("Lado de fora", Vector2(COL_E_X, y))   # i18n-ok: id do grupo (PX_GRUPO), o texto ao lado é traduzido
+	_txt(Idioma.t("Lado de fora  ·  %d/%d") % [feitas, ms.size()], Vector2(COL_E_X + 27.0, y + 17.0), 16, TINTA)
 	y += 24.0
 	for m in ms:
 		y = _linha_meta(e, m, y, false)
 	# página direita: os cinco lugares, com a situação no 2º ato e o recorde da invasão
-	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), "Lugares de fora  ·  %d/%d vencidos no 2º ato" % [e.vencidos_no_ato(2), Fases.TOTAL], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), Idioma.t("Lugares de fora  ·  %d/%d vencidos no 2º ato") % [e.vencidos_no_ato(2), Fases.TOTAL], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
 	var yy: float = 124.0
 	for i in Fases.TOTAL:
 		var li: int = i + Fases.TOTAL
@@ -1574,18 +1597,18 @@ func _metas_fora(e: Estado, todas: Array) -> void:
 		draw_rect(r, Color(0.86, 0.95, 0.8) if feito else PAPEL_ESC.lightened(0.25))
 		draw_rect(r, COR_TEM if feito else PAPEL_BORDA, false, 1.5 if feito else 1.0)
 		draw_rect(Rect2(r.position.x, r.position.y, 5.0, r.size.y), COR_ABA[ABA_METAS].darkened(0.1))
-		_txt(Fases.NOME[li], Vector2(r.position.x + 14.0, yy + 24.0), 20, TINTA, 180.0)
-		_txt("Chefe: " + Fases.CHEFE_NOME[li], Vector2(r.position.x + 14.0, yy + 44.0), 13, TINTA2, 250.0)
+		_txt(Idioma.t(Fases.NOME[li]), Vector2(r.position.x + 14.0, yy + 24.0), 20, TINTA, 180.0)
+		_txt(Idioma.t("Chefe: %s") % Idioma.t(Fases.CHEFE_NOME[li]), Vector2(r.position.x + 14.0, yy + 44.0), 13, TINTA2, 250.0)
 		if feito:
-			_selo_meta(Vector2(r.end.x - 40.0, yy + 18.0), "FEITO", COR_TEM)
+			_selo_meta(Vector2(r.end.x - 40.0, yy + 18.0), Idioma.t("FEITO"), COR_TEM)
 			var rec: int = e.recordes[li]
-			_txt(("Invasão: onda %d" % rec) if rec > 0 else "Invasão: sem recorde", Vector2(r.end.x - 195.0, yy + 44.0), 13, TINTA2, 160.0)
+			_txt((Idioma.t("Invasão: onda %d") % rec) if rec > 0 else Idioma.t("Invasão: sem recorde"), Vector2(r.end.x - 195.0, yy + 44.0), 13, TINTA2, 160.0)
 		else:
-			_txt("falta", Vector2(r.end.x - 60.0, yy + 24.0), 14, TINTA2, 50.0)
+			_txt(Idioma.t("falta"), Vector2(r.end.x - 60.0, yy + 24.0), 14, TINTA2, 50.0)
 		yy += 62.0
 	# as ruas do 3º ato, em linhas mais baixas por baixo dos lugares de fora
 	yy += 2.0
-	_txt("Ruas do bairro  ·  %d/%d vencidas no 3º ato" % [e.vencidos_no_ato(3), Fases.TOTAL] + ((" · Invasão: onda %d" % e.recordes[Fases.TOTAL * 2]) if e.recordes[Fases.TOTAL * 2] > 0 else (" · Invasão: sem recorde" if e.tudo_vencido() else "")), Vector2(COL_D_X + 6.0, yy + 12.0), 15, TINTA)
+	_txt(_titulo_ruas(e), Vector2(COL_D_X + 6.0, yy + 12.0), 15, TINTA)
 	yy += 20.0
 	for i in Fases.TOTAL:
 		var li3: int = i + Fases.TOTAL * 2
@@ -1594,14 +1617,14 @@ func _metas_fora(e: Estado, todas: Array) -> void:
 		draw_rect(r3, Color(0.86, 0.95, 0.8) if feito3 else PAPEL_ESC.lightened(0.25))
 		draw_rect(r3, COR_TEM if feito3 else PAPEL_BORDA, false, 1.5 if feito3 else 1.0)
 		draw_rect(Rect2(r3.position.x, r3.position.y, 5.0, r3.size.y), Fases.GANGUE_COR[i])
-		_txt(cortar(Fases.nome_do_lugar(li3), 16, 172.0), Vector2(r3.position.x + 14.0, yy + 21.0), 16, TINTA)
-		_txt(cortar("Chefe: " + Fases.nome_do_chefe(li3), 13, 175.0), Vector2(r3.position.x + 196.0, yy + 20.0), 13, TINTA2)
+		_txt(cortar(Idioma.t(Fases.nome_do_lugar(li3)), 16, 172.0), Vector2(r3.position.x + 14.0, yy + 21.0), 16, TINTA)
+		_txt(cortar(Idioma.t("Chefe: %s") % Idioma.t(Fases.nome_do_chefe(li3)), 13, 175.0), Vector2(r3.position.x + 196.0, yy + 20.0), 13, TINTA2)
 		if feito3:
-			_selo_meta(Vector2(r3.end.x - 40.0, yy + 16.0), "FEITO", COR_TEM)
+			_selo_meta(Vector2(r3.end.x - 40.0, yy + 16.0), Idioma.t("FEITO"), COR_TEM)
 		elif not e.lugar_aberto(3, i + 1):
-			_txt("fechado", Vector2(r3.end.x - 66.0, yy + 21.0), 13, TINTA2)
+			_txt(Idioma.t("fechado"), Vector2(r3.end.x - 66.0, yy + 21.0), 13, TINTA2)
 		else:
-			_txt("falta", Vector2(r3.end.x - 50.0, yy + 21.0), 14, TINTA2)
+			_txt(Idioma.t("falta"), Vector2(r3.end.x - 50.0, yy + 21.0), 14, TINTA2)
 		yy += 35.0
 
 func _pagina_metas(e: Estado) -> void:
@@ -1611,21 +1634,21 @@ func _pagina_metas(e: Estado) -> void:
 		if e.metas_pagas.has(m["id"]):
 			ganhos += int(m["premio"])
 	ganhos_exib = UIComum.contar(ganhos_exib, float(ganhos), get_process_delta_time())
-	_faixa(Rect2(COL_E_X, 76.0, COL_W, 34.0), "Metas: %d de %d  ·  troféus ganhos com metas: %d" % [e.metas_cumpridas(), todas.size(), int(round(ganhos_exib))], [17, 16, 15, 14, 13, 12], COR_OURO)
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 34.0), Idioma.t("Metas: %d de %d  ·  troféus ganhos com metas: %d") % [e.metas_cumpridas(), todas.size(), int(round(ganhos_exib))], [17, 16, 15, 14, 13, 12], COR_OURO)
 	if metas_pag == 1:
 		_metas_fora(e, todas)
 		return
 	var zerada: bool = e.campanha_vencida()
 	# página esquerda: Campanha, Guarda-roupa e Invasão
 	var y: float = 120.0
-	for g in ["Campanha", "Guarda-roupa", "Invasão"]:
+	for g in ["Campanha", "Guarda-roupa", "Invasão"]:   # i18n-ok: ids dos grupos de metas (comparados com m["grupo"]); traduzidos ao desenhar
 		var ms: Array = todas.filter(func(m: Dictionary) -> bool: return m["grupo"] == g)
 		var feitas: int = 0
 		for m in ms:
 			if e.metas_pagas.has(m["id"]):
 				feitas += 1
 		_emblema_grupo(g, Vector2(COL_E_X, y))
-		_txt("%s  ·  %d/%d" % [g, feitas, ms.size()], Vector2(COL_E_X + 27.0, y + 17.0), 16, TINTA)
+		_txt("%s  ·  %d/%d" % [Idioma.t(g), feitas, ms.size()], Vector2(COL_E_X + 27.0, y + 17.0), 16, TINTA)
 		y += 24.0
 		for m in ms:
 			y = _linha_meta(e, m, y, g == "Invasão" and not zerada)
@@ -1638,7 +1661,7 @@ func _pagina_metas(e: Estado) -> void:
 		if e.metas_pagas.has(m["id"]):
 			nf += 1
 	var premio_f: int = int(fs[0]["premio"]) if not fs.is_empty() else 0
-	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), "Fantasias  ·  %d/%d  ·  +%d troféus cada" % [nf, fs.size(), premio_f], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 34.0), Idioma.t("Fantasias  ·  %d/%d  ·  +%d troféus cada") % [nf, fs.size(), premio_f], [17, 16, 15, 14, 13], Color(1.0, 0.94, 0.7))
 	var por_col: int = ceili(fs.size() / 2.0)
 	var larg_c: float = floorf(COL_W * 0.5) - 3.0
 	# com 54 fantasias, 22 px por linha passava do pé da página: o passo encolhe para caber até METAS_FIM_Y
@@ -1655,11 +1678,11 @@ func _pagina_metas(e: Estado) -> void:
 		draw_rect(r2, COR_TEM if feita2 else PAPEL_BORDA, false, 1.5 if feita2 else 1.0)
 		draw_rect(Rect2(r2.position.x, r2.position.y, 5.0, r2.size.y), Pecas.CONJUNTO_COR[c].darkened(0.1))
 		var base_y: float = yy + roundf(alt * 0.5) + 5.0
-		_txt(UIComum.caber(Pecas.CONJUNTO_NOME[c], fonte, larg_c - 62.0), Vector2(r2.position.x + 11.0, base_y), fonte, TINTA)
+		_txt(UIComum.caber(Idioma.t(Pecas.CONJUNTO_NOME[c]), fonte, larg_c - 62.0), Vector2(r2.position.x + 11.0, base_y), fonte, TINTA)
 		if metas_novas.has(m["id"]):
 			draw_rect(r2.grow(2.0), Color(1.0, 0.8, 0.2, 0.5 + 0.5 * sin(t * 6.0)), false, 2.0)
 		if feita2:
-			_selo_meta(Vector2(r2.end.x - 26.0, yy + alt * 0.5), "FEITA", COR_TEM, 11 if alt >= 18.0 else 10)
+			_selo_meta(Vector2(r2.end.x - 26.0, yy + alt * 0.5), Idioma.t("FEITA"), COR_TEM, 11 if alt >= 18.0 else 10)
 		else:
 			_txt("%d/%d" % [e.pecas_da_fantasia(c), Pecas.SLOTS], Vector2(r2.end.x - 46.0, base_y), fonte, TINTA2, 40.0)
 
@@ -1673,7 +1696,6 @@ const FAM_ENFRENTAR: Array[String] = [
 	"Bicam forte, mas caem fácil: derrube os corvos antes de chegarem aos gatos.",
 	"Regeneram o tempo todo: concentre o dano no mesmo sapo, sem espalhar golpes.",
 ]
-const BANDO_ENFRENTAR := "Misturam todas as famílias: monte um time que sirva para tudo, com gatos fortes na frente e dano de longe atrás."
 const TIPO_ENFRENTAR: Array[String] = [
 	"Sem truque: qualquer gato na frente resolve. Fique de olho nos fantasiados no meio do bando.",
 	"Pula por cima dos gatos: deixe um gato em Recuar perto da torre para pegá-lo.",
@@ -1686,48 +1708,51 @@ const TIPO_ENFRENTAR: Array[String] = [
 	"Explode ao encostar: derrube de longe antes que chegue aos gatos ou à torre.",
 	"Larga uma peça da fantasia que veste: vale a pena derrubá-lo.",
 ]
-const FANTASIADO_OQUE := "Um bicho comum vestido com uma fantasia do lugar. Também usa os bônus dela. Com a fantasia completa, solta o poder dela, com aviso: atordoe para cancelar."
 const BICHO_RETRATO_ESC := 1.45
 
 static var _entradas_c: Array = []
 
+static var _entradas_idioma: String = ""
+
 static func entradas() -> Array:
-	if not _entradas_c.is_empty():
+	# os textos das entradas já saem traduzidos: o cache vale só para o idioma em que foi montado
+	if not _entradas_c.is_empty() and _entradas_idioma == Idioma.atual:
 		return _entradas_c
+	_entradas_idioma = Idioma.atual
 	var l: Array = []
 	for i in Fases.TOTAL:
-		l.append({"k": "fam", "i": i, "chave": "f%d" % i, "nome": Fases.FAMILIA_NOME[i], "cor": Desenho.COR_FAM[i],
-			"oque": Fases.FAMILIA_DICA[i], "dica": FAM_ENFRENTAR[i],
-			"ficha": ["Vida ×%s  ·  Velocidade ×%s  ·  Dano ×%s" % [_n(Fases.FAMILIA_VIDA[i]), _n(Fases.FAMILIA_VEL[i]), _n(Fases.FAMILIA_DANO[i])], "Chefe da família: " + Fases.CHEFE_NOME[i]],
-			"onde": "Vive %s. Fora da casa, aparece misturada nos bandos." % _em(i)})
+		l.append({"k": "fam", "i": i, "chave": "f%d" % i, "nome": Idioma.t(Fases.FAMILIA_NOME[i]), "cor": Desenho.COR_FAM[i],
+			"oque": Idioma.t(Fases.FAMILIA_DICA[i]), "dica": Idioma.t(FAM_ENFRENTAR[i]),
+			"ficha": [Idioma.t("Vida ×%s  ·  Velocidade ×%s  ·  Dano ×%s") % [_n(Fases.FAMILIA_VIDA[i]), _n(Fases.FAMILIA_VEL[i]), _n(Fases.FAMILIA_DANO[i])], Idioma.t("Chefe da família: %s") % Idioma.t(Fases.CHEFE_NOME[i])],
+			"onde": Idioma.t("Vive %s. Fora da casa, aparece misturada nos bandos.") % _em(i)})
 	for k in Fases.TOTAL:
 		var lg: int = k + Fases.TOTAL
-		l.append({"k": "bando", "i": k, "chave": "b%d" % k, "nome": Fases.FAMILIA_NOME[lg], "cor": Desenho.COR_FAM[k],
-			"oque": Fases.FAMILIA_DICA[lg], "dica": BANDO_ENFRENTAR,
-			"ficha": ["Chefe: " + Fases.CHEFE_NOME[lg], "Mais forte que os bichos da casa"],
-			"onde": "Só no segundo ato, %s." % _em(lg)})
+		l.append({"k": "bando", "i": k, "chave": "b%d" % k, "nome": Idioma.t(Fases.FAMILIA_NOME[lg]), "cor": Desenho.COR_FAM[k],
+			"oque": Idioma.t(Fases.FAMILIA_DICA[lg]), "dica": Idioma.t("Misturam todas as famílias: monte um time que sirva para tudo, com gatos fortes na frente e dano de longe atrás."),
+			"ficha": [Idioma.t("Chefe: %s") % Idioma.t(Fases.CHEFE_NOME[lg]), Idioma.t("Mais forte que os bichos da casa")],
+			"onde": Idioma.t("Só no segundo ato, %s.") % _em(lg)})
 	for t in Balanco.TIPO_NOMES.size():
-		l.append({"k": "tipo", "i": t, "chave": "t%d" % t, "nome": Balanco.TIPO_NOMES[t], "cor": Desenho.COR_TIPO[t],
-			"oque": Campo.TIPO_DICA[t], "dica": TIPO_ENFRENTAR[t],
-			"ficha": ["Vida ×%s  ·  Velocidade ×%s" % [_n(Balanco.TIPO_VIDA[t]), _n(Balanco.TIPO_VEL[t])], "Tamanho ×%s" % _n(Balanco.TIPO_ESCALA[t])],
+		l.append({"k": "tipo", "i": t, "chave": "t%d" % t, "nome": Idioma.t(Balanco.TIPO_NOMES[t]), "cor": Desenho.COR_TIPO[t],
+			"oque": Idioma.t(Campo.TIPO_DICA[t]), "dica": Idioma.t(TIPO_ENFRENTAR[t]),
+			"ficha": [Idioma.t("Vida ×%s  ·  Velocidade ×%s") % [_n(Balanco.TIPO_VIDA[t]), _n(Balanco.TIPO_VEL[t])], Idioma.t("Tamanho ×%s") % _n(Balanco.TIPO_ESCALA[t])],
 			"onde": _onde_tipo(t)})
-	l.append({"k": "tipo", "i": 9, "chave": "t9", "nome": "Fantasiado", "cor": Desenho.DOURADO,
-		"oque": FANTASIADO_OQUE, "dica": TIPO_ENFRENTAR[9],
-		"ficha": ["Larga uma peça da fantasia e dá %d troféu" % Torre.TROFEU_ELITE, "Tamanho ×%s" % _n(Balanco.ELITE_ESCALA)],
-		"onde": "Em toda luta a partir da onda %d de cada lugar." % Balanco.ELITE_ONDA_MIN})
+	l.append({"k": "tipo", "i": 9, "chave": "t9", "nome": Idioma.t("Fantasiado"), "cor": Desenho.DOURADO,
+		"oque": Idioma.t("Um bicho comum vestido com uma fantasia do lugar. Também usa os bônus dela. Com a fantasia completa, solta o poder dela, com aviso: atordoe para cancelar."), "dica": Idioma.t(TIPO_ENFRENTAR[9]),
+		"ficha": [Idioma.t("Larga uma peça da fantasia e dá %d troféu") % Torre.TROFEU_ELITE, Idioma.t("Tamanho ×%s") % _n(Balanco.ELITE_ESCALA)],
+		"onde": Idioma.t("Em toda luta a partir da onda %d de cada lugar.") % Balanco.ELITE_ONDA_MIN})
 	for i in Fases.CHEFE_NOME.size():
 		var vest: Array = []
 		for c in Fases.lista_do_lugar(i):
-			vest.append(Pecas.CONJUNTO_NOME[c])
-		l.append({"k": "chefe", "i": i, "chave": "c%d" % i, "nome": Fases.CHEFE_NOME[i], "cor": Desenho.COR_CHEFES[i],
-			"oque": Fases.CHEFE_ATAQUE[i] + ". Solta o poder com aviso de %d s: atordoe o chefe para cancelar." % int(Balanco.PODER_AVISO_T), "dica": Fases.CHEFE_FRAQUEZA[i],
-			"ficha": ["Larga uma peça Rara ou Lendária e dá %d troféus" % Torre.TROFEU_CHEFE, "Veste: " + ", ".join(vest)],
-			"onde": "Última onda %s%s." % [_do(i), "" if i < Fases.TOTAL else " (segundo ato)"]})
+			vest.append(Idioma.t(Pecas.CONJUNTO_NOME[c]))
+		l.append({"k": "chefe", "i": i, "chave": "c%d" % i, "nome": Idioma.t(Fases.CHEFE_NOME[i]), "cor": Desenho.COR_CHEFES[i],
+			"oque": Idioma.t("%s. Solta o poder com aviso de %d s: atordoe o chefe para cancelar.") % [Idioma.t(Fases.CHEFE_ATAQUE[i]), int(Balanco.PODER_AVISO_T)], "dica": Idioma.t(Fases.CHEFE_FRAQUEZA[i]),
+			"ficha": [Idioma.t("Larga uma peça Rara ou Lendária e dá %d troféus") % Torre.TROFEU_CHEFE, Idioma.t("Veste: %s") % ", ".join(vest)],
+			"onde": (Idioma.t("Última onda %s.") if i < Fases.TOTAL else Idioma.t("Última onda %s (segundo ato).")) % _do(i)})
 	for g in Fases.GANGUE_NOME.size():
 		var lg3: int = g + Fases.TOTAL * 2
-		l.append({"k": "gangue", "i": g, "chave": "g%d" % g, "nome": Fases.GANGUE_NOME[g], "cor": Fases.GANGUE_COR[g].lerp(Color(0.6, 0.5, 0.45), 0.25),
-			"oque": texto_truque(g), "dica": GANGUE_ENFRENTAR[g], "ficha": [],
-			"onde": "Só no terceiro ato: %s." % _em(lg3)})
+		l.append({"k": "gangue", "i": g, "chave": "g%d" % g, "nome": Idioma.t(Fases.GANGUE_NOME[g]), "cor": Fases.GANGUE_COR[g].lerp(Color(0.6, 0.5, 0.45), 0.25),
+			"oque": texto_truque(g), "dica": Idioma.t(GANGUE_ENFRENTAR[g]), "ficha": [],
+			"onde": Idioma.t("Só no terceiro ato: %s.") % _em(lg3)})
 	_entradas_c = l
 	return l
 
@@ -1744,14 +1769,14 @@ const GANGUE_ENFRENTAR: Array[String] = [
 static func texto_truque(g: int) -> String:
 	match g:
 		0:
-			return "O Mensageiro não rouba bloco: ao tocar a torre, leva um gato para dormir com os peixes por %d s. Matá-lo antes cancela." % int(Balanco.OFERTA_T)
+			return Idioma.t("O Mensageiro não rouba bloco: ao tocar a torre, leva um gato para dormir com os peixes por %d s. Matá-lo antes cancela.") % int(Balanco.OFERTA_T)
 		1:
-			return "O Guitarrista dá +%d%% de velocidade aos rivais em volta (o comboio), e o Suicida pintado corre ao primeiro gato ou à torre e explode." % int(round(Balanco.COMBOIO_VEL * 100.0))
+			return Idioma.t("O Guitarrista dá +%d%% de velocidade aos rivais em volta (o comboio), e o Suicida pintado corre ao primeiro gato ou à torre e explode.") % int(round(Balanco.COMBOIO_VEL * 100.0))
 		2:
-			return "O Programa volta uma vez com %d%% de vida ao ser derrotado, e o disco do Lançador quica em até %d gatos." % [int(round(Balanco.RECOMPILA_VIDA * 100.0)), Balanco.DISCO_QUICAS + 1]
+			return Idioma.t("O Programa volta uma vez com %d%% de vida ao ser derrotado, e o disco do Lançador quica em até %d gatos.") % [int(round(Balanco.RECOMPILA_VIDA * 100.0)), Balanco.DISCO_QUICAS + 1]
 		3:
-			return "Hoplitas lado a lado levam menos dano de frente (%d%% por vizinho, até %d). Golpes pelos flancos e poderes que atravessam furam a falange." % [int(round(Balanco.FALANGE_POR_VIZINHO * 100.0)), Balanco.FALANGE_MAX]
-	return "Abaixo de %d%% de vida, o mutante ganha +%d%% de dano e de velocidade. O Telepata atira de longe nos gatos e na torre." % [int(round(Balanco.MUTACAO_LIMIAR * 100.0)), int(round(Balanco.MUTACAO_DANO * 100.0))]
+			return Idioma.t("Hoplitas lado a lado levam menos dano de frente (%d%% por vizinho, até %d). Golpes pelos flancos e poderes que atravessam furam a falange.") % [int(round(Balanco.FALANGE_POR_VIZINHO * 100.0)), Balanco.FALANGE_MAX]
+	return Idioma.t("Abaixo de %d%% de vida, o mutante ganha +%d%% de dano e de velocidade. O Telepata atira de longe nos gatos e na torre.") % [int(round(Balanco.MUTACAO_LIMIAR * 100.0)), int(round(Balanco.MUTACAO_DANO * 100.0))]
 
 ## Tipos de rival da gangue `g` na ordem da ficha: o comum primeiro, depois os da tabela da gangue.
 static func tipos_da_gangue(g: int) -> Array[int]:
@@ -1770,16 +1795,17 @@ static func _n(v: float) -> String:
 
 ## "do Quarto", "da Sala"...
 static func _do(i: int) -> String:
-	return ("da " if i in [1, 2, 6, 8, 9] else "do ") + Fases.NOME[i]
+	var lugar: String = Idioma.t(Fases.NOME[i])
+	return Idioma.t("da %s") % lugar if i in [1, 2, 6, 8, 9] else Idioma.t("do %s") % lugar
 
 static func _onde_tipo(t: int) -> String:
 	if t == 0:
-		return "Em todo lugar, desde a primeira onda."
+		return Idioma.t("Em todo lugar, desde a primeira onda.")
 	var p: int = Balanco.TIPO_PROG_MIN[t]
 	var fase: int = maxi(1, int(ceil((p - Balanco.ONDAS_TOTAIS) / float(Balanco.PROG_POR_FASE))) + 1)
 	if fase > Fases.TOTAL:
-		return "Só no segundo ato, lá fora."
-	return "A partir de %s, onda %d." % [Fases.NOME[fase - 1], p - (fase - 1) * Balanco.PROG_POR_FASE]
+		return Idioma.t("Só no segundo ato, lá fora.")
+	return Idioma.t("A partir de %s, onda %d.") % [Idioma.t(Fases.NOME[fase - 1]), p - (fase - 1) * Balanco.PROG_POR_FASE]
 
 static func _derrotado(e: Estado, en: Dictionary) -> bool:
 	if en["k"] == "gangue":
@@ -1912,19 +1938,19 @@ func _indice_gangues(e: Estado) -> void:
 			vistas += 1
 		if e.vencido[g] >= 3:
 			chefes_der += 1
-	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), "Gangues das ruas", [30, 26], COR_OURO)
-	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), "Gangues vistas: %d de 5  ·  Chefes derrotados: %d de 5" % [vistas, chefes_der], [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
-	_rotulo_bichos("Gangues do 3º ato", rect_tile_bicho(BICHOS_CASA), COR_ABA[ABA_BICHOS], "tipos, truque e chefe")
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), Idioma.t("Gangues das ruas"), [30, 26], COR_OURO)
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), Idioma.t("Gangues vistas: %d de 5  ·  Chefes derrotados: %d de 5") % [vistas, chefes_der], [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
+	_rotulo_bichos(Idioma.t("Gangues do 3º ato"), rect_tile_bicho(BICHOS_CASA), COR_ABA[ABA_BICHOS], Idioma.t("tipos, truque e chefe"))
 	for k in range(BICHOS_CASA, lista.size()):
 		_tile_bicho(e, k)
 	var cx := Rect2(COL_E_X, 276.0, COL_W, 354.0)
-	_caixa(cx, "Como são os rivais", COR_ABA[ABA_BICHOS])
+	_caixa(cx, Idioma.t("Como são os rivais"), COR_ABA[ABA_BICHOS])
 	var yy: float = cx.position.y + 46.0
 	var par: Array[String] = [
-		"No terceiro ato todo inimigo é um gato rival de uma gangue: veste peças do lugar e briga com o seu time antes de ir à torre.",
-		"Cada gangue tem os seus tipos de rival, um truque e um chefe.",
-		"Derrube o líder (o de coroa) e os outros ficam abalados por %d s: %d%% menos dano e %d%% menos velocidade." % [int(Balanco.MORAL_T), int(round(Balanco.MORAL_DANO * 100.0)), int(round(Balanco.MORAL_VEL * 100.0))],
-		"Cada ficha se revela quando o rival aparece na prévia da onda. O chefe só aparece na prévia da última onda.",
+		Idioma.t("No terceiro ato todo inimigo é um gato rival de uma gangue: veste peças do lugar e briga com o seu time antes de ir à torre."),
+		Idioma.t("Cada gangue tem os seus tipos de rival, um truque e um chefe."),
+		Idioma.t("Derrube o líder (o de coroa) e os outros ficam abalados por %d s: %d%% menos dano e %d%% menos velocidade.") % [int(Balanco.MORAL_T), int(round(Balanco.MORAL_DANO * 100.0)), int(round(Balanco.MORAL_VEL * 100.0))],
+		Idioma.t("Cada ficha se revela quando o rival aparece na prévia da onda. O chefe só aparece na prévia da última onda."),
 	]
 	for tx in par:
 		yy = _bloco(tx, Vector2(cx.position.x + 18.0, yy), cx.size.x - 36.0, [17, 16, 15, 14], 4, TINTA, 4.0) + 12.0
@@ -1936,15 +1962,15 @@ func _indice_gangues(e: Estado) -> void:
 		draw_rect(r, PAPEL_ESC)
 		draw_rect(r, PAPEL_BORDA, false, 2.0)
 		draw_rect(Rect2(r.position.x, r.position.y, 8.0, r.size.y), cor.darkened(0.05) if viu else Color(0.5, 0.45, 0.42))
-		_txt(Fases.GANGUE_NOME[g] if viu else "???", Vector2(r.position.x + 20.0, r.position.y + 25.0), 20, TINTA if viu else TINTA2)
+		_txt(Idioma.t(Fases.GANGUE_NOME[g]) if viu else "???", Vector2(r.position.x + 20.0, r.position.y + 25.0), 20, TINTA if viu else TINTA2)
 		var tipos: Array[int] = tipos_da_gangue(g)
 		var n_v: int = 0
 		for tp in tipos:
 			if e.viu_rival(g, tp):
 				n_v += 1
-		_txt("Tipos de rival vistos: %d de %d" % [n_v, tipos.size()], Vector2(r.position.x + 20.0, r.position.y + 50.0), 15, TINTA2)
+		_txt(Idioma.t("Tipos de rival vistos: %d de %d") % [n_v, tipos.size()], Vector2(r.position.x + 20.0, r.position.y + 50.0), 15, TINTA2)
 		var vc: bool = e.viu_chefe_gangue(g)
-		_txt(("Chefe: " + Fases.nome_do_chefe(Fases.TOTAL * 2 + g)) if vc else "Chefe: ainda não visto", Vector2(r.position.x + 20.0, r.position.y + 74.0), 15, TINTA if vc else TINTA2)
+		_txt((Idioma.t("Chefe: %s") % Idioma.t(Fases.nome_do_chefe(Fases.TOTAL * 2 + g))) if vc else Idioma.t("Chefe: ainda não visto"), Vector2(r.position.x + 20.0, r.position.y + 74.0), 15, TINTA if vc else TINTA2)
 		EmblemaGangue.desenhar(self, g, r.position + Vector2(r.size.x - 44.0, 58.0), 48.0, viu)
 		if e.vencido[g] >= 3:
 			_estrela(r.position + Vector2(r.size.x - 22.0, 22.0), COR_OURO)
@@ -1956,13 +1982,13 @@ func _indice_bichos(e: Estado) -> void:
 	for en in lista:
 		if en["k"] == "chefe" and _derrotado(e, en):
 			chefes_der += 1
-	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), "Bestiário", [30, 26], COR_OURO)
-	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), ("Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d" % [vistos, lista.size(), chefes_der, Fases.CHEFE_NOME.size()]) + ("  ·  Secreto: Schrödinger" if e.feitos.has("schro") else ""), [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
-	_rotulo_bichos("Famílias da casa", rect_tile_bicho(0), COR_ABA[1])
-	_rotulo_bichos("Tipos de bicho", rect_tile_bicho(10), COR_ABA[2], "e o fantasiado")
-	_rotulo_bichos("Chefes da casa", rect_tile_bicho(20), COR_ABA[3])
-	_rotulo_bichos("Chefes de fora", rect_tile_bicho(25), COR_ABA[ABA_FORA])
-	_rotulo_bichos("Bandos de fora", rect_tile_bicho(5), COR_ABA[ABA_FORA], "todas as famílias juntas")
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), Idioma.t("Bestiário"), [30, 26], COR_OURO)
+	_faixa(Rect2(COL_D_X, 76.0, COL_W, 38.0), (Idioma.t("Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d") % [vistos, lista.size(), chefes_der, Fases.CHEFE_NOME.size()]) + ("  ·  " + Idioma.t("Secreto: Schrödinger") if e.feitos.has("schro") else ""), [17, 16, 15, 14, 13, 12], Color(1.0, 0.94, 0.7))
+	_rotulo_bichos(Idioma.t("Famílias da casa"), rect_tile_bicho(0), COR_ABA[1])
+	_rotulo_bichos(Idioma.t("Tipos de bicho"), rect_tile_bicho(10), COR_ABA[2], Idioma.t("e o fantasiado"))
+	_rotulo_bichos(Idioma.t("Chefes da casa"), rect_tile_bicho(20), COR_ABA[3])
+	_rotulo_bichos(Idioma.t("Chefes de fora"), rect_tile_bicho(25), COR_ABA[ABA_FORA])
+	_rotulo_bichos(Idioma.t("Bandos de fora"), rect_tile_bicho(5), COR_ABA[ABA_FORA], Idioma.t("todas as famílias juntas"))
 	for k in BICHOS_CASA:
 		_tile_bicho(e, k)
 	# a legenda ganha altura (sobe até a folga abaixo da grade de tipos) para ter 3 fileiras de 6: com a fonte
@@ -1970,14 +1996,14 @@ func _indice_bichos(e: Estado) -> void:
 	var pl := Rect2(COL_E_X, 506.0, COL_W, 124.0)
 	draw_rect(pl, PAPEL_ESC)
 	draw_rect(pl, PAPEL_BORDA, false, 2.0)
-	_txt("Ícones sobre os bichos e gatos na luta", Vector2(pl.position.x + 10.0, pl.position.y + 17.0), 13, TINTA)
+	_txt(Idioma.t("Ícones sobre os bichos e gatos na luta"), Vector2(pl.position.x + 10.0, pl.position.y + 17.0), 13, TINTA)
 	# legenda dos estados: ícone e nome, 6 por fileira (passar o mouse num bicho na luta mostra o tempo de cada um).
 	# Cada fileira reparte a folga entre os nomes pela largura real do texto, então nenhum encosta no vizinho.
 	for fil in 3:
 		var larguras: Array[float] = []
 		var soma: float = 0.0
 		for c in 6:
-			var w: float = maxf(UIComum.largura(IconesEstado.CURTO[fil * 6 + c], 10), 16.0)
+			var w: float = maxf(UIComum.largura(Idioma.t(IconesEstado.CURTO[fil * 6 + c]), 10), 16.0)
 			larguras.append(w)
 			soma += w
 		var folga: float = (pl.size.x - 20.0 - soma) / 5.0
@@ -1986,15 +2012,15 @@ func _indice_bichos(e: Estado) -> void:
 		for c in 6:
 			var q: int = fil * 6 + c
 			IconesEstado.desenhar(self, q, Vector2(roundf(x0 + larguras[c] * 0.5), cy))
-			_txt(IconesEstado.CURTO[q], Vector2(roundf(x0), cy + 16.0), 10, TINTA2, larguras[c] + 2.0)
+			_txt(Idioma.t(IconesEstado.CURTO[q]), Vector2(roundf(x0), cy + 16.0), 10, TINTA2, larguras[c] + 2.0)
 			x0 += larguras[c] + folga
 	var pr := Rect2(COL_D_X, 538.0, COL_W, 92.0)
 	draw_rect(pr, PAPEL_ESC)
 	draw_rect(pr, PAPEL_BORDA, false, 2.0)
-	_txt("Seu progresso", Vector2(pr.position.x + 14.0, pr.position.y + 24.0), 16, TINTA)
+	_txt(Idioma.t("Seu progresso"), Vector2(pr.position.x + 14.0, pr.position.y + 24.0), 16, TINTA)
 	var lb: float = (pr.size.x - 28.0 - 14.0) * 0.5
-	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(vistos) / lista.size(), "Vistos: %d de %d" % [vistos, lista.size()], Color(0.4, 0.7, 0.45))
-	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(chefes_der) / Fases.CHEFE_NOME.size(), "Chefes derrotados: %d de %d" % [chefes_der, Fases.CHEFE_NOME.size()], Color(0.95, 0.72, 0.15))
+	_barra(Rect2(pr.position.x + 14.0, pr.position.y + 62.0, lb, 16.0), float(vistos) / lista.size(), Idioma.t("Vistos: %d de %d") % [vistos, lista.size()], Color(0.4, 0.7, 0.45))
+	_barra(Rect2(pr.position.x + 28.0 + lb, pr.position.y + 62.0, lb, 16.0), float(chefes_der) / Fases.CHEFE_NOME.size(), Idioma.t("Chefes derrotados: %d de %d") % [chefes_der, Fases.CHEFE_NOME.size()], Color(0.95, 0.72, 0.15))
 
 ## Cabine do retrato (página da esquerda da ficha): o bicho, o estado "visto/derrotado" e o carimbo.
 func _cabine_ficha(e: Estado, en: Dictionary, viu: bool, cor: Color) -> void:
@@ -2006,17 +2032,17 @@ func _cabine_ficha(e: Estado, en: Dictionary, viu: bool, cor: Color) -> void:
 	draw_rect(Rect2(cb.position.x, cb.end.y - 63.0, cb.size.x, Q), cor.darkened(0.2).lerp(PAPEL, 0.4))
 	_moldura_px(cb, PAPEL_BORDA)
 	_cantoneiras(cb, Color(0.3, 0.17, 0.15))
-	_txt("Ficha nº %02d" % (pagina - 1), Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
-	var grupo: String = {"fam": "Família", "bando": "Bando de fora", "tipo": "Tipo de bicho", "chefe": "Chefe", "gangue": "Gangue"}[en["k"]]
+	_txt(Idioma.t("Ficha nº %02d") % (pagina - 1), Vector2(cb.position.x + 34.0, cb.position.y + 18.0), 13, TINTA2)
+	var grupo: String = {"fam": Idioma.t("Família"), "bando": Idioma.t("Bando de fora"), "tipo": Idioma.t("Tipo de bicho"), "chefe": Idioma.t("Chefe"), "gangue": Idioma.t("Gangue")}[en["k"]]
 	_txt(grupo, Vector2(cb.end.x - 160.0, cb.position.y + 18.0), 13, TINTA2, 130.0)
 	if viu:
 		var px: float = cb.get_center().x
 		if en["k"] == "gangue":
 			px -= 95.0
 			_retrato_chefe_gangue(e, int(en["i"]), Vector2(cb.get_center().x + 105.0, cb.end.y - 44.0))
-			_txt(Fases.nome_do_lugar(Fases.TOTAL * 2 + int(en["i"])), Vector2(cb.position.x + 34.0, cb.position.y + 38.0), 13, TINTA2)
+			_txt(Idioma.t(Fases.nome_do_lugar(Fases.TOTAL * 2 + int(en["i"]))), Vector2(cb.position.x + 34.0, cb.position.y + 38.0), 13, TINTA2)
 		_bicho(self, en, Vector2(px, cb.end.y - 44.0), BICHO_RETRATO_ESC * (0.85 if en["k"] == "chefe" else 1.0), false)
-		_txt("Derrotado" if der else "Visto", Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, COR_TEM if der else TINTA)
+		_txt(Idioma.t("Derrotado") if der else Idioma.t("Visto"), Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, COR_TEM if der else TINTA)
 	else:
 		_txt("???", Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, COR_FALTA)
 	if der:
@@ -2037,25 +2063,25 @@ func _ficha_bicho(e: Estado, k: int) -> void:
 	var der: bool = _derrotado(e, en)
 	var cor: Color = en["cor"]
 	# ---------------- página da esquerda
-	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else "Bicho desconhecido", [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else Idioma.t("Bicho desconhecido"), [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
 	_cabine_ficha(e, en, viu, cor)
 	var pb := Rect2(COL_E_X, 392.0, COL_W, 100.0)
-	_caixa(pb, "O que faz", cor)
+	_caixa(pb, Idioma.t("O que faz"), cor)
 	var ob := Rect2(COL_E_X, 500.0, COL_W, 130.0)
-	_caixa(ob, "Onde aparece", cor)
+	_caixa(ob, Idioma.t("Onde aparece"), cor)
 	# ---------------- página da direita
 	var rd1 := Rect2(COL_D_X, 78.0, COL_W, 200.0)
 	var rd2 := Rect2(COL_D_X, 288.0, COL_W, 150.0)
 	var rd3 := Rect2(COL_D_X, 448.0, COL_W, 182.0)
-	_caixa(rd1, "Como enfrentar", cor)
-	_caixa(rd2, "Números", cor)
-	_caixa(rd3, "No seu caderno", cor)
+	_caixa(rd1, Idioma.t("Como enfrentar"), cor)
+	_caixa(rd2, Idioma.t("Números"), cor)
+	_caixa(rd3, Idioma.t("No seu caderno"), cor)
 	if not viu:
-		_bloco("Este bicho ainda não apareceu numa luta. Avance na campanha e vá ver o que ele faz.", Vector2(pb.position.x + 18.0, pb.position.y + 44.0), pb.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
-		_bloco("Ainda é segredo.", Vector2(ob.position.x + 18.0, ob.position.y + 44.0), ob.size.x - 30.0, [16, 15], 1, TINTA2)
-		_bloco("Quando ele aparecer, a dica de como vencê-lo fica anotada aqui.", Vector2(rd1.position.x + 18.0, rd1.position.y + 44.0), rd1.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_bloco(Idioma.t("Este bicho ainda não apareceu numa luta. Avance na campanha e vá ver o que ele faz."), Vector2(pb.position.x + 18.0, pb.position.y + 44.0), pb.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_bloco(Idioma.t("Ainda é segredo."), Vector2(ob.position.x + 18.0, ob.position.y + 44.0), ob.size.x - 30.0, [16, 15], 1, TINTA2)
+		_bloco(Idioma.t("Quando ele aparecer, a dica de como vencê-lo fica anotada aqui."), Vector2(rd1.position.x + 18.0, rd1.position.y + 44.0), rd1.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
 		_txt("???", Vector2(rd2.position.x + 18.0, rd2.position.y + 48.0), 20, TINTA2)
-		_txt("Ainda não visto", Vector2(rd3.position.x + 18.0, rd3.position.y + 48.0), 18, COR_FALTA)
+		_txt(Idioma.t("Ainda não visto"), Vector2(rd3.position.x + 18.0, rd3.position.y + 48.0), 18, COR_FALTA)
 		return
 	_bloco(_maiuscula(en["oque"]), Vector2(pb.position.x + 18.0, pb.position.y + 44.0), pb.size.x - 30.0, [18, 16, 15, 14], 3, TINTA, 3.0)
 	_bloco(en["onde"], Vector2(ob.position.x + 18.0, ob.position.y + 44.0), ob.size.x - 30.0, [16, 15, 14], 3, TINTA, 3.0)
@@ -2065,12 +2091,12 @@ func _ficha_bicho(e: Estado, k: int) -> void:
 		yy = _bloco(ln, Vector2(rd2.position.x + 18.0, yy), rd2.size.x - 30.0, [16, 15, 14, 13], 2, TINTA, 3.0) + 6.0
 	yy = rd3.position.y + 44.0
 	_bolinha(Vector2(rd3.position.x + 18.0, yy - 13.0), COR_TEM, true)
-	yy = _bloco("Já apareceu numa luta sua.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [16, 15, 14], 2, TINTA, 3.0) + 6.0
+	yy = _bloco(Idioma.t("Já apareceu numa luta sua."), Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [16, 15, 14], 2, TINTA, 3.0) + 6.0
 	if en["k"] == "chefe":
 		_bolinha(Vector2(rd3.position.x + 18.0, yy - 13.0), COR_TEM if der else COR_FALTA, der)
-		_bloco("Derrotado: sim." if der else "Derrotado: ainda não.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [16, 15, 14], 2, TINTA, 3.0)
+		_bloco(Idioma.t("Derrotado: sim.") if der else Idioma.t("Derrotado: ainda não."), Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [16, 15, 14], 2, TINTA, 3.0)
 	else:
-		_bloco("O jogo ainda não conta quantos você derrotou.", Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [14, 13, 12], 2, TINTA2, 3.0)
+		_bloco(Idioma.t("O jogo ainda não conta quantos você derrotou."), Vector2(rd3.position.x + 38.0, yy), rd3.size.x - 52.0, [14, 13, 12], 2, TINTA2, 3.0)
 
 ## O chefe da gangue (como no painel do mapa), só depois de visto na prévia.
 func _retrato_chefe_gangue(e: Estado, g: int, pe: Vector2) -> void:
@@ -2087,13 +2113,14 @@ func _carimbo_bicho(centro: Vector2) -> void:
 	var f: Font = UIComum.FONTE
 	var pul: float = 1.0 + 0.03 * sin(t * 3.0)
 	UIComum.trans(self, centro, -0.2, Vector2(pul, pul))
-	var w: float = largura("DERROTADO", 26) + 22.0
+	var rotulo: String = Idioma.t("DERROTADO")
+	var w: float = largura(rotulo, 26) + 22.0
 	var r := Rect2(-w * 0.5, -22.0, w, 38.0)
 	var tinta := Color(0.78, 0.12, 0.12, 0.9)
 	draw_rect(r, Color(1, 1, 1, 0.35))
 	draw_rect(r, tinta, false, 4.0)
 	draw_rect(r.grow(-6.0), tinta, false, 1.5)
-	draw_string(f, Vector2(-w * 0.5 + 11.0, 8.0), "DERROTADO", HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(26), tinta)
+	draw_string(f, Vector2(-w * 0.5 + 11.0, 8.0), rotulo, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(26), tinta)
 	UIComum.trans_fim(self)
 
 ## Ficha de uma gangue do 3º ato: truque e como enfrentar à esquerda; tipos de rival e chefe à direita.
@@ -2102,21 +2129,21 @@ func _ficha_gangue(e: Estado, k: int) -> void:
 	var g: int = int(en["i"])
 	var viu: bool = e.viu_bicho(en["chave"])
 	var cor: Color = en["cor"]
-	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else "Gangue desconhecida", [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
+	_faixa(Rect2(COL_E_X, 76.0, COL_W, 38.0), en["nome"] if viu else Idioma.t("Gangue desconhecida"), [30, 28, 26, 24, 22, 20, 18], cor if viu else Color(0.7, 0.66, 0.62))
 	EmblemaGangue.desenhar(self, g, Vector2(COL_E_X + 28.0, 95.0), 32.0, viu)
 	EmblemaGangue.desenhar(self, g, Vector2(COL_E_X + COL_W - 28.0, 95.0), 32.0, viu)
 	_cabine_ficha(e, en, viu, cor)
 	var pb := Rect2(COL_E_X, 392.0, COL_W, 118.0)
-	_caixa(pb, ("O truque: " + GANGUE_TRUQUE_NOME[g]) if viu else "O truque", cor)
+	_caixa(pb, (Idioma.t("O truque: %s") % Idioma.t(GANGUE_TRUQUE_NOME[g])) if viu else Idioma.t("O truque"), cor)
 	var ob := Rect2(COL_E_X, 518.0, COL_W, 112.0)
-	_caixa(ob, "Como enfrentar", cor)
+	_caixa(ob, Idioma.t("Como enfrentar"), cor)
 	var rd1 := Rect2(COL_D_X, 78.0, COL_W, 372.0)
 	var rd2 := Rect2(COL_D_X, 460.0, COL_W, 170.0)
-	_caixa(rd1, "Tipos de rival", cor)
-	_caixa(rd2, "O chefe", cor)
+	_caixa(rd1, Idioma.t("Tipos de rival"), cor)
+	_caixa(rd2, Idioma.t("O chefe"), cor)
 	if not viu:
-		_bloco("Esta gangue ainda não apareceu numa luta. Chegue ao terceiro ato e veja a prévia da onda.", Vector2(pb.position.x + 18.0, pb.position.y + 44.0), pb.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
-		_bloco("Quando ela aparecer, a dica fica anotada aqui.", Vector2(ob.position.x + 18.0, ob.position.y + 44.0), ob.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_bloco(Idioma.t("Esta gangue ainda não apareceu numa luta. Chegue ao terceiro ato e veja a prévia da onda."), Vector2(pb.position.x + 18.0, pb.position.y + 44.0), pb.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_bloco(Idioma.t("Quando ela aparecer, a dica fica anotada aqui."), Vector2(ob.position.x + 18.0, ob.position.y + 44.0), ob.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
 		_txt("???", Vector2(rd1.position.x + 18.0, rd1.position.y + 48.0), 20, TINTA2)
 		_txt("???", Vector2(rd2.position.x + 18.0, rd2.position.y + 48.0), 20, TINTA2)
 		return
@@ -2126,18 +2153,18 @@ func _ficha_gangue(e: Estado, k: int) -> void:
 	for tp in tipos_da_gangue(g):
 		var visto: bool = e.viu_rival(g, tp)
 		_bolinha(Vector2(rd1.position.x + 18.0, yy - 4.0), COR_TEM if visto else COR_FALTA, visto)
-		_txt(Balanco.nome_rival(g, tp) if visto else "???", Vector2(rd1.position.x + 42.0, yy + 8.0), 16, TINTA if visto else TINTA2)
+		_txt(Idioma.t(Balanco.nome_rival(g, tp)) if visto else "???", Vector2(rd1.position.x + 42.0, yy + 8.0), 16, TINTA if visto else TINTA2)
 		var dica: String = Balanco.dica_rival(g, tp)
 		if dica == "":
 			dica = Campo.TIPO_DICA[tp]
-		_bloco(dica if visto else "Ainda não apareceu.", Vector2(rd1.position.x + 42.0, yy + 23.0), rd1.size.x - 60.0, [13, 12, 11], 2, TINTA2, 2.0)
+		_bloco(Idioma.t(dica) if visto else Idioma.t("Ainda não apareceu."), Vector2(rd1.position.x + 42.0, yy + 23.0), rd1.size.x - 60.0, [13, 12, 11], 2, TINTA2, 2.0)
 		yy += 46.0
 	var li: int = Fases.TOTAL * 2 + g
 	if not e.viu_chefe_gangue(g):
-		_bloco("O chefe aparece na prévia da última onda do lugar.", Vector2(rd2.position.x + 18.0, rd2.position.y + 44.0), rd2.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
+		_bloco(Idioma.t("O chefe aparece na prévia da última onda do lugar."), Vector2(rd2.position.x + 18.0, rd2.position.y + 44.0), rd2.size.x - 30.0, [16, 15, 14], 3, TINTA2, 3.0)
 		return
-	_txt(Fases.nome_do_chefe(li), Vector2(rd2.position.x + 18.0, rd2.position.y + 44.0), 20, Color(0.5, 0.28, 0.02))
+	_txt(Idioma.t(Fases.nome_do_chefe(li)), Vector2(rd2.position.x + 18.0, rd2.position.y + 44.0), 20, Color(0.5, 0.28, 0.02))
 	if e.vencido[g] >= 3:
-		_txt("Derrotado", Vector2(rd2.end.x - 80.0, rd2.position.y + 44.0), 14, COR_TEM)
-	var y2: float = _bloco(Fases.ataque_do_chefe(li), Vector2(rd2.position.x + 18.0, rd2.position.y + 68.0), rd2.size.x - 30.0, [14, 13, 12], 3, TINTA, 3.0) + 4.0
-	_bloco("Fraqueza: " + Fases.fraqueza_do_chefe(li), Vector2(rd2.position.x + 18.0, y2), rd2.size.x - 30.0, [14, 13, 12], 2, COR_TEM, 3.0)
+		_txt(Idioma.t("Derrotado"), Vector2(rd2.end.x - 80.0, rd2.position.y + 44.0), 14, COR_TEM)
+	var y2: float = _bloco(Idioma.t(Fases.ataque_do_chefe(li)), Vector2(rd2.position.x + 18.0, rd2.position.y + 68.0), rd2.size.x - 30.0, [14, 13, 12], 3, TINTA, 3.0) + 4.0
+	_bloco(Idioma.t("Fraqueza: %s") % Idioma.t(Fases.fraqueza_do_chefe(li)), Vector2(rd2.position.x + 18.0, y2), rd2.size.x - 30.0, [14, 13, 12], 2, COR_TEM, 3.0)
