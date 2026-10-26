@@ -116,7 +116,7 @@ tradução) nem em `_onde` (diz de que arquivo ou tabela a chave vem, para dar c
 - Chaves de uma ou duas palavras podem ser ambíguas ("Tela", "Ligado/Ligada"): veja `_onde` e, na dúvida, pergunte.
 - Célula vazia = sem tradução: o jogo mostra o português (nunca a chave "crua" sem sentido).
 - **Glossário** (sempre igual no jogo todo):
-  - `miau` -> `meow` nos trocadilhos: Super Miau -> Super Meow, Miaujestosa -> Meowjestic, Guardamiau -> Guardmeow, Sua Miauestade -> Her Meowjesty.
+  - `miau` -> `meow` nos trocadilhos: Super Miau -> Super Meow, Miaujestosa -> Meowjestic, Guardamiau -> Guardmeow, Sua Miauestade -> Your Meowjesty. **Glossário completo e decisões do dono: `notas/idioma/glossario.md` (tem prioridade sobre esta lista).**
   - gato -> cat; bicho -> critter; fantasia -> costume; peça -> piece; guarda-roupa -> wardrobe; cômodo -> room;
     onda -> wave; troféu -> trophy; torre -> tower; ato -> act; invasão -> invasion; fichário -> binder.
   - Nome do jogo: *Gatos e Roupas* -> *Cats & Costumes* (já está em `Idioma.TITULOS`).
