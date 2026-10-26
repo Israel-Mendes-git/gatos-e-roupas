@@ -548,7 +548,7 @@ func _lado_direito(e: Estado) -> void:
 	draw_circle(Vector2(PREVIA_R.position.x + 150.0, PREVIA_R.end.y - 38.0), 0.0, cor)
 	draw_rect(Rect2(PREVIA_R.position.x + 20.0, PREVIA_R.end.y - 40.0, 260.0, 4.0), Color(cor.r, cor.g, cor.b, 0.5))
 	Desenho.boneco(self, Vector2(PREVIA_R.position.x + 140.0, PREVIA_R.end.y - 40.0), 2.6, 1.0, 0, pecas_previa, 0.0, t, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, true, 0, false)
-	var nome_mostrado: String = str(rr["nome"])
+	var nome_mostrado: String = Idioma.t(str(rr["nome"]))
 	_texto(nome_mostrado, Vector2(PREVIA_R.position.x + 290.0, PREVIA_R.position.y + 40.0), Oficina.tam_cabe(nome_mostrado, [26, 24, 22, 20, 18], 200.0), cor.lightened(0.35), 204.0, 4)
 	# as quatro peças em ícone
 	for s in Pecas.SLOTS:

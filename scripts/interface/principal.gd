@@ -1101,6 +1101,11 @@ func _dicas_do_gato() -> void:
 	if estado.fases_vencidas >= 1:
 		menus.dica("ficha", Idioma.t("Mouse no nome do gato: vida, dano e números."))
 
+## Nome do ato no meio de uma frase: minúsculo em português ("O ato dois"); em inglês fica "Act Two" (nome próprio).
+func _ato_em_frase(i: int) -> String:
+	var n: String = Idioma.t(Balanco.ATO_NOME[i])
+	return n.to_lower() if Idioma.atual == Idioma.PADRAO else n
+
 ## Recado do guarda-roupa depois de uma onda vencida.
 func _montar_aviso(subiram: Array[String]) -> void:
 	var partes: Array[String] = []
@@ -1163,9 +1168,9 @@ func _fim_fase(vitoria: bool) -> void:
 			var a_at: int = estado.ato_atual()
 			var faltam: int = Fases.TOTAL - estado.vencidos_no_ato(a_at)
 			if faltam >= Fases.TOTAL and a_at >= 3:
-				sub = Idioma.t("%s vencido! Mas as ruas são de gangues de gatos rivais, que vestem as fantasias do lugar. O %s está no mapa: Mercadão, Ferro-velho, Beco, Arena e Telhados.") % [Idioma.t(Balanco.ATO_NOME[a_at - 2]), Idioma.t(Balanco.ATO_NOME[a_at - 1]).to_lower()]
+				sub = Idioma.t("%s vencido! Mas as ruas são de gangues de gatos rivais, que vestem as fantasias do lugar. O %s está no mapa: Mercadão, Ferro-velho, Beco, Arena e Telhados.") % [Idioma.t(Balanco.ATO_NOME[a_at - 2]), _ato_em_frase(a_at - 1)]
 			elif faltam >= Fases.TOTAL:
-				sub = Idioma.t("%s vencido! A casa é sua, mas os bichos fugiram para fora. O %s está no mapa: quintal, garagem, telhado, rua e toca, na ordem que quiser.") % [Idioma.t(Balanco.ATO_NOME[a_at - 2]), Idioma.t(Balanco.ATO_NOME[a_at - 1]).to_lower()]
+				sub = Idioma.t("%s vencido! A casa é sua, mas os bichos fugiram para fora. O %s está no mapa: quintal, garagem, telhado, rua e toca, na ordem que quiser.") % [Idioma.t(Balanco.ATO_NOME[a_at - 2]), _ato_em_frase(a_at - 1)]
 			else:
 				sub = (Idioma.t("%s: falta %d lugar. Os que ficam para depois chegam mais fortes.") if faltam == 1 else Idioma.t("%s: faltam %d lugares. Os que ficam para depois chegam mais fortes.")) % [Idioma.t(Balanco.ATO_NOME[a_at - 1]), faltam]
 		elif estado.fase < Fases.TOTAL:
@@ -3717,7 +3722,8 @@ func _tela_resumo() -> void:
 			_aro_px(Vector2(cx, cy), 30.0, 30.0, _com_alfa(cc, 0.9))
 			if age < 0.6:
 				_estrela4(Vector2(cx, cy - 24.0 - age * 30.0), 8.0 * (1.0 - age / 0.6) + 2.0, Color(1, 0.95, 0.5))
-			Desenho.texto(_c, Idioma.t(Pecas.RARIDADE_NOME[p.raridade]), Vector2(cx - 31, cy + 40), 13, cc.lightened(0.3), 62.0, 3)
+			var rar_txt: String = Idioma.t(Pecas.RARIDADE_NOME[p.raridade])
+			Desenho.texto(_c, rar_txt, Vector2(cx - 31, cy + 40), _tam_cabe(rar_txt, [13, 12, 11, 10], 62.0), cc.lightened(0.3), 62.0, 3)
 		Desenho.icone(_c, p.tipo, Vector2(cx, cy), 44.0 * esc, p.nivel, 0.0, 0.0, p.marcas, p.raridade)
 	var y: float = y0 + lin_p * 66.0 + (22.0 if lin_p > 0 else 8.0)
 	for k3 in linhas:

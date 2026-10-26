@@ -1622,7 +1622,7 @@ func _painel_lateral(f: int) -> void:
 	cv.draw_rect(RETRATO, Color(1, 1, 1, 0.18), false, 1.0)
 	# nome e situação
 	var nome: String = Idioma.t(Fases.nome_do_lugar(li))
-	var tn: int = p._tam_cabe(nome, [28, 26, 24], 200.0)
+	var tn: int = p._tam_cabe(nome, [28, 26, 24, 20, 18], 200.0)
 	Desenho.texto(cv, nome, Vector2(x0, 156), tn, p._com_alfa(Color(1, 0.95, 0.8), al), -1.0, 5)
 	var chip := Rect2(x0 + larg - 120.0, 132.0, 120.0, 28.0)
 	if venc:
