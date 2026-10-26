@@ -1,0 +1,901 @@
+keys,en,_onde
+Continuar,Continue,interface/menus.gd
+Nova campanha,New campaign,interface/menus.gd
+Tutorial,Tutorial,interface/menus.gd
+Opções,Options,interface/menus.gd
+Créditos,Credits,interface/menus.gd
+Sair,Quit,interface/menus.gd
+Voltar ao mapa,Back to map,interface/menus.gd
+Menu principal,Main menu,interface/menus.gd
+Tela cheia,Fullscreen,interface/menus.gd
+Janela,Windowed,interface/menus.gd
+Ligado,On,interface/menus.gd
+Desligado,Off,interface/menus.gd
+Ligada,On,interface/menus.gd
+Desligada,Off,interface/menus.gd
+Apagar...,Erase...,interface/menus.gd
+Voltar,Back,interface/menus.gd
+Cancelar,Cancel,interface/menus.gd
+Confirmar,Confirm,interface/menus.gd
+Invasão · %s · Onda %d%s,Invasion · %s · Wave %d%s,interface/menus.gd
+ · na luta, · in battle,interface/menus.gd
+%s · Onda %d de %d%s,%s · Wave %d of %d%s,interface/menus.gd
+Tudo vencido · recorde: onda %d,All cleared · record: wave %d,interface/menus.gd
+Tudo vencido · %d gatos,All cleared · %d cats,interface/menus.gd
+%dº ato · %d de %d lugares,Act %d · %d of %d places,interface/menus.gd
+Cômodo %d de %d · %d gatos,Room %d of %d · %d cats,interface/menus.gd
+Nova campanha?,New campaign?,interface/menus.gd
+"A campanha gravada (%s) será apagada, com o guarda-roupa e os gatos treinados.","The saved campaign (%s) will be erased, along with the wardrobe and the trained cats.",interface/menus.gd
+Apagar e começar,Erase and start,interface/menus.gd
+Fazer o tutorial?,Do the tutorial?,interface/menus.gd
+Há uma luta guardada. Fazer o tutorial agora encerra essa luta (as roupas e o progresso gravado ficam).,A battle is on hold. Doing the tutorial now ends that battle (your clothes and saved progress stay).,interface/menus.gd
+Fazer o tutorial,Do the tutorial,interface/menus.gd
+Encerrar a invasão?,End the invasion?,interface/menus.gd
+"Sair agora termina a invasão. O recorde das ondas vencidas fica gravado, mas o que caiu nesta luta se perde. As roupas ficam como estão.","Leaving now ends the invasion. Your record of cleared waves is kept, but whatever dropped in this battle is lost. Your clothes stay as they are.",interface/menus.gd
+Sair agora termina a invasão. O recorde das ondas vencidas fica gravado. As roupas ficam como estão.,Leaving now ends the invasion. Your record of cleared waves is kept. Your clothes stay as they are.,interface/menus.gd
+Continuar invasão,Keep fighting,interface/menus.gd
+Voltar ao mapa?,Back to the map?,interface/menus.gd
+Sair da luta conta como desistir dela: o que caiu nela se perde. As roupas ficam como estão.,Leaving the battle counts as giving up: whatever dropped in it is lost. Your clothes stay as they are.,interface/menus.gd
+A luta em curso termina aqui. As roupas ficam como estão.,The battle in progress ends here. Your clothes stay as they are.,interface/menus.gd
+Continuar luta,Keep fighting,interface/menus.gd
+Ir ao menu principal?,Go to the main menu?,interface/menus.gd
+"A invasão fica guardada: ""Continuar"" no menu principal volta a este ponto. Se você fechar o jogo, ela se perde (as roupas ficam).","The invasion is put on hold: ""Continue"" on the main menu returns to this point. If you close the game, it is lost (your clothes stay).",interface/menus.gd
+"A luta fica guardada: ""Continuar"" no menu principal volta a este ponto. Se você fechar o jogo, ela se perde (as roupas ficam).","The battle is put on hold: ""Continue"" on the main menu returns to this point. If you close the game, it is lost (your clothes stay).",interface/menus.gd
+Apagar a campanha?,Erase the campaign?,interface/menus.gd
+"Isso apaga o progresso, o guarda-roupa e os gatos treinados.","This erases your progress, the wardrobe and the trained cats.",interface/menus.gd
+"Sim, apagar","Yes, erase",interface/menus.gd
+Tem certeza?,Are you sure?,interface/menus.gd
+Não dá para desfazer. Todo o progresso desta campanha será perdido.,This cannot be undone. All progress in this campaign will be lost.,interface/menus.gd
+Apagar de vez,Erase for good,interface/menus.gd
+Pausado,Paused,interface/menus.gd
+Esc fecha,Esc closes,interface/menus.gd
+gatos fantasiados contra bichos invasores,costumed cats versus invading critters,interface/menus.gd
+ligado,on,interface/menus.gd
+desligado,off,interface/menus.gd
+Ligado: os gatos usam o poder da fantasia sozinhos. Desligado: você dispara na luta. Agora: %s.,On: the cats use the costume power by themselves. Off: you fire it in battle. Now: %s.,interface/menus.gd
+Idioma,Language,interface/menus.gd
+Língua dos textos do jogo. Clique para trocar,Language of the game text. Click to switch,interface/menus.gd
+Tela,Screen,interface/menus.gd
+Agora: tela cheia. Clique para trocar,Now: fullscreen. Click to switch,interface/menus.gd
+Agora: em janela. Clique para trocar,Now: windowed. Click to switch,interface/menus.gd
+Velocidade da luta,Battle speed,interface/menus.gd
+Ao começar uma luta. Agora: %dx,When a battle starts. Now: %dx,interface/menus.gd
+Som,Sound,interface/menus.gd
+Efeitos e música. Agora: desligados,Effects and music. Now: off,interface/menus.gd
+Efeitos e música. Agora: ligados,Effects and music. Now: on,interface/menus.gd
+Volume dos efeitos,Effects volume,interface/menus.gd
+Agora: %d%% (de 10 em 10),Now: %d%% (in steps of 10),interface/menus.gd
+Ligue o som para ajustar,Turn the sound on to adjust,interface/menus.gd
+Volume da música,Music volume,interface/menus.gd
+Tremor de tela,Screen shake,interface/menus.gd
+Sacudidas nos golpes fortes. Agora: %s,Shaking on strong hits. Now: %s,interface/menus.gd
+Números de dano,Damage numbers,interface/menus.gd
+Valores que sobem dos golpes. Agora: %s,Values that float up from hits. Now: %s,interface/menus.gd
+Poderes automáticos,Automatic powers,interface/menus.gd
+Preparação da onda,Wave preparation,interface/menus.gd
+Arrumar o time antes da onda. Agora: ligada,Arrange the team before the wave. Now: on,interface/menus.gd
+Arrumar o time antes da onda. Agora: começa direto,Arrange the team before the wave. Now: starts right away,interface/menus.gd
+Campanha,Campaign,interface/menus.gd
+Apaga o progresso gravado,Erases the saved progress,interface/menus.gd
+Nenhuma campanha gravada,No saved campaign,interface/menus.gd
+Cicatriz,,dados:Pecas.MARCA_NOME
+Estilhaço,,dados:Pecas.MARCA_NOME
+Couraça,,dados:Pecas.MARCA_NOME
+Brasa,,dados:Pecas.MARCA_NOME
+Pólvora,,dados:Pecas.MARCA_NOME
+vida máxima,,dados:Pecas.MARCA_DICA
+golpes ferem em volta,,dados:Pecas.MARCA_DICA
+projéteis ferem menos,,dados:Pecas.MARCA_DICA
+golpes queimam,,dados:Pecas.MARCA_DICA
+explode ao morrer,,dados:Pecas.MARCA_DICA
+Cabeça,,dados:Pecas.SLOT_NOME
+Corpo,,dados:Pecas.SLOT_NOME
+Mão,,dados:Pecas.SLOT_NOME
+Acessório,,dados:Pecas.SLOT_NOME
+Porrete,,dados:Pecas.NOME
+Estilingue,,dados:Pecas.NOME
+Escudo,,dados:Pecas.NOME
+Colete,,dados:Pecas.NOME
+Capa,,dados:Pecas.NOME
+Espinhos,,dados:Pecas.NOME
+Capacete,,dados:Pecas.NOME
+Chapéu de palha,,dados:Pecas.NOME
+Máscara,,dados:Pecas.NOME
+Lança,,dados:Pecas.NOME
+Tocha,,dados:Pecas.NOME
+Avental,,dados:Pecas.NOME
+Barril,,dados:Pecas.NOME
+Coroa,,dados:Pecas.NOME
+Chifres,,dados:Pecas.NOME
+Cetro,,dados:Pecas.NOME
+Regador,,dados:Pecas.NOME
+Sabre,,dados:Pecas.NOME
+Varinha,,dados:Pecas.NOME
+Cartola,,dados:Pecas.NOME
+Chapéu de caubói,,dados:Pecas.NOME
+Chapéu de pirata,,dados:Pecas.NOME
+Chapéu pontudo,,dados:Pecas.NOME
+Pele de urso,,dados:Pecas.NOME
+Poncho,,dados:Pecas.NOME
+Casaco,,dados:Pecas.NOME
+Manto,,dados:Pecas.NOME
+Botas,,dados:Pecas.NOME
+Joelheiras,,dados:Pecas.NOME
+Bandeira,,dados:Pecas.NOME
+Nariz vermelho,,dados:Pecas.NOME
+Colar de dentes,,dados:Pecas.NOME
+Saco de sementes,,dados:Pecas.NOME
+Cantil,,dados:Pecas.NOME
+Gancho,,dados:Pecas.NOME
+Amuleto,,dados:Pecas.NOME
+Boné de encanador,,dados:Pecas.NOME
+Macacão,,dados:Pecas.NOME
+Desentupidor,,dados:Pecas.NOME
+Cogumelo,,dados:Pecas.NOME
+Capuz de morcego,,dados:Pecas.NOME
+Capa de morcego,,dados:Pecas.NOME
+Bumerangue,,dados:Pecas.NOME
+Cinto de utilidades,,dados:Pecas.NOME
+Máscara de teia,,dados:Pecas.NOME
+Colante de aranha,,dados:Pecas.NOME
+Lança-teia,,dados:Pecas.NOME
+Aranha de estimação,,dados:Pecas.NOME
+Capuz estelar,,dados:Pecas.NOME
+Túnica estelar,,dados:Pecas.NOME
+Espada de luz,,dados:Pecas.NOME
+Cristal estelar,,dados:Pecas.NOME
+Elmo sombrio,,dados:Pecas.NOME
+Armadura sombria,,dados:Pecas.NOME
+Espada rubra,,dados:Pecas.NOME
+Respirador,,dados:Pecas.NOME
+Gorro verde,,dados:Pecas.NOME
+Túnica verde,,dados:Pecas.NOME
+Espadiau Mestre,,dados:Pecas.NOME
+Ocarina,,dados:Pecas.NOME
+Bandana ninja,,dados:Pecas.NOME
+Casco de tartaruga,,dados:Pecas.NOME
+Nunchaku,,dados:Pecas.NOME
+Fatia de pizza,,dados:Pecas.NOME
+Topete de ouriço,,dados:Pecas.NOME
+Pelo azul,,dados:Pecas.NOME
+Luvas brancas,,dados:Pecas.NOME
+Tênis vermelhos,,dados:Pecas.NOME
+Capacete de ferro,,dados:Pecas.NOME
+Armadura de ferro,,dados:Pecas.NOME
+Luva repulsora,,dados:Pecas.NOME
+Reator,,dados:Pecas.NOME
+Elmo alado,,dados:Pecas.NOME
+Capa rubra,,dados:Pecas.NOME
+Miaulnir,,dados:Pecas.NOME
+Cinturão de força,,dados:Pecas.NOME
+Tiara de gelo,,dados:Pecas.NOME
+Vestido de gelo,,dados:Pecas.NOME
+Cetro de gelo,,dados:Pecas.NOME
+Floco de neve,,dados:Pecas.NOME
+Capacete de bolha,,dados:Pecas.NOME
+Traje espacial,,dados:Pecas.NOME
+Laser de pulso,,dados:Pecas.NOME
+Mochila a jato,,dados:Pecas.NOME
+Bandana com placa,,dados:Pecas.NOME
+Macacão laranja,,dados:Pecas.NOME
+Kunai,,dados:Pecas.NOME
+Pergaminho,,dados:Pecas.NOME
+Capacete azul,,dados:Pecas.NOME
+Armadura azul,,dados:Pecas.NOME
+Canhão de braço,,dados:Pecas.NOME
+Tanque de energia,,dados:Pecas.NOME
+Capuz de tubarão,,dados:Pecas.NOME
+Roupa de tubarão,,dados:Pecas.NOME
+Dentadura,,dados:Pecas.NOME
+Boia de salva-vidas,,dados:Pecas.NOME
+Antenas,,dados:Pecas.NOME
+Colete listrado,,dados:Pecas.NOME
+Ferrão,,dados:Pecas.NOME
+Pote de mel,,dados:Pecas.NOME
+Franja Heroica,,dados:Pecas.NOME
+Collant Azul com Peito em S,,dados:Pecas.NOME
+Punho de Aço,,dados:Pecas.NOME
+Capa Vermelha Esvoaçante,,dados:Pecas.NOME
+Capuz Verde com Pluma,,dados:Pecas.NOME
+Colete de Folhas Costuradas,,dados:Pecas.NOME
+Arco Recurvo de Brinquedo,,dados:Pecas.NOME
+Aljava de Flechas-Truque,,dados:Pecas.NOME
+Caveira em Chamas,,dados:Pecas.NOME
+Jaqueta de Couro com Espetos,,dados:Pecas.NOME
+Corrente Flamejante,,dados:Pecas.NOME
+Roda de Fogo Portátil,,dados:Pecas.NOME
+Franja de Advogado,,dados:Pecas.NOME
+Terno Azul de Tribunal,,dados:Pecas.NOME
+Martelo da Objeção,,dados:Pecas.NOME
+Distintivo de Advogado Dourado,,dados:Pecas.NOME
+Capuz de Pelúcia Mal Costurado,,dados:Pecas.NOME
+Disfarce Amarelo Remendado,,dados:Pecas.NOME
+Pata Misteriosa,,dados:Pecas.NOME
+Rabo de Raio de Papelão,,dados:Pecas.NOME
+Chapéu de Coringa de Três Pontas,,dados:Pecas.NOME
+Colete de Baralho,,dados:Pecas.NOME
+Mão de Pôquer em Leque,,dados:Pecas.NOME
+Fichas de Cassino Empilhadas,,dados:Pecas.NOME
+Cabeça de Ervilha com Canhão-Boca,,dados:Pecas.NOME
+Caule com Folhas,,dados:Pecas.NOME
+Metralhadora de Ervilha,,dados:Pecas.NOME
+Vagem de Munição,,dados:Pecas.NOME
+Espiga de Milho Careca,,dados:Pecas.NOME
+Folhas de Milho Apertadas,,dados:Pecas.NOME
+Bazuca de Pipoca,,dados:Pecas.NOME
+Tablete de Manteiga,,dados:Pecas.NOME
+Pétalas de Girassol,,dados:Pecas.NOME
+Colete de Folhas de Girassol,,dados:Pecas.NOME
+Flor de Mão do Girassol,,dados:Pecas.NOME
+Sol do Quintal,,dados:Pecas.NOME
+Chapéu de Palha de Fazendeiro,,dados:Pecas.NOME
+Jardineira Azul e Camisa Vermelha,,dados:Pecas.NOME
+Enxada de Fazenda,,dados:Pecas.NOME
+Junimo Escondido,,dados:Pecas.NOME
+Cabeça de Steve,,dados:Pecas.NOME
+Camiseta Ciano e Calça Índigo,,dados:Pecas.NOME
+Picareta de Diamante,,dados:Pecas.NOME
+Bloco de Grama,,dados:Pecas.NOME
+Touca de Soneca,,dados:Pecas.NOME
+Barriga Gigante Creme,,dados:Pecas.NOME
+Onigiri Quentinho,,dados:Pecas.NOME
+Cesto de Frutas,,dados:Pecas.NOME
+Bandana Azul de Líder,,dados:Pecas.NOME
+Casco Verde Bem Polido,,dados:Pecas.NOME
+Katanas Gêmeas Afiadas Demais,,dados:Pecas.NOME
+Cinto Azul com Fivela L,,dados:Pecas.NOME
+Bandana Roxa com Óculos de Soldador,,dados:Pecas.NOME
+Casco Cheio de Engenhocas,,dados:Pecas.NOME
+Bastão Extensível,,dados:Pecas.NOME
+Computador de Pulso Gordinho,,dados:Pecas.NOME
+Bandana Vermelha Torta,,dados:Pecas.NOME
+Casco Cheio de Arranhões,,dados:Pecas.NOME
+Par de Sais Prontas,,dados:Pecas.NOME
+Cinto Vermelho Mal-Humorado,,dados:Pecas.NOME
+Para-brisa de Capacete,,dados:Pecas.NOME
+Carroceria Azul Turbo,,dados:Pecas.NOME
+Bola Gigante de Futebol Cósmico,,dados:Pecas.NOME
+Propulsor Turbo,,dados:Pecas.NOME
+Máscara Vermelha de Olhos Brancos,,dados:Pecas.NOME
+Traje Vermelho Cheio de Remendos,,dados:Pecas.NOME
+Duas Katanas de Papelão,,dados:Pecas.NOME
+Chimichanga Fatal,,dados:Pecas.NOME
+Franja Rebelde Loira,,dados:Pecas.NOME
+Jaqueta de Couro Marrom,,dados:Pecas.NOME
+Pistola do Agente,,dados:Pecas.NOME
+Maleta do Mercador,,dados:Pecas.NOME
+Fedora com Máscara de Teia,,dados:Pecas.NOME
+Sobretudo Cinza Pingando,,dados:Pecas.NOME
+Pistola do Detetive,,dados:Pecas.NOME
+Rolo de Filme P&B,,dados:Pecas.NOME
+Máscara de Cavaleiro Oco,,dados:Pecas.NOME
+Manto Preto Pequenino,,dados:Pecas.NOME
+Prego Afiado,,dados:Pecas.NOME
+Frasco de Alma,,dados:Pecas.NOME
+Máscara de Casca Branca com Chifres Finos,,dados:Pecas.NOME
+Agulha de Costura Gigante,,dados:Pecas.NOME
+Novelo de Seda,,dados:Pecas.NOME
+Cabelo Dourado Espetado,,dados:Pecas.NOME
+Kimono Laranja Rasgado,,dados:Pecas.NOME
+Concha de Energia Azul,,dados:Pecas.NOME
+Esfera de Quatro Estrelas,,dados:Pecas.NOME
+Chapéu Amassado de Aventureiro,,dados:Pecas.NOME
+Jaqueta de Couro Gasta,,dados:Pecas.NOME
+Chicote de Barbante,,dados:Pecas.NOME
+Ídolo Dourado de Atum,,dados:Pecas.NOME
+Boné Vermelho e Branco,,dados:Pecas.NOME
+Mochila Amarela de Aventureiro,,dados:Pecas.NOME
+Miaubola,,dados:Pecas.NOME
+Rato Elétrico de Pelúcia,,dados:Pecas.NOME
+Capacete de Viseira Reluzente,,dados:Pecas.NOME
+Macacão de Lycra Tamanho Gato,,dados:Pecas.NOME
+Luvas do Ranger,,dados:Pecas.NOME
+Pulseira de Transformar,,dados:Pecas.NOME
+Crista de Placas Dorsais,,dados:Pecas.NOME
+Pele de Dinossauro Atômico,,dados:Pecas.NOME
+Bafo Atômico,,dados:Pecas.NOME
+Cauda Radioativa Gigante,,dados:Pecas.NOME
+Cabeça de Gorila Peluda,,dados:Pecas.NOME
+Pelagem Preta de Gorila,,dados:Pecas.NOME
+Mão de Gorila,,dados:Pecas.NOME
+Banana,,dados:Pecas.NOME
+Chapéu de Fora-da-Lei Surrado,,dados:Pecas.NOME
+Casaco de Couro com Lenço Vermelho,,dados:Pecas.NOME
+Rifle de Caçador,,dados:Pecas.NOME
+Caderninho de Esboços,,dados:Pecas.NOME
+Capuz de Leviatã com Mandíbulas,,dados:Pecas.NOME
+Pele de Leviatã de Faixas Ferrugem,,dados:Pecas.NOME
+Rifle de Estase,,dados:Pecas.NOME
+Cauda de Leviatã com Nadadeiras,,dados:Pecas.NOME
+Cabeça de Polvo com Barba de Tentáculos,,dados:Pecas.NOME
+Manto Verde com Asinhas de Morcego,,dados:Pecas.NOME
+Necronomiau,,dados:Pecas.NOME
+Tentáculo Fofo,,dados:Pecas.NOME
+Cabeça do Ateliê,,dados:Pecas.NOME
+Corpo do Ateliê,,dados:Pecas.NOME
+Mão do Ateliê,,dados:Pecas.NOME
+Acessório do Ateliê,,dados:Pecas.NOME
+Pancada forte de perto,,dados:Pecas.DICA
+Atira de longe,,dados:Pecas.DICA
+Reduz dano e atrai inimigos,,dados:Pecas.DICA
+Muita vida,,dados:Pecas.DICA
+Rápido e esquiva golpes,,dados:Pecas.DICA
+Devolve dano a quem bate,,dados:Pecas.DICA
+Armadura contra golpes,,dados:Pecas.DICA
+Regenera vida,,dados:Pecas.DICA
+Inimigos próximos ficam lentos,,dados:Pecas.DICA
+"Alcance médio, bate por trás do escudo",,dados:Pecas.DICA
+Golpe fraco que deixa o alvo queimando,,dados:Pecas.DICA
+Cura o aliado ferido mais próximo,,dados:Pecas.DICA
+"Explode ao morrer, ferindo inimigos",,dados:Pecas.DICA
+Aliados por perto causam mais dano,,dados:Pecas.DICA
+"Quanto menos vida, mais dano",,dados:Pecas.DICA
+Golpe lento que fere todos em volta do alvo,,dados:Pecas.DICA
+Jato curto que deixa o alvo lento,,dados:Pecas.DICA
+Golpes fracos e muito rápidos,,dados:Pecas.DICA
+Tiro lento e forte que ignora armadura,,dados:Pecas.DICA
+Chance de golpe crítico,,dados:Pecas.DICA
+Ataca mais rápido,,dados:Pecas.DICA
+Abates podem render blocos para a torre,,dados:Pecas.DICA
+Fere aos poucos os inimigos em volta,,dados:Pecas.DICA
+"Vida, e cura ao abater",,dados:Pecas.DICA
+Projéteis ferem bem menos,,dados:Pecas.DICA
+"Vida, e mais dano a cada abate na luta",,dados:Pecas.DICA
+Anula um golpe de tempos em tempos,,dados:Pecas.DICA
+Anda mais rápido,,dados:Pecas.DICA
+Reduz todo dano recebido,,dados:Pecas.DICA
+Aliados por perto regeneram vida,,dados:Pecas.DICA
+Atrai inimigos e esquiva golpes,,dados:Pecas.DICA
+Mais dano em todo ataque,,dados:Pecas.DICA
+"Ao morrer, cura todos os aliados",,dados:Pecas.DICA
+"Uma vez por luta, cura quando a vida está baixa",,dados:Pecas.DICA
+Golpes devolvem vida a quem bate,,dados:Pecas.DICA
+As marcas das outras peças valem em dobro,,dados:Pecas.DICA
+Cavaleiro,,dados:Pecas.CONJUNTO_NOME
+Guardamiau,,dados:Pecas.CONJUNTO_NOME
+Sua Miauestade,,dados:Pecas.CONJUNTO_NOME
+Palhamiau,,dados:Pecas.CONJUNTO_NOME
+Vikingato,,dados:Pecas.CONJUNTO_NOME
+Jardimiau,,dados:Pecas.CONJUNTO_NOME
+Caubói,,dados:Pecas.CONJUNTO_NOME
+Piramiau,,dados:Pecas.CONJUNTO_NOME
+Miauerlin,,dados:Pecas.CONJUNTO_NOME
+Miaurio,,dados:Pecas.CONJUNTO_NOME
+Batmiau,,dados:Pecas.CONJUNTO_NOME
+Garoto-Aranhiau,,dados:Pecas.CONJUNTO_NOME
+Jedimiau,,dados:Pecas.CONJUNTO_NOME
+Darth Miauder,,dados:Pecas.CONJUNTO_NOME
+Linkmiau,,dados:Pecas.CONJUNTO_NOME
+Miauchelangelo,,dados:Pecas.CONJUNTO_NOME
+Sonimiau,,dados:Pecas.CONJUNTO_NOME
+Iron Miau,,dados:Pecas.CONJUNTO_NOME
+Thormiau,,dados:Pecas.CONJUNTO_NOME
+Elsamiau,,dados:Pecas.CONJUNTO_NOME
+Buzz Lightmiau,,dados:Pecas.CONJUNTO_NOME
+Narutomiau,,dados:Pecas.CONJUNTO_NOME
+Mega Miau,,dados:Pecas.CONJUNTO_NOME
+Gatubarão,,dados:Pecas.CONJUNTO_NOME
+Gatabelha,,dados:Pecas.CONJUNTO_NOME
+Super Miau,,dados:Pecas.CONJUNTO_NOME
+Arqueiro Miau,,dados:Pecas.CONJUNTO_NOME
+Motoqueiro Miausma,,dados:Pecas.CONJUNTO_NOME
+Fênix Miaussimo,,dados:Pecas.CONJUNTO_NOME
+Mimiau,,dados:Pecas.CONJUNTO_NOME
+Jimiau,,dados:Pecas.CONJUNTO_NOME
+Disparamiau,,dados:Pecas.CONJUNTO_NOME
+Milhau,,dados:Pecas.CONJUNTO_NOME
+Giramiau,,dados:Pecas.CONJUNTO_NOME
+Stardew Miaulley,,dados:Pecas.CONJUNTO_NOME
+Miaucraft,,dados:Pecas.CONJUNTO_NOME
+Miaulax,,dados:Pecas.CONJUNTO_NOME
+Leonarmiau,,dados:Pecas.CONJUNTO_NOME
+Donatemiau,,dados:Pecas.CONJUNTO_NOME
+Rafamiau,,dados:Pecas.CONJUNTO_NOME
+Rocket Miaugue,,dados:Pecas.CONJUNTO_NOME
+Deadmiau,,dados:Pecas.CONJUNTO_NOME
+Meon,,dados:Pecas.CONJUNTO_NOME
+Miau-Noir,,dados:Pecas.CONJUNTO_NOME
+Hollowmiau,,dados:Pecas.CONJUNTO_NOME
+Silkmiau,,dados:Pecas.CONJUNTO_NOME
+Super Miaujin,,dados:Pecas.CONJUNTO_NOME
+O Arqueólogo,,dados:Pecas.CONJUNTO_NOME
+Treinador de Miaumons,,dados:Pecas.CONJUNTO_NOME
+Ranger Miau,,dados:Pecas.CONJUNTO_NOME
+Miauzilla,,dados:Pecas.CONJUNTO_NOME
+King-Miau,,dados:Pecas.CONJUNTO_NOME
+Arthur Miaurgon,,dados:Pecas.CONJUNTO_NOME
+Submiautica,,dados:Pecas.CONJUNTO_NOME
+Catchullu,,dados:Pecas.CONJUNTO_NOME
+Ateliê,,dados:Pecas.CONJUNTO_NOME
+Carga de lança,,dados:Pecas.PODER_NOME
+Muralha,,dados:Pecas.PODER_NOME
+Ordem real,,dados:Pecas.PODER_NOME
+Buzina,,dados:Pecas.PODER_NOME
+Fúria,,dados:Pecas.PODER_NOME
+Chuva de pétalas,,dados:Pecas.PODER_NOME
+Saque rápido,,dados:Pecas.PODER_NOME
+Bala de canhão,,dados:Pecas.PODER_NOME
+Relâmpago,,dados:Pecas.PODER_NOME
+Pisão,,dados:Pecas.PODER_NOME
+Fumaça,,dados:Pecas.PODER_NOME
+Teia,,dados:Pecas.PODER_NOME
+Empurrão,,dados:Pecas.PODER_NOME
+Aperto sombrio,,dados:Pecas.PODER_NOME
+Canção do tempo,,dados:Pecas.PODER_NOME
+Pizza para todos,,dados:Pecas.PODER_NOME
+Bola de espinhos,,dados:Pecas.PODER_NOME
+Salva de mísseis,,dados:Pecas.PODER_NOME
+Trovoada,,dados:Pecas.PODER_NOME
+Nevasca,,dados:Pecas.PODER_NOME
+Alvo travado,,dados:Pecas.PODER_NOME
+Clones,,dados:Pecas.PODER_NOME
+Teletransporte,,dados:Pecas.PODER_NOME
+Arrastão,,dados:Pecas.PODER_NOME
+Enxame,,dados:Pecas.PODER_NOME
+Salvamento,,dados:Pecas.PODER_NOME
+Flecha ricochete,,dados:Pecas.PODER_NOME
+Olhar da Penitência,,dados:Pecas.PODER_NOME
+Objeção!,,dados:Pecas.PODER_NOME
+Imitar,,dados:Pecas.PODER_NOME
+Mão de pôquer,,dados:Pecas.PODER_NOME
+Torre de ervilha,,dados:Pecas.PODER_NOME
+Manteiga escorregadia,,dados:Pecas.PODER_NOME
+Reviver,,dados:Pecas.PODER_NOME
+Colheita,,dados:Pecas.PODER_NOME
+Construir,,dados:Pecas.PODER_NOME
+Cochilo,,dados:Pecas.PODER_NOME
+Plano de ataque,,dados:Pecas.PODER_NOME
+Domo refletor,,dados:Pecas.PODER_NOME
+Lobo solitário,,dados:Pecas.PODER_NOME
+Turbo,,dados:Pecas.PODER_NOME
+Esforço máximo,,dados:Pecas.PODER_NOME
+Chute giratório,,dados:Pecas.PODER_NOME
+Modo Noir,,dados:Pecas.PODER_NOME
+Alma Sombria,,dados:Pecas.PODER_NOME
+Laço de seda,,dados:Pecas.PODER_NOME
+Camehamiau!,,dados:Pecas.PODER_NOME
+Pedra rolante,,dados:Pecas.PODER_NOME
+Eu escolho você!,,dados:Pecas.PODER_NOME
+Megazord,,dados:Pecas.PODER_NOME
+Sopro radioativo,,dados:Pecas.PODER_NOME
+Bater no peito,,dados:Pecas.PODER_NOME
+Recompensa,,dados:Pecas.PODER_NOME
+Rifle de estase,,dados:Pecas.PODER_NOME
+Loucura,,dados:Pecas.PODER_NOME
+Poder do Ateliê,,dados:Pecas.PODER_NOME
+"investe pela fileira, fere quem cruza, derruba o primeiro e fica protegido",,dados:Pecas.PODER_DICA
+o time recebe bem menos dano por uns segundos,,dados:Pecas.PODER_DICA
+o time ataca em dobro por uns segundos,,dados:Pecas.PODER_DICA
+atordoa os inimigos em volta,,dados:Pecas.PODER_DICA
+por uns segundos os golpes ferem em volta e roubam vida,,dados:Pecas.PODER_DICA
+um canteiro cura os aliados dentro e atrasa os inimigos,,dados:Pecas.PODER_DICA
+"seis tiros, sempre no inimigo mais fraco",,dados:Pecas.PODER_DICA
+"explode o maior bando e queima; devolve blocos ou, com a torre cheia, fere mais",,dados:Pecas.PODER_DICA
+raio fortíssimo no inimigo mais resistente,,dados:Pecas.PODER_DICA
+"pula de inimigo em inimigo, esmagando os mais fortes",,dados:Pecas.PODER_DICA
+esconde os aliados em volta: os bichos trocam de alvo,,dados:Pecas.PODER_DICA
+"prende os inimigos mais perto da torre: não andam, mas ainda atacam",,dados:Pecas.PODER_DICA
+joga os inimigos para longe,,dados:Pecas.PODER_DICA
+fere um inimigo e toma a vida dele,,dados:Pecas.PODER_DICA
+adianta a recarga dos poderes dos outros gatos,,dados:Pecas.PODER_DICA
+cura muito o mais ferido e um pouco os outros,,dados:Pecas.PODER_DICA
+"fica rápido, espinhento e firme contra atordoar",,dados:Pecas.PODER_DICA
+três explosões na entrada da torre,,dados:Pecas.PODER_DICA
+"raios nos maiores bandos, atordoando",,dados:Pecas.PODER_DICA
+deixa todos os inimigos lentos,,dados:Pecas.PODER_DICA
+o laser marca quem atravessa: recebe mais dano de tudo,,dados:Pecas.PODER_DICA
+dois clones lutam ao seu lado por uns segundos,,dados:Pecas.PODER_DICA
+"aparece junto do inimigo mais ao fundo, golpeia e fica protegido",,dados:Pecas.PODER_DICA
+puxa os inimigos de longe para perto e fere cada um,,dados:Pecas.PODER_DICA
+uma nuvem de abelhas fere os inimigos mais próximos por uns segundos,,dados:Pecas.PODER_DICA
+"leva o aliado mais ferido ao posto, cura e soca o chão onde ele estava",,dados:Pecas.PODER_DICA
+"uma flecha salta de inimigo em inimigo, mais forte a cada salto",,dados:Pecas.PODER_DICA
+queima os 3 inimigos de maior vida: dano em % da vida máxima deles,,dados:Pecas.PODER_DICA
+corta o poder que um bicho está carregando e anima o time (só com aviso),,dados:Pecas.PODER_DICA
+"repete o último poder; sem nenhum, refaz o Disfarce e cura",,dados:Pecas.PODER_DICA
+"saca cartas e joga a melhor mão: quanto melhor, mais dano no bando",,dados:Pecas.PODER_DICA
+planta uma torre de ervilhas que atira sozinha por uns segundos,,dados:Pecas.PODER_DICA
+"uma poça de manteiga faz o bando deslizar para o fundo, lento",,dados:Pecas.PODER_DICA
+"levanta o aliado caído, sem a marca de nocaute (1x por luta)",,dados:Pecas.PODER_DICA
+"planta 3 mudas: viram pimenta que explode, morango que cura, ou murcham",,dados:Pecas.PODER_DICA
+ergue blocos que provocam os bichos e explodem ao cair,,dados:Pecas.PODER_DICA
+dorme e se cura; o ronco adormece os inimigos em volta,,dados:Pecas.PODER_DICA
+o time foca o bicho mais forte e bate mais nele; dois cortes do líder,,dados:Pecas.PODER_DICA
+domo parado devolve os tiros inimigos ao atirador (só rende contra tiro),,dados:Pecas.PODER_DICA
+"os bichos em volta só batem nele, que apanha menos e bate mais forte",,dados:Pecas.PODER_DICA
+"atropela em linha, protegido, e deixa um rastro de chamas azuis",,dados:Pecas.PODER_DICA
+"regenera e bate mais forte por uns segundos; se cair, levanta e explode",,dados:Pecas.PODER_DICA
+chuta em volta: empurra e atordoa; quem já estava atordoado apanha muito,,dados:Pecas.PODER_DICA
+preto e branco: os bichos erram golpes nele e os tiros dele ferem mais,,dados:Pecas.PODER_DICA
+"a Alma vira a Sombra: perfura a fileira, fere muito, deixa lento e cura",,dados:Pecas.PODER_DICA
+liga os 4 bichos mais fortes: o dano de um se espalha pelos outros,,dados:Pecas.PODER_DICA
+carrega parado e solta um feixe que cruza o campo todo,,dados:Pecas.PODER_DICA
+uma pedra rola até a torre e atordoa quem tocar,,dados:Pecas.PODER_DICA
+"a bola captura o bicho mais fraco: ferido, vira aliado por uns segundos",,dados:Pecas.PODER_DICA
+liga os aliados perto com escudo e vira um gigante por uns segundos,,dados:Pecas.PODER_DICA
+"sopro em cone: o bicho vira radioativo e explode ao cair, contagiando",,dados:Pecas.PODER_DICA
+ruge: os bichos fogem e ele bate mais forte e apanha menos,,dados:Pecas.PODER_DICA
+"marca o bicho mais forte: se cair no prazo, o time cura e bate mais",,dados:Pecas.PODER_DICA
+bolha que congela o bando: o dano retido sai de uma vez no fim,,dados:Pecas.PODER_DICA
+os 3 bichos mais fortes enlouquecem e se atacam; o chefe leva tentáculo,,dados:Pecas.PODER_DICA
+o poder que o criador do Ateliê escolheu,,dados:Pecas.PODER_DICA
+Comum,,dados:Pecas.RARIDADE_NOME
+Rara,,dados:Pecas.RARIDADE_NOME
+Épica,,dados:Pecas.RARIDADE_NOME
+Lendária,,dados:Pecas.RARIDADE_NOME
+Mítica,,dados:Pecas.RARIDADE_NOME
+Miaujestosa,,dados:Pecas.RARIDADE_NOME
+Quarto,Bedroom,dados:Fases.NOME
+Sala,Living room,dados:Fases.NOME
+Cozinha,Kitchen,dados:Fases.NOME
+Sótão,Attic,dados:Fases.NOME
+Porão,Basement,dados:Fases.NOME
+Quintal,Backyard,dados:Fases.NOME
+Garagem,Garage,dados:Fases.NOME
+Telhado,Roof,dados:Fases.NOME
+Rua,Street,dados:Fases.NOME
+Toca,Burrow,dados:Fases.NOME
+Mercadão do Peixe,Fish Market,dados:Fases.NOME_ATO3
+Ferro-velho,Scrapyard,dados:Fases.NOME_ATO3
+Beco do Fliperama,Arcade Alley,dados:Fases.NOME_ATO3
+Arena da Praça,Square Arena,dados:Fases.NOME_ATO3
+Telhados e Antenas,Rooftops and Antennas,dados:Fases.NOME_ATO3
+Ratos,,dados:Fases.FAMILIA_NOME
+Guaxinins,,dados:Fases.FAMILIA_NOME
+Raposas,,dados:Fases.FAMILIA_NOME
+Corvos,,dados:Fases.FAMILIA_NOME
+Sapos,,dados:Fases.FAMILIA_NOME
+Bando do quintal,,dados:Fases.FAMILIA_NOME
+Bando da garagem,,dados:Fases.FAMILIA_NOME
+Bando do telhado,,dados:Fases.FAMILIA_NOME
+Bando da rua,,dados:Fases.FAMILIA_NOME
+Bando da toca,,dados:Fases.FAMILIA_NOME
+Sem truques: avançam em bando,,dados:Fases.FAMILIA_DICA
+"Gordos e resistentes, mas lentos",,dados:Fases.FAMILIA_DICA
+Rápidas e frágeis,,dados:Fases.FAMILIA_DICA
+Bicam forte e caem fácil,,dados:Fases.FAMILIA_DICA
+Regeneram vida o tempo todo,,dados:Fases.FAMILIA_DICA
+"Todas as famílias juntas, cavando por baixo da cerca",,dados:Fases.FAMILIA_DICA
+"Todas as famílias juntas, escondidas entre caixas e latas",,dados:Fases.FAMILIA_DICA
+"Todas as famílias juntas, pulando de telha em telha",,dados:Fases.FAMILIA_DICA
+"Todas as famílias juntas, donas da calçada",,dados:Fases.FAMILIA_DICA
+"Todas as famílias juntas, em casa: é aqui que elas moram",,dados:Fases.FAMILIA_DICA
+Rei dos Ratos,,dados:Fases.CHEFE_NOME
+Guaxinim Glutão,,dados:Fases.CHEFE_NOME
+Raposa Ligeira,,dados:Fases.CHEFE_NOME
+Corvo Velho,,dados:Fases.CHEFE_NOME
+Sapo-Rei,,dados:Fases.CHEFE_NOME
+Toupeira Escavadora,,dados:Fases.CHEFE_NOME
+Gambá Fedido,,dados:Fases.CHEFE_NOME
+Esquilo Acrobata,,dados:Fases.CHEFE_NOME
+Vira-Lata Chefão,,dados:Fases.CHEFE_NOME
+Texugo-Rei,,dados:Fases.CHEFE_NOME
+Dom Gatleone,,dados:Fases.CHEFE_NOME_ATO3
+Imortal Miau,,dados:Fases.CHEFE_NOME_ATO3
+Programa Mestre,,dados:Fases.CHEFE_NOME_ATO3
+Rei Miaunidas,,dados:Fases.CHEFE_NOME_ATO3
+Magnetomiau,,dados:Fases.CHEFE_NOME_ATO3
+Gato de Schrödinger,,dados:Fases.CHEFE_NOME_ATO3
+Chama ratos de reforço. Poder: Ordem real (os ratos atacam em dobro),,dados:Fases.CHEFE_ATAQUE
+Cada patada fere todos em volta. Poder: Pisão no gato mais forte,,dados:Fases.CHEFE_ATAQUE
+Dispara em direção à torre. Poder: Carga de lança,,dados:Fases.CHEFE_ATAQUE
+Atira penas de longe em quem está atrás. Poder: Trovoada,,dados:Fases.CHEFE_ATAQUE
+Regenera e se desfaz em sapinhos ao cair. Poder: Teia (prende os gatos mais perto),,dados:Fases.CHEFE_ATAQUE
+Cava e some; reaparece em cima do gato mais atrás. Poder: Arrastão (puxa os gatos para o buraco),,dados:Fases.CHEFE_ATAQUE
+"O fedor deixa os gatos lentos e, de tempos em tempos, tontos. Poder: Enxame",,dados:Fases.CHEFE_ATAQUE
+Arremessa bolotas de longe e dá saltos acrobáticos que ferem a fileira inteira. Poder: Relâmpago,,dados:Fases.CHEFE_ATAQUE
+Late e joga os gatos para trás; chama a matilha. Poder: Fúria,,dados:Fases.CHEFE_ATAQUE
+"Couro grosso: golpe fraco não fere. Ferido, ataca em dobro. Poder: Bola de espinhos",,dados:Fases.CHEFE_ATAQUE
+"Chama o Mensageiro: se tocar a torre, leva um gato a dormir. Depois, Capangas. Poder: Arrastão",,dados:Fases.CHEFE_ATAQUE_ATO3
+"O comboio varre faixas do campo (aviso de 1 s); depois, duas faixas e mais veloz. Poder: Carga de lança",,dados:Fases.CHEFE_ATAQUE_ATO3
+Lança disco que quica em 3 gatos e deixa em pixel por 3 s. Volta uma vez ao cair. Poder: Trovoada,,dados:Fases.CHEFE_ATAQUE_ATO3
+"Falange: de frente quase não leva dano. Chuta o gato da frente; depois, chuva de flechas. Poder: Fúria",,dados:Fases.CHEFE_ATAQUE_ATO3
+"Campo magnético puxa o time e anula o bônus de conjunto por 6 s; no fim, levanta um carro. Poder: Relâmpago",,dados:Fases.CHEFE_ATAQUE_ATO3
+"A cada 6 s alterna entre vivo e morto (aviso antes). Morto, atordoa com a pata. Poder: Relâmpago",,dados:Fases.CHEFE_ATAQUE_ATO3
+Lento: tiros de longe têm tempo de sobra,,dados:Fases.CHEFE_FRAQUEZA
+Pelo seco: fogo fere em dobro,,dados:Fases.CHEFE_FRAQUEZA
+"Quando perde o fôlego, fica parada e frágil",,dados:Fases.CHEFE_FRAQUEZA
+Ossos ocos: golpes de perto ferem mais,,dados:Fases.CHEFE_FRAQUEZA
+Explosões ferem em dobro,,dados:Fases.CHEFE_FRAQUEZA
+Sai tonta do buraco: um instante parada e frágil,,dados:Fases.CHEFE_FRAQUEZA
+Gás inflamável: fogo fere em dobro,,dados:Fases.CHEFE_FRAQUEZA
+Explosões o derrubam no meio do salto: ferem em dobro,,dados:Fases.CHEFE_FRAQUEZA
+Depois de latir fica sem fôlego e recebe dano em dobro,,dados:Fases.CHEFE_FRAQUEZA
+"Varinha, poderes e fogo passam pelo couro",,dados:Fases.CHEFE_FRAQUEZA
+"Mate o Mensageiro antes da torre; pelo seco, fogo fere em dobro",,dados:Fases.CHEFE_FRAQUEZA_ATO3
+"Entre as faixas, nas fileiras livres, ele fica exposto",,dados:Fases.CHEFE_FRAQUEZA_ATO3
+"Quando recompila, fica um instante frágil: guarde força",,dados:Fases.CHEFE_FRAQUEZA_ATO3
+Ataque pelos flancos e use poderes: de frente ele quase não sente,,dados:Fases.CHEFE_FRAQUEZA_ATO3
+Sem o bônus de conjunto o time fica fraco: espalhe-se e mate rápido,,dados:Fases.CHEFE_FRAQUEZA_ATO3
+"Vivo, apanha normal; morto, só poder e Varinha o ferem. Guarde o poder",,dados:Fases.CHEFE_FRAQUEZA_ATO3
+Família Gatíssima,,dados:Fases.GANGUE_NOME
+Estrada Furiosa,,dados:Fases.GANGUE_NOME
+Tropa do Grid,,dados:Fases.GANGUE_NOME
+Legião Miauparta,,dados:Fases.GANGUE_NOME
+Irmandade Mutante,,dados:Fases.GANGUE_NOME
+Gatos de gangue do Mercadão: enfrentam o time antes de ir à torre,,dados:Fases.GANGUE_DICA
+Gatos de gangue do Ferro-velho: enfrentam o time antes de ir à torre,,dados:Fases.GANGUE_DICA
+Gatos de gangue do Beco: enfrentam o time antes de ir à torre,,dados:Fases.GANGUE_DICA
+Gatos de gangue da Arena: enfrentam o time antes de ir à torre,,dados:Fases.GANGUE_DICA
+Gatos de gangue dos Telhados: enfrentam o time antes de ir à torre,,dados:Fases.GANGUE_DICA
+Bicho comum,,dados:Balanco.TIPO_NOMES
+Saltador,,dados:Balanco.TIPO_NOMES
+Ladrão,,dados:Balanco.TIPO_NOMES
+Grandalhão,,dados:Balanco.TIPO_NOMES
+Ninhada,,dados:Balanco.TIPO_NOMES
+Atirador,,dados:Balanco.TIPO_NOMES
+Curandeiro,,dados:Balanco.TIPO_NOMES
+Escudeiro,,dados:Balanco.TIPO_NOMES
+Bicho-bomba,,dados:Balanco.TIPO_NOMES
+Vira-lata de gangue,,dados:Balanco.GANGUE_TIPO_NOME
+Entregador de moto,,dados:Balanco.GANGUE_TIPO_NOME
+Mensageiro,,dados:Balanco.GANGUE_TIPO_NOME
+Capanga de sobretudo,,dados:Balanco.GANGUE_TIPO_NOME
+Gata e gatinhos,,dados:Balanco.GANGUE_TIPO_NOME
+Motoqueiro,,dados:Balanco.GANGUE_TIPO_NOME
+Saqueador,,dados:Balanco.GANGUE_TIPO_NOME
+Brutamontes,,dados:Balanco.GANGUE_TIPO_NOME
+Ninhada de motinhas,,dados:Balanco.GANGUE_TIPO_NOME
+Guitarrista,,dados:Balanco.GANGUE_TIPO_NOME
+Suicida pintado,,dados:Balanco.GANGUE_TIPO_NOME
+Programa,,dados:Balanco.GANGUE_TIPO_NOME
+Piloto de moto de luz,,dados:Balanco.GANGUE_TIPO_NOME
+Programa-ladrão,,dados:Balanco.GANGUE_TIPO_NOME
+Programa pesado,,dados:Balanco.GANGUE_TIPO_NOME
+Pixels,,dados:Balanco.GANGUE_TIPO_NOME
+Lançador de discos,,dados:Balanco.GANGUE_TIPO_NOME
+Recruta da Legião,,dados:Balanco.GANGUE_TIPO_NOME
+Chutador,,dados:Balanco.GANGUE_TIPO_NOME
+Batedor,,dados:Balanco.GANGUE_TIPO_NOME
+Escudeiros novatos,,dados:Balanco.GANGUE_TIPO_NOME
+Hoplita,,dados:Balanco.GANGUE_TIPO_NOME
+Mutante,,dados:Balanco.GANGUE_TIPO_NOME
+Garra-fera,,dados:Balanco.GANGUE_TIPO_NOME
+Ladrão mutante,,dados:Balanco.GANGUE_TIPO_NOME
+Mutante pesado,,dados:Balanco.GANGUE_TIPO_NOME
+Ninhada mutante,,dados:Balanco.GANGUE_TIPO_NOME
+Telepata,,dados:Balanco.GANGUE_TIPO_NOME
+Corre de moto direto à torre.,,dados:Balanco.GANGUE_TIPO_DICA
+"Ao tocar a torre, leva um gato para dormir 6 s. Mate antes!",,dados:Balanco.GANGUE_TIPO_DICA
+"Lento, muita vida; derruba 2 blocos por golpe.",,dados:Balanco.GANGUE_TIPO_DICA
+Passa batido e acerta o gato de trás antes de ir à torre.,,dados:Balanco.GANGUE_TIPO_DICA
+Rouba blocos da torre e foge com eles.,,dados:Balanco.GANGUE_TIPO_DICA
+"Ao cair, vira dois filhotes.",,dados:Balanco.GANGUE_TIPO_DICA
+Dá velocidade ao comboio em volta; atira de longe.,,dados:Balanco.GANGUE_TIPO_DICA
+Corre ao primeiro gato ou à torre e explode.,,dados:Balanco.GANGUE_TIPO_DICA
+Volta uma vez com 40% de vida ao ser derrotado.,,dados:Balanco.GANGUE_TIPO_DICA
+Corre à torre largando um rastro de luz que fere quem passa.,,dados:Balanco.GANGUE_TIPO_DICA
+Atira discos que quicam em até 3 gatos.,,dados:Balanco.GANGUE_TIPO_DICA
+Corre direto à torre.,,dados:Balanco.GANGUE_TIPO_DICA
+"Em falange, leva menos dano de frente. Ataque pelos flancos!",,dados:Balanco.GANGUE_TIPO_DICA
+"Abaixo de 30% de vida, fica mais forte e mais rápido.",,dados:Balanco.GANGUE_TIPO_DICA
+"Corre à torre, regenera vida e enfurece com pouca vida.",,dados:Balanco.GANGUE_TIPO_DICA
+Seu tiro confunde: o gato bate no aliado mais perto.,,dados:Balanco.GANGUE_TIPO_DICA
+Vida,,dados:Balanco.ATR_NOMES
+Força,,dados:Balanco.ATR_NOMES
+Agilidade,,dados:Balanco.ATR_NOMES
+Fiapo,,dados:Balanco.NOMES_BONECOS
+Botão,,dados:Balanco.NOMES_BONECOS
+Retalho,,dados:Balanco.NOMES_BONECOS
+Feltro,,dados:Balanco.NOMES_BONECOS
+Novelo,,dados:Balanco.NOMES_BONECOS
+Primeiro ato,,dados:Balanco.ATO_NOME
+Segundo ato,,dados:Balanco.ATO_NOME
+Terceiro ato,,dados:Balanco.ATO_NOME
+Frente,,dados:Boneco.LINHA_NOMES
+Meio,,dados:Boneco.LINHA_NOMES
+Fundo,,dados:Boneco.LINHA_NOMES
+Avançar,,dados:Boneco.POSTURA_NOMES
+Segurar,,dados:Boneco.POSTURA_NOMES
+Recuar,,dados:Boneco.POSTURA_NOMES
+Sem estampa,,dados:Atelie.ESTAMPA_NOME
+Listras,,dados:Atelie.ESTAMPA_NOME
+Bolinhas,,dados:Atelie.ESTAMPA_NOME
+Xadrez,,dados:Atelie.ESTAMPA_NOME
+Coração,,dados:Atelie.ESTAMPA_NOME
+Estrela,,dados:Atelie.ESTAMPA_NOME
+Camuflagem,,dados:Atelie.ESTAMPA_NOME
+Remendos,,dados:Atelie.ESTAMPA_NOME
+Original,,dados:Atelie.MATIZ_NOME
+Vermelho,,dados:Atelie.MATIZ_NOME
+Laranja,,dados:Atelie.MATIZ_NOME
+Amarelo,,dados:Atelie.MATIZ_NOME
+Lima,,dados:Atelie.MATIZ_NOME
+Verde,,dados:Atelie.MATIZ_NOME
+Menta,,dados:Atelie.MATIZ_NOME
+Ciano,,dados:Atelie.MATIZ_NOME
+Azul,,dados:Atelie.MATIZ_NOME
+Anil,,dados:Atelie.MATIZ_NOME
+Violeta,,dados:Atelie.MATIZ_NOME
+Magenta,,dados:Atelie.MATIZ_NOME
+Rosa,,dados:Atelie.MATIZ_NOME
+Super,,dados:Atelie._PREFIXOS
+Mega,,dados:Atelie._PREFIXOS
+Capitão,,dados:Atelie._PREFIXOS
+Doutor,,dados:Atelie._PREFIXOS
+Mestre,,dados:Atelie._PREFIXOS
+Sombra,,dados:Atelie._PREFIXOS
+Ninja,,dados:Atelie._PREFIXOS
+Carta alta,,dados:Poquer.NOME
+Par,,dados:Poquer.NOME
+Dois pares,,dados:Poquer.NOME
+Trinca,,dados:Poquer.NOME
+Sequência,,dados:Poquer.NOME
+Flush,,dados:Poquer.NOME
+Full House,,dados:Poquer.NOME
+Quadra,,dados:Poquer.NOME
+Straight Flush,,dados:Poquer.NOME
+Esforço máximo!,,dados:Simulacao._PIADAS_ESFORCO
+Isso vai pro trailer!,,dados:Simulacao._PIADAS_ESFORCO
+Quebrando a quarta parede!,,dados:Simulacao._PIADAS_ESFORCO
+Cadê meu spin-off?,,dados:Simulacao._PIADAS_ESFORCO
+"Sem spoilers, por favor!",,dados:Simulacao._PIADAS_ESFORCO
+Estrutura,,dados:Torre.MELHORIA_NOME
+Canhão,,dados:Torre.MELHORIA_NOME
+Rapidez,,dados:Torre.MELHORIA_NOME
+Enfermaria,,dados:Torre.MELHORIA_NOME
+Ratoeira,,dados:Torre.MODULO_NOME
+Catapulta de ração,,dados:Torre.MODULO_NOME
+Sirene,,dados:Torre.MODULO_NOME
+Balista de penas,,dados:Torre.MODULO_NOME
+Caldeirão,,dados:Torre.MODULO_NOME
+Fosso,,dados:Torre.MODULO_NOME
+Repelente,,dados:Torre.MODULO_NOME
+Luneta,,dados:Torre.MODULO_NOME
+Casinha,,dados:Torre.MODULO_NOME
+Reforço,,dados:Torre.MODULO_NOME
+Oferta recusada,,dados:Torre.MODULO_NOME
+Sucata,,dados:Torre.MODULO_NOME
+Firewall,,dados:Torre.MODULO_NOME
+Ímã,,dados:Torre.MODULO_NOME
+Quem bate na torre de perto leva o troco,,dados:Torre.MODULO_DICA
+De tempos em tempos lança um saco de ração que fere em área,,dados:Torre.MODULO_DICA
+"Quando a torre cai à metade, um alarme atordoa todos os bichos (uma vez por onda)",,dados:Torre.MODULO_DICA
+O tiro da torre atravessa e fere mais dois bichos atrás do alvo,,dados:Torre.MODULO_DICA
+"Durante a luta, repõe um bloco de tempos em tempos",,dados:Torre.MODULO_DICA
+"De tempos em tempos o bicho mais perto cai no buraco, leva dano e fica tonto",,dados:Torre.MODULO_DICA
+Bichos perto da torre andam e batem mais devagar,,dados:Torre.MODULO_DICA
+"O tiro mira o alvo prioritário, às vezes acerta em cheio e deixa o alvo mais frágil",,dados:Torre.MODULO_DICA
+Um cão de guarda luta ao lado da torre a cada onda,,dados:Torre.MODULO_DICA
+Os primeiros golpes de cada onda na torre não derrubam bloco; o chefe derruba no máximo um,,dados:Torre.MODULO_DICA
+O primeiro ladrão de cada onda desiste e vai embora de mãos vazias,,dados:Torre.MODULO_DICA
+"A primeira bomba de cada onda explode na sucata, sem tirar bloco",,dados:Torre.MODULO_DICA
+"Uma vez por onda, congela os bichos que se juntam perto da torre",,dados:Torre.MODULO_DICA
+"Rivais tiram só um bloco por golpe, e um golpe em cada três é barrado",,dados:Torre.MODULO_DICA
+"O tiro da torre empurra o alvo para trás, para longe da torre",,dados:Torre.MODULO_DICA
+Sem truques e sem pressa: gatos na frente seguram o bando enquanto os de trás atacam.,,dados:Fichario.FAM_ENFRENTAR
+"Aguentam muito dano e andam devagar: atacar de longe dá tempo de sobra, e dano alto compensa a vida.",,dados:Fichario.FAM_ENFRENTAR
+"Vêm rápidas e caem rápido: gatos na linha da frente não deixam passar, e Recuar guarda a torre.",,dados:Fichario.FAM_ENFRENTAR
+"Bicam forte, mas caem fácil: derrube os corvos antes de chegarem aos gatos.",,dados:Fichario.FAM_ENFRENTAR
+"Regeneram o tempo todo: concentre o dano no mesmo sapo, sem espalhar golpes.",,dados:Fichario.FAM_ENFRENTAR
+Sem truque: qualquer gato na frente resolve. Fique de olho nos fantasiados no meio do bando.,,dados:Fichario.TIPO_ENFRENTAR
+Pula por cima dos gatos: deixe um gato em Recuar perto da torre para pegá-lo.,,dados:Fichario.TIPO_ENFRENTAR
+Marque o Ladrão como alvo na preparação e deixe gatos na linha da frente.,,dados:Fichario.TIPO_ENFRENTAR
+Muita vida: dano alto e poderes ajudam. Marque-o como alvo para o time inteiro focar.,,dados:Fichario.TIPO_ENFRENTAR
+Cada Ninhada vira dois filhotes ao cair: golpes em área resolvem rápido.,,dados:Fichario.TIPO_ENFRENTAR
+Atira de longe: gatos em Avançar o alcançam. Marque-o como alvo.,,dados:Fichario.TIPO_ENFRENTAR
+"Cura os outros: derrube-o primeiro, marcando-o como alvo.",,dados:Fichario.TIPO_ENFRENTAR
+Leva pouco dano e atrai os golpes: a Varinha ignora a defesa dele.,,dados:Fichario.TIPO_ENFRENTAR
+Explode ao encostar: derrube de longe antes que chegue aos gatos ou à torre.,,dados:Fichario.TIPO_ENFRENTAR
+Larga uma peça da fantasia que veste: vale a pena derrubá-lo.,,dados:Fichario.TIPO_ENFRENTAR
+A oferta,,dados:Fichario.GANGUE_TRUQUE_NOME
+Comboio,,dados:Fichario.GANGUE_TRUQUE_NOME
+Recompilação e discos,,dados:Fichario.GANGUE_TRUQUE_NOME
+Falange,,dados:Fichario.GANGUE_TRUQUE_NOME
+Mutação,,dados:Fichario.GANGUE_TRUQUE_NOME
+Marque o Mensageiro como alvo e derrube-o antes que toque a torre. Gatos na frente seguram os Capangas.,,dados:Fichario.GANGUE_ENFRENTAR
+Derrube o Guitarrista primeiro: sem ele o comboio perde a velocidade. Gatos de longe acertam os Suicidas antes que cheguem.,,dados:Fichario.GANGUE_ENFRENTAR
+O Programa volta uma vez: guarde dano para o segundo round. Derrube os Lançadores antes que os discos quiquem entre os gatos.,,dados:Fichario.GANGUE_ENFRENTAR
+"Ataque os hoplitas pelos flancos ou com poderes que atravessam, e derrube o líder para abalar a gangue inteira.",,dados:Fichario.GANGUE_ENFRENTAR
+Termine os mutantes feridos de uma vez: abaixo de 30% de vida eles ficam mais fortes. Dano concentrado vence.,,dados:Fichario.GANGUE_ENFRENTAR
+Da casa,,dados:Oficina.ABAS_NOME
+De fora,,dados:Oficina.ABAS_NOME
+Das ruas,,dados:Oficina.ABAS_NOME
+Clique numa peça do guarda-roupa: veste no gato selecionado (ou no primeiro com o espaço livre). Clique numa peça vestida: devolve.,,dados:principal.AJUDA_ATALHOS
+"Arraste uma peça: no gato veste; no carretel sobe o nível; na estrela sobe a raridade; sobre uma igual, funde. Esc cancela o arrasto.",,dados:principal.AJUDA_ATALHOS
+Clique num gato para selecioná-lo. Teclas 1 a 5 também. Clique na tarja de uma fantasia para filtrar o guarda-roupa por ela.,,dados:principal.AJUDA_ATALHOS
+"Lápis acima do nome (ou duplo clique no nome): dá outro nome ao gato. Enter confirma, Esc desiste.",,dados:principal.AJUDA_ATALHOS
+Q / E ou Tab: troca de aba.   V: vestir o time.   Z: desfazer.   F: fichário.   T: oficina da torre.   ? : esta ajuda.,,dados:principal.AJUDA_ATALHOS
+Espaço ou Enter: LUTAR.   Botão direito numa peça: abre o fichário na fantasia dela.,,dados:principal.AJUDA_ATALHOS
+"Fantasia: grupo de peças da mesma família. Com 2 ou 3 peças da mesma fantasia num gato vem um bônus; com as 4 (cabeça, corpo, mão e acessório) ele libera o poder da fantasia.",,dados:principal.AJUDA_REGRAS
+"Raridade: comum, rara, épica, lendária, mítica e miaujestosa (esta só reforçando uma mítica). Mais raridade dá mais efeito e mais espaço para marcas.",,dados:principal.AJUDA_REGRAS
+"Marca: quando um gato cai na luta, a roupa dele ganha uma marca para sempre. Cada peça comporta um número limitado delas.",,dados:principal.AJUDA_REGRAS
+Promover (carretel): sobe o nível da peça e custa blocos. Reforçar (estrela): sobe a raridade e custa troféus.,,dados:principal.AJUDA_REGRAS
+"Fundir: peça repetida que cai na luta se funde sozinha com a que você já tem, que fica melhor. Você nunca tem duas iguais paradas.",,dados:principal.AJUDA_REGRAS
+"Linha: Frente, Meio ou Fundo define onde o gato luta. Clique no botão dele para alternar.",,dados:principal.AJUDA_REGRAS
+"Números: passe o mouse no nome do gato para ver vida, dano e o resto. Antes de cada onda dá para arrastar os gatos, dar ordens e marcar um alvo.",,dados:principal.AJUDA_REGRAS
+"Treino: cada nível do gato dá 1 ponto. Gaste em Vida, Força ou Agilidade. A cada 10 níveis ele incorpora o poder da fantasia completa que veste e passa a soltá-lo sozinho na luta.",,dados:principal.AJUDA_REGRAS
+Casa segura,,dados:Metas.lista
+Vença os cinco cômodos,,dados:Metas.lista
+Quarto sem um arranhão,,dados:Metas.lista
+Vença o cômodo sem nenhum gato nocauteado,,dados:Metas.lista
+Sala sem um arranhão,,dados:Metas.lista
+Cozinha sem um arranhão,,dados:Metas.lista
+Sótão sem um arranhão,,dados:Metas.lista
+Porão sem um arranhão,,dados:Metas.lista
+Desfile,,dados:Metas.lista
+Vença um cômodo com todos os gatos de fantasia completa,,dados:Metas.lista
+Vizinhança segura,,dados:Metas.lista
+Vença os cinco lugares de fora da casa,,dados:Metas.lista
+Lado de fora,,dados:Metas.lista
+Quintal sem um arranhão,,dados:Metas.lista
+Vença o lugar sem nenhum gato nocauteado,,dados:Metas.lista
+Garagem sem um arranhão,,dados:Metas.lista
+Telhado sem um arranhão,,dados:Metas.lista
+Rua sem um arranhão,,dados:Metas.lista
+Toca sem um arranhão,,dados:Metas.lista
+De pai para filhote,,dados:Metas.lista
+Um gato incorpora o poder de uma fantasia,,dados:Metas.lista
+Vivo e morto,,dados:Metas.lista
+Complete o bestiário e abra a caixa do Sótão,,dados:Metas.lista
+Secretos,,dados:Metas.lista
+Feita sob medida,,dados:Metas.lista
+Complete o fichário e crie a sua fantasia no Ateliê,,dados:Metas.lista
+Roupa de guerra,,dados:Metas.lista
+Tenha uma peça com 4 marcas,,dados:Metas.lista
+Guarda-roupa,,dados:Metas.lista
+Meio armário,,dados:Metas.lista
+Junte 50 peças diferentes,,dados:Metas.lista
+Armário cheio,,dados:Metas.lista
+Junte todas as 216 peças,,dados:Metas.lista
+Casa sitiada,,dados:Metas.lista
+Passe da onda 10 na Invasão sem fim,,dados:Metas.lista
+Invasão,,dados:Metas.lista
+Muralha de gatos,,dados:Metas.lista
+Passe da onda 20 na Invasão sem fim,,dados:Metas.lista
+Fantasia de Cavaleiro,,dados:Metas.lista
+Junte as 4 peças,,dados:Metas.lista
+Fantasias,,dados:Metas.lista
+Fantasia de Guardamiau,,dados:Metas.lista
+Fantasia de Sua Miauestade,,dados:Metas.lista
+Fantasia de Palhamiau,,dados:Metas.lista
+Fantasia de Vikingato,,dados:Metas.lista
+Fantasia de Jardimiau,,dados:Metas.lista
+Fantasia de Caubói,,dados:Metas.lista
+Fantasia de Piramiau,,dados:Metas.lista
+Fantasia de Miauerlin,,dados:Metas.lista
+Fantasia de Miaurio,,dados:Metas.lista
+Fantasia de Batmiau,,dados:Metas.lista
+Fantasia de Garoto-Aranhiau,,dados:Metas.lista
+Fantasia de Jedimiau,,dados:Metas.lista
+Fantasia de Darth Miauder,,dados:Metas.lista
+Fantasia de Linkmiau,,dados:Metas.lista
+Fantasia de Miauchelangelo,,dados:Metas.lista
+Fantasia de Sonimiau,,dados:Metas.lista
+Fantasia de Iron Miau,,dados:Metas.lista
+Fantasia de Thormiau,,dados:Metas.lista
+Fantasia de Elsamiau,,dados:Metas.lista
+Fantasia de Buzz Lightmiau,,dados:Metas.lista
+Fantasia de Narutomiau,,dados:Metas.lista
+Fantasia de Mega Miau,,dados:Metas.lista
+Fantasia de Gatubarão,,dados:Metas.lista
+Fantasia de Gatabelha,,dados:Metas.lista
+Fantasia de Super Miau,,dados:Metas.lista
+Fantasia de Arqueiro Miau,,dados:Metas.lista
+Fantasia de Motoqueiro Miausma,,dados:Metas.lista
+Fantasia de Fênix Miaussimo,,dados:Metas.lista
+Fantasia de Mimiau,,dados:Metas.lista
+Fantasia de Jimiau,,dados:Metas.lista
+Fantasia de Disparamiau,,dados:Metas.lista
+Fantasia de Giramiau,,dados:Metas.lista
+Fantasia de Stardew Miaulley,,dados:Metas.lista
+Fantasia de Miaucraft,,dados:Metas.lista
+Fantasia de Miaulax,,dados:Metas.lista
+Fantasia de Leonarmiau,,dados:Metas.lista
+Fantasia de Donatemiau,,dados:Metas.lista
+Fantasia de Rafamiau,,dados:Metas.lista
+Fantasia de Rocket Miaugue,,dados:Metas.lista
+Fantasia de Deadmiau,,dados:Metas.lista
+Fantasia de Meon,,dados:Metas.lista
+Fantasia de Miau-Noir,,dados:Metas.lista
+Fantasia de Hollowmiau,,dados:Metas.lista
+Fantasia de Silkmiau,,dados:Metas.lista
+Fantasia de Super Miaujin,,dados:Metas.lista
+Fantasia de O Arqueólogo,,dados:Metas.lista
+Fantasia de Treinador de Miaumons,,dados:Metas.lista
+Fantasia de Ranger Miau,,dados:Metas.lista
+Fantasia de Miauzilla,,dados:Metas.lista
+Fantasia de King-Miau,,dados:Metas.lista
+Fantasia de Arthur Miaurgon,,dados:Metas.lista
+Fantasia de Submiautica,,dados:Metas.lista
+Fantasia de Catchullu,,dados:Metas.lista

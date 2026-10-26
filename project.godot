@@ -5,6 +5,9 @@ config_version=5
 [application]
 
 config/name="Gatos e Roupas"
+config/name_localized={
+"en": "Cats & Costumes"
+}
 config/version="1.0.0"
 config/icon="res://assets/terceiros/gui/icone.png"
 config/windows_native_icon="res://assets/terceiros/gui/icone.ico"
@@ -27,3 +30,8 @@ theme/custom_font="res://assets/fontes/Jersey10-Regular.ttf"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.1, 0.1, 0.16, 1)
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://idiomas/textos.en.translation")
+locale/fallback="pt"
