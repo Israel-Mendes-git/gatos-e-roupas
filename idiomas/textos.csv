@@ -1359,9 +1359,9 @@ No nível %d o gato guarda o poder da fantasia vestida (a mesma de novo sobe o g
 Subiu de nível: %s.,Leveled up: %s.,interface/principal.gd
 Nocaute: %s.,Knocked out: %s.,interface/principal.gd
 Invasão encerrada,Invasion Over,interface/principal.gd
-Invasão encerrada na onda %d em %s. O time se levantou; o que caiu e os troféus ficam com você.,Invasion ended at wave %d in %s. The team got back up; drops and trophies are yours to keep.,interface/principal.gd
-Novo recorde! Você venceu %d onda em %s (antes: %d).,New record! You cleared %d wave in %s (was: %d).,interface/principal.gd
-Novo recorde! Você venceu %d ondas em %s (antes: %d).,New record! You cleared %d waves in %s (was: %d).,interface/principal.gd
+Invasão encerrada na onda %d em %s. O time se levantou; o que caiu e os troféus ficam com você.,Invasion ended at wave %d in the %s. The team got back up; drops and trophies are yours to keep.,interface/principal.gd
+Novo recorde! Você venceu %d onda em %s (antes: %d).,New record! You cleared %d wave in the %s (was: %d).,interface/principal.gd
+Novo recorde! Você venceu %d ondas em %s (antes: %d).,New record! You cleared %d waves in the %s (was: %d).,interface/principal.gd
 Recorde de %s: onda %d.,%s record: wave %d.,interface/principal.gd
 Nenhuma onda vencida desta vez. Tente de novo!,No waves cleared this time. Try again!,interface/principal.gd
 Gato de Schrödinger vencido!,Schrödinger's Cat defeated!,interface/principal.gd
