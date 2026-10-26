@@ -160,7 +160,7 @@ static func reg(txt: String) -> void:
 		if _reg_arq == null:
 			registrar_entrada = false
 			return
-		_reg_arq.store_line("registro iniciado em " + Time.get_datetime_string_from_system())
+		_reg_arq.store_line("registro iniciado em " + Time.get_datetime_string_from_system())   # i18n-ok (log)
 	if _reg_linhas > 20000:
 		return
 	_reg_linhas += 1
@@ -168,7 +168,7 @@ static func reg(txt: String) -> void:
 	_reg_arq.flush()
 
 func _estado_txt() -> String:
-	return "tela=%s cortina=%.2f filtro=%d modo=%s" % [Tela.keys()[tela], tr_t, mouse_filter, str(dono.modo) if dono != null else "?"]
+	return "tela=%s cortina=%.2f filtro=%d modo=%s" % [Tela.keys()[tela], tr_t, mouse_filter, str(dono.modo) if dono != null else "?"]   # i18n-ok (log)
 
 # ------------------------------------------------------------------ ciclo
 func _init() -> void:
@@ -1228,38 +1228,38 @@ func _linhas_creditos() -> Array:
 	var l: Array = []
 	var peq: Color = C_TEXTO2
 	l.append(["t", Idioma.titulo_jogo(), 26, C_NOME])
-	l.append(["t", "Um jogo de %s" % AUTOR_JOGO, 17, C_TEXTO])
+	l.append(["t", Idioma.t("Um jogo de %s") % AUTOR_JOGO, 17, C_TEXTO])
 	l.append(["pata"])
-	l.append(["t", "Gatos em pixel art", 14, peq])
-	l.append(["t", "32x32 Pixel kittens Cats", 22, C_NOME])
-	l.append(["t", "por Last tick", 17, C_TEXTO])
+	l.append(["t", Idioma.t("Gatos em pixel art"), 14, peq])
+	l.append(["t", "32x32 Pixel kittens Cats", 22, C_NOME])   # i18n-ok (nome próprio)
+	l.append(["t", Idioma.t("por Last tick"), 17, C_TEXTO])
 	l.append(["t", "last-tick.itch.io", 14, C_LINK])
 	l.append(["pata"])
-	l.append(["t", "Interface com tema de gato", 14, peq])
-	l.append(["t", "Cat User Interface", 22, C_NOME])
-	l.append(["t", "por ToffeeCraft", 17, C_TEXTO])
+	l.append(["t", Idioma.t("Interface com tema de gato"), 14, peq])
+	l.append(["t", "Cat User Interface", 22, C_NOME])   # i18n-ok (nome próprio)
+	l.append(["t", Idioma.t("por ToffeeCraft"), 17, C_TEXTO])
 	l.append(["t", "toffeecraft.itch.io/cat-user-interface", 14, C_LINK])
 	l.append(["pata"])
-	l.append(["t", "Molduras, botões e ícones do jogo", 14, peq])
-	l.append(["t", "Cryo's Mini GUI", 22, C_NOME])
-	l.append(["t", "por PaperHatLizard", 17, C_TEXTO])
-	l.append(["t", "Licença CC BY 4.0", 14, C_TEXTO])
+	l.append(["t", Idioma.t("Molduras, botões e ícones do jogo"), 14, peq])
+	l.append(["t", "Cryo's Mini GUI", 22, C_NOME])   # i18n-ok (nome próprio)
+	l.append(["t", Idioma.t("por PaperHatLizard"), 17, C_TEXTO])
+	l.append(["t", Idioma.t("Licença CC BY 4.0"), 14, C_TEXTO])
 	l.append(["t", "paperhatlizard.itch.io/cryos-mini-gui", 14, C_LINK])
 	l.append(["pata"])
-	l.append(["t", "Fonte", 14, peq])
-	l.append(["t", "Jersey 10", 22, C_NOME])
-	l.append(["t", "por Sarah Cadigan-Fried", 17, C_TEXTO])
-	l.append(["t", "Licença SIL Open Font 1.1", 14, C_TEXTO])
+	l.append(["t", Idioma.t("Fonte"), 14, peq])
+	l.append(["t", "Jersey 10", 22, C_NOME])   # i18n-ok (nome próprio)
+	l.append(["t", Idioma.t("por Sarah Cadigan-Fried"), 17, C_TEXTO])
+	l.append(["t", Idioma.t("Licença SIL Open Font 1.1"), 14, C_TEXTO])
 	l.append(["pata"])
-	l.append(["t", "Música", 14, peq])
-	l.append(["t", "Trilha chiptune original", 22, C_NOME])
-	l.append(["t", "composta e sintetizada para o jogo", 17, C_TEXTO])
+	l.append(["t", Idioma.t("Música"), 14, peq])
+	l.append(["t", Idioma.t("Trilha chiptune original"), 22, C_NOME])
+	l.append(["t", Idioma.t("composta e sintetizada para o jogo"), 17, C_TEXTO])
 	l.append(["pata"])
-	l.append(["t", "Feito com", 14, peq])
-	l.append(["t", "Godot Engine", 22, C_NOME])
+	l.append(["t", Idioma.t("Feito com"), 14, peq])
+	l.append(["t", "Godot Engine", 22, C_NOME])   # i18n-ok (nome próprio)
 	l.append(["t", "godotengine.org", 14, C_LINK])
 	l.append(["pata"])
-	l.append(["t", "Obrigado por jogar!", 20, C_NOME])
+	l.append(["t", Idioma.t("Obrigado por jogar!"), 20, C_NOME])
 	return l
 
 func _tela_creditos() -> void:
@@ -1286,7 +1286,7 @@ func _tela_creditos() -> void:
 	var iw: float = painel.size.x - 18.0
 	draw_rect(Rect2(ix, painel.position.y + 9.0, iw, area_cred.position.y - painel.position.y - 9.0), C_CREME)
 	draw_rect(Rect2(ix, area_cred.end.y, iw, painel.end.y - area_cred.end.y - 9.0), C_CREME)
-	_cabecalho("Créditos", painel, 70.0)
+	_cabecalho(Idioma.t("Créditos"), painel, 70.0)
 	if cred_altura > area_cred.size.y:
 		var frac: float = rolagem_cred / maxf(1.0, cred_altura - area_cred.size.y)
 		var barra := Rect2(area_cred.end.x + 14, area_cred.position.y, 6, area_cred.size.y)
@@ -1492,7 +1492,7 @@ func _banner_meta() -> void:
 	var prem: int = int(meta_atual["premio"])
 	var kc: float = clampf((META_DURACAO - meta_t - 0.35) / 0.8, 0.0, 1.0)
 	var vis: int = int(round(prem * kc))
-	_t("+%d troféus" % vis if prem != 1 else "+1 troféu", Vector2(r.position.x + 56.0, y + 2.0), 14, C_NOME)
+	_t(Idioma.t("+%d troféus") % vis if prem != 1 else Idioma.t("+1 troféu"), Vector2(r.position.x + 56.0, y + 2.0), 14, C_NOME)
 
 # ------------------------------------------------------------------ tela de final
 const CONFETE_COR: Array[Color] = [Color(1.0, 0.45, 0.5), Color(1.0, 0.8, 0.3), Color(0.55, 0.85, 0.6), Color(0.55, 0.75, 1.0), Color(0.85, 0.6, 1.0)]
@@ -1531,24 +1531,24 @@ func _cena_final() -> void:
 	_painel_gato(rt)
 	# 3º ato vencido (Magnetomiau): o bairro também é dos gatos; antes disso, só a casa e o quintal
 	var bairro: bool = e.tudo_vencido()
-	_t("As ruas também são dos gatos!" if bairro else "A casa é dos gatos!", Vector2(rt.position.x, rt.position.y + 56.0), 40 if bairro else 46, C_TEXTO, rt.size.x)
+	_t(Idioma.t("As ruas também são dos gatos!") if bairro else Idioma.t("A casa é dos gatos!"), Vector2(rt.position.x, rt.position.y + 56.0), 40 if bairro else 46, C_TEXTO, rt.size.x)
 	# ficha com os números da campanha
 	var rf := Rect2(290, 140, 350, 350)
 	_painel_gato(rf, false)
-	_t("Números da campanha", Vector2(rf.position.x, rf.position.y + 44.0), 22, C_NOME, rf.size.x)
+	_t(Idioma.t("Números da campanha"), Vector2(rf.position.x, rf.position.y + 44.0), 22, C_NOME, rf.size.x)
 	var minutos: int = int(round(float(e.estat.get("tempo", 0.0)) / 60.0))
 	var kf: float = clampf((tela_t - 0.5) / 1.8, 0.0, 1.0)
 	kf = 1.0 - pow(1.0 - kf, 3.0)   # os números sobem até o valor, desacelerando
 	var cnt := func(v: int) -> int: return int(round(v * kf))
 	var linhas: Array = [
-		["Tempo de luta", "%d min" % cnt.call(minutos)],
-		["Ondas lutadas", str(cnt.call(int(e.estat.get("ondas", 0))))],
-		["Gatos nocauteados", str(cnt.call(int(e.estat.get("nocautes", 0))))],
-		["Bichos derrotados", str(cnt.call(int(e.estat.get("abates", 0))))],
-		["Derrotas", str(cnt.call(int(e.estat.get("derrotas", 0))))],
-		["Fantasias completas", "%d de %d" % [cnt.call(e.fantasias_completas()), Pecas.n_ativas()]],
-		["Peças encontradas", "%d de %d" % [cnt.call(e.pecas_tidas()), Pecas.n_pecas_ativas()]],
-		["Troféus", str(cnt.call(e.trofeus))],
+		[Idioma.t("Tempo de luta"), Idioma.t("%d min") % cnt.call(minutos)],
+		[Idioma.t("Ondas lutadas"), str(cnt.call(int(e.estat.get("ondas", 0))))],
+		[Idioma.t("Gatos nocauteados"), str(cnt.call(int(e.estat.get("nocautes", 0))))],
+		[Idioma.t("Bichos derrotados"), str(cnt.call(int(e.estat.get("abates", 0))))],
+		[Idioma.t("Derrotas"), str(cnt.call(int(e.estat.get("derrotas", 0))))],
+		[Idioma.t("Fantasias completas"), Idioma.t("%d de %d") % [cnt.call(e.fantasias_completas()), Pecas.n_ativas()]],
+		[Idioma.t("Peças encontradas"), Idioma.t("%d de %d") % [cnt.call(e.pecas_tidas()), Pecas.n_pecas_ativas()]],
+		[Idioma.t("Troféus"), str(cnt.call(e.trofeus))],
 	]
 	for k in linhas.size():
 		_linha_ficha(linhas[k][0], linhas[k][1], rf.position.x + 30.0, rf.position.y + 84.0 + k * 33.0, rf.size.x - 60.0)
@@ -1559,7 +1559,7 @@ func _cena_final() -> void:
 			melhor = b
 	var rg := Rect2(660, 140, 330, 190)
 	_painel_gato(rg, false)
-	_t("Gato de maior nível", Vector2(rg.position.x, rg.position.y + 40.0), 20, C_NOME, rg.size.x)
+	_t(Idioma.t("Gato de maior nível"), Vector2(rg.position.x, rg.position.y + 40.0), 20, C_NOME, rg.size.x)
 	if melhor != null:
 		var cx: float = rg.position.x + 90.0
 		var pulo2: float = absf(sin(t * 3.0)) * 8.0
@@ -1568,15 +1568,15 @@ func _cena_final() -> void:
 		Desenho.boneco(self, Vector2(cx, rg.end.y - 30.0 - pulo2), 1.5, 1.0, 0, melhor.pecas, 0.0, t * 3.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, false, 0, false)
 		Desenho.sem_sombra = false
 		_t(melhor.nome, Vector2(rg.position.x + 150.0, rg.position.y + 100.0), 26, C_TEXTO)
-		_t("Nível %d" % melhor.nivel, Vector2(rg.position.x + 150.0, rg.position.y + 132.0), 20, C_TEXTO2)
+		_t(Idioma.t("Nível %d") % melhor.nivel, Vector2(rg.position.x + 150.0, rg.position.y + 132.0), 20, C_TEXTO2)
 	# o que se abriu
 	var ro := Rect2(660, 345, 330, 145)
 	_painel_gato(ro, false)
-	_t("O que foi liberado", Vector2(ro.position.x, ro.position.y + 40.0), 20, C_NOME, ro.size.x)
+	_t(Idioma.t("O que foi liberado"), Vector2(ro.position.x, ro.position.y + 40.0), 20, C_NOME, ro.size.x)
 	# 2º ato vencido: a casa e o lado de fora são dos gatos, e as ruas do bairro (3º ato) se abrem
-	var liberados: Array = ["As ruas do bairro foram abertas: 3º ato", "Invasão sem fim e metas no fichário"]
+	var liberados: Array = [Idioma.t("As ruas do bairro foram abertas: 3º ato"), Idioma.t("Invasão sem fim e metas no fichário")]
 	if bairro:
-		liberados = ["Torre: quarta vaga de módulo", "Nível 40: quarta herança", "Invasão sem fim e metas"]
+		liberados = [Idioma.t("Torre: quarta vaga de módulo"), Idioma.t("Nível 40: quarta herança"), Idioma.t("Invasão sem fim e metas")]
 	var yo: float = ro.position.y + 68.0
 	for txt in liberados:
 		_pata(0, Vector2(ro.position.x + 26.0, yo - 20.0), 1)

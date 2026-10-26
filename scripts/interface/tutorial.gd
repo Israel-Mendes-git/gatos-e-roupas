@@ -28,6 +28,7 @@ const COR_OURO := Color(1.0, 0.82, 0.3)
 var p: Variant = null
 var fonte: int = Fonte.NENHUM
 var roteiro: Array[Dictionary] = []
+var _idioma_roteiro: String = Idioma.atual   # o roteiro guarda textos já traduzidos: remonta quando o idioma muda
 var passo_i: int = 0
 var _mostrando: bool = false      # o passo atual já apareceu (ini chamado)
 var _t: float = 0.0
@@ -66,27 +67,27 @@ func _passo(id: String, modo: int, tipo: String, txt: String, alvo: String, extr
 func _montar_roteiro() -> Array[Dictionary]:
 	var ent: Array = [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]
 	var r: Array[Dictionary] = []
-	r.append(_passo("obj", M_MAPA, "ok", "Oi! Eu sou o gato-guia. Bichos invasores querem derrubar e roubar os blocos da torre. Sem blocos, a onda está perdida.", ""))
-	r.append(_passo("mapa", M_MAPA, "acao", "A casa tem cinco cômodos, cada um com cinco ondas. Clique no Quarto para começar.", "comodo:0", {"cond": "_c_guarda", "teclas": ent}))
-	r.append(_passo("time", M_GUARDA, "ok", "Estes são os seus gatos. Cada um luta sozinho e pode vestir até 4 peças.", "gatos"))
-	r.append(_passo("sel", M_GUARDA, "acao", "Clique neste gato para escolhê-lo. O que você vestir vai para o escolhido.", "gato:0", {"ini": "_i_sel", "cond": "_c_sel", "teclas": [KEY_1]}))
-	r.append(_passo("vestir", M_GUARDA, "acao", "Arraste o Capacete até o gato. Só clicar na peça também funciona.", "capacete", {"ini": "_i_vestir", "cond": "_c_vestir"}))
-	r.append(_passo("espacos", M_GUARDA, "ok", "Cada gato tem 4 espaços: Cabeça, Corpo, Mão e Acessório. A mão é a arma. O resto dá vida, defesa e truques. Passe o mouse numa peça para ver o que ela faz.", "gato_sel"))
-	r.append(_passo("outras", M_GUARDA, "acao", "Agora vista o Colete e uma arma: o Porrete ou o Estilingue.", "painel+gato_sel", {"cond": "_c_outras"}))
-	r.append(_passo("fantasias", M_GUARDA, "ok", "Peças da mesma fantasia combinam. Com 2 ou 3 vem um bônus. Com as 4, o gato ganha um poder.", "painel"))
-	r.append(_passo("botoes", M_GUARDA, "ok", "Com mais peças, estes botões vestem os gatos por você. Vestir o time é a tecla V.", "bt_vestir"))
-	r.append(_passo("linha", M_GUARDA, "acao", "Cada gato luta numa linha: Frente, Meio ou Fundo. A frente apanha primeiro. Clique em Linha para trocar.", "linhas", {"ini": "_i_linha", "cond": "_c_linha"}))
-	r.append(_passo("lutar", M_GUARDA, "acao", "Pronto! Clique em LUTAR para a onda começar.", "btn_lutar", {"cond": "_c_lutar", "teclas": ent}))
-	r.append(_passo("prep_gatos", M_COMBATE, "acao", "A onda ainda não começou. Arraste um gato para escolher onde ele fica.", "prep_gatos", {"prep": true, "cond": "_c_posto", "solta_livre": true}))
-	r.append(_passo("prep_postura", M_COMBATE, "acao", "Dê ordens ao time: Avançar ataca, Segurar espera no posto, Recuar fica junto da torre. Clique numa (ou Q, W, E).", "prep_ordens", {"prep": true, "ini": "_i_postura", "cond": "_c_postura", "teclas": [KEY_Q, KEY_W, KEY_E]}))
-	r.append(_passo("prep_alvo", M_COMBATE, "acao", "Esta é a onda que vem. Clique num bicho para os gatos baterem nele primeiro.", "prep_previa", {"prep": true, "cond": "_c_alvo"}))
-	r.append(_passo("prep_ir", M_COMBATE, "acao", "Tudo certo? Clique em Começar a onda (ou aperte Espaço).", "prep_comecar", {"prep": true, "cond": "_c_ir", "teclas": ent, "marca": "a_prep"}))
-	r.append(_passo("luta_vel", M_COMBATE, "acao", "A luta corre sozinha. Este botão muda a velocidade: 1x, 2x ou 3x. Clique nele.", "vel", {"ini": "_i_vel", "cond": "_c_vel", "segura": true}))
-	r.append(_passo("luta_pausa", M_COMBATE, "ok", "Este botão (ou a tecla Esc) pausa a luta. Lá dentro ficam as Opções.", "pausa", {"segura": true}))
-	r.append(_passo("luta_ver", M_COMBATE, "ok", "Agora é só assistir! Se os blocos da torre acabarem, a onda está perdida.", "campo_torre", {"segura": true}))
-	r.append(_passo("depois", M_GUARDA, "ok", "Onda vencida! Os bichos podem largar peças novas, que ficam na aba Novas. Os gatos ganham experiência.", "aba_novas"))
-	r.append(_passo("treino", M_GUARDA, "acao", "Gato que sobe de nível ganha 1 ponto de treino. Gaste em Vida, Força ou Agilidade.", "atributos", {"ini": "_i_treino", "cond": "_c_treino", "marca": "a_treino"}))
-	r.append(_passo("fim", M_GUARDA, "ok", "Isso é o básico! Vença as outras 4 ondas do Quarto. Na última vem o chefe. Boa sorte!", "", {"rotulo": "Vamos lá!", "txt_treino": "Fim do treino! Na campanha de verdade o Quarto continua por mais 4 ondas. Vou te levar de volta ao título."}))
+	r.append(_passo("obj", M_MAPA, "ok", Idioma.t("Oi! Eu sou o gato-guia. Bichos invasores querem derrubar e roubar os blocos da torre. Sem blocos, a onda está perdida."), ""))
+	r.append(_passo("mapa", M_MAPA, "acao", Idioma.t("A casa tem cinco cômodos, cada um com cinco ondas. Clique no Quarto para começar."), "comodo:0", {"cond": "_c_guarda", "teclas": ent}))
+	r.append(_passo("time", M_GUARDA, "ok", Idioma.t("Estes são os seus gatos. Cada um luta sozinho e pode vestir até 4 peças."), "gatos"))
+	r.append(_passo("sel", M_GUARDA, "acao", Idioma.t("Clique neste gato para escolhê-lo. O que você vestir vai para o escolhido."), "gato:0", {"ini": "_i_sel", "cond": "_c_sel", "teclas": [KEY_1]}))
+	r.append(_passo("vestir", M_GUARDA, "acao", Idioma.t("Arraste o Capacete até o gato. Só clicar na peça também funciona."), "capacete", {"ini": "_i_vestir", "cond": "_c_vestir"}))
+	r.append(_passo("espacos", M_GUARDA, "ok", Idioma.t("Cada gato tem 4 espaços: Cabeça, Corpo, Mão e Acessório. A mão é a arma. O resto dá vida, defesa e truques. Passe o mouse numa peça para ver o que ela faz."), "gato_sel"))
+	r.append(_passo("outras", M_GUARDA, "acao", Idioma.t("Agora vista o Colete e uma arma: o Porrete ou o Estilingue."), "painel+gato_sel", {"cond": "_c_outras"}))
+	r.append(_passo("fantasias", M_GUARDA, "ok", Idioma.t("Peças da mesma fantasia combinam. Com 2 ou 3 vem um bônus. Com as 4, o gato ganha um poder."), "painel"))
+	r.append(_passo("botoes", M_GUARDA, "ok", Idioma.t("Com mais peças, estes botões vestem os gatos por você. Vestir o time é a tecla V."), "bt_vestir"))
+	r.append(_passo("linha", M_GUARDA, "acao", Idioma.t("Cada gato luta numa linha: Frente, Meio ou Fundo. A frente apanha primeiro. Clique em Linha para trocar."), "linhas", {"ini": "_i_linha", "cond": "_c_linha"}))
+	r.append(_passo("lutar", M_GUARDA, "acao", Idioma.t("Pronto! Clique em LUTAR para a onda começar."), "btn_lutar", {"cond": "_c_lutar", "teclas": ent}))
+	r.append(_passo("prep_gatos", M_COMBATE, "acao", Idioma.t("A onda ainda não começou. Arraste um gato para escolher onde ele fica."), "prep_gatos", {"prep": true, "cond": "_c_posto", "solta_livre": true}))
+	r.append(_passo("prep_postura", M_COMBATE, "acao", Idioma.t("Dê ordens ao time: Avançar ataca, Segurar espera no posto, Recuar fica junto da torre. Clique numa (ou Q, W, E)."), "prep_ordens", {"prep": true, "ini": "_i_postura", "cond": "_c_postura", "teclas": [KEY_Q, KEY_W, KEY_E]}))
+	r.append(_passo("prep_alvo", M_COMBATE, "acao", Idioma.t("Esta é a onda que vem. Clique num bicho para os gatos baterem nele primeiro."), "prep_previa", {"prep": true, "cond": "_c_alvo"}))
+	r.append(_passo("prep_ir", M_COMBATE, "acao", Idioma.t("Tudo certo? Clique em Começar a onda (ou aperte Espaço)."), "prep_comecar", {"prep": true, "cond": "_c_ir", "teclas": ent, "marca": "a_prep"}))
+	r.append(_passo("luta_vel", M_COMBATE, "acao", Idioma.t("A luta corre sozinha. Este botão muda a velocidade: 1x, 2x ou 3x. Clique nele."), "vel", {"ini": "_i_vel", "cond": "_c_vel", "segura": true}))
+	r.append(_passo("luta_pausa", M_COMBATE, "ok", Idioma.t("Este botão (ou a tecla Esc) pausa a luta. Lá dentro ficam as Opções."), "pausa", {"segura": true}))
+	r.append(_passo("luta_ver", M_COMBATE, "ok", Idioma.t("Agora é só assistir! Se os blocos da torre acabarem, a onda está perdida."), "campo_torre", {"segura": true}))
+	r.append(_passo("depois", M_GUARDA, "ok", Idioma.t("Onda vencida! Os bichos podem largar peças novas, que ficam na aba Novas. Os gatos ganham experiência."), "aba_novas"))
+	r.append(_passo("treino", M_GUARDA, "acao", Idioma.t("Gato que sobe de nível ganha 1 ponto de treino. Gaste em Vida, Força ou Agilidade."), "atributos", {"ini": "_i_treino", "cond": "_c_treino", "marca": "a_treino"}))
+	r.append(_passo("fim", M_GUARDA, "ok", Idioma.t("Isso é o básico! Vença as outras 4 ondas do Quarto. Na última vem o chefe. Boa sorte!"), "", {"rotulo": Idioma.t("Vamos lá!"), "txt_treino": Idioma.t("Fim do treino! Na campanha de verdade o Quarto continua por mais 4 ondas. Vou te levar de volta ao título.")}))
 	return r
 
 # ---- condições e inícios dos passos
@@ -654,40 +655,40 @@ func _aula(id: String) -> Dictionary:
 	var d: Dictionary = {"id": id, "modos": [M_GUARDA], "balaos": [], "segura": false}
 	match id:
 		"a_fantasia":
-			d["balaos"] = [["Fantasia completa! Com as 4 peças da mesma fantasia, o gato ganha um poder.", "gato_fant"], ["Na luta o poder vira um botão lá embaixo. Você escolhe a hora de soltar.", ""]]
+			d["balaos"] = [[Idioma.t("Fantasia completa! Com as 4 peças da mesma fantasia, o gato ganha um poder."), "gato_fant"], [Idioma.t("Na luta o poder vira um botão lá embaixo. Você escolhe a hora de soltar."), ""]]
 		"a_treino":
-			d["balaos"] = [["Subiu de nível! Cada nível dá 1 ponto de treino. Gaste em Vida, Força ou Agilidade.", "atributos"]]
+			d["balaos"] = [[Idioma.t("Subiu de nível! Cada nível dá 1 ponto de treino. Gaste em Vida, Força ou Agilidade."), "atributos"]]
 		"a_fusao":
-			d["balaos"] = [["Peça repetida? Ela se funde sozinha com a que você já tem, e a peça fica melhor.", "painel"], ["Se as duas já estão no máximo, a repetida vira um troféu.", ""]]
+			d["balaos"] = [[Idioma.t("Peça repetida? Ela se funde sozinha com a que você já tem, e a peça fica melhor."), "painel"], [Idioma.t("Se as duas já estão no máximo, a repetida vira um troféu."), ""]]
 		"a_trofeu":
 			d["modos"] = [M_GUARDA, M_MAPA]
-			d["balaos"] = [["Você ganhou troféus! Eles pagam melhorias permanentes da torre.", "torre_bt"], ["Abra a Oficina (tecla T) para gastá-los. Cada chefe vencido também libera um módulo.", "torre_bt"]]
+			d["balaos"] = [[Idioma.t("Você ganhou troféus! Eles pagam melhorias permanentes da torre."), "torre_bt"], [Idioma.t("Abra a Oficina (tecla T) para gastá-los. Cada chefe vencido também libera um módulo."), "torre_bt"]]
 		"a_heranca":
-			d["balaos"] = [["Nível 10! O gato pode guardar o poder da fantasia completa que veste.", "gato_heranca"], ["Clique em \"Herança pronta!\" sob o gato. Depois o poder dispara sozinho na luta.", "gato_heranca"]]
+			d["balaos"] = [[Idioma.t("Nível 10! O gato pode guardar o poder da fantasia completa que veste."), "gato_heranca"], [Idioma.t("Clique em \"Herança pronta!\" sob o gato. Depois o poder dispara sozinho na luta."), "gato_heranca"]]
 		"a_marcas":
-			d["balaos"] = [["Um gato caiu na luta! A roupa dele ganhou uma marca.", "gato_caido"], ["Marcas dão efeitos extras à peça. Cada peça aguenta poucas. Passe o mouse nela para ver.", "gato_caido"]]
+			d["balaos"] = [[Idioma.t("Um gato caiu na luta! A roupa dele ganhou uma marca."), "gato_caido"], [Idioma.t("Marcas dão efeitos extras à peça. Cada peça aguenta poucas. Passe o mouse nela para ver."), "gato_caido"]]
 		"a_chefe":
-			d["balaos"] = [["Última onda do cômodo: vem o chefe! Ele tem vida de sobra e um truque só dele.", "previa"], ["Vencê-lo libera o próximo cômodo, um gato novo no time e um módulo para a torre.", ""]]
+			d["balaos"] = [[Idioma.t("Última onda do cômodo: vem o chefe! Ele tem vida de sobra e um truque só dele."), "previa"], [Idioma.t("Vencê-lo libera o próximo cômodo, um gato novo no time e um módulo para a torre."), ""]]
 		"a_mapa":
 			d["modos"] = [M_MAPA]
-			d["balaos"] = [["Cômodo novo liberado! Cada um tem uma família de bichos e um chefe.", "comodo:%d" % clampi(p.estado.fase_liberada - 1, 0, Fases.TOTAL - 1)], ["Dá para voltar aos cômodos vencidos para treinar e juntar peças.", ""]]
+			d["balaos"] = [[Idioma.t("Cômodo novo liberado! Cada um tem uma família de bichos e um chefe."), "comodo:%d" % clampi(p.estado.fase_liberada - 1, 0, Fases.TOTAL - 1)], [Idioma.t("Dá para voltar aos cômodos vencidos para treinar e juntar peças."), ""]]
 		"a_fichario":
 			d["modos"] = [M_MAPA]
-			d["balaos"] = [["O Fichário [F] é o álbum das fantasias. Na aba Metas há prêmios em troféus.", "fich_bt"]]
+			d["balaos"] = [[Idioma.t("O Fichário [F] é o álbum das fantasias. Na aba Metas há prêmios em troféus."), "fich_bt"]]
 		"a_ato2":
 			d["modos"] = [M_MAPA]
-			d["balaos"] = [["Casa limpa, mas os bichos fugiram para fora! É o segundo ato.", ""], ["Aperte V (ou o botão) para ver o mapa de fora: Quintal, Garagem, Telhado, Rua e Toca.", "mapa_vista"]]
+			d["balaos"] = [[Idioma.t("Casa limpa, mas os bichos fugiram para fora! É o segundo ato."), ""], [Idioma.t("Aperte V (ou o botão) para ver o mapa de fora: Quintal, Garagem, Telhado, Rua e Toca."), "mapa_vista"]]
 		"a_invasao":
 			d["modos"] = [M_MAPA]
-			d["balaos"] = [["Agora existe a Invasão sem fim: ondas e mais ondas até a torre cair. Ela fica na vista da casa; este botão alterna as vistas.", "mapa_vista"], ["Na casa, escolha um cômodo e aperte I. O seu recorde fica gravado.", ""]]
+			d["balaos"] = [[Idioma.t("Agora existe a Invasão sem fim: ondas e mais ondas até a torre cair. Ela fica na vista da casa; este botão alterna as vistas."), "mapa_vista"], [Idioma.t("Na casa, escolha um cômodo e aperte I. O seu recorde fica gravado."), ""]]
 		"a_prep":
 			d["modos"] = [M_COMBATE]
 			d["prep"] = true
-			d["balaos"] = [["Antes de cada onda você arruma o time. Arraste os gatos para escolher onde ficam.", "prep_gatos"], ["Dê ordens: Avançar, Segurar ou Recuar (teclas Q, W, E). Com um gato escolhido, vale só para ele.", "prep_ordens"], ["Clique num bicho da onda que vem para marcar o alvo. Espaço começa a onda.", "prep_previa"]]
+			d["balaos"] = [[Idioma.t("Antes de cada onda você arruma o time. Arraste os gatos para escolher onde ficam."), "prep_gatos"], [Idioma.t("Dê ordens: Avançar, Segurar ou Recuar (teclas Q, W, E). Com um gato escolhido, vale só para ele."), "prep_ordens"], [Idioma.t("Clique num bicho da onda que vem para marcar o alvo. Espaço começa a onda."), "prep_previa"]]
 		"a_poder":
 			d["modos"] = [M_COMBATE]
 			d["segura"] = true
-			d["balaos"] = [["Poder carregado! Clique neste botão (ou aperte o número dele) para soltar.", "poder:%d" % _poder_pronto()], ["Depois ele recarrega. Nas Opções dá para ligar o poder automático.", ""]]
+			d["balaos"] = [[Idioma.t("Poder carregado! Clique neste botão (ou aperte o número dele) para soltar."), "poder:%d" % _poder_pronto()], [Idioma.t("Depois ele recarrega. Nas Opções dá para ligar o poder automático."), ""]]
 		_:
 			if id.begins_with("a_bicho_"):
 				var pr: int = int(id.substr(8))
@@ -695,7 +696,7 @@ func _aula(id: String) -> Dictionary:
 					if int(g["prio"]) == pr:
 						d["modos"] = [M_COMBATE]
 						d["prep"] = true
-						d["balaos"] = [["%s: %s" % [g["nome"], str(g["dica"]).to_lower()], "tipo:%d" % pr]]
+						d["balaos"] = [[Idioma.t("%s: %s") % [Idioma.t(str(g["nome"])), Idioma.t(str(g["dica"])).to_lower()], "tipo:%d" % pr]]
 				if (d["balaos"] as Array).is_empty():
 					return {}
 			else:
@@ -758,39 +759,39 @@ func _aula_rever(ctx: String) -> Dictionary:
 		"guarda":
 			d["modos"] = [M_GUARDA]
 			b = [
-				["Estes são os seus gatos. Cada um luta sozinho e pode vestir até 4 peças. Clique num gato para escolhê-lo: o que você vestir vai para o escolhido.", "gatos"],
-				["Arraste uma peça até o gato (só clicar nela também funciona). Cada gato tem 4 espaços: Cabeça, Corpo, Mão e Acessório. Passe o mouse numa peça para ver o que ela faz.", "painel"],
-				["Peças da mesma fantasia combinam. Com 2 ou 3 vem um bônus. Com as 4, o gato ganha um poder.", "painel"],
-				["Estes botões vestem os gatos por você. Vestir o time é a tecla V.", "bt_vestir"],
-				["Cada gato luta numa linha: Frente, Meio ou Fundo. A frente apanha primeiro. Clique em Linha para trocar.", "linhas"],
-				["Gato que sobe de nível ganha 1 ponto de treino. Gaste em Vida, Força ou Agilidade.", "atributos"],
-				["Pronto? Clique em LUTAR para a onda começar. Atalhos e regras: tecla F1.", "btn_lutar"],
+				[Idioma.t("Estes são os seus gatos. Cada um luta sozinho e pode vestir até 4 peças. Clique num gato para escolhê-lo: o que você vestir vai para o escolhido."), "gatos"],
+				[Idioma.t("Arraste uma peça até o gato (só clicar nela também funciona). Cada gato tem 4 espaços: Cabeça, Corpo, Mão e Acessório. Passe o mouse numa peça para ver o que ela faz."), "painel"],
+				[Idioma.t("Peças da mesma fantasia combinam. Com 2 ou 3 vem um bônus. Com as 4, o gato ganha um poder."), "painel"],
+				[Idioma.t("Estes botões vestem os gatos por você. Vestir o time é a tecla V."), "bt_vestir"],
+				[Idioma.t("Cada gato luta numa linha: Frente, Meio ou Fundo. A frente apanha primeiro. Clique em Linha para trocar."), "linhas"],
+				[Idioma.t("Gato que sobe de nível ganha 1 ponto de treino. Gaste em Vida, Força ou Agilidade."), "atributos"],
+				[Idioma.t("Pronto? Clique em LUTAR para a onda começar. Atalhos e regras: tecla F1."), "btn_lutar"],
 			]
 		"mapa":
 			d["modos"] = [M_MAPA]
 			b = [
-				["A casa tem cinco cômodos, cada um com cinco ondas. Clique num cômodo para entrar.", "comodo:%d" % clampi(e.fase_liberada - 1, 0, Fases.TOTAL - 1)],
-				["Cada cômodo tem uma família de bichos e um chefe. Dá para voltar aos cômodos vencidos para treinar e juntar peças.", ""],
-				["O Fichário [F] é o álbum das fantasias. Na aba Metas há prêmios em troféus.", "fich_bt"],
-				["Troféus pagam melhorias permanentes da torre. Abra a Oficina (tecla T) para gastá-los.", "torre_bt"],
+				[Idioma.t("A casa tem cinco cômodos, cada um com cinco ondas. Clique num cômodo para entrar."), "comodo:%d" % clampi(e.fase_liberada - 1, 0, Fases.TOTAL - 1)],
+				[Idioma.t("Cada cômodo tem uma família de bichos e um chefe. Dá para voltar aos cômodos vencidos para treinar e juntar peças."), ""],
+				[Idioma.t("O Fichário [F] é o álbum das fantasias. Na aba Metas há prêmios em troféus."), "fich_bt"],
+				[Idioma.t("Troféus pagam melhorias permanentes da torre. Abra a Oficina (tecla T) para gastá-los."), "torre_bt"],
 			]
 			if e.campanha_vencida():
-				b.append(["Casa limpa, mas os bichos fugiram para fora! Este botão (ou V) alterna as vistas: a casa, o Quintal e o resto. Na casa, I abre a Invasão sem fim.", "mapa_vista"])
+				b.append([Idioma.t("Casa limpa, mas os bichos fugiram para fora! Este botão (ou V) alterna as vistas: a casa, o Quintal e o resto. Na casa, I abre a Invasão sem fim."), "mapa_vista"])
 		"oficina":
 			d["modos"] = [M_GUARDA, M_MAPA]
 			b = [
-				["Troféus pagam melhorias permanentes da torre. " + Oficina.explicacao_trofeus() + ".", "of_trofeus"],
-				["Cada botão Melhorar compra um nível da torre. O preço sobe a cada nível; botão apagado quer dizer que faltam troféus (passe o mouse para ver o motivo).", "of_melhorias"],
-				["Cada chefe vencido libera um módulo. Monte nas vagas livres; as abas separam os da casa, de fora e das ruas.", "of_modulos"],
-				["Setas e Enter também mexem aqui. Esc ou Fechar volta ao jogo.", "of_fechar"],
+				[Idioma.t("Troféus pagam melhorias permanentes da torre. %s.") % Oficina.explicacao_trofeus(), "of_trofeus"],
+				[Idioma.t("Cada botão Melhorar compra um nível da torre. O preço sobe a cada nível; botão apagado quer dizer que faltam troféus (passe o mouse para ver o motivo)."), "of_melhorias"],
+				[Idioma.t("Cada chefe vencido libera um módulo. Monte nas vagas livres; as abas separam os da casa, de fora e das ruas."), "of_modulos"],
+				[Idioma.t("Setas e Enter também mexem aqui. Esc ou Fechar volta ao jogo."), "of_fechar"],
 			]
 		"fichario":
 			d["modos"] = [M_GUARDA, M_MAPA]
 			b = [
-				["O Fichário é o álbum das fantasias: uma página para cada uma, com as 4 peças, o poder e onde achar. Peça que ainda não apareceu fica em silhueta.", "fi_pagina"],
-				["As abas pulam para o Índice, para um cômodo, para as fantasias de fora, para as Metas (prêmios em troféus) e para o Bestiário dos bichos.", "fi_abas"],
-				["Voltar e Avançar viram as páginas (também setas, A e D, ou a roda do mouse).", "fi_nav"],
-				["A última página mostra a fantasia criada no Ateliê, que abre quando o fichário está completo.", "fi_pagina"],
+				[Idioma.t("O Fichário é o álbum das fantasias: uma página para cada uma, com as 4 peças, o poder e onde achar. Peça que ainda não apareceu fica em silhueta."), "fi_pagina"],
+				[Idioma.t("As abas pulam para o Índice, para um cômodo, para as fantasias de fora, para as Metas (prêmios em troféus) e para o Bestiário dos bichos."), "fi_abas"],
+				[Idioma.t("Voltar e Avançar viram as páginas (também setas, A e D, ou a roda do mouse)."), "fi_nav"],
+				[Idioma.t("A última página mostra a fantasia criada no Ateliê, que abre quando o fichário está completo."), "fi_pagina"],
 			]
 		"prep":
 			var a_prep: Dictionary = _aula("a_prep")
@@ -801,12 +802,12 @@ func _aula_rever(ctx: String) -> Dictionary:
 			d["modos"] = [M_COMBATE]
 			d["segura"] = true   # a luta fica parada enquanto o balão está aberto
 			b = [
-				["A luta corre sozinha. Este botão muda a velocidade: 1x, 2x ou 3x.", "vel"],
-				["Este botão (ou a tecla Esc) pausa a luta. Lá dentro ficam as Opções.", "pausa"],
-				["Se os blocos da torre acabarem, a onda está perdida.", "campo_torre"],
+				[Idioma.t("A luta corre sozinha. Este botão muda a velocidade: 1x, 2x ou 3x."), "vel"],
+				[Idioma.t("Este botão (ou a tecla Esc) pausa a luta. Lá dentro ficam as Opções."), "pausa"],
+				[Idioma.t("Se os blocos da torre acabarem, a onda está perdida."), "campo_torre"],
 			]
 			if p.campo.sim != null and p.campo.sim.poder_manual and not p.campo.poder_btns.is_empty():
-				b.append(["Poderes das fantasias completas: clique no botão (ou aperte o número dele) quando estiver carregado. Nas Opções dá para ligar o poder automático.", "poder:%d" % _poder_pronto()])
+				b.append([Idioma.t("Poderes das fantasias completas: clique no botão (ou aperte o número dele) quando estiver carregado. Nas Opções dá para ligar o poder automático."), "poder:%d" % _poder_pronto()])
 	d["balaos"] = b
 	if b.is_empty():
 		return {}
@@ -906,6 +907,9 @@ func _gatilhos() -> void:
 func _draw() -> void:
 	if p == null:
 		return
+	if _idioma_roteiro != Idioma.atual:
+		_idioma_roteiro = Idioma.atual
+		roteiro = _montar_roteiro()
 	_rect_ok = Rect2()
 	_rect_pular = Rect2()
 	_calc_pular()
@@ -935,7 +939,7 @@ func _calc_pular() -> void:
 func _desenhar_pular() -> void:
 	var r: Rect2 = _rect_pular
 	var sob: bool = r.has_point(get_local_mouse_position())
-	var txt: String = "Pular tutorial" if _pular_t <= 0.0 else "Clique de novo"
+	var txt: String = Idioma.t("Pular tutorial") if _pular_t <= 0.0 else Idioma.t("Clique de novo")
 	var cor: Color = UIComum.B_MARROM if _pular_t <= 0.0 else UIComum.B_VERMELHO
 	UIComum.botao(self, r, txt, cor, {"h": 1.0 if sob else 0.0, "tam": 15}, _t)
 
@@ -947,8 +951,8 @@ func _desenhar_passo(s: Dictionary) -> void:
 	var txt: String = str(s["txt"])
 	if fonte == Fonte.TREINO and s.has("txt_treino"):
 		txt = str(s["txt_treino"])
-	var cont: String = "%d de %d" % [passo_i + 1, roteiro.size()]
-	_balao(txt, holes, s["tipo"] == "ok", str(s.get("rotulo", "Entendi")), cont, a)
+	var cont: String = Idioma.t("%d de %d") % [passo_i + 1, roteiro.size()]
+	_balao(txt, holes, s["tipo"] == "ok", str(s.get("rotulo", Idioma.t("Entendi"))), cont, a)
 
 func _desenhar_aula() -> void:
 	var bl: Array = aula["balaos"]
@@ -957,8 +961,8 @@ func _desenhar_aula() -> void:
 	var holes: Array[Rect2] = _alvos(str(bl[aula_i][1]))
 	var a: float = clampf(_t_aula / 0.25, 0.0, 1.0)
 	_molduras(holes, a)
-	var cont: String = "" if bl.size() == 1 else "%d de %d" % [aula_i + 1, bl.size()]
-	_balao(str(bl[aula_i][0]), holes, true, "Entendi", cont, a)
+	var cont: String = "" if bl.size() == 1 else Idioma.t("%d de %d") % [aula_i + 1, bl.size()]
+	_balao(str(bl[aula_i][0]), holes, true, Idioma.t("Entendi"), cont, a)
 
 ## Escurece a tela inteira menos os buracos (faixas horizontais entre as bordas dos retângulos).
 func _escurecer(holes: Array[Rect2], alfa: float) -> void:
