@@ -52,7 +52,7 @@ Esc fecha,Esc closes,interface/menus.gd
 gatos fantasiados contra bichos invasores,costumed cats vs. invading critters,interface/menus.gd
 ligado,on,interface/menus.gd
 desligado,off,interface/menus.gd
-Ligado: os gatos usam o poder da fantasia sozinhos. Desligado: você dispara na luta. Agora: %s.,On: the cats use the costume power by themselves. Off: you fire it in battle. Now: %s.,interface/menus.gd
+Ligado: os gatos usam o poder da fantasia sozinhos. Desligado: você dispara na luta. Agora: %s.,On: cats fire costume powers on their own. Off: you fire them. Now: %s.,interface/menus.gd
 Idioma,Language,interface/menus.gd
 Língua dos textos do jogo. Clique para trocar,Language of the game text. Click to switch,interface/menus.gd
 Tela,Screen,interface/menus.gd
@@ -539,7 +539,7 @@ Mercadão do Peixe,Fish Market,dados:Fases.NOME_ATO3
 Ferro-velho,Scrapyard,dados:Fases.NOME_ATO3
 Beco do Fliperama,Arcade Alley,dados:Fases.NOME_ATO3
 Arena da Praça,Square Arena,dados:Fases.NOME_ATO3
-Telhados e Antenas,Rooftops and Antennas,dados:Fases.NOME_ATO3
+Telhados e Antenas,Rooftops & Antennas,dados:Fases.NOME_ATO3
 Ratos,Rats,dados:Fases.FAMILIA_NOME
 Guaxinins,Raccoons,dados:Fases.FAMILIA_NOME
 Raposas,Foxes,dados:Fases.FAMILIA_NOME
@@ -759,7 +759,7 @@ Bichos perto da torre andam e batem mais devagar,Critters near the tower move an
 Um cão de guarda luta ao lado da torre a cada onda,A guard dog fights beside the tower each wave,dados:Torre.MODULO_DICA
 Os primeiros golpes de cada onda na torre não derrubam bloco; o chefe derruba no máximo um,The first hits on the tower each wave knock off no blocks; the boss knocks off one at most,dados:Torre.MODULO_DICA
 O primeiro ladrão de cada onda desiste e vai embora de mãos vazias,The first thief each wave gives up and leaves empty-handed,dados:Torre.MODULO_DICA
-"A primeira bomba de cada onda explode na sucata, sem tirar bloco","The first bomb each wave blows up on the scrap, removing no block",dados:Torre.MODULO_DICA
+"A primeira bomba de cada onda explode na sucata, sem tirar bloco","The first bomb each wave blows up on the scrap, harmlessly",dados:Torre.MODULO_DICA
 "Uma vez por onda, congela os bichos que se juntam perto da torre","Once per wave, freezes critters bunched up near the tower",dados:Torre.MODULO_DICA
 "Rivais tiram só um bloco por golpe, e um golpe em cada três é barrado","Rivals take only one block per hit, and one hit in three is blocked",dados:Torre.MODULO_DICA
 "O tiro da torre empurra o alvo para trás, para longe da torre","The tower's shot pushes the target back, away from the tower",dados:Torre.MODULO_DICA
@@ -798,13 +798,13 @@ Clique num gato para selecioná-lo. Teclas 1 a 5 também. Clique na tarja de uma
 Q / E ou Tab: troca de aba.   V: vestir o time.   Z: desfazer.   F: fichário.   T: oficina da torre.   ? : esta ajuda.,Q / E or Tab: switch tab.   V: dress the team.   Z: undo.   F: Binder.   T: Tower Workshop.   ? : this help.,dados:principal.AJUDA_ATALHOS
 Espaço ou Enter: LUTAR.   Botão direito numa peça: abre o fichário na fantasia dela.,Space or Enter: FIGHT.   Right-click a piece: opens the Binder at its costume.,dados:principal.AJUDA_ATALHOS
 "Fantasia: grupo de peças da mesma família. Com 2 ou 3 peças da mesma fantasia num gato vem um bônus; com as 4 (cabeça, corpo, mão e acessório) ele libera o poder da fantasia.","Costume: a group of matching pieces. 2 or 3 pieces of one costume on a cat give a bonus; with all 4 (head, body, paw, and accessory) it unlocks the costume's power.",dados:principal.AJUDA_REGRAS
-"Raridade: comum, rara, épica, lendária, mítica e miaujestosa (esta só reforçando uma mítica). Mais raridade dá mais efeito e mais espaço para marcas.","Rarity: common, rare, epic, legendary, mythic, and meowjestic (only by ranking up a mythic). Higher rarity gives more effect and more room for marks.",dados:principal.AJUDA_REGRAS
+"Raridade: comum, rara, épica, lendária, mítica e miaujestosa (esta só reforçando uma mítica). Mais raridade dá mais efeito e mais espaço para marcas.","Rarity: common, rare, epic, legendary, mythic, and meowjestic (only by ranking up a mythic). More rarity, more effect and room for marks.",dados:principal.AJUDA_REGRAS
 "Marca: quando um gato cai na luta, a roupa dele ganha uma marca para sempre. Cada peça comporta um número limitado delas.","Mark: when a cat falls in a fight, its outfit gets a mark forever. Each piece holds a limited number of them.",dados:principal.AJUDA_REGRAS
 Promover (carretel): sobe o nível da peça e custa blocos. Reforçar (estrela): sobe a raridade e custa troféus.,Level Up (spool): raises the piece's level and costs blocks. Rank Up (star): raises its rarity and costs trophies.,dados:principal.AJUDA_REGRAS
-"Fundir: peça repetida que cai na luta se funde sozinha com a que você já tem, que fica melhor. Você nunca tem duas iguais paradas.","Fuse: a duplicate piece dropped in a fight fuses on its own with the one you have, making it better. You never keep two matching pieces idle.",dados:principal.AJUDA_REGRAS
+"Fundir: peça repetida que cai na luta se funde sozinha com a que você já tem, que fica melhor. Você nunca tem duas iguais paradas.",Fuse: a duplicate piece from a fight fuses on its own with yours and makes it better. No idle duplicates.,dados:principal.AJUDA_REGRAS
 "Linha: Frente, Meio ou Fundo define onde o gato luta. Clique no botão dele para alternar.","Row: Front, Middle, or Back sets where the cat fights. Click its button to switch.",dados:principal.AJUDA_REGRAS
 "Números: passe o mouse no nome do gato para ver vida, dano e o resto. Antes de cada onda dá para arrastar os gatos, dar ordens e marcar um alvo.","Numbers: hover over a cat's name to see health, damage, and more. Before each wave you can drag cats, give orders, and mark a target.",dados:principal.AJUDA_REGRAS
-"Treino: cada nível do gato dá 1 ponto. Gaste em Vida, Força ou Agilidade. A cada 10 níveis ele incorpora o poder da fantasia completa que veste e passa a soltá-lo sozinho na luta.","Training: each cat level gives 1 point. Spend it on Health, Strength, or Agility. Every 10 levels it takes on the power of the full costume it wears and unleashes it on its own in a fight.",dados:principal.AJUDA_REGRAS
+"Treino: cada nível do gato dá 1 ponto. Gaste em Vida, Força ou Agilidade. A cada 10 níveis ele incorpora o poder da fantasia completa que veste e passa a soltá-lo sozinho na luta.","Training: each level gives 1 point for Health, Strength, or Agility. Every 10 levels the cat keeps the power of its full costume and fires it on its own.",dados:principal.AJUDA_REGRAS
 Casa segura,Safe House,dados:Metas.lista
 Vença os cinco cômodos,Win all five rooms,dados:Metas.lista
 Quarto sem um arranhão,Bedroom Without a Scratch,dados:Metas.lista
@@ -1138,9 +1138,9 @@ da %s,of the %s,interface/fichario.gd
 do %s,of the %s,interface/fichario.gd
 "Em todo lugar, desde a primeira onda.","Everywhere, from the first wave.",interface/fichario.gd
 "Só no segundo ato, lá fora.","Only in Act Two, outside.",interface/fichario.gd
-"A partir de %s, onda %d.","From %s, wave %d.",interface/fichario.gd
+"A partir de %s, onda %d.","%s, from wave %d on.",interface/fichario.gd
 Gangues das ruas,Street gangs,interface/fichario.gd
-Gangues vistas: %d de 5  ·  Chefes derrotados: %d de 5,Gangs seen: %d of 5  ·  Bosses defeated: %d of 5,interface/fichario.gd
+Gangues vistas: %d de 5  ·  Chefes derrotados: %d de 5,Gangs seen: %d of 5  ·  Bosses beaten: %d of 5,interface/fichario.gd
 Gangues do 3º ato,Act Three gangs,interface/fichario.gd
 "tipos, truque e chefe","types, trick and boss",interface/fichario.gd
 Como são os rivais,What the rivals are like,interface/fichario.gd
@@ -1150,7 +1150,7 @@ Derrube o líder (o de coroa) e os outros ficam abalados por %d s: %d%% menos da
 Cada ficha se revela quando o rival aparece na prévia da onda. O chefe só aparece na prévia da última onda.,Each card is revealed when the rival shows up in the wave preview. The boss only shows up in the final wave's preview.,interface/fichario.gd
 Tipos de rival vistos: %d de %d,Rival types seen: %d of %d,interface/fichario.gd
 Chefe: ainda não visto,Boss: not seen yet,interface/fichario.gd
-Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d,Critters seen: %d of %d  ·  Bosses defeated: %d of %d,interface/fichario.gd
+Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d,Seen: %d of %d  ·  Bosses beaten: %d of %d,interface/fichario.gd
 Secreto: Schrödinger,Secret: Schrödinger,interface/fichario.gd
 Famílias da casa,House families,interface/fichario.gd
 Tipos de bicho,Critter types,interface/fichario.gd
@@ -1275,8 +1275,8 @@ Troféus,Trophies,interface/menus.gd
 Gato de maior nível,Highest-Level Cat,interface/menus.gd
 Nível %d,Level %d,interface/menus.gd
 O que foi liberado,Unlocked,interface/menus.gd
-As ruas do bairro foram abertas: 3º ato,The neighborhood streets are open: Act Three,interface/menus.gd
-Invasão sem fim e metas no fichário,Endless Invasion and Goals in the Binder,interface/menus.gd
+As ruas do bairro foram abertas: 3º ato,Act Three: the streets are open,interface/menus.gd
+Invasão sem fim e metas no fichário,Endless Invasion and Goals,interface/menus.gd
 Torre: quarta vaga de módulo,Tower: fourth module slot,interface/menus.gd
 Nível 40: quarta herança,Level 40: fourth Legacy,interface/menus.gd
 Invasão sem fim e metas,Endless Invasion and Goals,interface/menus.gd
@@ -1369,8 +1369,8 @@ Gato de Schrödinger vencido!,Schrödinger's Cat defeated!,interface/principal.g
 %s %s!,%s %s!,interface/principal.gd
 O time descansou e segue vestido como estava.,The team rested and stays dressed as before.,interface/principal.gd
 A campanha está completa: a casa inteira é sua!,The campaign is complete: the whole house is yours!,interface/principal.gd
-"%s vencido! Mas as ruas são de gangues de gatos rivais, que vestem as fantasias do lugar. O %s está no mapa: Mercadão, Ferro-velho, Beco, Arena e Telhados.","%s defeated! But the streets belong to rival cat gangs, who wear the local costumes. The %s is on the map: Fish Market, Junkyard, Alley, Arena and Rooftops.",interface/principal.gd
-"%s vencido! A casa é sua, mas os bichos fugiram para fora. O %s está no mapa: quintal, garagem, telhado, rua e toca, na ordem que quiser.","%s defeated! The house is yours, but the critters fled outside. The %s is on the map: backyard, garage, rooftop, street and burrow, in any order you like.",interface/principal.gd
+"%s vencido! Mas as ruas são de gangues de gatos rivais, que vestem as fantasias do lugar. O %s está no mapa: Mercadão, Ferro-velho, Beco, Arena e Telhados.","%s defeated! But the streets belong to rival cat gangs, who wear the local costumes. %s is on the map: Fish Market, Junkyard, Alley, Arena and Rooftops.",interface/principal.gd
+"%s vencido! A casa é sua, mas os bichos fugiram para fora. O %s está no mapa: quintal, garagem, telhado, rua e toca, na ordem que quiser.","%s defeated! The house is yours, but the critters fled outside. %s is on the map: backyard, garage, rooftop, street and burrow, in any order you like.",interface/principal.gd
 %s: falta %d lugar. Os que ficam para depois chegam mais fortes.,%s: %d place left. Places you leave for later are tougher.,interface/principal.gd
 %s: faltam %d lugares. Os que ficam para depois chegam mais fortes.,%s: %d places left. Places you leave for later are tougher.,interface/principal.gd
  Próximo: %s., Next: %s.,interface/principal.gd
@@ -1780,3 +1780,11 @@ os,the,dados:principal.ARTIGO
 Vencido,Defeated,interface/principal.gd (VENCIDO_GENERO capitalizado)
 Vencida,Defeated,interface/principal.gd (VENCIDO_GENERO capitalizado)
 Vencidos,Defeated,interface/principal.gd (VENCIDO_GENERO capitalizado)
+Bate nos gatos que encontra e depois na torre.,"Hits the cats it meets, then the tower.",dados:Campo.TIPO_DICA
+Pula por cima dos gatos e vai direto à torre.,Leaps over the cats and heads straight for the tower.,dados:Campo.TIPO_DICA
+"Muita vida, lento; derruba 2 blocos por golpe.","Lots of health, slow; knocks down 2 blocks per hit.",dados:Campo.TIPO_DICA
+Atira de longe nos gatos e na torre.,Shoots the cats and the tower from afar.,dados:Campo.TIPO_DICA
+Cura o bicho ferido mais próximo.,Heals the nearest hurt critter.,dados:Campo.TIPO_DICA
+Leva pouco dano e atrai os golpes dos gatos.,Takes little damage and draws the cats' hits.,dados:Campo.TIPO_DICA
+"Corre, encosta num gato ou na torre e explode.",Runs up to a cat or the tower and explodes.,dados:Campo.TIPO_DICA
+Fantasia sem nome,Unnamed costume,dados:Atelie.NOME_VAZIO
