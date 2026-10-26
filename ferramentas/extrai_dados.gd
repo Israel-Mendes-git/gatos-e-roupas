@@ -22,6 +22,8 @@ const TABELAS := {
 	"res://scripts/arte/torre.gd": ["MELHORIA_NOME", "MODULO_NOME", "MODULO_DICA"],
 	"res://scripts/interface/fichario.gd": ["FAM_ENFRENTAR", "TIPO_ENFRENTAR", "GANGUE_TRUQUE_NOME", "GANGUE_ENFRENTAR"],
 	"res://scripts/interface/oficina.gd": ["ABAS_NOME"],
+	"res://scripts/interface/campo.gd": ["PREP_DICA"],
+	"res://scripts/interface/icones_estado.gd": ["NOME", "CURTO", "DICA"],
 	"res://scripts/interface/principal.gd": ["ABA_NOMES", "AJUDA_ATALHOS", "AJUDA_REGRAS"],
 }
 ## Tabelas de índices/pixels com strings que NÃO são texto de jogador (para a lista de candidatas não cobertas).
