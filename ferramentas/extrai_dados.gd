@@ -24,10 +24,10 @@ const TABELAS := {
 	"res://scripts/interface/oficina.gd": ["ABAS_NOME"],
 	"res://scripts/interface/campo.gd": ["PREP_DICA"],
 	"res://scripts/interface/icones_estado.gd": ["NOME", "CURTO", "DICA"],
-	"res://scripts/interface/principal.gd": ["ABA_NOMES", "AJUDA_ATALHOS", "AJUDA_REGRAS"],
+	"res://scripts/interface/principal.gd": ["ABA_NOMES", "AJUDA_ATALHOS", "AJUDA_REGRAS", "VENCIDO_GENERO", "ARTIGO"],
 }
 ## Tabelas de índices/pixels com strings que NÃO são texto de jogador (para a lista de candidatas não cobertas).
-const NAO_TEXTO := ["PX_", "ICO_", "PALETA", "CABIDE", "ARTIGO", "VENCIDO_GENERO", "EMBLEMAS", "ICONES"]
+const NAO_TEXTO := ["PX_", "ICO_", "PALETA", "CABIDE", "EMBLEMAS", "ICONES"]
 
 var achados: Array = []   # [texto, origem]
 var vistos: Dictionary = {}

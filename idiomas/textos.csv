@@ -899,3 +899,884 @@ Fantasia de King-Miau,,dados:Metas.lista
 Fantasia de Arthur Miaurgon,,dados:Metas.lista
 Fantasia de Submiautica,,dados:Metas.lista
 Fantasia de Catchullu,,dados:Metas.lista
++%d blocos no começo de cada cômodo,,arte/torre.gd
++%d%% de dano no tiro da torre,,arte/torre.gd
+a torre atira %d%% mais rápido,,arte/torre.gd
++%d%% de cura entre ondas (do nível 6: +%s%%),,arte/torre.gd
+Sugerir nome,,interface/atelie_tela.gd
+Salvar a fantasia,,interface/atelie_tela.gd
+Criar a fantasia,,interface/atelie_tela.gd
+Fechar,,interface/atelie_tela.gd
+Pronto! As peças estão no guarda-roupa.,,interface/atelie_tela.gd
+Passou do orçamento: tire %d ponto(s).,,interface/atelie_tela.gd
+"Crie a sua fantasia: escolha formas, cores, um poder e um bônus, sem passar dos pontos.",,interface/atelie_tela.gd
+Peças,,interface/atelie_tela.gd
+Sua fantasia,,interface/atelie_tela.gd
+Setas e Enter  |  Esc fecha,,interface/atelie_tela.gd
+%s (%d pt),,interface/atelie_tela.gd
+Estampa,,interface/atelie_tela.gd
+Vale para as 4 peças. Não custa pontos.,,interface/atelie_tela.gd
+Poder,,interface/atelie_tela.gd
+Bônus,,interface/atelie_tela.gd
+2 peças: %s; 4 peças: %s,,interface/atelie_tela.gd
+%d ponto,,interface/atelie_tela.gd
+%d pontos,,interface/atelie_tela.gd
+Pontos: %d de %d,,interface/atelie_tela.gd
+Sobram %d,,interface/atelie_tela.gd
+No limite,,interface/atelie_tela.gd
+Faltam %d pontos (tire %d),,interface/atelie_tela.gd
+Moldes %d + poder %d + bônus %d,,interface/atelie_tela.gd
+"Poder do kit completo: solta a cada %d s, com %d%% da força da fantasia de origem (o bônus vale com 2 peças e com as 4).",,interface/atelie_tela.gd
+"Mudar é de graça; as peças mantêm nível, raridade e marcas.",,interface/atelie_tela.gd
+Clique para dar um nome (até %d letras),,interface/atelie_tela.gd
+Onda %d,,interface/campo.gd
+esquiva,,interface/campo.gd
+Herança: %s!,,interface/campo.gd
+cortado!,,interface/campo.gd
+CHEFE!,,interface/campo.gd
+CRÍTICO!,,interface/campo.gd
+barreira,,interface/campo.gd
+Disfarce rasgou!,,interface/campo.gd
+Aparou!,,interface/campo.gd
+Interrompido!,,interface/campo.gd
+Capturado!,,interface/campo.gd
+Segundo fôlego!,,interface/campo.gd
+Recompensa paga!,,interface/campo.gd
+Caixa fechada!,,interface/campo.gd
+Superposição!,,interface/campo.gd
+Pimenta!,,interface/campo.gd
+Morango!,,interface/campo.gd
+murchou,,interface/campo.gd
+glub! cura,,interface/campo.gd
+sementes!,,interface/campo.gd
++1 bloco,,interface/campo.gd
+Reforços!,,interface/campo.gd
+sem fôlego...,,interface/campo.gd
+disparou!,,interface/campo.gd
+%s!,,interface/campo.gd
+nível %d,,interface/campo.gd
++%d blocos,,interface/campo.gd
+fugiu! -%d bloco,,interface/campo.gd
+fugiu! -%d blocos,,interface/campo.gd
+Dorme com os peixes!,,interface/campo.gd
+Acordou!,,interface/campo.gd
+Recompilando!,,interface/campo.gd
+Confuso!,,interface/campo.gd
+Mutação!,,interface/campo.gd
+PLAC!,,interface/campo.gd
+ALARME!,,interface/campo.gd
+PLOFT!,,interface/campo.gd
+FIRME!,,interface/campo.gd
+Combo!,,interface/campo.gd
+atordoado,,interface/campo.gd
+sem alvo,,interface/campo.gd
+Vista as 4 peças de uma fantasia para ganhar um poder,,interface/campo.gd
+caído,,interface/campo.gd
+ARMADO,,interface/campo.gd
+PRONTO,,interface/campo.gd
+%d s,,interface/campo.gd
+Clique ou aperte %d,,interface/campo.gd
+Invasão · %s · Onda %d,,interface/campo.gd
+as ruas,,interface/campo.gd
+Recorde: onda %d,,interface/campo.gd
+Sem recorde ainda,,interface/campo.gd
+Onda de chefe,,interface/campo.gd
+%s · Onda %d/%d,,interface/campo.gd
+Onda vencida!,,interface/campo.gd
+O chefe do cômodo. Chega por último.,,interface/campo.gd
+Fantasiado,,interface/campo.gd
+Mais forte: veste uma fantasia e larga uma peça dela ao cair.,,interface/campo.gd
+Gato,,interface/campo.gd
+Sapinho,,interface/campo.gd
+Filhote,,interface/campo.gd
+%s fantasiada,,interface/campo.gd
+%s fantasiado,,interface/campo.gd
+"Molhado, lento",,interface/campo.gd
+Lento a %s,,interface/campo.gd
+Marcado: +%s de dano,,interface/campo.gd
+Oculto na fumaça,,interface/campo.gd
+Disfarçado: anula o próximo golpe,,interface/campo.gd
+Em fúria,,interface/campo.gd
+Curando no canteiro,,interface/campo.gd
+Abalado: -%s de dano e de velocidade,,interface/campo.gd
+Fugindo com %d bloco,,interface/campo.gd
+Fugindo com %d blocos,,interface/campo.gd
+Fugindo,,interface/campo.gd
+Dormindo com os peixes: fora da luta,,interface/campo.gd
+Mutante: +%s de dano e de velocidade,,interface/campo.gd
+Confuso: ataca o aliado mais perto,,interface/campo.gd
+%s s,,interface/campo.gd
+dano +%s,,interface/campo.gd
+embalo +%s,,interface/campo.gd
+%s · %s,,interface/campo.gd
+Nível %d · %s,,interface/campo.gd
+Alvo prioritário do time,,interface/campo.gd
+Herança: %s,,interface/campo.gd
+Poder: %s,,interface/campo.gd
+pronto,,interface/campo.gd
+em %s s,,interface/campo.gd
+Atacando,,interface/campo.gd
+Indo para,,interface/campo.gd
+a torre,,interface/campo.gd
+Vale para %s.,,interface/campo.gd
+o time todo,,interface/campo.gd
+Alvo prioritário: clique para tirar,,interface/campo.gd
+Clique: o time bate nele primeiro,,interface/campo.gd
+Onda que vem,,interface/campo.gd
+o gato,,interface/campo.gd
+Ordem para,,interface/campo.gd
+Começar a onda,,interface/campo.gd
+Espaço,,interface/campo.gd
+Alvo: %s,,interface/campo.gd
+Vai virar fantasma!,,interface/campo.gd
+Vai voltar à vida!,,interface/campo.gd
+Fantasias completas: %d de %d  ·  Peças: %d de %d,,interface/fichario.gd
+Não cai em nenhum lugar,,interface/fichario.gd
+Cai %s: %s e %s,,interface/fichario.gd
+Cai %s: %s,,interface/fichario.gd
+Chefe: %s (assinatura),,interface/fichario.gd
+Chefe: %s,,interface/fichario.gd
+por enquanto cai %s,,interface/fichario.gd
+"Cômodo bloqueado: vença o chefe %s, %s",,interface/fichario.gd
+na %s,,interface/fichario.gd
+nos %s,,interface/fichario.gd
+no %s,,interface/fichario.gd
+%s e %s,,interface/fichario.gd
+Fichário de fantasias,,interface/fichario.gd
+Índice,,interface/fichario.gd
+Bichos,,interface/fichario.gd
+Metas,,interface/fichario.gd
+Metas %d/2,,interface/fichario.gd
+Bestiário,,interface/fichario.gd
+Bestiário: gangues,,interface/fichario.gd
+Bicho %d de %d,,interface/fichario.gd
+Ateliê  ·  a sua fantasia,,interface/fichario.gd
+Fantasia %d de %d  ·  %s,,interface/fichario.gd
+"Setas, A/D ou PgUp/PgDn  |  Esc fecha",,interface/fichario.gd
+Setas ou A/D  |  Esc fecha,,interface/fichario.gd
+Ainda não visto,,interface/fichario.gd
+Derrotado,,interface/fichario.gd
+Visto,,interface/fichario.gd
+%d de %d peças,,interface/fichario.gd
+%s  ·  %d/%d completas,,interface/fichario.gd
+bloqueado,,interface/fichario.gd
+Lado de fora  ·  %d/%d completas,,interface/fichario.gd
+só caem fora da casa,,interface/fichario.gd
+pág. %d/%d,,interface/fichario.gd
+Como ler o índice,,interface/fichario.gd
+Clique numa fantasia para abrir a página dela. Fantasias completas ganham uma estrela dourada; peça que ainda não apareceu fica em silhueta.,,interface/fichario.gd
+Seu progresso,,interface/fichario.gd
+Gangues do 3º ato: na próxima página,,interface/fichario.gd
+Completas: %d de %d,,interface/fichario.gd
+Peças encontradas: %d de %d,,interface/fichario.gd
+Ficha nº %02d,,interface/fichario.gd
+%d/%d peças,,interface/fichario.gd
+Poder da fantasia completa,,interface/fichario.gd
+"%s, a cada %d s",,interface/fichario.gd
+Vale com as 4 peças vestidas,,interface/fichario.gd
+Fantasia completa: o poder é seu,,interface/fichario.gd
+Onde encontrar,,interface/fichario.gd
+Também cai aqui: %s,,interface/fichario.gd
+Ficha secreta,,interface/fichario.gd
+Fichário completo! Abra o Ateliê (botão no mapa ou no guarda-roupa) e crie a sua fantasia.,,interface/fichario.gd
+Complete o fichário para abrir o Ateliê,,interface/fichario.gd
+Fantasia do Ateliê,,interface/fichario.gd
+"Lá você escolhe as formas, as cores, a estampa, um poder, um bônus e o nome, dentro de um orçamento de pontos.",,interface/fichario.gd
+Ainda não existem,,interface/fichario.gd
+4/4 peças,,interface/fichario.gd
+"Solta a cada %d s, com %d%% da força da fantasia de origem (%s).",,interface/fichario.gd
+Estampa: %s,,interface/fichario.gd
+Cor: %s,,interface/fichario.gd
+Bônus: %s,,interface/fichario.gd
+2 ou 3 peças,,interface/fichario.gd
+4 peças,,interface/fichario.gd
+COMPLETA,,interface/fichario.gd
+Tem agora ×%d,,interface/fichario.gd
+"Tem agora ×%d  ·  melhor: %s, nível %d",,interface/fichario.gd
+Tem agora ×%d  ·  melhor: %s,,interface/fichario.gd
+Já teve (não tem agora),,interface/fichario.gd
+Falta: ainda não apareceu,,interface/fichario.gd
+Bônus de fantasia,,interface/fichario.gd
+NOVA,,interface/fichario.gd
+Vença a campanha para liberar,,interface/fichario.gd
+FEITA,,interface/fichario.gd
+pendente,,interface/fichario.gd
+trancada,,interface/fichario.gd
+Ruas do bairro  ·  %d/%d vencidas no 3º ato,,interface/fichario.gd
+Invasão: onda %d,,interface/fichario.gd
+Invasão: sem recorde,,interface/fichario.gd
+Lado de fora  ·  %d/%d,,interface/fichario.gd
+Lugares de fora  ·  %d/%d vencidos no 2º ato,,interface/fichario.gd
+FEITO,,interface/fichario.gd
+falta,,interface/fichario.gd
+fechado,,interface/fichario.gd
+Metas: %d de %d  ·  troféus ganhos com metas: %d,,interface/fichario.gd
+Fantasias  ·  %d/%d  ·  +%d troféus cada,,interface/fichario.gd
+Vida ×%s  ·  Velocidade ×%s  ·  Dano ×%s,,interface/fichario.gd
+Chefe da família: %s,,interface/fichario.gd
+"Vive %s. Fora da casa, aparece misturada nos bandos.",,interface/fichario.gd
+"Misturam todas as famílias: monte um time que sirva para tudo, com gatos fortes na frente e dano de longe atrás.",,interface/fichario.gd
+Mais forte que os bichos da casa,,interface/fichario.gd
+"Só no segundo ato, %s.",,interface/fichario.gd
+Vida ×%s  ·  Velocidade ×%s,,interface/fichario.gd
+Tamanho ×%s,,interface/fichario.gd
+"Um bicho comum vestido com uma fantasia do lugar. Também usa os bônus dela. Com a fantasia completa, solta o poder dela, com aviso: atordoe para cancelar.",,interface/fichario.gd
+Larga uma peça da fantasia e dá %d troféu,,interface/fichario.gd
+Em toda luta a partir da onda %d de cada lugar.,,interface/fichario.gd
+%s. Solta o poder com aviso de %d s: atordoe o chefe para cancelar.,,interface/fichario.gd
+Larga uma peça Rara ou Lendária e dá %d troféus,,interface/fichario.gd
+Veste: %s,,interface/fichario.gd
+Última onda %s.,,interface/fichario.gd
+Última onda %s (segundo ato).,,interface/fichario.gd
+Só no terceiro ato: %s.,,interface/fichario.gd
+"O Mensageiro não rouba bloco: ao tocar a torre, leva um gato para dormir com os peixes por %d s. Matá-lo antes cancela.",,interface/fichario.gd
+"O Guitarrista dá +%d%% de velocidade aos rivais em volta (o comboio), e o Suicida pintado corre ao primeiro gato ou à torre e explode.",,interface/fichario.gd
+"O Programa volta uma vez com %d%% de vida ao ser derrotado, e o disco do Lançador quica em até %d gatos.",,interface/fichario.gd
+"Hoplitas lado a lado levam menos dano de frente (%d%% por vizinho, até %d). Golpes pelos flancos e poderes que atravessam furam a falange.",,interface/fichario.gd
+"Abaixo de %d%% de vida, o mutante ganha +%d%% de dano e de velocidade. O Telepata atira de longe nos gatos e na torre.",,interface/fichario.gd
+da %s,,interface/fichario.gd
+do %s,,interface/fichario.gd
+"Em todo lugar, desde a primeira onda.",,interface/fichario.gd
+"Só no segundo ato, lá fora.",,interface/fichario.gd
+"A partir de %s, onda %d.",,interface/fichario.gd
+Gangues das ruas,,interface/fichario.gd
+Gangues vistas: %d de 5  ·  Chefes derrotados: %d de 5,,interface/fichario.gd
+Gangues do 3º ato,,interface/fichario.gd
+"tipos, truque e chefe",,interface/fichario.gd
+Como são os rivais,,interface/fichario.gd
+No terceiro ato todo inimigo é um gato rival de uma gangue: veste peças do lugar e briga com o seu time antes de ir à torre.,,interface/fichario.gd
+"Cada gangue tem os seus tipos de rival, um truque e um chefe.",,interface/fichario.gd
+Derrube o líder (o de coroa) e os outros ficam abalados por %d s: %d%% menos dano e %d%% menos velocidade.,,interface/fichario.gd
+Cada ficha se revela quando o rival aparece na prévia da onda. O chefe só aparece na prévia da última onda.,,interface/fichario.gd
+Tipos de rival vistos: %d de %d,,interface/fichario.gd
+Chefe: ainda não visto,,interface/fichario.gd
+Bichos vistos: %d de %d  ·  Chefes derrotados: %d de %d,,interface/fichario.gd
+Secreto: Schrödinger,,interface/fichario.gd
+Famílias da casa,,interface/fichario.gd
+Tipos de bicho,,interface/fichario.gd
+e o fantasiado,,interface/fichario.gd
+Chefes da casa,,interface/fichario.gd
+Chefes de fora,,interface/fichario.gd
+Bandos de fora,,interface/fichario.gd
+todas as famílias juntas,,interface/fichario.gd
+Ícones sobre os bichos e gatos na luta,,interface/fichario.gd
+Vistos: %d de %d,,interface/fichario.gd
+Chefes derrotados: %d de %d,,interface/fichario.gd
+Família,,interface/fichario.gd
+Bando de fora,,interface/fichario.gd
+Tipo de bicho,,interface/fichario.gd
+Chefe,,interface/fichario.gd
+Gangue,,interface/fichario.gd
+Bicho desconhecido,,interface/fichario.gd
+O que faz,,interface/fichario.gd
+Onde aparece,,interface/fichario.gd
+Como enfrentar,,interface/fichario.gd
+Números,,interface/fichario.gd
+No seu caderno,,interface/fichario.gd
+Este bicho ainda não apareceu numa luta. Avance na campanha e vá ver o que ele faz.,,interface/fichario.gd
+Ainda é segredo.,,interface/fichario.gd
+"Quando ele aparecer, a dica de como vencê-lo fica anotada aqui.",,interface/fichario.gd
+Já apareceu numa luta sua.,,interface/fichario.gd
+Derrotado: sim.,,interface/fichario.gd
+Derrotado: ainda não.,,interface/fichario.gd
+O jogo ainda não conta quantos você derrotou.,,interface/fichario.gd
+DERROTADO,,interface/fichario.gd
+Gangue desconhecida,,interface/fichario.gd
+O truque: %s,,interface/fichario.gd
+O truque,,interface/fichario.gd
+Tipos de rival,,interface/fichario.gd
+O chefe,,interface/fichario.gd
+Esta gangue ainda não apareceu numa luta. Chegue ao terceiro ato e veja a prévia da onda.,,interface/fichario.gd
+"Quando ela aparecer, a dica fica anotada aqui.",,interface/fichario.gd
+Ainda não apareceu.,,interface/fichario.gd
+O chefe aparece na prévia da última onda do lugar.,,interface/fichario.gd
+Fraqueza: %s,,interface/fichario.gd
+Escolhido,,interface/mapa_casa.gd
+As ruas do bairro,,interface/mapa_casa.gd
+Lado de fora da casa,,interface/mapa_casa.gd
+Mapa da casa,,interface/mapa_casa.gd
+Escolha um cômodo: cada um tem %d ondas e um chefe.,,interface/mapa_casa.gd
+"Terceiro ato: siga a trilha dourada, do Mercadão aos Telhados. Cada lugar tem %d ondas e um chefe.",,interface/mapa_casa.gd
+Tudo vencido! Clique num lugar e escolha: Jogar de novo.,,interface/mapa_casa.gd
+"Segundo ato: escolha um lugar, na ordem que quiser. Cada um tem %d ondas e um chefe.",,interface/mapa_casa.gd
+Tudo vencido! Clique num lugar e escolha: Jogar de novo ou Invasão sem fim.,,interface/mapa_casa.gd
+Clique num cômodo e escolha: Jogar de novo ou Invasão sem fim. O 2º ato fica lá fora.,,interface/mapa_casa.gd
+Campanha vencida! Cace peças nos cômodos ou encare a Invasão sem fim.,,interface/mapa_casa.gd
+Jogar,,interface/mapa_casa.gd
+feito,,interface/mapa_casa.gd
+Bloqueado,,interface/mapa_casa.gd
+Próximo,,interface/mapa_casa.gd
+Liberado,,interface/mapa_casa.gd
+%dº ato: falta,,interface/mapa_casa.gd
+%dº ato: feito,,interface/mapa_casa.gd
+Família: %s,,interface/mapa_casa.gd
+%s. Lugar deixado para depois chega mais forte (agora: +%d%% de vida).,,interface/mapa_casa.gd
+Jogar o %dº ato,,interface/mapa_casa.gd
+Jogar de novo,,interface/mapa_casa.gd
+Invasão sem fim,,interface/mapa_casa.gd
+Vença o 3º ato inteiro para liberar a invasão das ruas,,interface/mapa_casa.gd
+Vença no 2º ato para liberar a invasão,,interface/mapa_casa.gd
+Clique ou Enter para entrar,,interface/mapa_casa.gd
+Vença antes: %s,,interface/mapa_casa.gd
+Ataque do chefe,,interface/mapa_casa.gd
+Fraqueza,,interface/mapa_casa.gd
+Fantasias que caem,,interface/mapa_casa.gd
+Invasão das ruas  ·  %s,,interface/mapa_casa.gd
+Invasão sem fim  ·  %s,,interface/mapa_casa.gd
+Caixa do Sótão,,interface/mapa_casa.gd
+Aberta,,interface/mapa_casa.gd
+Segredo,,interface/mapa_casa.gd
+"Luta secreta · uma onda, só o chefe",,interface/mapa_casa.gd
+O bestiário está completo e algo se mexe dentro da caixa. Time descansado e torre cheia.,,interface/mapa_casa.gd
+Abrir a caixa,,interface/mapa_casa.gd
+Abrir de novo,,interface/mapa_casa.gd
+Vivo agora,,interface/mapa_casa.gd
+Morto agora,,interface/mapa_casa.gd
+Prêmio,,interface/mapa_casa.gd
+"Uma peça Miaujestosa, a raridade mais alta, e troféus.",,interface/mapa_casa.gd
+"Vença antes: %s, %s e %s",,interface/mapa_casa.gd
+Final,,interface/mapa_casa.gd
+Ver lá fora,,interface/mapa_casa.gd
+Ver a casa,,interface/mapa_casa.gd
+Ver as ruas,,interface/mapa_casa.gd
+2 a 3 peças: %s,,interface/mapa_casa.gd
+4 peças: %s,,interface/mapa_casa.gd
+Um jogo de %s,,interface/menus.gd
+Gatos em pixel art,,interface/menus.gd
+por Last tick,,interface/menus.gd
+Interface com tema de gato,,interface/menus.gd
+por ToffeeCraft,,interface/menus.gd
+"Molduras, botões e ícones do jogo",,interface/menus.gd
+por PaperHatLizard,,interface/menus.gd
+Licença CC BY 4.0,,interface/menus.gd
+Fonte,,interface/menus.gd
+por Sarah Cadigan-Fried,,interface/menus.gd
+Licença SIL Open Font 1.1,,interface/menus.gd
+Música,,interface/menus.gd
+Trilha chiptune original,,interface/menus.gd
+composta e sintetizada para o jogo,,interface/menus.gd
+Feito com,,interface/menus.gd
+Obrigado por jogar!,,interface/menus.gd
++%d troféus,,interface/menus.gd
++1 troféu,,interface/menus.gd
+As ruas também são dos gatos!,,interface/menus.gd
+A casa é dos gatos!,,interface/menus.gd
+Números da campanha,,interface/menus.gd
+Tempo de luta,,interface/menus.gd
+%d min,,interface/menus.gd
+Ondas lutadas,,interface/menus.gd
+Gatos nocauteados,,interface/menus.gd
+Bichos derrotados,,interface/menus.gd
+Derrotas,,interface/menus.gd
+Fantasias completas,,interface/menus.gd
+%d de %d,,interface/menus.gd
+Peças encontradas,,interface/menus.gd
+Troféus,,interface/menus.gd
+Gato de maior nível,,interface/menus.gd
+Nível %d,,interface/menus.gd
+O que foi liberado,,interface/menus.gd
+As ruas do bairro foram abertas: 3º ato,,interface/menus.gd
+Invasão sem fim e metas no fichário,,interface/menus.gd
+Torre: quarta vaga de módulo,,interface/menus.gd
+Nível 40: quarta herança,,interface/menus.gd
+Invasão sem fim e metas,,interface/menus.gd
+Blocos,,interface/oficina.gd
+Dano do tiro,,interface/oficina.gd
+Tiros por segundo,,interface/oficina.gd
+Cura entre ondas,,interface/oficina.gd
+Máximo,,interface/oficina.gd
+Libera no 3º ato,,interface/oficina.gd
+Falta 1 troféu,,interface/oficina.gd
+Faltam %d troféus,,interface/oficina.gd
+"Vença o chefe %s, %s",,interface/oficina.gd
+%s (2º ato),,interface/oficina.gd
+%s (3º ato),,interface/oficina.gd
+Melhorar (%d),,interface/oficina.gd
+Desmontar,,interface/oficina.gd
+Montar,,interface/oficina.gd
+%s já está no nível máximo,,interface/oficina.gd
+%s: os níveis 9 e 10 chegam no 3º ato,,interface/oficina.gd
+%s: %s para melhorar,,interface/oficina.gd
+Desmonte um módulo primeiro,,interface/oficina.gd
+Sem vaga: desmonte um módulo (mais vagas ao vencer o ato),,interface/oficina.gd
+Oficina da torre,,interface/oficina.gd
+Melhorias da torre,,interface/oficina.gd
+Módulos montados: %d de %d vagas,,interface/oficina.gd
+Sua torre,,interface/oficina.gd
+"Chefes dão %d (%d no 2º ato, %d no 3º), bichos fantasiados dão %d",,interface/oficina.gd
+%dª vaga: vença o %dº ato inteiro,,interface/oficina.gd
+%s: %s (máximo),,interface/oficina.gd
+Vale a partir do próximo cômodo,,interface/oficina.gd
+Montado,,interface/oficina.gd
+LUTAR,,interface/principal.gd
+Mapa,,interface/principal.gd
+Vestir melhor,,interface/principal.gd
+Monta as melhores fantasias para o gato selecionado (V = o time todo).,,interface/principal.gd
+Vestir o time,,interface/principal.gd
+Monta as melhores fantasias para todos os gatos (tecla V).,,interface/principal.gd
+Desfazer,,interface/principal.gd
+Volta as roupas como estavam antes da última montagem automática (tecla Z).,,interface/principal.gd
+Repete o tutorial desta tela (F1: atalhos e regras).,,interface/principal.gd
+Fichário [F],,interface/principal.gd
+Bestiário completo! Algo se mexe na caixa do Sótão. Clique na caixa que treme (ou aperte C) e depois em Abrir a caixa.,,interface/principal.gd
+Clique ou arraste uma peça para vestir o gato.,,interface/principal.gd
+Blocos: vida da torre e moeda para promover peças.,,interface/principal.gd
+ e ,,interface/principal.gd
+Confirmar: apagar,,interface/principal.gd
+Atordoe o bicho durante o aviso (!) para cancelar o poder.,,interface/principal.gd
+A onda demorou demais e o tempo acabou.,,interface/principal.gd
+"Mais dano ajuda: treine Força, vista armas melhores e use os poderes das fantasias.",,interface/principal.gd
+Todos os gatos caíram e a torre ficou sozinha (%d por poder de bicho).,,interface/principal.gd
+ Vida e peças de corpo seguram o resto.,,interface/principal.gd
+Todos os gatos caíram e a torre ficou sozinha.,,interface/principal.gd
+Treine Vida e vista peças de corpo. Gatos fortes na frente protegem os de trás.,,interface/principal.gd
+O chefe %s acabou com a torre.,,interface/principal.gd
+ (%d bloco),,interface/principal.gd
+ (%d blocos),,interface/principal.gd
+Os ladrões levaram %d blocos.,,interface/principal.gd
+Os ladrões levaram os blocos da torre.,,interface/principal.gd
+Os saltadores pularam os gatos e chegaram à torre%s.,,interface/principal.gd
+Recuar deixa gatos perto da torre para pegar os saltadores.,,interface/principal.gd
+O Grandalhão derrubou a torre%s.,,interface/principal.gd
+Marque o Grandalhão como alvo: o time inteiro foca nele. Dano alto e poderes ajudam.,,interface/principal.gd
+Os bichos-bomba explodiram na torre%s.,,interface/principal.gd
+Gatos de longe derrubam as bombas antes de elas chegarem.,,interface/principal.gd
+Os atiradores derrubaram a torre de longe%s.,,interface/principal.gd
+"Deixe gatos em Avançar para alcançá-los, ou marque o Atirador como alvo.",,interface/principal.gd
+"Os bichos chegaram à torre e a derrubaram%s, e poderes de bicho derrubaram %d gato.",,interface/principal.gd
+"Os bichos chegaram à torre e a derrubaram%s, e poderes de bicho derrubaram %d gatos.",,interface/principal.gd
+ Mais gatos na linha da frente seguram o bando.,,interface/principal.gd
+Os bichos chegaram à torre e a derrubaram%s.,,interface/principal.gd
+Mais gatos na linha da frente seguram o bando. Treine Força e Vida.,,interface/principal.gd
+"%s: clique em ""Herança pronta!"" para guardar %s.",,interface/principal.gd
+%s pode guardar um poder: vista uma fantasia completa.,,interface/principal.gd
+No nível %d o gato guarda o poder da fantasia vestida (a mesma de novo sobe o grau).,,interface/principal.gd
+"%s: gatos rivais de gangue, que brigam com o seu time antes de ir à torre.",,interface/principal.gd
+%s: bichos misturados e com truques novos.,,interface/principal.gd
+"Mouse no nome do gato: vida, dano e números.",,interface/principal.gd
+%s incorporou %s.,,interface/principal.gd
+%s incorporou %s!,,interface/principal.gd
+Subiu de nível: %s.,,interface/principal.gd
+Nocaute: %s.,,interface/principal.gd
+Invasão encerrada,,interface/principal.gd
+Invasão encerrada na onda %d em %s. O time se levantou; o que caiu e os troféus ficam com você.,,interface/principal.gd
+Novo recorde! Você venceu %d onda em %s (antes: %d).,,interface/principal.gd
+Novo recorde! Você venceu %d ondas em %s (antes: %d).,,interface/principal.gd
+Recorde de %s: onda %d.,,interface/principal.gd
+Nenhuma onda vencida desta vez. Tente de novo!,,interface/principal.gd
+Gato de Schrödinger vencido!,,interface/principal.gd
+"Vivo e morto ao mesmo tempo, e agora de vez só um. A caixa do Sótão guarda um prêmio para quem a abre de novo.",,interface/principal.gd
+%s %s!,,interface/principal.gd
+O time descansou e segue vestido como estava.,,interface/principal.gd
+A campanha está completa: a casa inteira é sua!,,interface/principal.gd
+"%s vencido! Mas as ruas são de gangues de gatos rivais, que vestem as fantasias do lugar. O %s está no mapa: Mercadão, Ferro-velho, Beco, Arena e Telhados.",,interface/principal.gd
+"%s vencido! A casa é sua, mas os bichos fugiram para fora. O %s está no mapa: quintal, garagem, telhado, rua e toca, na ordem que quiser.",,interface/principal.gd
+%s: falta %d lugar. Os que ficam para depois chegam mais fortes.,,interface/principal.gd
+%s: faltam %d lugares. Os que ficam para depois chegam mais fortes.,,interface/principal.gd
+ Próximo: %s.,,interface/principal.gd
+Gato novo no time: %s! Agora são %d gatos.,,interface/principal.gd
+Derrota,,interface/principal.gd
+"Desta vez, %s resistiu. O time se levantou; as peças de quem caiu ganharam marcas e o que caiu ficou com você.",,interface/principal.gd
+Dica: %s,,interface/principal.gd
+O que houve: %s,,interface/principal.gd
+Subiram de nível: %s. Gaste os pontos de treino.,,interface/principal.gd
+Troféus ganhos: +%d (você tem %d),,interface/principal.gd
+Módulo novo na oficina: %s,,interface/principal.gd
+Peças ganhas: %d,,interface/principal.gd
+Nenhuma peça nova desta vez.,,interface/principal.gd
+Meta cumprida: %s,,interface/principal.gd
+Mais %d metas cumpridas,,interface/principal.gd
+%s (com %s),,interface/principal.gd
+%s (você ainda não tem),,interface/principal.gd
+Não há gato para vestir.,,interface/principal.gd
+%s já veste %s inteira.,,interface/principal.gd
+Você ainda não tem nenhuma peça de %s.,,interface/principal.gd
+Nada livre de %s para %s. Faltam: %s.,,interface/principal.gd
+Vestir %s,,interface/principal.gd
+%s veste %s (%d/%d). Z desfaz.,,interface/principal.gd
+%s veste %d/%d de %s. Faltam: %s. Z desfaz.,,interface/principal.gd
++%d%% de vida máxima,,interface/principal.gd
++%d%% de dano,,interface/principal.gd
++%d%% de velocidade de ataque e +%d%% de movimento,,interface/principal.gd
++%d%% de vida,,interface/principal.gd
++%d%% de velocidade de ataque,,interface/principal.gd
+F abre o fichário nela,,interface/principal.gd
+Poder liberado: %s,,interface/principal.gd
+%s já está vestido do melhor jeito.,,interface/principal.gd
+O time,,interface/principal.gd
+%d peça trocada,,interface/principal.gd
+%d peças trocadas,,interface/principal.gd
+ · %d fantasia completa,,interface/principal.gd
+ · %d fantasias completas,,interface/principal.gd
+. Z desfaz.,,interface/principal.gd
+Não há montagem para desfazer.,,interface/principal.gd
+Não dá mais para desfazer: uma peça mudou.,,interface/principal.gd
+Roupas de volta como estavam.,,interface/principal.gd
+%s já veste esta peça.,,interface/principal.gd
+Em %s (%s):,,interface/principal.gd
+Sai: %s,,interface/principal.gd
+"nada, o espaço está livre",,interface/principal.gd
+Entra: %s,,interface/principal.gd
+%s: ganha o poder %s,,interface/principal.gd
+%s: ganha o bônus de %s,,interface/principal.gd
+%s: mais perto do poder,,interface/principal.gd
+%s: perde o poder %s,,interface/principal.gd
+%s: perde o bônus de %s,,interface/principal.gd
+%s: mantém o bônus,,interface/principal.gd
+Não muda nenhuma fantasia.,,interface/principal.gd
+%s está sem roupa.,,interface/principal.gd
+%s: %d ponto de treino.,,interface/principal.gd
+%s: %d pontos de treino.,,interface/principal.gd
+%d peça nova.,,interface/principal.gd
+%d peças novas.,,interface/principal.gd
+%s: falta 1 peça de %s (você tem).,,interface/principal.gd
+Nível máximo,,interface/principal.gd
+Faltam blocos,,interface/principal.gd
+Raridade máxima,,interface/principal.gd
+Faltam troféus,,interface/principal.gd
+Nível máximo.,,interface/principal.gd
+Faltam blocos (custa %d).,,interface/principal.gd
+"Já é miaujestosa, a raridade máxima.",,interface/principal.gd
+Faltam troféus (custa %d).,,interface/principal.gd
+Tudo já é mítico.,,interface/principal.gd
+Faltam troféus (mínimo %d).,,interface/principal.gd
+Nada para reforçar agora.,,interface/principal.gd
+%d peça mais rara,,interface/principal.gd
+%d peças mais raras,,interface/principal.gd
+Tudo no nível máximo.,,interface/principal.gd
+Faltam blocos (mínimo %d).,,interface/principal.gd
+Nada para promover agora.,,interface/principal.gd
+%d peça promovida,,interface/principal.gd
+%d peças promovidas,,interface/principal.gd
+%s%s nível %d,,interface/principal.gd
+sem marcas,,interface/principal.gd
+1 marca,,interface/principal.gd
+%d marcas,,interface/principal.gd
+Torre [T],,interface/principal.gd
+Invasão · %s,,interface/principal.gd
+Onda %d de %d,,interface/principal.gd
+%d/%d módulos,,interface/principal.gd
+Fantasias de %s,,interface/principal.gd
+Só %s,,interface/principal.gd
+Volta da luta,,interface/principal.gd
+%s subiu para o nível %d  (+%d ponto de treino),,interface/principal.gd
+%s subiu para o nível %d  (+%d pontos de treino),,interface/principal.gd
+%s caiu na luta: a roupa ganhou uma marca,,interface/principal.gd
++%d troféu,,interface/principal.gd
+Clique para continuar,,interface/principal.gd
+Atalhos e regras,,interface/principal.gd
+Atalhos,,interface/principal.gd
+Regras,,interface/principal.gd
+"Clique, Esc ou ? para fechar",,interface/principal.gd
+%d aviso,,interface/principal.gd
+%d avisos,,interface/principal.gd
+Vença o próximo cômodo,,interface/principal.gd
+  completa!,,interface/principal.gd
+NOCAUTE,,interface/principal.gd
+Linha: %s,,interface/principal.gd
+Enter ok · Esc sai,,interface/principal.gd
+Nv %d,,interface/principal.gd
+máx.,,interface/principal.gd
+Vista as 4 peças da fantasia em %s.,,interface/principal.gd
+%s já tem %s no grau máximo. Vista outra fantasia completa.,,interface/principal.gd
+"%s já tem %s: a herança sobe para o grau %s, com mais força (+%d%%) e solta a cada %d s. Isso é para sempre.",,interface/principal.gd
+"%s passa a soltar %s sozinho na luta, a cada %d s, com qualquer roupa (%s). Isso é para sempre e não dá para trocar depois. Incorporar a mesma fantasia de novo sobe o grau.",,interface/principal.gd
+Incorporar %s?,,interface/principal.gd
+Incorporar,,interface/principal.gd
+Ainda não,,interface/principal.gd
+%s (grau máximo),,interface/principal.gd
+%s sobe para %s,,interface/principal.gd
+Herança pronta!,,interface/principal.gd
+Herança: vista 4/4,,interface/principal.gd
+vestida,,interface/principal.gd
+vestir!,,interface/principal.gd
+em uso,,interface/principal.gd
++%d em uso,,interface/principal.gd
+Todas,,interface/principal.gd
+Novas,,interface/principal.gd
+Fantas.,,interface/principal.gd
+Acess.,,interface/principal.gd
+Nenhuma peça aqui.,,interface/principal.gd
+Próxima onda: CHEFE,,interface/principal.gd
+Próxima onda,,interface/principal.gd
+Onda %d: CHEFE!,,interface/principal.gd
+Ataque: %s,,interface/principal.gd
+Promover,,interface/principal.gd
+−%d blocos,,interface/principal.gd
+Nível,,interface/principal.gd
+%d a %d blocos,,interface/principal.gd
+−%d troféus,,interface/principal.gd
+%d a %d troféus,,interface/principal.gd
+Raridade,,interface/principal.gd
+Fundir peças iguais?,,interface/principal.gd
+"%s + %s → %s, %s",,interface/principal.gd
+Sai de graça. A outra peça some.,,interface/principal.gd
+ %d marca a mais não cabe e se perde.,,interface/principal.gd
+ %d marcas a mais não cabem e se perdem.,,interface/principal.gd
+Fundir,,interface/principal.gd
+Promover a fantasia inteira,,interface/principal.gd
+"Sobe um nível de cada peça que %s veste e ainda pode subir, pagando os blocos de cada peça (o nível mais alto custa mais) enquanto houver blocos.",,interface/principal.gd
+Custo total: %d blocos para %d peça (a torre tem %d).,,interface/principal.gd
+Custo total: %d blocos para %d peças (a torre tem %d).,,interface/principal.gd
+Escreva um nome.,,interface/principal.gd
+Nome já em uso.,,interface/principal.gd
+O gato agora se chama %s.,,interface/principal.gd
+Dano por golpe,,interface/principal.gd
+Dano por segundo,,interface/principal.gd
+Golpes por segundo,,interface/principal.gd
+Velocidade,,interface/principal.gd
+Nível %d  ·  %s  ·  %s,,interface/principal.gd
+Alcançando o time: XP x%s,,interface/principal.gd
+Duplo clique no nome (ou no lápis) troca o nome.,,interface/principal.gd
+Heranças (%d de %d),,interface/principal.gd
+"Pronto para incorporar %s: clique em ""Herança pronta!"".",,interface/principal.gd
+Pronto para incorporar um poder: vista uma fantasia completa.,,interface/principal.gd
+No nível %d ele incorpora o poder da fantasia completa que estiver vestindo e passa a soltá-lo sozinho.,,interface/principal.gd
+"Números com as roupas, a fantasia e o treino de agora. A posição e a ordem (avançar, segurar, recuar) se escolhem na preparação da luta.",,interface/principal.gd
+%s: %d ponto,,interface/principal.gd
+%s: %d pontos,,interface/principal.gd
+Cada ponto dá %s,,interface/principal.gd
+Clique para gastar um ponto de treino.,,interface/principal.gd
+Sem pontos de treino: cada nível novo dá um.,,interface/principal.gd
+"%s agora, em números:",,interface/principal.gd
+%s já veste a fantasia inteira.,,interface/principal.gd
+Nada livre para vestir em %s.,,interface/principal.gd
+Clique: veste as 4 peças em %s.,,interface/principal.gd
+Clique: veste %d de 4 peças em %s.,,interface/principal.gd
+"Poder: %s, %s (a cada %d s)",,interface/principal.gd
+%s: já com %s,,interface/principal.gd
+%s: no guarda-roupa,,interface/principal.gd
+%s: com %s,,interface/principal.gd
+%s: você ainda não tem,,interface/principal.gd
+Peças de outro gato não saem sozinhas: tire do gato primeiro.,,interface/principal.gd
+Clique: mostra só as peças desta fantasia.,,interface/principal.gd
+"solta sozinho a cada %d s, com %d%% da força do grau I",,interface/principal.gd
+Grau %s de %s. A mesma fantasia incorporada de novo sobe o grau.,,interface/principal.gd
+"%s solta sozinho na luta, com qualquer roupa.",,interface/principal.gd
+"Clique para incorporar %s: %s solta sozinho na luta, para sempre.",,interface/principal.gd
+Vista uma fantasia completa (4 peças) em %s e clique aqui.,,interface/principal.gd
+Raridade da fantasia inteira,,interface/principal.gd
+"Sobe uma raridade em cada peça que %s veste (de %d a %d troféus por peça, conforme a raridade).",,interface/principal.gd
+Custo total: %d troféus (você tem %d).,,interface/principal.gd
+"Arraste uma peça: carretel sobe o nível (blocos), estrela sobe a raridade (troféus).",,interface/principal.gd
+"Peça sobre peça igual: funde, de graça.",,interface/principal.gd
+  nível %d,,interface/principal.gd
+Fantasia: %s,,interface/principal.gd
+Arraste ao carretel: nível +1 (%d blocos),,interface/principal.gd
+"Solte sobre outra igual: funde, de graça",,interface/principal.gd
+Faltam blocos para o nível (custa %d),,interface/principal.gd
+Campanha vencida! Jogue qualquer cômodo de novo para caçar peças.,,interface/principal.gd
+%s: %d/%d lugares vencidos,,interface/principal.gd
+Cômodos vencidos: %d/%d,,interface/principal.gd
+Seu time,,interface/principal.gd
+%s · Nv %d,,interface/principal.gd
+Guarda-roupa: %d peças,,interface/principal.gd
+%d ponto de treino por gastar,,interface/principal.gd
+%d pontos de treino por gastar,,interface/principal.gd
+Cada lugar vencido na casa traz um gato novo,,interface/principal.gd
+O time chega a %d gatos vencendo lugares da casa,,interface/principal.gd
+Esc ou II: menu de pausa,,interface/principal.gd
+T: oficina da torre,,interface/principal.gd
+I: invasão sem fim,,interface/principal.gd
+"V: casa, lá fora ou ruas",,interface/principal.gd
+V: casa ou lado de fora,,interface/principal.gd
+Isso apaga o progresso e as peças.,,interface/principal.gd
+Clique para entrar,,interface/principal.gd
+"Oi! Eu sou o gato-guia. Bichos invasores querem derrubar e roubar os blocos da torre. Sem blocos, a onda está perdida.",,interface/tutorial.gd
+"A casa tem cinco cômodos, cada um com cinco ondas. Clique no Quarto para começar.",,interface/tutorial.gd
+Estes são os seus gatos. Cada um luta sozinho e pode vestir até 4 peças.,,interface/tutorial.gd
+Clique neste gato para escolhê-lo. O que você vestir vai para o escolhido.,,interface/tutorial.gd
+Arraste o Capacete até o gato. Só clicar na peça também funciona.,,interface/tutorial.gd
+"Cada gato tem 4 espaços: Cabeça, Corpo, Mão e Acessório. A mão é a arma. O resto dá vida, defesa e truques. Passe o mouse numa peça para ver o que ela faz.",,interface/tutorial.gd
+Agora vista o Colete e uma arma: o Porrete ou o Estilingue.,,interface/tutorial.gd
+"Peças da mesma fantasia combinam. Com 2 ou 3 vem um bônus. Com as 4, o gato ganha um poder.",,interface/tutorial.gd
+"Com mais peças, estes botões vestem os gatos por você. Vestir o time é a tecla V.",,interface/tutorial.gd
+"Cada gato luta numa linha: Frente, Meio ou Fundo. A frente apanha primeiro. Clique em Linha para trocar.",,interface/tutorial.gd
+Pronto! Clique em LUTAR para a onda começar.,,interface/tutorial.gd
+A onda ainda não começou. Arraste um gato para escolher onde ele fica.,,interface/tutorial.gd
+"Dê ordens ao time: Avançar ataca, Segurar espera no posto, Recuar fica junto da torre. Clique numa (ou Q, W, E).",,interface/tutorial.gd
+Esta é a onda que vem. Clique num bicho para os gatos baterem nele primeiro.,,interface/tutorial.gd
+Tudo certo? Clique em Começar a onda (ou aperte Espaço).,,interface/tutorial.gd
+"A luta corre sozinha. Este botão muda a velocidade: 1x, 2x ou 3x. Clique nele.",,interface/tutorial.gd
+Este botão (ou a tecla Esc) pausa a luta. Lá dentro ficam as Opções.,,interface/tutorial.gd
+"Agora é só assistir! Se os blocos da torre acabarem, a onda está perdida.",,interface/tutorial.gd
+"Onda vencida! Os bichos podem largar peças novas, que ficam na aba Novas. Os gatos ganham experiência.",,interface/tutorial.gd
+"Gato que sobe de nível ganha 1 ponto de treino. Gaste em Vida, Força ou Agilidade.",,interface/tutorial.gd
+Isso é o básico! Vença as outras 4 ondas do Quarto. Na última vem o chefe. Boa sorte!,,interface/tutorial.gd
+Vamos lá!,,interface/tutorial.gd
+Fim do treino! Na campanha de verdade o Quarto continua por mais 4 ondas. Vou te levar de volta ao título.,,interface/tutorial.gd
+"Fantasia completa! Com as 4 peças da mesma fantasia, o gato ganha um poder.",,interface/tutorial.gd
+Na luta o poder vira um botão lá embaixo. Você escolhe a hora de soltar.,,interface/tutorial.gd
+"Subiu de nível! Cada nível dá 1 ponto de treino. Gaste em Vida, Força ou Agilidade.",,interface/tutorial.gd
+"Peça repetida? Ela se funde sozinha com a que você já tem, e a peça fica melhor.",,interface/tutorial.gd
+"Se as duas já estão no máximo, a repetida vira um troféu.",,interface/tutorial.gd
+Você ganhou troféus! Eles pagam melhorias permanentes da torre.,,interface/tutorial.gd
+Abra a Oficina (tecla T) para gastá-los. Cada chefe vencido também libera um módulo.,,interface/tutorial.gd
+Nível 10! O gato pode guardar o poder da fantasia completa que veste.,,interface/tutorial.gd
+"Clique em ""Herança pronta!"" sob o gato. Depois o poder dispara sozinho na luta.",,interface/tutorial.gd
+Um gato caiu na luta! A roupa dele ganhou uma marca.,,interface/tutorial.gd
+Marcas dão efeitos extras à peça. Cada peça aguenta poucas. Passe o mouse nela para ver.,,interface/tutorial.gd
+Última onda do cômodo: vem o chefe! Ele tem vida de sobra e um truque só dele.,,interface/tutorial.gd
+"Vencê-lo libera o próximo cômodo, um gato novo no time e um módulo para a torre.",,interface/tutorial.gd
+Cômodo novo liberado! Cada um tem uma família de bichos e um chefe.,,interface/tutorial.gd
+Dá para voltar aos cômodos vencidos para treinar e juntar peças.,,interface/tutorial.gd
+O Fichário [F] é o álbum das fantasias. Na aba Metas há prêmios em troféus.,,interface/tutorial.gd
+"Casa limpa, mas os bichos fugiram para fora! É o segundo ato.",,interface/tutorial.gd
+"Aperte V (ou o botão) para ver o mapa de fora: Quintal, Garagem, Telhado, Rua e Toca.",,interface/tutorial.gd
+Agora existe a Invasão sem fim: ondas e mais ondas até a torre cair. Ela fica na vista da casa; este botão alterna as vistas.,,interface/tutorial.gd
+"Na casa, escolha um cômodo e aperte I. O seu recorde fica gravado.",,interface/tutorial.gd
+Antes de cada onda você arruma o time. Arraste os gatos para escolher onde ficam.,,interface/tutorial.gd
+"Dê ordens: Avançar, Segurar ou Recuar (teclas Q, W, E). Com um gato escolhido, vale só para ele.",,interface/tutorial.gd
+Clique num bicho da onda que vem para marcar o alvo. Espaço começa a onda.,,interface/tutorial.gd
+Poder carregado! Clique neste botão (ou aperte o número dele) para soltar.,,interface/tutorial.gd
+Depois ele recarrega. Nas Opções dá para ligar o poder automático.,,interface/tutorial.gd
+%s: %s,,interface/tutorial.gd
+Estes são os seus gatos. Cada um luta sozinho e pode vestir até 4 peças. Clique num gato para escolhê-lo: o que você vestir vai para o escolhido.,,interface/tutorial.gd
+"Arraste uma peça até o gato (só clicar nela também funciona). Cada gato tem 4 espaços: Cabeça, Corpo, Mão e Acessório. Passe o mouse numa peça para ver o que ela faz.",,interface/tutorial.gd
+Estes botões vestem os gatos por você. Vestir o time é a tecla V.,,interface/tutorial.gd
+Pronto? Clique em LUTAR para a onda começar. Atalhos e regras: tecla F1.,,interface/tutorial.gd
+"A casa tem cinco cômodos, cada um com cinco ondas. Clique num cômodo para entrar.",,interface/tutorial.gd
+Cada cômodo tem uma família de bichos e um chefe. Dá para voltar aos cômodos vencidos para treinar e juntar peças.,,interface/tutorial.gd
+Troféus pagam melhorias permanentes da torre. Abra a Oficina (tecla T) para gastá-los.,,interface/tutorial.gd
+"Casa limpa, mas os bichos fugiram para fora! Este botão (ou V) alterna as vistas: a casa, o Quintal e o resto. Na casa, I abre a Invasão sem fim.",,interface/tutorial.gd
+Troféus pagam melhorias permanentes da torre. %s.,,interface/tutorial.gd
+Cada botão Melhorar compra um nível da torre. O preço sobe a cada nível; botão apagado quer dizer que faltam troféus (passe o mouse para ver o motivo).,,interface/tutorial.gd
+"Cada chefe vencido libera um módulo. Monte nas vagas livres; as abas separam os da casa, de fora e das ruas.",,interface/tutorial.gd
+Setas e Enter também mexem aqui. Esc ou Fechar volta ao jogo.,,interface/tutorial.gd
+"O Fichário é o álbum das fantasias: uma página para cada uma, com as 4 peças, o poder e onde achar. Peça que ainda não apareceu fica em silhueta.",,interface/tutorial.gd
+"As abas pulam para o Índice, para um cômodo, para as fantasias de fora, para as Metas (prêmios em troféus) e para o Bestiário dos bichos.",,interface/tutorial.gd
+"Voltar e Avançar viram as páginas (também setas, A e D, ou a roda do mouse).",,interface/tutorial.gd
+"A última página mostra a fantasia criada no Ateliê, que abre quando o fichário está completo.",,interface/tutorial.gd
+"A luta corre sozinha. Este botão muda a velocidade: 1x, 2x ou 3x.",,interface/tutorial.gd
+"Se os blocos da torre acabarem, a onda está perdida.",,interface/tutorial.gd
+Poderes das fantasias completas: clique no botão (ou aperte o número dele) quando estiver carregado. Nas Opções dá para ligar o poder automático.,,interface/tutorial.gd
+Pular tutorial,,interface/tutorial.gd
+Clique de novo,,interface/tutorial.gd
+Entendi,,interface/tutorial.gd
+troféus,,interface/ui_comum.gd
+"ele solta sozinho a cada %d s, mais fraco que o da roupa",,jogo/balanco.gd
+%s sem um arranhão,,jogo/metas.gd
+Junte todas as %d peças,,jogo/metas.gd
+Fantasia de %s,,jogo/metas.gd
+%d%% do dano,,jogo/pecas.gd
++%d de armadura,,jogo/pecas.gd
+aliados por perto: +%d%% de dano,,jogo/pecas.gd
+explode ao morrer (+%d),,jogo/pecas.gd
+regenera +%d de vida por segundo,,jogo/pecas.gd
+ataca %d%% mais rápido,,jogo/pecas.gd
+golpes devolvem %d%% do dano em vida,,jogo/pecas.gd
+golpes queimam (+%d/s),,jogo/pecas.gd
+"cantil: cura %d%% da vida uma vez, abaixo de %d%%",,jogo/pecas.gd
++%d%% de chance de golpe crítico,,jogo/pecas.gd
+"Disfarce anula o 1º golpe, atordoa %s s; +%d%% dano; Furioso",,jogo/pecas.gd
+anula um golpe a cada %d s,,jogo/pecas.gd
+o poder recarrega %d%% mais depressa,,jogo/pecas.gd
+%d%% de chance de atirar duas vezes,,jogo/pecas.gd
+golpes deixam o alvo lento (%d%% de chance),,jogo/pecas.gd
+aliados em volta regeneram +%s de vida por segundo,,jogo/pecas.gd
+"ao cair, cura os aliados em %d%% da vida",,jogo/pecas.gd
+golpes atordoam o alvo (%d%% de chance),,jogo/pecas.gd
+mais dano com menos vida (até +%d%%),,jogo/pecas.gd
+anda %d%% mais rápido,,jogo/pecas.gd
+Apara %d%% dos golpes de perto; tiro na perna atordoa,,jogo/pecas.gd
+o 1º golpe em cada inimigo fere ×%s,,jogo/pecas.gd
++%d de alcance,,jogo/pecas.gd
+golpes ferem em volta (%d%% do dano),,jogo/pecas.gd
++%d%% de dano em quem tem menos de %d%% de vida,,jogo/pecas.gd
+%d%% de chance de esquivar,,jogo/pecas.gd
+cura %d%% da vida a cada abate,,jogo/pecas.gd
+espinhos: devolve %d de dano a quem bate de perto,,jogo/pecas.gd
+segundo fôlego: levanta uma vez com %d%% da vida,,jogo/pecas.gd
+golpes assustam o alvo (%d%% de chance),,jogo/pecas.gd
+Mensageiro!,,jogo/simulacao.gd
+Capangas!,,jogo/simulacao.gd
+Comboio!,,jogo/simulacao.gd
+Disco!,,jogo/simulacao.gd
+Flechas!,,jogo/simulacao.gd
+Chute!,,jogo/simulacao.gd
+Carro!,,jogo/simulacao.gd
+Ímã!,,jogo/simulacao.gd
+Contra-prova!,,jogo/simulacao.gd
+Protesto!,,jogo/simulacao.gd
+Disfarce refeito!,,jogo/simulacao.gd
+Reviveu!,,jogo/simulacao.gd
+Ainda não!,,jogo/simulacao.gd
+O nível de poder é mais de 8 mil!,,jogo/simulacao.gd
+Não é muito eficaz...,,jogo/simulacao.gd
+A bola balançou...,,jogo/simulacao.gd
+Alcance,,jogo/simulacao.gd
+%d (atira),,jogo/simulacao.gd
+Armadura,,jogo/simulacao.gd
+-%s por golpe,,jogo/simulacao.gd
+Redução de dano,,jogo/simulacao.gd
+Esquiva,,jogo/simulacao.gd
+Golpe crítico,,jogo/simulacao.gd
+Regeneração,,jogo/simulacao.gd
+%s de vida/s,,jogo/simulacao.gd
+%s por golpe levado,,jogo/simulacao.gd
+Roubo de vida,,jogo/simulacao.gd
+Cura em aliado,,jogo/simulacao.gd
+Queimadura,,jogo/simulacao.gd
+%s de dano/s,,jogo/simulacao.gd
+Aura de dano,,jogo/simulacao.gd
+Aura de cura,,jogo/simulacao.gd
+Aura de força,,jogo/simulacao.gd
++%s de dano,,jogo/simulacao.gd
+Aura de lentidão,,jogo/simulacao.gd
+bichos a %s,,jogo/simulacao.gd
+até +%s de dano ferido,,jogo/simulacao.gd
+Golpe em área,,jogo/simulacao.gd
+%s nos vizinhos,,jogo/simulacao.gd
+Explosão ao cair,,jogo/simulacao.gd
+Barreira,,jogo/simulacao.gd
+a cada %s s,,jogo/simulacao.gd
+Atordoar no golpe,,jogo/simulacao.gd
+Deixar lento no golpe,,jogo/simulacao.gd
+Tiro duplo,,jogo/simulacao.gd
+"Avançar: vai atrás de qualquer bicho que apareça, onde estiver.",,dados:Campo.PREP_DICA
+"Segurar: fica no posto e só sai para quem chega perto (o fundo, só para quem encosta).",,dados:Campo.PREP_DICA
+Recuar: fica colado na torre e só luta com quem chega nela.,,dados:Campo.PREP_DICA
+Atordoado,,dados:IconesEstado.NOME
+Preso na teia,,dados:IconesEstado.NOME
+Lento,,dados:IconesEstado.NOME
+Marcado,,dados:IconesEstado.NOME
+Queimando,,dados:IconesEstado.NOME
+Sem fôlego,,dados:IconesEstado.NOME
+Oculto,,dados:IconesEstado.NOME
+Protegido,,dados:IconesEstado.NOME
+Disfarçado,,dados:IconesEstado.NOME
+Frenesi,,dados:IconesEstado.NOME
+Curando,,dados:IconesEstado.NOME
+Abalado,,dados:IconesEstado.NOME
+Dormindo,,dados:IconesEstado.NOME
+Confuso,,dados:IconesEstado.NOME
+Mais,,dados:IconesEstado.NOME
+Preso,,dados:IconesEstado.CURTO
+não age e não anda,,dados:IconesEstado.DICA
+"não anda, mas ataca quem alcançar",,dados:IconesEstado.DICA
+anda e ataca mais devagar,,dados:IconesEstado.DICA
+recebe mais dano de todos,,dados:IconesEstado.DICA
+perde vida a cada segundo,,dados:IconesEstado.DICA
+robô sem corda: parado,,dados:IconesEstado.DICA
+os inimigos não o escolhem como alvo,,dados:IconesEstado.DICA
+escudo: aguenta mais dano,,dados:IconesEstado.DICA
+o próximo golpe é anulado e quem bateu fica atordoado,,dados:IconesEstado.DICA
+ataca mais rápido,,dados:IconesEstado.DICA
+golpes em área e rouba vida,,dados:IconesEstado.DICA
+"veloz, espinhento e não atordoa",,dados:IconesEstado.DICA
+recupera vida no canteiro,,dados:IconesEstado.DICA
+corre com um bloco roubado,,dados:IconesEstado.DICA
+o líder caiu: dano e velocidade menores,,dados:IconesEstado.DICA
+dorme com os peixes: fora da luta,,dados:IconesEstado.DICA
+com pouca vida: mais dano e mais velocidade,,dados:IconesEstado.DICA
+bate no aliado mais perto,,dados:IconesEstado.DICA
+há mais estados nele,,dados:IconesEstado.DICA
+vencido,,dados:principal.VENCIDO_GENERO
+vencida,,dados:principal.VENCIDO_GENERO
+vencidos,,dados:principal.VENCIDO_GENERO
+o,,dados:principal.ARTIGO
+a,,dados:principal.ARTIGO
+os,,dados:principal.ARTIGO
+Vencido,,interface/principal.gd (VENCIDO_GENERO capitalizado)
+Vencida,,interface/principal.gd (VENCIDO_GENERO capitalizado)
+Vencidos,,interface/principal.gd (VENCIDO_GENERO capitalizado)
