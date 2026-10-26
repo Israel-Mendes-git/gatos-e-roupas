@@ -617,22 +617,22 @@ const NOMES_BONECOS: Array[String] = ["Fiapo", "Botão", "Retalho", "Feltro", "N
 const PODER_INTERVALO := 9.0        # segundos entre usos
 # Acerto da força do poder por fantasia (dano, duração e cura do poder da fantasia completa no gato; não vale para herança nem bicho).
 const PODER_KIT_FORCA: Dictionary = {
-	Pecas.Conjunto.JARDINEIRO: 1.5, Pecas.Conjunto.ESTELAR: 2.0, Pecas.Conjunto.MORCEGO: 2.2,
-	Pecas.Conjunto.NINJA_FOLHA: 2.5, Pecas.Conjunto.CAVALEIRO: 1.3, Pecas.Conjunto.OURICO: 2.5,
+	Pecas.Conjunto.JARDINEIRO: 1.5, Pecas.Conjunto.ESTELAR: 2.0, Pecas.Conjunto.MORCEGO: 1.9,
+	Pecas.Conjunto.NINJA_FOLHA: 1.9, Pecas.Conjunto.CAVALEIRO: 1.3, Pecas.Conjunto.OURICO: 2.5,
 	Pecas.Conjunto.VIKING: 1.7, Pecas.Conjunto.CIRCO: 3.0, Pecas.Conjunto.FENIX_MIAUSSIMO: 2.3,
 	Pecas.Conjunto.ARANHA: 1.15, Pecas.Conjunto.ROCKET_MIAUGUE: 1.4, Pecas.Conjunto.SOMBRIO: 1.7, Pecas.Conjunto.TUBARAO: 1.2,
 	Pecas.Conjunto.STARDEW_MIAULLEY: 2.2, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
 	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7, Pecas.Conjunto.MIMIAU: 0.6,
 	Pecas.Conjunto.SUPER_MIAUJIN: 0.7, Pecas.Conjunto.TREINADOR: 1.6,
 	Pecas.Conjunto.MIAUZILLA: 3.4, Pecas.Conjunto.ARTHUR_MIAURGON: 2.6, Pecas.Conjunto.CATCHULLU: 0.5,
-	Pecas.Conjunto.SUBMIAUTICA: 0.6,
+	Pecas.Conjunto.SUBMIAUTICA: 0.6, Pecas.Conjunto.DISPARAMIAU: 0.8,
 }
 # Acerto da recarga por fantasia (x PODER_INTERVALO), medido com o simulador (kits=todos): >1 recarrega mais devagar.
 const PODER_KIT_INTERVALO: Dictionary = {
 	Pecas.Conjunto.FERRO: 1.6, Pecas.Conjunto.CAUBOI: 1.55, Pecas.Conjunto.MIAULAX: 1.7,
 	Pecas.Conjunto.JIMIAU: 1.55, Pecas.Conjunto.TROVAO: 1.6, Pecas.Conjunto.GUARDIAO: 1.55,
 	Pecas.Conjunto.JARDINEIRO: 0.6, Pecas.Conjunto.ARANHA: 0.7, Pecas.Conjunto.ESTELAR: 0.6,
-	Pecas.Conjunto.MORCEGO: 0.65, Pecas.Conjunto.NINJA_FOLHA: 0.7, Pecas.Conjunto.CAVALEIRO: 0.75,
+	Pecas.Conjunto.MORCEGO: 1.0, Pecas.Conjunto.NINJA_FOLHA: 0.7, Pecas.Conjunto.CAVALEIRO: 0.75,
 	Pecas.Conjunto.OURICO: 0.75, Pecas.Conjunto.VIKING: 0.75, Pecas.Conjunto.CIRCO: 0.6,
 	Pecas.Conjunto.ROCKET_MIAUGUE: 0.75, Pecas.Conjunto.STARDEW_MIAULLEY: 0.8, Pecas.Conjunto.SOMBRIO: 0.8,
 	Pecas.Conjunto.GELO: 0.8, Pecas.Conjunto.FENIX_MIAUSSIMO: 0.8, Pecas.Conjunto.MEON: 0.85,
