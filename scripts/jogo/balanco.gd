@@ -624,7 +624,7 @@ const PODER_KIT_FORCA: Dictionary = {
 	Pecas.Conjunto.STARDEW_MIAULLEY: 2.2, Pecas.Conjunto.MEON: 1.7, Pecas.Conjunto.GELO: 1.3,
 	Pecas.Conjunto.MAGO: 1.2, Pecas.Conjunto.MIAULAX: 0.7, Pecas.Conjunto.MIMIAU: 0.6,
 	Pecas.Conjunto.SUPER_MIAUJIN: 0.7, Pecas.Conjunto.TREINADOR: 1.6,
-	Pecas.Conjunto.MIAUZILLA: 2.8, Pecas.Conjunto.ARTHUR_MIAURGON: 2.6, Pecas.Conjunto.CATCHULLU: 0.5,
+	Pecas.Conjunto.MIAUZILLA: 3.4, Pecas.Conjunto.ARTHUR_MIAURGON: 2.6, Pecas.Conjunto.CATCHULLU: 0.5,
 	Pecas.Conjunto.SUBMIAUTICA: 0.7,
 }
 # Acerto da recarga por fantasia (x PODER_INTERVALO), medido com o simulador (kits=todos): >1 recarrega mais devagar.
@@ -638,7 +638,7 @@ const PODER_KIT_INTERVALO: Dictionary = {
 	Pecas.Conjunto.GELO: 0.8, Pecas.Conjunto.FENIX_MIAUSSIMO: 0.8, Pecas.Conjunto.MEON: 0.85,
 	Pecas.Conjunto.MAGO: 0.9, Pecas.Conjunto.PIRATA: 1.15,
 	Pecas.Conjunto.SUPER_MIAUJIN: 1.5, Pecas.Conjunto.TREINADOR: 0.6, Pecas.Conjunto.MIAU_NOIR: 0.7,
-	Pecas.Conjunto.ARTHUR_MIAURGON: 0.85, Pecas.Conjunto.MIAUZILLA: 0.6, Pecas.Conjunto.CATCHULLU: 1.45,
+	Pecas.Conjunto.ARTHUR_MIAURGON: 0.85, Pecas.Conjunto.MIAUZILLA: 0.5, Pecas.Conjunto.CATCHULLU: 1.45,
 }
 ## Segundos de recarga do poder da fantasia `c` completa (o que a ficha mostra; sem marcas nem bônus de recarga).
 static func poder_recarga(c: int) -> int:
