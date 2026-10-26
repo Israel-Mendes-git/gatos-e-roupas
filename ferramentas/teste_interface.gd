@@ -129,6 +129,28 @@ func _opcoes() -> void:
 	_ok(is_equal_approx(Musica.volume, maxf(0.0, vm - 0.1)), "o volume da música desce sem mexer nos efeitos")
 	mn._acionar("o_mp")
 	_ok(is_equal_approx(Musica.volume, vm), "o volume da música sobe de volta")
+	# idioma: trocar nas Opções muda o texto dos botões na hora (e volta ao português para o resto do teste)
+	_ok(Idioma.atual == "pt", "o teste começa em português")
+	_ok(mn.botoes[0]["id"] == "o_idioma" and mn.botoes[0]["txt"] == "Português", "botão de idioma mostra o idioma atual")
+	mn._acionar("o_idioma")
+	_ok(Idioma.atual == "en" and mn.botoes[0]["txt"] == "English", "o botão troca para English")
+	var voltar_txt: String = ""
+	for bt in mn.botoes:
+		if bt["id"] == "o_voltar" and bt["txt"] != "":
+			voltar_txt = bt["txt"]
+	_ok(voltar_txt == "Back", "botão Voltar em inglês: '%s'" % voltar_txt)
+	mn.tela = Menus.Tela.TITULO
+	mn._montar()
+	var opc_txt: String = ""
+	for bt in mn.botoes:
+		if bt["id"] == "opcoes":
+			opc_txt = bt["txt"]
+	_ok(opc_txt == "Options", "o título em inglês traz 'Options': '%s'" % opc_txt)
+	await _quadros()
+	mn.tela = Menus.Tela.OPCOES
+	mn._montar()
+	mn._acionar("o_idioma")
+	_ok(Idioma.atual == "pt", "o botão volta ao português")
 	mn.tela = Menus.Tela.NENHUMA
 	mn._montar()
 	await _quadros()

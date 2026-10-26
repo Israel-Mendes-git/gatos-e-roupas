@@ -20,9 +20,9 @@ static var numeros_dano: bool = true
 static var poder_automatico: bool = false
 static var preparacao_onda: bool = true   # desligada: a onda começa direto, com os postos e ordens gravados
 ## Altura de cada linha da tela de Opções (a do "Poder automático" é mais alta: tem três linhas de explicação).
-const OPC_Y: Array[float] = [0.0, 48.0, 96.0, 144.0, 192.0, 240.0, 288.0, 336.0, 410.0, 458.0]
-const OPC_TOPO := 96.0   # da borda do painel até a primeira linha
-const OPC_H := 46.0      # altura dos botões de cada linha
+const OPC_Y: Array[float] = [0.0, 44.0, 88.0, 132.0, 176.0, 220.0, 264.0, 308.0, 352.0, 420.0, 464.0]   # idioma, tela, velocidade, som, efeitos, música, tremor, dano, poderes, preparação, campanha
+const OPC_TOPO := 92.0   # da borda do painel até a primeira linha
+const OPC_H := 42.0      # altura dos botões de cada linha
 static var tela_cheia: bool = false
 static var velocidade_padrao: int = 1
 static var dicas_vistas: Dictionary = {}
@@ -96,7 +96,13 @@ var entrando: bool = false   # a cortina atual é a entrada num cômodo (o mapa 
 # ------------------------------------------------------------------ opções em disco
 static func carregar_opcoes() -> void:
 	var cfg := ConfigFile.new()
-	if cfg.load(cfg_caminho) != OK:
+	var tem_cfg: bool = cfg.load(cfg_caminho) == OK
+	# idioma: o gravado; na primeira execução, o do sistema (os testes, que não gravam, ficam em português)
+	if tem_cfg and cfg.has_section_key("opcoes", "idioma"):
+		Idioma.definir(str(cfg.get_value("opcoes", "idioma", Idioma.PADRAO)))
+	elif gravar:
+		Idioma.definir(Idioma.detectar())
+	if not tem_cfg:
 		return
 	tremor_tela = bool(cfg.get_value("opcoes", "tremor", true))
 	numeros_dano = bool(cfg.get_value("opcoes", "numeros_dano", true))
@@ -119,6 +125,7 @@ static func gravar_opcoes() -> void:
 		return
 	var cfg := ConfigFile.new()
 	cfg.load(cfg_caminho)   # preserva as outras chaves (ex.: "ui")
+	cfg.set_value("opcoes", "idioma", Idioma.atual)
 	cfg.set_value("opcoes", "tremor", tremor_tela)
 	cfg.set_value("opcoes", "numeros_dano", numeros_dano)
 	cfg.set_value("opcoes", "tela_cheia", tela_cheia)
@@ -372,22 +379,22 @@ func _montar() -> void:
 			var y: float = 210.0 if tem_save else 236.0
 			var x: float = 490.0
 			if tem_save:
-				_bt("continuar", "Continuar", Rect2(x, y, 300, 68), B_VERDE, 26, {"sub": _resumo_save()})
+				_bt("continuar", Idioma.t("Continuar"), Rect2(x, y, 300, 68), B_VERDE, 26, {"sub": _resumo_save()})
 				y += 78.0
-			_bt("nova", "Nova campanha", Rect2(x, y, 300, 46), B_LARANJA)
+			_bt("nova", Idioma.t("Nova campanha"), Rect2(x, y, 300, 46), B_LARANJA)
 			y += 54.0
-			_bt("tutorial", "Tutorial", Rect2(x, y, 300, 46), B_OURO)
+			_bt("tutorial", Idioma.t("Tutorial"), Rect2(x, y, 300, 46), B_OURO)
 			y += 54.0
-			_bt("opcoes", "Opções", Rect2(x, y, 300, 46), B_AZUL)
+			_bt("opcoes", Idioma.t("Opções"), Rect2(x, y, 300, 46), B_AZUL)
 			y += 54.0
-			_bt("creditos", "Créditos", Rect2(x, y, 300, 46), B_MARROM)
+			_bt("creditos", Idioma.t("Créditos"), Rect2(x, y, 300, 46), B_MARROM)
 			y += 54.0
-			_bt("sair", "Sair", Rect2(x, y, 300, 46), B_VERMELHO)
+			_bt("sair", Idioma.t("Sair"), Rect2(x, y, 300, 46), B_VERMELHO)
 		Tela.PAUSA:
-			var itens: Array = [["p_continuar", "Continuar", B_VERDE], ["opcoes", "Opções", B_AZUL]]
+			var itens: Array = [["p_continuar", Idioma.t("Continuar"), B_VERDE], ["opcoes", Idioma.t("Opções"), B_AZUL]]
 			if dono.modo != dono.Modo.MAPA:
-				itens.append(["p_mapa", "Voltar ao mapa", B_LARANJA])
-			itens.append(["p_menu", "Menu principal", B_VERMELHO])
+				itens.append(["p_mapa", Idioma.t("Voltar ao mapa"), B_LARANJA])
+			itens.append(["p_menu", Idioma.t("Menu principal"), B_VERMELHO])
 			var h: float = 128.0 + itens.size() * 62.0
 			painel = Rect2(450, roundf((720.0 - h) * 0.5) + 40.0, 380, h)
 			for k in itens.size():
@@ -398,33 +405,34 @@ func _montar() -> void:
 			var y0: float = painel.position.y + OPC_TOPO
 			var h: float = OPC_H
 			var lig_som: bool = not Som.mudo
-			_bt("o_tela", "Tela cheia" if tela_cheia else "Janela", Rect2(xr - 230, y0 + OPC_Y[0], 230, h), B_AZUL)
+			_bt("o_idioma", Idioma.nome_atual(), Rect2(xr - 230, y0 + OPC_Y[0], 230, h), B_ROSA_IDIOMA)
+			_bt("o_tela", Idioma.t("Tela cheia") if tela_cheia else Idioma.t("Janela"), Rect2(xr - 230, y0 + OPC_Y[1], 230, h), B_AZUL)
 			for k in 3:
-				_bt("o_v%d" % (k + 1), "%dx" % (k + 1), Rect2(xr - 230 + k * 80, y0 + OPC_Y[1], 70, h), B_OURO if velocidade_padrao == k + 1 else B_CINZA, 22, {"marcado": velocidade_padrao == k + 1})
-			_bt("o_som", "Ligado" if lig_som else "Desligado", Rect2(xr - 230, y0 + OPC_Y[2], 230, h), B_VERDE if lig_som else B_CINZA, 22, {"icone": "ok" if lig_som else "x"})
-			_bt("o_vm", "", Rect2(xr - 230, y0 + OPC_Y[3] + 2.0, 42, 42), Color.WHITE, 22, {"icone": "menos", "on": lig_som and Som.volume > 0.05})
-			_bt("o_vp", "", Rect2(xr - 42, y0 + OPC_Y[3] + 2.0, 42, 42), Color.WHITE, 22, {"icone": "mais", "on": lig_som and Som.volume < 0.95})
-			_bt("o_mm", "", Rect2(xr - 230, y0 + OPC_Y[4] + 2.0, 42, 42), Color.WHITE, 22, {"icone": "menos", "on": lig_som and Musica.volume > 0.05})
-			_bt("o_mp", "", Rect2(xr - 42, y0 + OPC_Y[4] + 2.0, 42, 42), Color.WHITE, 22, {"icone": "mais", "on": lig_som and Musica.volume < 0.95})
-			_bt("o_tremor", "Ligado" if tremor_tela else "Desligado", Rect2(xr - 230, y0 + OPC_Y[5], 230, h), B_VERDE if tremor_tela else B_CINZA, 22, {"icone": "ok" if tremor_tela else "x"})
-			_bt("o_dano", "Ligado" if numeros_dano else "Desligado", Rect2(xr - 230, y0 + OPC_Y[6], 230, h), B_VERDE if numeros_dano else B_CINZA, 22, {"icone": "ok" if numeros_dano else "x"})
-			_bt("o_poder", "Ligado" if poder_automatico else "Desligado", Rect2(xr - 230, y0 + OPC_Y[7], 230, h), B_VERDE if poder_automatico else B_CINZA, 22, {"icone": "ok" if poder_automatico else "x"})
-			_bt("o_prep", "Ligada" if preparacao_onda else "Desligada", Rect2(xr - 230, y0 + OPC_Y[8], 230, h), B_VERDE if preparacao_onda else B_CINZA, 22, {"icone": "ok" if preparacao_onda else "x"})
-			_bt("o_apagar", "Apagar...", Rect2(xr - 230, y0 + OPC_Y[9], 230, h), B_VERMELHO, 22, {"on": tem_save})
-			_bt("o_voltar", "Voltar", Rect2(640 - 130, painel.end.y - 82, 260, 56), B_MARROM)
+				_bt("o_v%d" % (k + 1), "%dx" % (k + 1), Rect2(xr - 230 + k * 80, y0 + OPC_Y[2], 70, h), B_OURO if velocidade_padrao == k + 1 else B_CINZA, 22, {"marcado": velocidade_padrao == k + 1})
+			_bt("o_som", Idioma.t("Ligado") if lig_som else Idioma.t("Desligado"), Rect2(xr - 230, y0 + OPC_Y[3], 230, h), B_VERDE if lig_som else B_CINZA, 22, {"icone": "ok" if lig_som else "x"})
+			_bt("o_vm", "", Rect2(xr - 230, y0 + OPC_Y[4], 42, 42), Color.WHITE, 22, {"icone": "menos", "on": lig_som and Som.volume > 0.05})
+			_bt("o_vp", "", Rect2(xr - 42, y0 + OPC_Y[4], 42, 42), Color.WHITE, 22, {"icone": "mais", "on": lig_som and Som.volume < 0.95})
+			_bt("o_mm", "", Rect2(xr - 230, y0 + OPC_Y[5], 42, 42), Color.WHITE, 22, {"icone": "menos", "on": lig_som and Musica.volume > 0.05})
+			_bt("o_mp", "", Rect2(xr - 42, y0 + OPC_Y[5], 42, 42), Color.WHITE, 22, {"icone": "mais", "on": lig_som and Musica.volume < 0.95})
+			_bt("o_tremor", Idioma.t("Ligado") if tremor_tela else Idioma.t("Desligado"), Rect2(xr - 230, y0 + OPC_Y[6], 230, h), B_VERDE if tremor_tela else B_CINZA, 22, {"icone": "ok" if tremor_tela else "x"})
+			_bt("o_dano", Idioma.t("Ligado") if numeros_dano else Idioma.t("Desligado"), Rect2(xr - 230, y0 + OPC_Y[7], 230, h), B_VERDE if numeros_dano else B_CINZA, 22, {"icone": "ok" if numeros_dano else "x"})
+			_bt("o_poder", Idioma.t("Ligado") if poder_automatico else Idioma.t("Desligado"), Rect2(xr - 230, y0 + OPC_Y[8], 230, h), B_VERDE if poder_automatico else B_CINZA, 22, {"icone": "ok" if poder_automatico else "x"})
+			_bt("o_prep", Idioma.t("Ligada") if preparacao_onda else Idioma.t("Desligada"), Rect2(xr - 230, y0 + OPC_Y[9], 230, h), B_VERDE if preparacao_onda else B_CINZA, 22, {"icone": "ok" if preparacao_onda else "x"})
+			_bt("o_apagar", Idioma.t("Apagar..."), Rect2(xr - 230, y0 + OPC_Y[10], 230, h), B_VERMELHO, 22, {"on": tem_save})
+			_bt("o_voltar", Idioma.t("Voltar"), Rect2(640 - 130, painel.end.y - 82, 260, 56), B_MARROM)
 			_bt("o_voltar", "", Rect2(painel.end.x - 72, painel.position.y + 24, 42, 42), Color.WHITE, 22, {"icone": "x"})
 		Tela.CREDITOS:
 			painel = Rect2(240, 50, 800, 620)
 			area_cred = Rect2(painel.position.x + 50, painel.position.y + 100, painel.size.x - 100, painel.size.y - 100 - 100)
-			_bt("c_voltar", "Voltar", Rect2(640 - 130, painel.end.y - 82, 260, 56), B_MARROM)
+			_bt("c_voltar", Idioma.t("Voltar"), Rect2(640 - 130, painel.end.y - 82, 260, 56), B_MARROM)
 			_bt("c_voltar", "", Rect2(painel.end.x - 72, painel.position.y + 24, 42, 42), Color.WHITE, 22, {"icone": "x"})
 		Tela.FINAL:
-			_bt("f_creditos", "Créditos", Rect2(388, 506, 230, 52), B_MARROM)
-			_bt("f_voltar", "Voltar ao mapa", Rect2(662, 506, 230, 52), B_VERDE)
+			_bt("f_creditos", Idioma.t("Créditos"), Rect2(388, 506, 230, 52), B_MARROM)
+			_bt("f_voltar", Idioma.t("Voltar ao mapa"), Rect2(662, 506, 230, 52), B_VERDE)
 		Tela.CONFIRMA:
 			painel = Rect2(370, 200, 540, 320)
-			_bt("cf_nao", conf.get("nao", "Cancelar"), Rect2(painel.position.x + 36, painel.end.y - 86, 224, 56), B_VERDE, 22, {"marcado": true})
-			_bt("cf_ok", conf.get("ok", "Confirmar"), Rect2(painel.end.x - 260, painel.end.y - 86, 224, 56), B_VERMELHO)
+			_bt("cf_nao", conf.get("nao", Idioma.t("Cancelar")), Rect2(painel.position.x + 36, painel.end.y - 86, 224, 56), B_VERDE, 22, {"marcado": true})
+			_bt("cf_ok", conf.get("ok", Idioma.t("Confirmar")), Rect2(painel.end.x - 260, painel.end.y - 86, 224, 56), B_VERMELHO)
 	foco = clampi(foco, 0, maxi(0, botoes.size() - 1))
 
 func _resumo_save() -> String:
@@ -432,14 +440,14 @@ func _resumo_save() -> String:
 	if dono.suspenso >= 0:
 		# há um cômodo em curso nesta sessão: o botão diz onde o jogador vai voltar
 		if e.invasao:
-			return "Invasão · %s · Onda %d%s" % [Fases.nome_do_lugar(e.lugar()), e.onda_invasao, " · na luta" if dono.suspenso == dono.Modo.COMBATE else ""]
-		return "%s · Onda %d de %d%s" % [Fases.nome_do_lugar(e.lugar()), mini(e.onda, Balanco.ONDAS_TOTAIS), Balanco.ONDAS_TOTAIS, " · na luta" if dono.suspenso == dono.Modo.COMBATE else ""]
+			return Idioma.t("Invasão · %s · Onda %d%s") % [Idioma.t(Fases.nome_do_lugar(e.lugar())), e.onda_invasao, Idioma.t(" · na luta") if dono.suspenso == dono.Modo.COMBATE else ""]
+		return Idioma.t("%s · Onda %d de %d%s") % [Idioma.t(Fases.nome_do_lugar(e.lugar())), mini(e.onda, Balanco.ONDAS_TOTAIS), Balanco.ONDAS_TOTAIS, Idioma.t(" · na luta") if dono.suspenso == dono.Modo.COMBATE else ""]
 	if e.campanha_vencida():
 		var rec: int = e.melhor_invasao()
 		if e.tudo_vencido():
-			return "Tudo vencido · recorde: onda %d" % rec if rec > 0 else "Tudo vencido · %d gatos" % e.bonecos.size()
-		return "%dº ato · %d de %d lugares" % [e.ato_atual(), e.vencidos_no_ato(e.ato_atual()), Fases.TOTAL]
-	return "Cômodo %d de %d · %d gatos" % [clampi(e.fase_liberada, 1, Fases.TOTAL), Fases.TOTAL, e.bonecos.size()]
+			return Idioma.t("Tudo vencido · recorde: onda %d") % rec if rec > 0 else Idioma.t("Tudo vencido · %d gatos") % e.bonecos.size()
+		return Idioma.t("%dº ato · %d de %d lugares") % [e.ato_atual(), e.vencidos_no_ato(e.ato_atual()), Fases.TOTAL]
+	return Idioma.t("Cômodo %d de %d · %d gatos") % [clampi(e.fase_liberada, 1, Fases.TOTAL), Fases.TOTAL, e.bonecos.size()]
 
 func confirmar(titulo: String, texto: String, ok: String, nao: String, acao: Callable) -> void:
 	conf = {"titulo": titulo, "texto": texto, "ok": ok, "nao": nao, "acao": acao, "volta": tela}
@@ -469,12 +477,12 @@ func _acionar(id: String) -> void:
 			ir(dono.continuar)
 		"nova":
 			if tem_save:
-				confirmar("Nova campanha?", "A campanha gravada (%s) será apagada, com o guarda-roupa e os gatos treinados." % _resumo_save(), "Apagar e começar", "Cancelar", Callable(self, "_nova_campanha"))
+				confirmar(Idioma.t("Nova campanha?"), Idioma.t("A campanha gravada (%s) será apagada, com o guarda-roupa e os gatos treinados.") % _resumo_save(), Idioma.t("Apagar e começar"), Idioma.t("Cancelar"), Callable(self, "_nova_campanha"))
 			else:
 				_nova_campanha()
 		"tutorial":
 			if dono.suspenso == dono.Modo.COMBATE:
-				confirmar("Fazer o tutorial?", "Há uma luta guardada. Fazer o tutorial agora encerra essa luta (as roupas e o progresso gravado ficam).", "Fazer o tutorial", "Cancelar", Callable(self, "_treino_ok"))
+				confirmar(Idioma.t("Fazer o tutorial?"), Idioma.t("Há uma luta guardada. Fazer o tutorial agora encerra essa luta (as roupas e o progresso gravado ficam)."), Idioma.t("Fazer o tutorial"), Idioma.t("Cancelar"), Callable(self, "_treino_ok"))
 			else:
 				_treino_ok()
 		"opcoes":
@@ -488,9 +496,9 @@ func _acionar(id: String) -> void:
 		"p_mapa":
 			var luta: bool = dono.modo == dono.Modo.COMBATE
 			if dono.estado.invasao:
-				confirmar("Encerrar a invasão?", "Sair agora termina a invasão. O recorde das ondas vencidas fica gravado" + (", mas o que caiu nesta luta se perde." if luta else ".") + " As roupas ficam como estão.", "Voltar ao mapa", "Continuar invasão", Callable(self, "_voltar_mapa_ok"))
+				confirmar(Idioma.t("Encerrar a invasão?"), Idioma.t("Sair agora termina a invasão. O recorde das ondas vencidas fica gravado, mas o que caiu nesta luta se perde. As roupas ficam como estão.") if luta else Idioma.t("Sair agora termina a invasão. O recorde das ondas vencidas fica gravado. As roupas ficam como estão."), Idioma.t("Voltar ao mapa"), Idioma.t("Continuar invasão"), Callable(self, "_voltar_mapa_ok"))
 				return
-			confirmar("Voltar ao mapa?", ("Sair da luta conta como desistir dela: o que caiu nela se perde. As roupas ficam como estão." if luta else "A luta em curso termina aqui. As roupas ficam como estão."), "Voltar ao mapa", "Continuar luta", Callable(self, "_voltar_mapa_ok"))
+			confirmar(Idioma.t("Voltar ao mapa?"), (Idioma.t("Sair da luta conta como desistir dela: o que caiu nela se perde. As roupas ficam como estão.") if luta else Idioma.t("A luta em curso termina aqui. As roupas ficam como estão.")), Idioma.t("Voltar ao mapa"), Idioma.t("Continuar luta"), Callable(self, "_voltar_mapa_ok"))
 		"f_creditos":
 			_ir_tela(Tela.CREDITOS)
 		"f_voltar":
@@ -499,7 +507,10 @@ func _acionar(id: String) -> void:
 			if dono.modo == dono.Modo.MAPA:
 				_menu_principal_ok()
 			else:
-				confirmar("Ir ao menu principal?", ("A invasão fica guardada" if dono.estado.invasao else "A luta fica guardada") + ": \"Continuar\" no menu principal volta a este ponto. Se você fechar o jogo, ela se perde (as roupas ficam).", "Menu principal", "Continuar luta", Callable(self, "_menu_principal_ok"))
+				confirmar(Idioma.t("Ir ao menu principal?"), Idioma.t("A invasão fica guardada: \"Continuar\" no menu principal volta a este ponto. Se você fechar o jogo, ela se perde (as roupas ficam).") if dono.estado.invasao else Idioma.t("A luta fica guardada: \"Continuar\" no menu principal volta a este ponto. Se você fechar o jogo, ela se perde (as roupas ficam)."), Idioma.t("Menu principal"), Idioma.t("Continuar luta"), Callable(self, "_menu_principal_ok"))
+		"o_idioma":
+			Idioma.proximo()
+			_opcao_mudou()
 		"o_tela":
 			tela_cheia = not tela_cheia
 			aplicar_janela()
@@ -533,7 +544,7 @@ func _acionar(id: String) -> void:
 			preparacao_onda = not preparacao_onda
 			_opcao_mudou()
 		"o_apagar":
-			confirmar("Apagar a campanha?", "Isso apaga o progresso, o guarda-roupa e os gatos treinados.", "Sim, apagar", "Cancelar", Callable(self, "_apagar_etapa2"))
+			confirmar(Idioma.t("Apagar a campanha?"), Idioma.t("Isso apaga o progresso, o guarda-roupa e os gatos treinados."), Idioma.t("Sim, apagar"), Idioma.t("Cancelar"), Callable(self, "_apagar_etapa2"))
 		"o_voltar", "c_voltar":
 			_voltar_de_sub()
 		"cf_nao":
@@ -563,7 +574,7 @@ func _cancelar_conf() -> void:
 	_montar()
 
 func _apagar_etapa2() -> void:
-	confirmar("Tem certeza?", "Não dá para desfazer. Todo o progresso desta campanha será perdido.", "Apagar de vez", "Cancelar", Callable(self, "_apagar_ok"))
+	confirmar(Idioma.t("Tem certeza?"), Idioma.t("Não dá para desfazer. Todo o progresso desta campanha será perdido."), Idioma.t("Apagar de vez"), Idioma.t("Cancelar"), Callable(self, "_apagar_ok"))
 
 func _apagar_ok() -> void:
 	fechar_tudo()
@@ -711,6 +722,7 @@ const B_LARANJA := Color(1.0, 0.76, 0.5)
 const B_AZUL := Color(0.65, 0.8, 1.0)
 const B_MARROM := Color(0.88, 0.72, 0.6)
 const B_VERMELHO := Color(1.0, 0.5, 0.48)
+const B_ROSA_IDIOMA := Color(1.0, 0.8, 0.86)
 const B_CINZA := Color(0.86, 0.82, 0.8)
 const B_OURO := Color(1.0, 0.84, 0.4)
 
@@ -859,9 +871,9 @@ func _draw() -> void:
 			for z in 3:
 				var fz: float = fposmod(t * 0.45 + z / 3.0, 1.0)
 				_t("z", Vector2(gx + 112.0 + fz * 26.0, painel.position.y - 70.0 - fz * 44.0), int(14 + fz * 12.0), Color(C_CREME.r, C_CREME.g, C_CREME.b, sin(fz * PI)))
-			_cabecalho("Pausado", painel, 68.0)
+			_cabecalho(Idioma.t("Pausado"), painel, 68.0)
 			_botoes_pintar()
-			_t("Esc fecha", Vector2(painel.position.x, painel.end.y - 26), 14, C_TEXTO2, painel.size.x)
+			_t(Idioma.t("Esc fecha"), Vector2(painel.position.x, painel.end.y - 26), 14, C_TEXTO2, painel.size.x)
 			_pop_fim()
 		Tela.OPCOES:
 			_fundo_sub()
@@ -1075,7 +1087,7 @@ func _sombra(p: Vector2, rx: float, ry: float) -> void:
 func _placa_titulo() -> void:
 	var fonte: Font = UIComum.FONTE
 	var tam: int = 94
-	var letras: String = TITULO_JOGO
+	var letras: String = Idioma.titulo_jogo()
 	var largs: Array[float] = []
 	var total: float = 0.0
 	for c in letras:
@@ -1108,7 +1120,7 @@ func _placa_titulo() -> void:
 		x += largs[k]
 	x = x0
 	for k in letras.length():
-		draw_string(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color(1.0, 0.62, 0.68) if (letras[k] == "-" or (letras[k] == "e" and k > 0 and k < letras.length() - 1 and letras[k - 1] == " " and letras[k + 1] == " ")) else C_CREME)
+		draw_string(fonte, Vector2(x, ys[k]), letras[k], HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(tam), Color(1.0, 0.62, 0.68) if (letras[k] == "-" or letras[k] == "&" or (letras[k] == "e" and k > 0 and k < letras.length() - 1 and letras[k - 1] == " " and letras[k + 1] == " ")) else C_CREME)
 		x += largs[k]
 	# novelo de lã rolando ao lado do nome, com a ponta do fio solta: pixels de 5 px, como as orelhas do logo
 	var u: float = 5.0
@@ -1144,35 +1156,36 @@ func _placa_titulo() -> void:
 	var rf: Rect2 = Rect2(640.0 - sw * 0.5, base + 34.0, sw, 34.0)
 	_forma(_desl(rf, Vector2(0, 5)), Color(0, 0, 0, 0.3))
 	_caixa(rf, C_CONT, C_CREME)
-	_t("gatos fantasiados contra bichos invasores", Vector2(rf.position.x, rf.position.y + 23.0), 17, C_TEXTO, rf.size.x)
+	_t(Idioma.t("gatos fantasiados contra bichos invasores"), Vector2(rf.position.x, rf.position.y + 23.0), 17, C_TEXTO, rf.size.x)
 
 # ------------------------------------------------------------------ opções
 func _tela_opcoes() -> void:
 	_painel_gato(painel)
-	_cabecalho("Opções", painel, 70.0)
+	_cabecalho(Idioma.t("Opções"), painel, 70.0)
 	var x: float = painel.position.x + 48.0
 	var xr: float = painel.end.x - 48.0
 	var y0: float = painel.position.y + OPC_TOPO
-	var lig := func(v: bool) -> String: return "ligado" if v else "desligado"
-	var poder_txt: String = "Ligado: os gatos usam o poder da fantasia sozinhos. Desligado: você dispara na luta. Agora: %s." % lig.call(poder_automatico)
+	var lig := func(v: bool) -> String: return Idioma.t("ligado") if v else Idioma.t("desligado")
+	var poder_txt: String = Idioma.t("Ligado: os gatos usam o poder da fantasia sozinhos. Desligado: você dispara na luta. Agora: %s.") % lig.call(poder_automatico)
 	var pct: int = int(round(Som.volume * 100.0))
 	var pct_m: int = int(round(Musica.volume * 100.0))
 	var rot: Array = [
-		["Tela", "Agora: %s. Clique para trocar" % ("tela cheia" if tela_cheia else "em janela")],
-		["Velocidade da luta", "Ao começar uma luta. Agora: %dx" % velocidade_padrao],
-		["Som", "Efeitos e música. Agora: %s" % ("desligados" if Som.mudo else "ligados")],
-		["Volume dos efeitos", "Agora: %d%% (de 10 em 10)" % pct if not Som.mudo else "Ligue o som para ajustar"],
-		["Volume da música", "Agora: %d%% (de 10 em 10)" % pct_m if not Som.mudo else "Ligue o som para ajustar"],
-		["Tremor de tela", "Sacudidas nos golpes fortes. Agora: %s" % lig.call(tremor_tela)],
-		["Números de dano", "Valores que sobem dos golpes. Agora: %s" % lig.call(numeros_dano)],
-		["Poderes automáticos", poder_txt],
-		["Preparação da onda", "Arrumar o time antes da onda. Agora: %s" % ("ligada" if preparacao_onda else "começa direto")],
-		["Campanha", "Apaga o progresso gravado" if tem_save else "Nenhuma campanha gravada"],
+		[Idioma.t("Idioma"), Idioma.t("Língua dos textos do jogo. Clique para trocar")],
+		[Idioma.t("Tela"), Idioma.t("Agora: tela cheia. Clique para trocar") if tela_cheia else Idioma.t("Agora: em janela. Clique para trocar")],
+		[Idioma.t("Velocidade da luta"), Idioma.t("Ao começar uma luta. Agora: %dx") % velocidade_padrao],
+		[Idioma.t("Som"), Idioma.t("Efeitos e música. Agora: desligados") if Som.mudo else Idioma.t("Efeitos e música. Agora: ligados")],
+		[Idioma.t("Volume dos efeitos"), Idioma.t("Agora: %d%% (de 10 em 10)") % pct if not Som.mudo else Idioma.t("Ligue o som para ajustar")],
+		[Idioma.t("Volume da música"), Idioma.t("Agora: %d%% (de 10 em 10)") % pct_m if not Som.mudo else Idioma.t("Ligue o som para ajustar")],
+		[Idioma.t("Tremor de tela"), Idioma.t("Sacudidas nos golpes fortes. Agora: %s") % lig.call(tremor_tela)],
+		[Idioma.t("Números de dano"), Idioma.t("Valores que sobem dos golpes. Agora: %s") % lig.call(numeros_dano)],
+		[Idioma.t("Poderes automáticos"), poder_txt],
+		[Idioma.t("Preparação da onda"), Idioma.t("Arrumar o time antes da onda. Agora: ligada") if preparacao_onda else Idioma.t("Arrumar o time antes da onda. Agora: começa direto")],
+		[Idioma.t("Campanha"), Idioma.t("Apaga o progresso gravado") if tem_save else Idioma.t("Nenhuma campanha gravada")],
 	]
 	for k in rot.size():
 		var y: float = y0 + OPC_Y[k]
 		_pata(k % 9, Vector2(x, y + 8.0), 2)
-		if k == 7:
+		if k == 8:
 			_t(rot[k][0], Vector2(x + 42.0, y + 22.0), 22, C_TEXTO)
 			var ly: float = y + 41.0
 			for l in _quebra(poder_txt, 13, 290.0):
@@ -1185,11 +1198,11 @@ func _tela_opcoes() -> void:
 			for d in int((painel.size.x - 96.0) / 14.0):
 				draw_rect(Rect2(x + d * 14.0, ys, 6, 3), Color(0.9, 0.62, 0.6, 0.7))
 	# réguas de volume (efeitos e música): dez quadradinhos entre o menos e o mais
-	for linha in [[3, Som.volume], [4, Musica.volume]]:
+	for linha in [[4, Som.volume], [5, Musica.volume]]:
 		var yv: float = y0 + OPC_Y[linha[0]]
 		var cheios: int = 0 if Som.mudo else int(round(float(linha[1]) * 10.0))
 		for q in 10:
-			var rq := Rect2(xr - 230.0 + 56.0 + q * 12.0, yv + 11.0, 10.0, 24.0)
+			var rq := Rect2(xr - 230.0 + 56.0 + q * 12.0, yv + 9.0, 10.0, 24.0)
 			draw_rect(rq, C_CONT)
 			draw_rect(rq.grow(-2.0), Color(1.0, 0.7, 0.72) if q < cheios else Color(0.92, 0.86, 0.82))
 	_botoes_pintar()
@@ -1214,7 +1227,7 @@ func _quebra(txt: String, tam: int, larg: float) -> Array[String]:
 func _linhas_creditos() -> Array:
 	var l: Array = []
 	var peq: Color = C_TEXTO2
-	l.append(["t", TITULO_JOGO, 26, C_NOME])
+	l.append(["t", Idioma.titulo_jogo(), 26, C_NOME])
 	l.append(["t", "Um jogo de %s" % AUTOR_JOGO, 17, C_TEXTO])
 	l.append(["pata"])
 	l.append(["t", "Gatos em pixel art", 14, peq])
