@@ -83,7 +83,7 @@ static func paleta(fase: int) -> Dictionary:
 	match fase:
 		2:  # SALA: vinho e madeira, luz laranja da lareira
 			return {
-				"nome": "Sala", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Sala", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.30, 0.11, 0.15),
 				"parede_baixa": tom_lum(Color(0.36, 0.17, 0.15), 0.165),
 				"rodape": tom_lum(Color(0.45, 0.28, 0.20), 0.20),
@@ -101,7 +101,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		3:  # COZINHA: verde-água e creme, luz branca fria
 			return {
-				"nome": "Cozinha", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,
+				"nome": "Cozinha", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": tom_lum(Color(0.28, 0.50, 0.48), 0.205),
 				"parede_baixa": tom_lum(Color(0.30, 0.45, 0.42), 0.165),
 				"rodape": tom_lum(Color(0.45, 0.55, 0.52), 0.20),
@@ -119,7 +119,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		4:  # SÓTÃO: anil e madeira clara, luar azul
 			return {
-				"nome": "Sótão", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,
+				"nome": "Sótão", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.15, 0.14, 0.30),
 				"parede_baixa": tom_lum(Color(0.25, 0.24, 0.42), 0.165),
 				"rodape": tom_lum(Color(0.40, 0.33, 0.38), 0.20),
@@ -137,7 +137,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		5:  # PORÃO: tijolo e cinza, luz amarela fraca
 			return {
-				"nome": "Porão", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,
+				"nome": "Porão", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.26, 0.14, 0.13),
 				"parede_baixa": tom_lum(Color(0.40, 0.22, 0.20), 0.165),
 				"rodape": tom_lum(Color(0.45, 0.45, 0.48), 0.20),
@@ -155,7 +155,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		6:  # QUINTAL: entardecer, grama verde, cerca de madeira
 			return {
-				"nome": "Quintal", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,
+				"nome": "Quintal", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.14, 0.17, 0.36),
 				"parede_baixa": tom_lum(Color(0.40, 0.28, 0.34), 0.185),
 				"rodape": tom_lum(Color(0.30, 0.42, 0.22), 0.20),
@@ -173,7 +173,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		7:  # GARAGEM: bloco cinza-azulado, cimento, luz fluorescente
 			return {
-				"nome": "Garagem", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,
+				"nome": "Garagem", "luz_dir": 1.0, "luz_extra": 0.03, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.20, 0.23, 0.28),
 				"parede_baixa": tom_lum(Color(0.30, 0.34, 0.40), 0.185),
 				"rodape": tom_lum(Color(0.45, 0.48, 0.52), 0.20),
@@ -191,7 +191,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		8:  # TELHADO: noite funda, telhas de barro azuladas, lua
 			return {
-				"nome": "Telhado", "luz_dir": -1.0, "luz_extra": 0.03, "vinheta": 0.08,
+				"nome": "Telhado", "luz_dir": -1.0, "luz_extra": 0.03, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.05, 0.07, 0.20),
 				"parede_baixa": tom_lum(Color(0.18, 0.20, 0.40), 0.185),
 				"rodape": tom_lum(Color(0.45, 0.30, 0.30), 0.20),
@@ -209,7 +209,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		9:  # RUA: asfalto, calçada, poste de luz sódio
 			return {
-				"nome": "Rua", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Rua", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.10, 0.10, 0.22),
 				"parede_baixa": tom_lum(Color(0.36, 0.22, 0.22), 0.185),
 				"rodape": tom_lum(Color(0.50, 0.48, 0.46), 0.20),
@@ -227,7 +227,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		10:  # TOCA: terra, raízes, lanternas âmbar
 			return {
-				"nome": "Toca", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Toca", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.17, 0.10, 0.07),
 				"parede_baixa": tom_lum(Color(0.34, 0.20, 0.12), 0.185),
 				"rodape": tom_lum(Color(0.40, 0.26, 0.16), 0.20),
@@ -245,7 +245,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		11:  # MERCADÃO DO PEIXE: madrugada azul-petróleo, concreto molhado, toldos vinho, néon
 			return {
-				"nome": "Mercadão do Peixe", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Mercadão do Peixe", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.04, 0.10, 0.15),
 				"parede_baixa": tom_lum(Color(0.18, 0.30, 0.38), 0.185),
 				"rodape": tom_lum(Color(0.35, 0.42, 0.45), 0.20),
@@ -263,7 +263,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		12:  # FERRO-VELHO: pôr do sol alaranjado, terra e sucata
 			return {
-				"nome": "Ferro-velho", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Ferro-velho", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.20, 0.10, 0.22),
 				"parede_baixa": tom_lum(Color(0.40, 0.28, 0.22), 0.185),
 				"rodape": tom_lum(Color(0.45, 0.32, 0.25), 0.20),
@@ -281,7 +281,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		13:  # BECO DO FLIPERAMA: tijolo arroxeado, néon ciano e laranja, chão em grade
 			return {
-				"nome": "Beco do Fliperama", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Beco do Fliperama", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.08, 0.05, 0.18),
 				"parede_baixa": tom_lum(Color(0.28, 0.22, 0.40), 0.17),
 				"rodape": tom_lum(Color(0.35, 0.30, 0.50), 0.20),
@@ -299,7 +299,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		14:  # ARENA DA PRAÇA: céu de tempestade, pedra clara, vermelho da legião
 			return {
-				"nome": "Arena da Praça", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Arena da Praça", "luz_dir": 1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.12, 0.10, 0.18),
 				"parede_baixa": tom_lum(Color(0.45, 0.38, 0.34), 0.19),
 				"rodape": tom_lum(Color(0.50, 0.44, 0.40), 0.20),
@@ -317,7 +317,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		15:  # TELHADOS E ANTENAS: noite roxa com raios, terraço de manta asfáltica
 			return {
-				"nome": "Telhados e Antenas", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Telhados e Antenas", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.07, 0.04, 0.16),
 				"parede_baixa": tom_lum(Color(0.30, 0.20, 0.42), 0.18),
 				"rodape": tom_lum(Color(0.40, 0.32, 0.50), 0.20),
@@ -335,7 +335,7 @@ static func paleta(fase: int) -> Dictionary:
 			}
 		_:  # QUARTO: ameixa e rosa, luz âmbar do abajur
 			return {
-				"nome": "Quarto", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,
+				"nome": "Quarto", "luz_dir": -1.0, "luz_extra": 0.04, "vinheta": 0.08,   # i18n-ok: nome do cenário (identidade, não é desenhado)
 				"parede_alta": Color(0.26, 0.17, 0.32),
 				"parede_baixa": tom_lum(Color(0.40, 0.22, 0.32), 0.165),
 				"rodape": tom_lum(Color(0.55, 0.32, 0.40), 0.20),
@@ -513,7 +513,7 @@ func iniciar(e: Estado) -> void:
 	# faixa de entrada da onda (o som toca quando ela começa a andar, depois da cortina)
 	var onda_n: int = estado.onda_invasao if estado.invasao else estado.onda
 	var nome_fase: String = Fases.nome_do_lugar(estado.lugar())
-	_faixa("Onda %d" % onda_n, nome_fase, Color(1.0, 0.9, 0.5), 1.7, 0.35, "onda")
+	_faixa(Idioma.t("Onda %d") % onda_n, Idioma.t(nome_fase), Color(1.0, 0.9, 0.5), 1.7, 0.35, "onda")
 
 func _process(delta: float) -> void:
 	if sim == null or not visible:
@@ -886,7 +886,7 @@ func _consumir() -> void:
 				else:
 					_som(["golpe1", "golpe2", "golpe3"][randi() % 3], tom_g, lerpf(-8.0, -4.0, clampf((tam_n - 13.0) / 12.0, 0.0, 1.0)), false, 0.08)
 			"esquiva":
-				_numero(Vector2(e["x"], e["y"] - 60 * ESC), "esquiva", Color(0.6, 0.9, 1.0), 15)
+				_numero(Vector2(e["x"], e["y"] - 60 * ESC), Idioma.t("esquiva"), Color(0.6, 0.9, 1.0), 15)
 				_som("esquiva", 1.0, -7.0)
 			"tiro":
 				var cor_t: Color = Color(0.85, 0.92, 1.0) if int(e.get("eq", 0)) == 0 else Color(1.0, 0.65, 0.5)
@@ -1068,7 +1068,7 @@ func _consumir() -> void:
 						nivel_nome += 1
 				# herança: a placa leva o selo com o ícone do poder (pela fantasia herdada: na Carga de lança o evento sai com poder -1)
 				var her_p: int = Pecas.PODER_TIPO[clampi(int(e["conj"]), 0, Pecas.PODER_TIPO.size() - 1)] if e.get("heranca", false) else -1
-				numeros.append({"p": Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 92 * ESC - sobe_p - nivel_nome * 46.0), "txt": ("Herança: " if e.get("heranca", false) else "") + Simulacao.heranca_nome_curto(e["conj"], int(e.get("grau", 1))) + "!", "cor": _cor_legivel(Pecas.CONJUNTO_COR[e["conj"]], 0.78), "vida": 1.5, "tam": 28, "larg": 380.0, "ct": 8, "placa": true, "her": her_p})
+				numeros.append({"p": Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 92 * ESC - sobe_p - nivel_nome * 46.0), "txt": (Idioma.t("Herança: %s!") if e.get("heranca", false) else "%s!") % Idioma.t(Simulacao.heranca_nome_curto(e["conj"], int(e.get("grau", 1)))), "cor": _cor_legivel(Pecas.CONJUNTO_COR[e["conj"]], 0.78), "vida": 1.5, "tam": 28, "larg": 380.0, "ct": 8, "placa": true, "her": her_p})
 				if her_p >= 0 and gato_p != null:
 					var her_k: int = 0   # duas heranças do mesmo gato juntas: o selinho novo vai ao lado, sem cobrir o outro
 					for hf0 in her_fx:
@@ -1085,7 +1085,7 @@ func _consumir() -> void:
 					var pt_txt: Vector2 = Vector2(clampf(e["x"], 140.0, 1140.0), e["y"] - 150 * ESC - sobe_p - nivel_nome * 46.0)
 					if not alvos_p.is_empty() and int(e.get("poder", 0)) == Pecas.Poder.POQUER:
 						pt_txt = Vector2(clampf(alvos_p[0].x, 140.0, 1140.0), alvos_p[0].y - 70.0)
-					_numero(pt_txt, String(e["texto"]), cp.lightened(0.25), 24, 1.5, 300.0)
+					_numero(pt_txt, Idioma.t(String(e["texto"])), cp.lightened(0.25), 24, 1.5, 300.0)
 				agenda.append({"t": ANTECIP_PODER, "k": "poder_fx", "poder": int(e.get("poder", 0)), "po": po, "alvos": alvos_p, "cor": cp,
 					"ex": {"x0": float(e.get("x0", e["x"])), "y0": float(e.get("y0", e["y"])), "x1": float(e.get("x1", e["x"])), "raio": float(e.get("raio", 0.0)), "dur": float(e.get("dur", 0.0)), "combos": int(e.get("combos", 0)),
 						"eq": int(e.get("eq", 0)), "u": bicho_p}})
@@ -1097,7 +1097,7 @@ func _consumir() -> void:
 				var pcv: Vector2 = Vector2(e["x"], e["y"] - (CORPO_ALT + 40.0) * ESC - _topo_extra(_unidade_perto(Vector2(e["x"], e["y"]), 1)))
 				tfx.append({"k": "aviso_cortado", "p": pcv, "t": 0.0, "dur": 0.75})
 				_faisca(pcv, Color(1.0, 0.85, 0.4), 6, 130.0, 0.4, 2.6)
-				_numero(pcv + Vector2(0, -34), "cortado!", Color(1.0, 0.85, 0.5), 15, 0.9, 120.0)
+				_numero(pcv + Vector2(0, -34), Idioma.t("cortado!"), Color(1.0, 0.85, 0.5), 15, 0.9, 120.0)
 				_som("esquiva", 0.7, -4.0)
 			"clone_fim":
 				# clone que some (fim do tempo ou derrotado): fumacinha, sem som e sem nocaute
@@ -1114,15 +1114,15 @@ func _consumir() -> void:
 				tremor = maxf(tremor, 6.0)
 			"chefe":
 				chefe_t = 2.2
-				var nome_ch: String = Fases.nome_do_chefe(estado.lugar_chefe())
-				_faixa(nome_ch, "CHEFE!", Color(1.0, 0.35, 0.3), 2.0, 0.0, "chefe")
+				var nome_ch: String = Idioma.t(Fases.nome_do_chefe(estado.lugar_chefe()))
+				_faixa(nome_ch, Idioma.t("CHEFE!"), Color(1.0, 0.35, 0.3), 2.0, 0.0, "chefe")
 				tfx.append({"k": "chefe_chega", "p": Vector2(1120.0, 520.0), "t": 0.0, "dur": 1.0})
 				tremor = maxf(tremor, 8.0)
 			"critico":
 				var pk: Vector2 = Vector2(e["x"], e["y"] - 66 * ESC)
 				_som("critico", 1.0, -2.0, true)
 				_pausa(3.0)
-				numeros.append({"p": pk + Vector2(0, -6), "txt": "CRÍTICO!", "cor": Color(1.0, 0.9, 0.2), "vida": 1.1, "tam": 34, "larg": 220.0, "ct": 7})
+				numeros.append({"p": pk + Vector2(0, -6), "txt": Idioma.t("CRÍTICO!"), "cor": Color(1.0, 0.9, 0.2), "vida": 1.1, "tam": 34, "larg": 220.0, "ct": 7})
 				_faisca(pk + Vector2(0, 26), Color(1.0, 0.9, 0.3), 12, 260.0, 0.45, 3.4)
 				# estrela grande de impacto + clarão
 				var pest: Vector2 = Vector2(e["x"], e["y"] - 40 * ESC)
@@ -1134,7 +1134,7 @@ func _consumir() -> void:
 				_som("barreira", 1.0, -5.0)
 				particulas.append({"p": pb2, "v": Vector2.ZERO, "vida": 0.4, "max": 0.4, "cor": Color(0.45, 0.7, 1.0, 0.6), "r": 22.0, "g": 0.0, "tipo": 1})
 				_faisca(pb2, Color(0.6, 0.85, 1.0), 10, 200.0, 0.4, 3.0)
-				_numero(pb2 + Vector2(0, -34), "barreira", Color(0.6, 0.85, 1.0), 16)
+				_numero(pb2 + Vector2(0, -34), Idioma.t("barreira"), Color(0.6, 0.85, 1.0), 16)
 			"disfarce_rasga":
 				var pd: Vector2 = Vector2(e["x"], e["y"] - 36 * ESC)
 				_som("barreira", 0.8, -4.0)
@@ -1142,7 +1142,7 @@ func _consumir() -> void:
 				_faisca(pd, Color(0.98, 0.75, 0.2), 8, 160.0, 0.9, 4.0)
 				_faisca(pd, Color(0.35, 0.2, 0.15), 6, 190.0, 0.7, 3.0)
 				particulas.append({"p": pd, "v": Vector2.ZERO, "vida": 0.35, "max": 0.35, "cor": Color(1.0, 0.95, 0.5, 0.6), "r": 26.0, "g": 0.0, "tipo": 1})
-				_numero(pd + Vector2(0, -36), "Disfarce rasgou!", Color(1.0, 0.9, 0.35), 20, 1.3, 190.0)
+				_numero(pd + Vector2(0, -36), Idioma.t("Disfarce rasgou!"), Color(1.0, 0.9, 0.35), 20, 1.3, 190.0)
 			"disfarce_refaz":
 				var pr2: Vector2 = Vector2(e["x"], e["y"] - 36 * ESC)
 				_faisca(pr2, Color(1.0, 0.92, 0.45), 10, 120.0, 0.6, 3.0)
@@ -1155,7 +1155,7 @@ func _consumir() -> void:
 				var ppy: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("barreira", 1.6, -2.0, true)
 				_faisca(ppy, Color(1.0, 1.0, 0.9), 12, 240.0, 0.4, 3.5)
-				_numero(ppy + Vector2(0, -26), "Aparou!", Color(0.9, 0.95, 1.0), 20, 1.0, 140.0)
+				_numero(ppy + Vector2(0, -26), Idioma.t("Aparou!"), Color(0.9, 0.95, 1.0), 20, 1.0, 140.0)
 				tremor = maxf(tremor, 2.5)
 				fx.append({"poder": -2, "p": ppy, "c": ppy, "alvos": [Vector2(float(e["ax"]), float(e["ay"]) - 30 * ESC)], "cor": Color(0.9, 0.95, 1.0), "t": 0.0, "dur": 0.45, "sem": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "ex": {}})
 			"kameha":
@@ -1167,7 +1167,7 @@ func _consumir() -> void:
 				var pcc: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("barreira", 0.6, -2.0, true)
 				_faisca(pcc, Color(0.5, 0.7, 1.0), 10, 200.0, 0.4, 3.0)
-				_numero(pcc + Vector2(0, -24), "Interrompido!", Color(1.0, 0.5, 0.4), 20, 1.0, 140.0)
+				_numero(pcc + Vector2(0, -24), Idioma.t("Interrompido!"), Color(1.0, 0.5, 0.4), 20, 1.0, 140.0)
 			"laco_passa":
 				var plp: Vector2 = Vector2(e["x"], e["y"] - 20 * ESC)
 				_faisca(plp, Color(1.0, 0.4, 0.5), 8, 160.0, 0.4, 3.0)
@@ -1175,14 +1175,14 @@ func _consumir() -> void:
 				var pcp: Vector2 = Vector2(e["x"], e["y"] - 24 * ESC)
 				_som("poder_pronto", 1.7, -2.0, true)
 				_faisca(pcp, Color(1.0, 1.0, 0.9), 14, 220.0, 0.5, 3.5)
-				_numero(pcp + Vector2(0, -26), "Capturado!", Color(1.0, 0.5, 0.45), 22, 1.2, 160.0)
+				_numero(pcp + Vector2(0, -26), Idioma.t("Capturado!"), Color(1.0, 0.5, 0.45), 22, 1.2, 160.0)
 			"medo":
 				_faisca(Vector2(e["x"], e["y"] - 40 * ESC), Color(1.0, 0.9, 0.3), 3, 90.0, 0.3, 2.5)
 			"folego":
 				var pfo: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("poder_pronto", 1.3, -1.0, true)
 				_faisca(pfo, Color(0.6, 1.0, 0.9), 14, 220.0, 0.5, 3.5)
-				_numero(pfo + Vector2(0, -26), "Segundo fôlego!", Color(0.6, 1.0, 0.9), 22, 1.2, 160.0)
+				_numero(pfo + Vector2(0, -26), Idioma.t("Segundo fôlego!"), Color(0.6, 1.0, 0.9), 22, 1.2, 160.0)
 			"estase_fim":
 				var pef: Vector2 = Vector2(e["x"], e["y"] - 24 * ESC)
 				_som("golpe_forte", 0.9, -2.0, true)
@@ -1197,18 +1197,18 @@ func _consumir() -> void:
 				var prp: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("poder_pronto", 1.5, -1.0, true)
 				_faisca(prp, Color(1.0, 0.85, 0.2), 16, 240.0, 0.55, 3.5)
-				_numero(prp + Vector2(0, -26), "Recompensa paga!", Color(1.0, 0.85, 0.2), 22, 1.3, 180.0)
+				_numero(prp + Vector2(0, -26), Idioma.t("Recompensa paga!"), Color(1.0, 0.85, 0.2), 22, 1.3, 180.0)
 			"escudo_quebra":
 				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Color(0.6, 0.9, 1.0), 6, 160.0, 0.3, 2.5)
 			"fala":
-				_numero(Vector2(e["x"], e["y"] - 110 * ESC), String(e["txt"]), Color(1.0, 0.35, 0.35), 26, 1.4, 220.0)
+				_numero(Vector2(e["x"], e["y"] - 110 * ESC), Idioma.t(String(e["txt"])), Color(1.0, 0.35, 0.35), 26, 1.4, 220.0)
 			"schro_caixa":
 				# Schrödinger fecha a caixa: nuvem de papelão e o frasco que quebra
 				var pc_s: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("poder_explosao", 0.8, -8.0, true)
 				_faisca(pc_s, Color(0.75, 0.58, 0.36), 14, 220.0, 0.5, 4.0)
 				_faisca(pc_s, Color(0.55, 1.0, 0.35), 10, 160.0, 0.6, 3.0)
-				_numero(pc_s + Vector2(0, -70), "Caixa fechada!", Color(0.7, 1.0, 0.5), 22, 1.2, 180.0)
+				_numero(pc_s + Vector2(0, -70), Idioma.t("Caixa fechada!"), Color(0.7, 1.0, 0.5), 22, 1.2, 180.0)
 			"veneno":
 				# veneno do frasco: bolhas verdes no raio, a cada pulso
 				var pv: Vector2 = Vector2(e["x"], e["y"] - 10 * ESC)
@@ -1225,7 +1225,7 @@ func _consumir() -> void:
 				_som("poder_raio", 1.4, -6.0, true)
 				_faisca(p1, Color(0.4, 0.9, 1.0), 12, 200.0, 0.5, 3.0)
 				_faisca(p2, Color(0.4, 0.9, 1.0), 12, 200.0, 0.5, 3.0)
-				_numero(p1.lerp(p2, 0.5) + Vector2(0, -80), "Superposição!", Color(0.5, 0.9, 1.0), 24, 1.4, 220.0)
+				_numero(p1.lerp(p2, 0.5) + Vector2(0, -80), Idioma.t("Superposição!"), Color(0.5, 0.9, 1.0), 24, 1.4, 220.0)
 			"schro_some":
 				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Color(0.6, 0.9, 1.0), 14, 160.0, 0.5, 3.0)
 			"muda":
@@ -1237,46 +1237,46 @@ func _consumir() -> void:
 						_faisca(pm, Color(1.0, 0.45, 0.1), 16, 260.0, 0.6, 4.0)
 						_faisca(pm, Color(1.0, 0.9, 0.4), 8, 180.0, 0.4, 3.0)
 						particulas.append({"p": pm, "v": Vector2.ZERO, "vida": 0.45, "max": 0.45, "cor": Color(1.0, 0.4, 0.15, 0.55), "r": rpm * 0.6, "g": 0.0, "tipo": 1})
-						_numero(pm + Vector2(0, -30), "Pimenta!", Color(1.0, 0.55, 0.3), 20, 1.0, 140.0)
+						_numero(pm + Vector2(0, -30), Idioma.t("Pimenta!"), Color(1.0, 0.55, 0.3), 20, 1.0, 140.0)
 					1:
 						_som("poder_cura", 1.5, -7.0)
 						_faisca(pm, Color(1.0, 0.45, 0.6), 10, 150.0, 0.6, 3.0)
 						_faisca(Vector2(float(e.get("ax", e["x"])), float(e.get("ay", e["y"])) - 40 * ESC), Color(0.45, 1.0, 0.55), 8, 100.0, 0.6, 3.0)
-						_numero(pm + Vector2(0, -30), "Morango!", Color(1.0, 0.6, 0.7), 20, 1.0, 140.0)
+						_numero(pm + Vector2(0, -30), Idioma.t("Morango!"), Color(1.0, 0.6, 0.7), 20, 1.0, 140.0)
 					_:
 						_faisca(pm, Color(0.55, 0.4, 0.25), 6, 90.0, 0.5, 2.5)
-						_numero(pm + Vector2(0, -24), "murchou", Color(0.7, 0.6, 0.5), 14, 0.8, 100.0)
+						_numero(pm + Vector2(0, -24), Idioma.t("murchou"), Color(0.7, 0.6, 0.5), 14, 0.8, 100.0)
 			"cantil":
 				var pc2: Vector2 = Vector2(e["x"], e["y"] - 46 * ESC)
 				_faisca(pc2, Color(0.4, 0.95, 0.6), 8, 110.0, 0.6, 3.0)
-				_numero(pc2, "glub! cura", Color(0.5, 1.0, 0.65), 18)
+				_numero(pc2, Idioma.t("glub! cura"), Color(0.5, 1.0, 0.65), 18)
 				_som("poder_cura", 1.3, -9.0)
 			"sementes":
 				var ps: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_faisca(ps, Color(0.55, 0.9, 0.3), 16, 280.0, 0.7, 3.4)
 				_faisca(ps, Color(0.95, 0.85, 0.4), 8, 180.0, 0.6, 2.4)
 				particulas.append({"p": ps, "v": Vector2.ZERO, "vida": 0.6, "max": 0.6, "cor": Color(0.5, 0.9, 0.35, 0.35), "r": 40.0, "g": 0.0, "tipo": 1})
-				_numero(ps + Vector2(0, -30), "sementes!", Color(0.6, 1.0, 0.4), 18, 1.1, 120.0)
+				_numero(ps + Vector2(0, -30), Idioma.t("sementes!"), Color(0.6, 1.0, 0.4), 18, 1.1, 120.0)
 				_som("poder", 1.3, -8.0)
 			"saque":
 				var pq: Vector2 = Vector2(e["x"], e["y"] - 60 * ESC)
 				_faisca(pq, Color(0.95, 0.7, 0.35), 8, 160.0, 0.5, 3.0)
-				_numero(pq, "+1 bloco", Color(1.0, 0.8, 0.45), 20, 1.2, 120.0)
+				_numero(pq, Idioma.t("+1 bloco"), Color(1.0, 0.8, 0.45), 20, 1.2, 120.0)
 				_som("drop", 1.2, -7.0)
 			"reforco":
 				var pf: Vector2 = Vector2(e["x"], e["y"] - 50 * ESC)
 				_faisca(pf, Color(1.0, 0.4, 0.3), 16, 240.0, 0.6, 3.6)
 				particulas.append({"p": pf, "v": Vector2.ZERO, "vida": 0.5, "max": 0.5, "cor": Color(1.0, 0.35, 0.25, 0.4), "r": 30.0, "g": 0.0, "tipo": 1})
-				_numero(pf + Vector2(0, -40), "Reforços!", Color(1.0, 0.5, 0.4), 26, 1.4, 180.0)
+				_numero(pf + Vector2(0, -40), Idioma.t("Reforços!"), Color(1.0, 0.5, 0.4), 26, 1.4, 180.0)
 				_som("poder", 0.8, -4.0, true)
 				tremor = maxf(tremor, 6.0)
 			"corda":
 				var pw: Vector2 = Vector2(e["x"], e["y"] - 70 * ESC)
 				if e.get("parado", false):
-					_numero(pw, "sem fôlego...", Color(0.6, 0.85, 1.0), 24, 1.6, 200.0)
+					_numero(pw, Idioma.t("sem fôlego..."), Color(0.6, 0.85, 1.0), 24, 1.6, 200.0)
 					_faisca(pw, Color(0.55, 0.82, 1.0), 8, 90.0, 0.7, 3.0)
 				else:
-					_numero(pw, "disparou!", Color(1.0, 0.7, 0.3), 24, 1.2, 160.0)
+					_numero(pw, Idioma.t("disparou!"), Color(1.0, 0.7, 0.3), 24, 1.2, 160.0)
 					_faisca(pw, Color(1.0, 0.7, 0.3), 12, 200.0, 0.5, 3.0)
 			"partes":
 				var pp2: Vector2 = Vector2(e["x"], e["y"] - 40 * ESC)
@@ -1302,7 +1302,7 @@ func _consumir() -> void:
 							cf = Color(1.0, 0.97, 0.9) if kf % 2 == 0 else Color(1.0, 0.72, 0.88)
 						_faisca(pr0, cf, 1, 220.0, 0.8, 3.6)
 					tfx.append({"k": "drop_rar", "p": pr0 + Vector2(0, 40 * ESC), "rar": rar, "t": 0.0, "dur": 0.9 + 0.1 * rar})
-					_numero(pr0 + Vector2(0, -30), Pecas.RARIDADE_NOME[clampi(rar, 0, Pecas.RARIDADE_NOME.size() - 1)] + "!", cr, 22 + 2 * rar, 1.4, 280.0)
+					_numero(pr0 + Vector2(0, -30), Idioma.t("%s!") % Idioma.t(Pecas.RARIDADE_NOME[clampi(rar, 0, Pecas.RARIDADE_NOME.size() - 1)]), cr, 22 + 2 * rar, 1.4, 280.0)
 					if rar >= 3:
 						tremor = maxf(tremor, 5.0 + (rar - 3) * 1.5)
 			"marca":
@@ -1313,20 +1313,20 @@ func _consumir() -> void:
 				_faisca(pm + Vector2(0, 20), cm, 10 + 5 * int(e["n"]), 210.0, 0.8, 3.6)
 				_faisca(pm + Vector2(0, 20), Color(1, 1, 1), 5, 140.0, 0.45, 2.4)
 				_som("marca", 1.0, -4.0)
-				_numero(pm, Pecas.MARCA_NOME[mk], cm, 24, 1.5, 140.0)
+				_numero(pm, Idioma.t(Pecas.MARCA_NOME[mk]), cm, 24, 1.5, 140.0)
 			"nivel":
 				var p3: Vector2 = Vector2(e["x"], e["y"] - 60 * ESC)
 				_faisca(p3, Desenho.DOURADO, 14, 170.0, 0.7, 3.5)
-				_numero(p3 + Vector2(0, -22), "nível " + str(e["nivel"]), Desenho.DOURADO, 18)
+				_numero(p3 + Vector2(0, -22), Idioma.t("nível %d") % int(e["nivel"]), Desenho.DOURADO, 18)
 				_som("poder_pronto", 1.35, -7.0)
 			"devolve":
 				var pd: Vector2 = Vector2(e["x"], e["y"] - 70 * ESC)
 				_faisca(pd, Color(0.9, 0.55, 0.35), 10, 200.0, 0.6, 3.5)
-				_numero(pd, "+%d blocos" % int(e["n"]), Color(0.6, 1.0, 0.6), 22, 1.4, 160.0)
+				_numero(pd, Idioma.t("+%d blocos") % int(e["n"]), Color(0.6, 1.0, 0.6), 22, 1.4, 160.0)
 				_som("drop", 1.1, -6.0)
 			"fuga":
 				if int(e["n"]) > 0:
-					_numero(Vector2(1180, e["y"] - 70 * ESC), "fugiu! -%d bloco%s" % [int(e["n"]), "" if int(e["n"]) == 1 else "s"], Color(1.0, 0.5, 0.4), 22, 1.4, 160.0)
+					_numero(Vector2(1180, e["y"] - 70 * ESC), (Idioma.t("fugiu! -%d bloco") if int(e["n"]) == 1 else Idioma.t("fugiu! -%d blocos")) % int(e["n"]), Color(1.0, 0.5, 0.4), 22, 1.4, 160.0)
 					_som("negado", 0.9, -6.0)
 			"oferta":
 				# Mensageiro da Família Gatíssima: o gato leva uma oferta que não pode recusar
@@ -1335,11 +1335,11 @@ func _consumir() -> void:
 				_som("negado", 0.7, -2.0, true)
 				_faisca(pof, Color(0.75, 0.2, 0.3), 14, 220.0, 0.5, 3.5)
 				_faisca(Vector2(e["mx"], e["my"] - 30 * ESC), Color(0.2, 0.15, 0.2), 8, 160.0, 0.4, 3.0)
-				_numero(pof + Vector2(0, -30), "Dorme com os peixes!", Color(1.0, 0.55, 0.6), 22, 1.4, 200.0)
+				_numero(pof + Vector2(0, -30), Idioma.t("Dorme com os peixes!"), Color(1.0, 0.55, 0.6), 22, 1.4, 200.0)
 			"acorda":
 				var pac: Vector2 = Vector2(e["x"], e["y"] - 40 * ESC)
 				_faisca(pac, Color(0.85, 0.92, 1.0), 8, 150.0, 0.4, 3.0)
-				_numero(pac, "Acordou!", Color(0.85, 0.95, 1.0), 18, 0.9, 100.0)
+				_numero(pac, Idioma.t("Acordou!"), Color(0.85, 0.95, 1.0), 18, 0.9, 100.0)
 			"atropelo":
 				var pat: Vector2 = Vector2(e["x"], e["y"] - 24 * ESC)
 				_som("golpe_forte", 1.1, -3.0, true)
@@ -1349,18 +1349,18 @@ func _consumir() -> void:
 				var prc: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("poder_pronto", 1.5, -2.0, true)
 				_faisca(prc, Color(0.3, 0.9, 1.0), 16, 260.0, 0.5, 3.5)
-				_numero(prc + Vector2(0, -26), "Recompilando!", Color(0.4, 0.95, 1.0), 20, 1.2, 160.0)
+				_numero(prc + Vector2(0, -26), Idioma.t("Recompilando!"), Color(0.4, 0.95, 1.0), 20, 1.2, 160.0)
 			"telepata":
 				var ptp: Vector2 = Vector2(e["x"], e["y"] - 40 * ESC)
 				_som("negado", 1.3, -4.0, true)
 				_faisca(ptp, Color(0.8, 0.5, 1.0), 10, 200.0, 0.5, 3.0)
-				_numero(ptp + Vector2(0, -20), "Confuso!", Color(0.85, 0.6, 1.0), 20, 1.0, 120.0)
+				_numero(ptp + Vector2(0, -20), Idioma.t("Confuso!"), Color(0.85, 0.6, 1.0), 20, 1.0, 120.0)
 			"mutacao":
 				var pmu: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_som("poder_pronto", 0.7, -2.0, true)
 				_faisca(pmu, Color(0.7, 0.3, 1.0), 12, 240.0, 0.5, 3.5)
 				_faisca(pmu, Color(1.0, 0.9, 0.2), 6, 180.0, 0.4, 3.0)
-				_numero(pmu + Vector2(0, -26), "Mutação!", Color(0.85, 0.5, 1.0), 20, 1.2, 140.0)
+				_numero(pmu + Vector2(0, -26), Idioma.t("Mutação!"), Color(0.85, 0.5, 1.0), 20, 1.2, 140.0)
 			"gemeos":
 				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Desenho.COR_TIPO[Unidade.Tipo.GEMEO], 12, 200.0, 0.5, 3.5)
 			"torre":
@@ -1388,7 +1388,7 @@ func _consumir() -> void:
 				ratoeira_t = 0.45
 				_som("ratoeira", 1.0, -3.0, true)
 				var cr: Vector2 = _centro_modulo(Torre.Modulo.RATOEIRA)
-				numeros.append({"p": cr + Vector2(0, -40), "txt": "PLAC!", "cor": Color(1.0, 0.9, 0.3), "vida": 0.9, "tam": 26, "larg": 120.0, "ct": 6})
+				numeros.append({"p": cr + Vector2(0, -40), "txt": Idioma.t("PLAC!"), "cor": Color(1.0, 0.9, 0.3), "vida": 0.9, "tam": 26, "larg": 120.0, "ct": 6})
 				var pr_r: Vector2 = Vector2(e["x"], e["y"] - 30 * ESC)
 				_faisca(pr_r, Color(1.0, 0.95, 0.6), 10, 240.0, 0.35, 2.6)
 				_faisca(cr, Color(1.0, 0.9, 0.5), 6, 120.0, 0.3, 2.2)
@@ -1407,7 +1407,7 @@ func _consumir() -> void:
 				var cs: Vector2 = _centro_modulo(Torre.Modulo.SIRENE)
 				for k in 3:
 					tfx.append({"k": "onda", "p": cs, "raio": 1300.0, "cor": Color(1.0, 0.25, 0.2), "t": -0.3 * k, "dur": 1.1, "chao": false})
-				numeros.append({"p": cs + Vector2(0, -44), "txt": "ALARME!", "cor": Color(1.0, 0.4, 0.35), "vida": 1.2, "tam": 24, "larg": 160.0, "ct": 6})
+				numeros.append({"p": cs + Vector2(0, -44), "txt": Idioma.t("ALARME!"), "cor": Color(1.0, 0.4, 0.35), "vida": 1.2, "tam": 24, "larg": 160.0, "ct": 6})
 				tremor = maxf(tremor, 2.0)
 				for u in sim.inimigos:
 					var ui: Unidade = u
@@ -1427,7 +1427,7 @@ func _consumir() -> void:
 				fosso_t = 0.6
 				_som("pancada", 0.8, -4.0, true)
 				var pf: Vector2 = Vector2(e["x"], e["y"] - 10 * ESC)
-				numeros.append({"p": pf + Vector2(0, -40), "txt": "PLOFT!", "cor": Color(0.85, 0.7, 0.45), "vida": 0.9, "tam": 24, "larg": 140.0, "ct": 6})
+				numeros.append({"p": pf + Vector2(0, -40), "txt": Idioma.t("PLOFT!"), "cor": Color(0.85, 0.7, 0.45), "vida": 0.9, "tam": 24, "larg": 140.0, "ct": 6})
 				_faisca(pf, Color(0.7, 0.55, 0.38), 12, 150.0, 0.5, 3.0)
 				tfx.append({"k": "fosso", "p": pf, "t": 0.0, "dur": 0.7})
 				for k in 3:
@@ -1438,7 +1438,7 @@ func _consumir() -> void:
 				reforco_t = 0.45
 				_som("escudo", 1.0, -4.0, true)
 				var pr2: Vector2 = _centro_modulo(Torre.Modulo.REFORCO)
-				numeros.append({"p": pr2 + Vector2(0, -44), "txt": "FIRME!", "cor": Color(0.7, 0.88, 1.0), "vida": 0.9, "tam": 22, "larg": 120.0, "ct": 6})
+				numeros.append({"p": pr2 + Vector2(0, -44), "txt": Idioma.t("FIRME!"), "cor": Color(0.7, 0.88, 1.0), "vida": 0.9, "tam": 22, "larg": 120.0, "ct": 6})
 				_faisca(Vector2(e["x"], e["y"] - 30 * ESC), Color(0.7, 0.88, 1.0), 8, 160.0, 0.35, 2.6)
 				tfx.append({"k": "reforco", "p": _centro_modulo(Torre.Modulo.REFORCO) + Vector2(20, -10), "t": 0.0, "dur": 0.5})
 			"luneta":
@@ -1747,7 +1747,7 @@ func _poder_fx(poder: int, po: Vector2, alvos: Array, cor: Color, ex: Dictionary
 			tremor = maxf(tremor, 4.0)
 			_faisca(centro, Color(1.0, 0.95, 0.7), 10, 260.0, 0.5, 4.0)
 			if int(ex.get("combos", 0)) > 0:
-				_numero(centro + Vector2(0, -50), "Combo!", Color(1.0, 0.85, 0.3), 24, 1.2, 160.0)
+				_numero(centro + Vector2(0, -50), Idioma.t("Combo!"), Color(1.0, 0.85, 0.3), 24, 1.2, 160.0)
 	var sem: Array = []
 	for i in 8:
 		sem.append(randf())
@@ -6979,7 +6979,7 @@ func _pedir_poder(i: int) -> void:
 		b["pop"] = 1.0
 		poder_seta_t = 0.0
 	else:
-		_recusar_poder(b, "atordoado" if atordoado else "sem alvo")
+		_recusar_poder(b, Idioma.t("atordoado") if atordoado else Idioma.t("sem alvo"))
 		poder_seta_t = 0.0
 
 func _recusar_poder(b: Dictionary, motivo: String) -> void:
@@ -6996,7 +6996,7 @@ func _desenhar_barra_poderes_placa(n: int) -> void:
 func _barra_poderes() -> void:
 	if poder_btns.is_empty():
 		if poder_sem_aviso:
-			Desenho.texto(self, "Vista as 4 peças de uma fantasia para ganhar um poder", Vector2(PB_CENTRO_X - 300.0, 690.0), 15, Color(1, 0.95, 0.85, 0.7), 600.0, 3)
+			Desenho.texto(self, Idioma.t("Vista as 4 peças de uma fantasia para ganhar um poder"), Vector2(PB_CENTRO_X - 300.0, 690.0), 15, Color(1, 0.95, 0.85, 0.7), 600.0, 3)
 		return
 	_desenhar_barra_poderes_placa(poder_btns.size())
 	for i in poder_btns.size():
@@ -7078,7 +7078,7 @@ func _botao_poder(i: int) -> void:
 	# nome do poder e situação
 	var tx: float = painel.end.x + 5.0
 	var larg_t: float = dentro.end.x - tx - 1.0
-	var nome: String = str(b["nome"])
+	var nome: String = Idioma.t(str(b["nome"]))
 	var tam_n: int = 19
 	nome = UIComum.caber(nome, tam_n, larg_t + 6.0)   # nome comprido abrevia (não há fonte nítida menor que 19); o vizinho pronto cresce por cima da borda
 	var cor_nome: Color = Color(1, 1, 1) if viva else Color(0.75, 0.75, 0.8)
@@ -7086,35 +7086,35 @@ func _botao_poder(i: int) -> void:
 	var txt: String
 	var cor_s: Color
 	if not viva:
-		txt = "caído"
+		txt = Idioma.t("caído")
 		cor_s = Color(0.8, 0.85, 1.0)
 	elif float(b["motivo_t"]) > 0.0:
 		txt = str(b["motivo"])
 		cor_s = Color(1.0, 0.55, 0.45)
 	elif trancado:
-		txt = "atordoado"
+		txt = Idioma.t("atordoado")
 		cor_s = Desenho.DOURADO
 	elif pronto and u.poder_armado and not auto:
-		txt = "ARMADO"   # pedido sem alvo: sai sozinho quando aparecer
+		txt = Idioma.t("ARMADO")   # pedido sem alvo: sai sozinho quando aparecer
 		cor_s = Desenho.DOURADO.lerp(Color(1, 1, 1), 0.3 * pu)
 	elif pronto:
-		txt = "PRONTO"
+		txt = Idioma.t("PRONTO")
 		cor_s = Color(1, 1, 1).lerp(cor, 0.25 * (1.0 - pu))
 	else:
-		txt = "%d s" % ceili(maxf(u.poder_cd, 0.0))
+		txt = Idioma.t("%d s") % ceili(maxf(u.poder_cd, 0.0))
 		cor_s = Color(1.0, 0.95, 0.85)
 	# ícone do poder no começo da linha de situação (escala 2: a mesma grade de 2 px da arte do botão)
 	IconesPoder.desenhar(self, int(b["poder"]), Vector2(tx + 10.0, dentro.end.y - 10.0), 2, 1.0 if viva else 0.55)
 	Desenho.texto(self, txt, Vector2(tx + 23.0, dentro.end.y - 4.0), 17 if pronto and viva else 15, cor_s, -1.0, 4)
 	if auto:
 		# selo AUTO de pixel: plaquinha dourada com contorno e letras 3x5 na grade da luta
-		var sl: float = IconesPoder.largura("AUTO", int(V.Q)) + V.Q * 2.0
+		var sl: float = IconesPoder.largura("AUTO", int(V.Q)) + V.Q * 2.0   # i18n-ok: selo na fonte de pixel 3x5, fixo
 		var sr: Rect2 = Rect2(V.sn(r.end.x - sl - 6.0), V.sn(r.position.y - 9.0), sl, V.Q * 7.0)
 		draw_rect(sr.grow(V.Q), V.CONT)
 		draw_rect(sr, Desenho.DOURADO)
 		draw_rect(Rect2(sr.position.x, sr.end.y - V.Q, sr.size.x, V.Q), V.tom(Desenho.DOURADO, 0.75))
 		draw_rect(Rect2(sr.position.x, sr.position.y, sr.size.x, V.Q), V.tom(Desenho.DOURADO, 1.4))
-		IconesPoder.texto(self, "AUTO", sr.position + Vector2(V.Q, 0.0), Color(0.3, 0.14, 0.04), int(V.Q), false)
+		IconesPoder.texto(self, "AUTO", sr.position + Vector2(V.Q, 0.0), Color(0.3, 0.14, 0.04), int(V.Q), false)   # i18n-ok: selo na fonte de pixel 3x5, fixo
 	# brilho que corre pelo botão quando o poder fica pronto: faixa inclinada em degraus de quadradinho
 	var bri: float = float(b.get("brilho", 0.0))
 	if bri > 0.0:
@@ -7157,7 +7157,7 @@ func _seta_primeira_vez(i: int) -> void:
 	for k in 5:
 		var hw2: float = (4 - k) * q
 		draw_rect(Rect2(tip.x - hw2, tip.y - (5 - k) * q, hw2 * 2.0 + q, q), Desenho.DOURADO if k > 0 else V.tom(Desenho.DOURADO, 1.4))
-	var txt: String = "Clique ou aperte %d" % int(poder_btns[i]["tecla"])
+	var txt: String = Idioma.t("Clique ou aperte %d") % int(poder_btns[i]["tecla"])
 	var tw: float = V.sn(UIComum.FONTE.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(15)).x + 18.0)
 	var pl: Rect2 = Rect2(V.sn(tip.x - tw * 0.5), tip.y - q * 15.0, tw, q * 8.0)
 	draw_rect(pl.grow(q), V.CONT)
@@ -7170,8 +7170,8 @@ func _dica_poder(i: int) -> void:
 	var b: Dictionary = poder_btns[i]
 	var cor: Color = b["cor"]
 	var r: Rect2 = b["rect"]
-	var nome: String = str(b["nome"])
-	var d: String = str(b["dica"])
+	var nome: String = Idioma.t(str(b["nome"]))
+	var d: String = Idioma.t(str(b["dica"]))
 	d = d.substr(0, 1).to_upper() + d.substr(1)
 	var fonte: Font = UIComum.FONTE
 	var larg: float = maxf(fonte.get_string_size(nome, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(17)).x, fonte.get_string_size(d, HORIZONTAL_ALIGNMENT_LEFT, -1, UIComum.tam(14)).x) + 22.0
@@ -7184,17 +7184,17 @@ func _dica_poder(i: int) -> void:
 	Desenho.texto(self, d, Vector2(pl.position.x + 11.0, pl.position.y + 43.0), 14, Color(1, 0.96, 0.88), -1.0, 3)
 
 func _hud() -> void:
-	var nome_fase: String = Fases.nome_do_lugar(estado.lugar())
+	var nome_fase: String = Idioma.t(Fases.nome_do_lugar(estado.lugar()))
 	if estado.invasao:
-		Desenho.texto(self, "Invasão · %s · Onda %d" % ["as ruas" if estado.invasao_ruas() else nome_fase, estado.onda_invasao], Vector2(20, 40), 30, Color(1, 1, 1), -1.0, 4)
+		Desenho.texto(self, Idioma.t("Invasão · %s · Onda %d") % [Idioma.t("as ruas") if estado.invasao_ruas() else nome_fase, estado.onda_invasao], Vector2(20, 40), 30, Color(1, 1, 1), -1.0, 4)
 		var rec_h: int = estado.recordes[estado.indice_recorde()]
-		Desenho.texto(self, ("Recorde: onda %d" % rec_h) if rec_h > 0 else "Sem recorde ainda", Vector2(22, 62), 16, Desenho.DOURADO, -1.0, 3)
+		Desenho.texto(self, (Idioma.t("Recorde: onda %d") % rec_h) if rec_h > 0 else Idioma.t("Sem recorde ainda"), Vector2(22, 62), 16, Desenho.DOURADO, -1.0, 3)
 		if estado.onda == Balanco.ONDAS_TOTAIS:
-			Desenho.texto(self, "Onda de chefe", Vector2(190, 62), 16, Color(1.0, 0.45, 0.4), -1.0, 3)
+			Desenho.texto(self, Idioma.t("Onda de chefe"), Vector2(190, 62), 16, Color(1.0, 0.45, 0.4), -1.0, 3)
 	else:
-		Desenho.texto(self, "%s · Onda %d/%d" % [nome_fase, estado.onda, Balanco.ONDAS_TOTAIS], Vector2(20, 40), 30, Color(1, 1, 1), -1.0, 4)
+		Desenho.texto(self, Idioma.t("%s · Onda %d/%d") % [nome_fase, estado.onda, Balanco.ONDAS_TOTAIS], Vector2(20, 40), 30, Color(1, 1, 1), -1.0, 4)
 		if estado.ato > 1:
-			Desenho.texto(self, Balanco.ATO_NOME[estado.ato - 1], Vector2(22, 62), 16, Desenho.DOURADO, -1.0, 3)
+			Desenho.texto(self, Idioma.t(Balanco.ATO_NOME[estado.ato - 1]), Vector2(22, 62), 16, Desenho.DOURADO, -1.0, 3)
 	# contador de inimigos restantes
 	var restam: int = sim.inimigos.size() + sim.fila.size()
 	UIComum.emblema(self, "inimigo", Vector2(546, 16), 2.0, Desenho.COR_INIMIGO)   # cabecinha de rato em pixel art, não uma bola
@@ -7204,7 +7204,7 @@ func _hud() -> void:
 		var ub: Unidade = u
 		if ub.chefe and ub.vida_max > 0.0 and not ub.ilusao:
 			var fr_b: float = clampf(ub.vida / ub.vida_max, 0.0, 1.0)
-			var nome_b: String = Fases.nome_do_chefe(estado.lugar_chefe())
+			var nome_b: String = Idioma.t(Fases.nome_do_chefe(estado.lugar_chefe()))
 			Desenho.texto(self, nome_b, Vector2(632, 42), 22, Color(1.0, 0.85, 0.8), 424.0, 4)
 			# barra de pixel: 420 px em quadradinhos de V.Q, 3 de altura, contorno escuro, brilho em cima e sombra embaixo
 			var q: float = V.Q
@@ -7234,7 +7234,7 @@ func _hud() -> void:
 		var tm: float = mensagem_t - 0.1
 		var em: float = 1.0 + 0.7 * exp(-tm * 7.0) * cos(tm * 16.0)   # entra com sobressalto
 		draw_set_transform(Vector2(640, 300), 0.0, Vector2(em, em))
-		Desenho.texto(self, "Onda vencida!", Vector2(-300, 0), 54, Desenho.DOURADO, 600.0, 7)
+		Desenho.texto(self, Idioma.t("Onda vencida!"), Vector2(-300, 0), 54, Desenho.DOURADO, 600.0, 7)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # ---------------------------------------------------------------- preparação da onda e leitura da luta
@@ -7280,19 +7280,19 @@ func _montar_preparacao() -> void:
 		b.rival = item.get("rival", false)
 		b.gangue = int(item.get("gangue", -1)) if b.rival else -1
 		b.chefe_tipo = Fases.chefe_base(estado.lugar_chefe()) if chefe else -1
-		var nome: String = Balanco.TIPO_NOMES[clampi(b.tipo, 0, Balanco.TIPO_NOMES.size() - 1)]
-		var dica: String = TIPO_DICA[clampi(b.tipo, 0, TIPO_DICA.size() - 1)]
+		var nome: String = Idioma.t(Balanco.TIPO_NOMES[clampi(b.tipo, 0, Balanco.TIPO_NOMES.size() - 1)])
+		var dica: String = Idioma.t(TIPO_DICA[clampi(b.tipo, 0, TIPO_DICA.size() - 1)])
 		if b.rival:
-			nome = Balanco.nome_rival(b.gangue, b.tipo)
+			nome = Idioma.t(Balanco.nome_rival(b.gangue, b.tipo))
 			var dica_g: String = Balanco.dica_rival(b.gangue, b.tipo)
 			if dica_g != "":
-				dica = dica_g
+				dica = Idioma.t(dica_g)
 		if chefe:
-			nome = Fases.nome_do_chefe(estado.lugar_chefe())
-			dica = "O chefe do cômodo. Chega por último."
+			nome = Idioma.t(Fases.nome_do_chefe(estado.lugar_chefe()))
+			dica = Idioma.t("O chefe do cômodo. Chega por último.")
 		elif elite:
-			nome = "Fantasiado"
-			dica = "Mais forte: veste uma fantasia e larga uma peça dela ao cair."
+			nome = Idioma.t("Fantasiado")
+			dica = Idioma.t("Mais forte: veste uma fantasia e larga uma peça dela ao cair.")
 		por_prio[pr] = {"u": b, "n": 1, "prio": pr, "nome": nome, "dica": dica, "pos": Vector2.ZERO}
 	var chaves: Array = por_prio.keys()
 	chaves.sort()
@@ -7619,17 +7619,17 @@ func _caixa_info(linhas: Array, ancora: Vector2, larg: float, borda: Color) -> v
 
 func _nome_unidade(u: Unidade) -> String:
 	if u.equipe == 0:
-		return u.boneco.nome if u.boneco != null else "Gato"
+		return u.boneco.nome if u.boneco != null else Idioma.t("Gato")
 	if u.chefe:
-		return Fases.nome_do_chefe(estado.lugar_chefe())
+		return Idioma.t(Fases.nome_do_chefe(estado.lugar_chefe()))
 	if u.parte:
-		return "Sapinho"
+		return Idioma.t("Sapinho")
 	if u.pequeno:
-		return "Filhote"
-	var n: String = Balanco.nome_rival(u.gangue, u.tipo) if u.rival else Balanco.TIPO_NOMES[clampi(u.tipo, 0, Balanco.TIPO_NOMES.size() - 1)]
+		return Idioma.t("Filhote")
+	var n: String = Idioma.t(Balanco.nome_rival(u.gangue, u.tipo) if u.rival else Balanco.TIPO_NOMES[clampi(u.tipo, 0, Balanco.TIPO_NOMES.size() - 1)])
 	if not u.elite:
 		return n
-	return n + (" fantasiada" if u.tipo == Unidade.Tipo.GEMEO else " fantasiado")
+	return (Idioma.t("%s fantasiada") if u.tipo == Unidade.Tipo.GEMEO else Idioma.t("%s fantasiado")) % n
 
 ## Linhas da ficha com os estados em vigor: [ícone, nome, tempo, tamanho, cor]; no fim, bônus sem ícone.
 func _estados_linhas(u: Unidade) -> Array:
@@ -7638,36 +7638,36 @@ func _estados_linhas(u: Unidade) -> Array:
 	for i in n:
 		var id: int = _ico_ids[i]
 		var tp: float = _ico_t[i]
-		var nome: String = IconesEstado.NOME[id]
+		var nome: String = Idioma.t(IconesEstado.NOME[id])
 		match id:
 			IconesEstado.E.LENTO:
-				nome = "Molhado, lento" if u.frio_t > 0.0 else "Lento a %s" % Simulacao.pct(u.lento)
+				nome = Idioma.t("Molhado, lento") if u.frio_t > 0.0 else Idioma.t("Lento a %s") % Simulacao.pct(u.lento)
 			IconesEstado.E.MARCADO:
-				nome = "Marcado: +%s de dano" % Simulacao.pct(u.marcado_bonus)
+				nome = Idioma.t("Marcado: +%s de dano") % Simulacao.pct(u.marcado_bonus)
 			IconesEstado.E.OCULTO:
-				nome = "Oculto na fumaça"
+				nome = Idioma.t("Oculto na fumaça")
 			IconesEstado.E.DISFARCADO:
-				nome = "Disfarçado: anula o próximo golpe"
+				nome = Idioma.t("Disfarçado: anula o próximo golpe")
 			IconesEstado.E.FURIA:
-				nome = "Em fúria"
+				nome = Idioma.t("Em fúria")
 			IconesEstado.E.CURA:
-				nome = "Curando no canteiro"
+				nome = Idioma.t("Curando no canteiro")
 			IconesEstado.E.ABALADO:
-				nome = "Abalado: -%s de dano e de velocidade" % Simulacao.pct(Balanco.MORAL_DANO)
+				nome = Idioma.t("Abalado: -%s de dano e de velocidade") % Simulacao.pct(Balanco.MORAL_DANO)
 			IconesEstado.E.FUGINDO:
-				nome = "Fugindo com %d bloco%s" % [u.carga, "" if u.carga == 1 else "s"] if u.carga > 0 else "Fugindo"
+				nome = ((Idioma.t("Fugindo com %d bloco") if u.carga == 1 else Idioma.t("Fugindo com %d blocos")) % u.carga) if u.carga > 0 else Idioma.t("Fugindo")
 			IconesEstado.E.DORMINDO:
-				nome = "Dormindo com os peixes: fora da luta"
+				nome = Idioma.t("Dormindo com os peixes: fora da luta")
 			IconesEstado.E.MUTANTE:
-				nome = "Mutante: +%s de dano e de velocidade" % Simulacao.pct(Balanco.MUTACAO_DANO)
+				nome = Idioma.t("Mutante: +%s de dano e de velocidade") % Simulacao.pct(Balanco.MUTACAO_DANO)
 			IconesEstado.E.CONFUSO:
-				nome = "Confuso: ataca o aliado mais perto"
-		saida.append([id, nome, ("%s s" % Simulacao.num(tp)) if tp < IconesEstado.SEM_TEMPO else "", 13, Color(0.85, 1.0, 0.85)])
+				nome = Idioma.t("Confuso: ataca o aliado mais perto")
+		saida.append([id, nome, (Idioma.t("%s s") % Simulacao.num(tp)) if tp < IconesEstado.SEM_TEMPO else "", 13, Color(0.85, 1.0, 0.85)])
 	var extra: Array[String] = []
 	if u.bonus_dano > 1.01:
-		extra.append("dano +%s" % Simulacao.pct(u.bonus_dano - 1.0))
+		extra.append(Idioma.t("dano +%s") % Simulacao.pct(u.bonus_dano - 1.0))
 	if u.embalo > 0.0:
-		extra.append("embalo +%s" % Simulacao.pct(u.embalo))
+		extra.append(Idioma.t("embalo +%s") % Simulacao.pct(u.embalo))
 	if not extra.is_empty():
 		saida.append([", ".join(extra), 13, Color(0.8, 1.0, 0.8)])
 	return saida
@@ -7703,29 +7703,33 @@ func _desenhar_foco() -> void:
 		_anel_px(pb, 15.0, 15.0, cor, 1)
 	var linhas: Array = [[_nome_unidade(u), 20, cor.lightened(0.3)]]
 	if aliado:
-		var sub: String = "%s · %s" % [Boneco.LINHA_NOMES[u.linha], Boneco.POSTURA_NOMES[u.postura]]
+		var sub: String = Idioma.t("%s · %s") % [Idioma.t(Boneco.LINHA_NOMES[u.linha]), Idioma.t(Boneco.POSTURA_NOMES[u.postura])]
 		if u.boneco != null:
-			sub = "Nível %d · %s" % [u.boneco.nivel, sub]
+			sub = Idioma.t("Nível %d · %s") % [u.boneco.nivel, sub]
 		linhas.append([sub, 13, Color(1, 1, 1, 0.75)])
 	elif sim.prioritario(u):
-		linhas.append(["Alvo prioritário do time", 13, Color(1.0, 0.55, 0.45)])
+		linhas.append([Idioma.t("Alvo prioritário do time"), 13, Color(1.0, 0.55, 0.45)])
 	for par in Simulacao.ficha_linhas(u):
 		linhas.append([par[0], par[1], 14, Color(1, 1, 1)])
 	if aliado and not u.herancas.is_empty():
 		var nomes: Array[String] = []
 		for hi in u.herancas.size():
-			nomes.append(Simulacao.heranca_nome_curto(u.herancas[hi], u.heranca_graus[hi] if hi < u.heranca_graus.size() else 1))
-		linhas.append(["Herança: " + ", ".join(nomes), 13, Color(0.85, 0.78, 1.0)])
+			nomes.append(Idioma.t(Simulacao.heranca_nome_curto(u.herancas[hi], u.heranca_graus[hi] if hi < u.heranca_graus.size() else 1)))
+		linhas.append([Idioma.t("Herança: %s") % ", ".join(nomes), 13, Color(0.85, 0.78, 1.0)])
 	if u.poder >= 0 and aliado:
 		var cj: int = clampi(u.poder_conj, 0, Pecas.PODER_NOME.size() - 1)
-		linhas.append(["Poder: " + Pecas.PODER_NOME[cj], "pronto" if u.poder_cd <= 0.0 else "em %s s" % Simulacao.num(u.poder_cd), 14, Color(1.0, 0.9, 0.5)])
+		linhas.append([Idioma.t("Poder: %s") % Idioma.t(Pecas.PODER_NOME[cj]), Idioma.t("pronto") if u.poder_cd <= 0.0 else Idioma.t("em %s s") % Simulacao.num(u.poder_cd), 14, Color(1.0, 0.9, 0.5)])
 	if not prep:
 		if alvo != null and alvo.vivo:
-			linhas.append(["Atacando", _nome_unidade(alvo), 14, cor.lightened(0.3)])
+			linhas.append([Idioma.t("Atacando"), _nome_unidade(alvo), 14, cor.lightened(0.3)])
 		elif not aliado:
-			linhas.append(["Indo para", "a torre", 14, Color(1.0, 0.8, 0.5)])
+			linhas.append([Idioma.t("Indo para"), Idioma.t("a torre"), 14, Color(1.0, 0.8, 0.5)])
 		linhas.append_array(_estados_linhas(u))
 	_caixa_info(linhas, Vector2(u.vx + 30.0, u.vy - CORPO_MEIO * esc_u), 262.0, cor)
+
+## "Avançar: vai atrás..." -> só a explicação (o nome da ordem já vai no título); sem ": " devolve tudo.
+func _dica_sem_titulo(t: String) -> String:
+	return t.get_slice(": ", 1) if ": " in t else t
 
 ## Quebra o texto em linhas de até `n` letras, sem partir palavra.
 func _quebra(txt: String, n: int) -> Array[String]:
@@ -7745,10 +7749,10 @@ func _desenhar_foco_previa() -> void:
 	var bt: String = _prep_bt_em(mouse_c)
 	if bt.begins_with("o"):
 		var i: int = int(bt.substr(1))
-		var lo: Array = [[Boneco.POSTURA_NOMES[i], 18, PREP_COR[i]]]
-		for t in _quebra(PREP_DICA[i].get_slice(": ", 1), 44):
+		var lo: Array = [[Idioma.t(Boneco.POSTURA_NOMES[i]), 18, PREP_COR[i]]]
+		for t in _quebra(_dica_sem_titulo(Idioma.t(PREP_DICA[i])), 44):
 			lo.append([t, 13, Color(1, 1, 1)])
-		lo.append(["Vale para %s." % ("o time todo" if prep_sel == null else _nome_unidade(prep_sel)), 13, Color(1.0, 0.9, 0.5)])
+		lo.append([Idioma.t("Vale para %s.") % (Idioma.t("o time todo") if prep_sel == null else _nome_unidade(prep_sel)), 13, Color(1.0, 0.9, 0.5)])
 		_caixa_info(lo, Vector2(_prep_rect(i).position.x - 22.0, 590.0), 320.0, PREP_COR[i])
 		return
 	var gi: int = _previa_em(mouse_c)
@@ -7759,7 +7763,7 @@ func _desenhar_foco_previa() -> void:
 	var linhas: Array = [["%s  ×%d" % [g["nome"], g["n"]], 18, Color(1.0, 0.7, 0.6)]]
 	for t in _quebra(str(g["dica"]), 40):
 		linhas.append([t, 13, Color(1, 1, 1)])
-	linhas.append(["Alvo prioritário: clique para tirar" if marcado else "Clique: o time bate nele primeiro", 13, Color(1.0, 0.55, 0.45) if marcado else Color(0.7, 1.0, 0.7)])
+	linhas.append([Idioma.t("Alvo prioritário: clique para tirar") if marcado else Idioma.t("Clique: o time bate nele primeiro"), 13, Color(1.0, 0.55, 0.45) if marcado else Color(0.7, 1.0, 0.7)])
 	_caixa_info(linhas, (g["pos"] as Vector2) + Vector2(-330.0, -40.0), 286.0, Color(1.0, 0.5, 0.42))
 
 ## Faixas das linhas no chão e o posto de cada gato (por baixo das unidades).
@@ -7835,11 +7839,11 @@ func _desenhar_prep() -> void:
 		var a: Unidade = sim.aliados[i]
 		var ea: float = esc_tela(a)
 		var cp: Color = PREP_COR[a.postura]
-		var rot: String = Boneco.POSTURA_NOMES[a.postura]
+		var rot: String = Idioma.t(Boneco.POSTURA_NOMES[a.postura])
 		var y_rot: float = a.vy - (CORPO_ALT + 12.0) * ea
 		if a == prep_sel:
 			# plaquinha clara com o nome: é para ele que valem as ordens
-			var nm: String = a.boneco.nome if a.boneco != null else "Gato"
+			var nm: String = a.boneco.nome if a.boneco != null else Idioma.t("Gato")
 			var pl := Rect2(a.vx - 40.0, y_rot - 40.0, 80.0, 20.0)
 			draw_rect(pl.grow(2.0), Color(0.25, 0.14, 0.04, 0.9))
 			draw_rect(pl, Color(1.0, 0.92, 0.6))
@@ -7853,15 +7857,15 @@ func _desenhar_prep() -> void:
 		var rz := Rect2(xs[z] + 3.0, yr, xs[z + 1] - xs[z] - 6.0, 22.0)
 		draw_rect(rz, Color(0.05, 0.03, 0.08, 0.78))
 		draw_rect(Rect2(rz.position.x, rz.end.y - 3.0, rz.size.x, 3.0), cz)
-		Desenho.texto(self, Boneco.LINHA_NOMES[2 - z], Vector2(rz.position.x, yr + 17.0), 15, cz.lightened(0.3), rz.size.x, 3)
+		Desenho.texto(self, Idioma.t(Boneco.LINHA_NOMES[2 - z]), Vector2(rz.position.x, yr + 17.0), 15, cz.lightened(0.3), rz.size.x, 3)
 	var rv := Rect2(851.0, yr, 398.0, 22.0)
 	draw_rect(rv, Color(0.05, 0.03, 0.08, 0.78))
 	draw_rect(Rect2(rv.position.x, rv.end.y - 3.0, rv.size.x, 3.0), Color(1.0, 0.45, 0.4))
-	Desenho.texto(self, "Onda que vem", Vector2(rv.position.x, yr + 17.0), 15, Color(1.0, 0.75, 0.65), rv.size.x, 3)
+	Desenho.texto(self, Idioma.t("Onda que vem"), Vector2(rv.position.x, yr + 17.0), 15, Color(1.0, 0.75, 0.65), rv.size.x, 3)
 	draw_rect(Rect2(198.0, 646.0, 148.0, 68.0), Color(0.05, 0.03, 0.08, 0.72))
 	# faixa de baixo: para quem vale a ordem, os três botões e "Começar"
-	var quem: String = "o time todo" if prep_sel == null else (prep_sel.boneco.nome if prep_sel.boneco != null else "o gato")
-	Desenho.texto(self, "Ordem para", Vector2(206.0, 672.0), 14, Color(1, 1, 1, 0.8), 140.0, 3)
+	var quem: String = Idioma.t("o time todo") if prep_sel == null else (prep_sel.boneco.nome if prep_sel.boneco != null else Idioma.t("o gato"))
+	Desenho.texto(self, Idioma.t("Ordem para"), Vector2(206.0, 672.0), 14, Color(1, 1, 1, 0.8), 140.0, 3)
 	if prep_sel != null:
 		var rq := Rect2(204.0, 678.0, 132.0, 26.0)
 		draw_rect(rq, Color(1.0, 0.92, 0.6))
@@ -7871,13 +7875,13 @@ func _desenhar_prep() -> void:
 	var atual: int = _prep_postura_atual()
 	for i in 3:
 		var id: String = "o%d" % i
-		UIComum.botao(self, _prep_rect(i), Boneco.POSTURA_NOMES[i], PREP_COR[i], {"h": UIComum.anim_h(prep_anim, id), "p": UIComum.anim_p(prep_anim, id), "marcado": atual == i, "sub": PREP_TECLA[i], "tam": 20}, rel)
-	UIComum.botao(self, PREP_COMECAR, "Começar a onda", UIComum.B_VERDE, {"h": UIComum.anim_h(prep_anim, "ir"), "p": UIComum.anim_p(prep_anim, "ir"), "sub": "Espaço", "tam": 22, "foco": fposmod(rel, 1.6) < 0.8 and UIComum.anim_h(prep_anim, "ir") < 0.05}, rel)
+		UIComum.botao(self, _prep_rect(i), Idioma.t(Boneco.POSTURA_NOMES[i]), PREP_COR[i], {"h": UIComum.anim_h(prep_anim, id), "p": UIComum.anim_p(prep_anim, id), "marcado": atual == i, "sub": PREP_TECLA[i], "tam": 20}, rel)
+	UIComum.botao(self, PREP_COMECAR, Idioma.t("Começar a onda"), UIComum.B_VERDE, {"h": UIComum.anim_h(prep_anim, "ir"), "p": UIComum.anim_p(prep_anim, "ir"), "sub": Idioma.t("Espaço"), "tam": 22, "foco": fposmod(rel, 1.6) < 0.8 and UIComum.anim_h(prep_anim, "ir") < 0.05}, rel)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var alvo_txt: String = ""
 	for gd2 in prep_previa:
 		if int(gd2["prio"]) == sim.prioridade:
-			alvo_txt = "Alvo: %s" % gd2["nome"]
+			alvo_txt = Idioma.t("Alvo: %s") % gd2["nome"]
 	if alvo_txt != "":
 		Desenho.texto(self, alvo_txt, Vector2(851.0, Balanco.CHAO_Y0 - 40.0), 15, Color(1.0, 0.7, 0.6), 398.0, 4)
 
@@ -7892,7 +7896,7 @@ func _desenhar_avisos() -> void:
 			var esc_s: float = ESC * uu.escala()
 			var ps: Vector2 = Vector2(uu.vx, uu.vy - (CORPO_ALT + 40.0) * esc_s)
 			var cs: Color = Color(0.75, 0.9, 1.0) if not uu.morto else Color(1.0, 0.85, 0.5)
-			Desenho.texto(self, "Vai virar fantasma!" if not uu.morto else "Vai voltar à vida!", ps + Vector2(-110, -6.0), 22, Color(cs.r, cs.g, cs.b, 0.6 + 0.4 * pk), 220.0, 5)
+			Desenho.texto(self, Idioma.t("Vai virar fantasma!") if not uu.morto else Idioma.t("Vai voltar à vida!"), ps + Vector2(-110, -6.0), 22, Color(cs.r, cs.g, cs.b, 0.6 + 0.4 * pk), 220.0, 5)
 		if not uu.vivo or uu.aviso_t <= 0.0:
 			continue
 		var cj: int = clampi(uu.poder_conj, 0, Pecas.PODER_NOME.size() - 1)
@@ -7950,4 +7954,4 @@ func _desenhar_avisos() -> void:
 		V.disco_c(self, pb, raio_b, cor.lerp(Color(1, 1, 1), 0.35 * pisca), cont_a)
 		V.arco(self, pb, raio_b - 5.0, -PI * 0.5, -PI * 0.5 + TAU * prog, cont_a, 1.0, 1.5)   # enche até soltar
 		_exclamacao(pb, Color(0.1, 0.04, 0.12))
-		Desenho.texto(self, (uu.aviso_nome if uu.aviso_nome != "" else Pecas.PODER_NOME[cj] + "!"), pb + Vector2(-100, -raio_b - 8.0), 22, Color(1, 1, 1, 0.6 + 0.4 * pisca), 200.0, 5)
+		Desenho.texto(self, (Idioma.t(uu.aviso_nome) if uu.aviso_nome != "" else Idioma.t("%s!") % Idioma.t(Pecas.PODER_NOME[cj])), pb + Vector2(-100, -raio_b - 8.0), 22, Color(1, 1, 1, 0.6 + 0.4 * pisca), 200.0, 5)

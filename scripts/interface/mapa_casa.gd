@@ -576,13 +576,13 @@ func _marca_escolhido(rs: Array[Rect2], t: float) -> void:
 	var pu: float = 0.5 + 0.5 * sin(t * 5.0)
 	_moldura(r.grow(6.0), 6.0, C_OURO.lerp(Color(1.0, 0.97, 0.7), pu))
 	_moldura(r.grow(12.0), 4.0, Color(1.0, 0.82, 0.3, 0.25 + 0.3 * pu))
-	var w: float = ceilf((_largura("Escolhido", 14) + 16.0) / 4.0) * 4.0
+	var w: float = ceilf((_largura(Idioma.t("Escolhido"), 14) + 16.0) / 4.0) * 4.0
 	var x: float = r.position.x + 8.0
 	var y: float = r.end.y - 36.0
 	_r(x, y, w, 28, C_CONTORNO)
 	_r(x + 4, y + 4, w - 8, 20, C_OURO)
 	_r(x + 4, y + 4, w - 8, 4, Color(1.0, 0.94, 0.6))
-	Desenho.texto(cv, "Escolhido", Vector2(x + 8, y + 19), 14, Color(0.22, 0.12, 0.06))
+	Desenho.texto(cv, Idioma.t("Escolhido"), Vector2(x + 8, y + 19), 14, Color(0.22, 0.12, 0.06))
 
 ## Entrar num cômodo: a luz dele acende e o quarto cresce sobre o mapa antes de a cortina fechar.
 func _entrada_comodo(d: int) -> void:
@@ -596,24 +596,24 @@ func _entrada_comodo(d: int) -> void:
 	_moldura(r, 4.0, Color(1.0, 0.95, 0.7, k))
 func _cabecalho() -> void:
 	var est: Estado = p.estado
-	Desenho.texto(cv, "As ruas do bairro" if _ruas else ("Lado de fora da casa" if _fora else "Mapa da casa"), Vector2(0, 48), 32, Color(1, 0.92, 0.75), 800.0, 6)
-	var sub: String = "Escolha um cômodo: cada um tem %d ondas e um chefe." % Balanco.ONDAS_TOTAIS
+	Desenho.texto(cv, Idioma.t("As ruas do bairro") if _ruas else (Idioma.t("Lado de fora da casa") if _fora else Idioma.t("Mapa da casa")), Vector2(0, 48), 32, Color(1, 0.92, 0.75), 800.0, 6)
+	var sub: String = Idioma.t("Escolha um cômodo: cada um tem %d ondas e um chefe.") % Balanco.ONDAS_TOTAIS
 	var cor: Color = Color(1, 1, 1, 0.8)
 	if _ruas:
-		sub = "Terceiro ato: siga a trilha dourada, do Mercadão aos Telhados. Cada lugar tem %d ondas e um chefe." % Balanco.ONDAS_TOTAIS
+		sub = Idioma.t("Terceiro ato: siga a trilha dourada, do Mercadão aos Telhados. Cada lugar tem %d ondas e um chefe.") % Balanco.ONDAS_TOTAIS
 		if est.tudo_vencido():
-			sub = "Tudo vencido! Clique num lugar e escolha: Jogar de novo."
+			sub = Idioma.t("Tudo vencido! Clique num lugar e escolha: Jogar de novo.")
 			cor = Desenho.DOURADO
 	elif _fora:
-		sub = "Segundo ato: escolha um lugar, na ordem que quiser. Cada um tem %d ondas e um chefe." % Balanco.ONDAS_TOTAIS
+		sub = Idioma.t("Segundo ato: escolha um lugar, na ordem que quiser. Cada um tem %d ondas e um chefe.") % Balanco.ONDAS_TOTAIS
 		if est.tudo_vencido():
-			sub = "Tudo vencido! Clique num lugar e escolha: Jogar de novo ou Invasão sem fim."
+			sub = Idioma.t("Tudo vencido! Clique num lugar e escolha: Jogar de novo ou Invasão sem fim.")
 			cor = Desenho.DOURADO
 	elif _ato > 1:
-		sub = "Clique num cômodo e escolha: Jogar de novo ou Invasão sem fim. O 2º ato fica lá fora."
+		sub = Idioma.t("Clique num cômodo e escolha: Jogar de novo ou Invasão sem fim. O 2º ato fica lá fora.")
 		cor = Desenho.DOURADO
 	elif est.campanha_vencida():
-		sub = "Campanha vencida! Cace peças nos cômodos ou encare a Invasão sem fim."
+		sub = Idioma.t("Campanha vencida! Cace peças nos cômodos ou encare a Invasão sem fim.")
 		cor = Desenho.DOURADO
 	var tam: int = p._tam_cabe(sub, [16, 14, 13], 780.0)
 	Desenho.texto(cv, sub, Vector2(0, 76), tam, cor, 800.0, 4)
@@ -997,7 +997,7 @@ func _luz(fi: int) -> void:
 	_l(lx - 4, 20, 12, 4, Color(1.0, 0.8, 0.3))
 
 func _plaquinha(fi: int, bloq: bool) -> void:
-	var nome: String = Fases.NOME[fi]
+	var nome: String = Idioma.t(Fases.NOME[fi])
 	var w: float = ceilf((_largura(nome, 14) + 16.0) / 4.0) * 4.0
 	var x: float = _o.x + 4.0
 	var y: float = _o.y + 4.0
@@ -1016,7 +1016,7 @@ func _selo() -> void:
 		_r(x + c.x, y + c.y, 4, 4, Color.WHITE)
 
 func _tag_jogar(t: float) -> void:
-	var w: float = ceilf((_largura("Jogar", 14) + 36.0) / 4.0) * 4.0
+	var w: float = ceilf((_largura(Idioma.t("Jogar"), 14) + 36.0) / 4.0) * 4.0
 	var x: float = _o.x + _iw - w - 4.0
 	var y: float = _o.y + 4.0
 	_r(x, y, w, 28, C_CONTORNO)
@@ -1027,7 +1027,7 @@ func _tag_jogar(t: float) -> void:
 	_r(ax, y + 8, 4, 12, C_CONTORNO)
 	_r(ax + 4, y + 10, 4, 8, C_CONTORNO)
 	_r(ax + 8, y + 12, 4, 4, C_CONTORNO)
-	Desenho.texto(cv, "Jogar", Vector2(x + 24, y + 19), 14, Color(0.22, 0.12, 0.06))
+	Desenho.texto(cv, Idioma.t("Jogar"), Vector2(x + 24, y + 19), 14, Color(0.22, 0.12, 0.06))
 
 func _cadeado() -> void:
 	var bx: float = _o.x + snappedf(_iw * 0.5, 4.0) - 12.0
@@ -1096,7 +1096,7 @@ func _lugar_fora(f: int, t: float, est: Estado, d: int) -> void:
 
 ## Plaquinha de madeira com o nome e, logo abaixo, o estado: "falta" (dourado, pulsando) ou "feito" (verde).
 func _placa_fora(fi: int, feito: bool, t: float) -> void:
-	var nome: String = Fases.nome_do_lugar(fi + Fases.TOTAL * (_av() - 1))
+	var nome: String = Idioma.t(Fases.nome_do_lugar(fi + Fases.TOTAL * (_av() - 1)))
 	var off: Vector2 = PLACA_FORA[fi]
 	var w: float = ceilf((_largura(nome, 14) + 16.0) / 4.0) * 4.0
 	var x: float = FORA[fi].position.x + off.x
@@ -1105,7 +1105,7 @@ func _placa_fora(fi: int, feito: bool, t: float) -> void:
 	_r(x + 4, y + 4, w - 8, 20, Color(0.42, 0.28, 0.17))
 	_r(x + 4, y + 4, w - 8, 4, Color(0.58, 0.4, 0.24))
 	Desenho.texto(cv, nome, Vector2(x + 8, y + 19), 14, Color(1, 0.94, 0.8))
-	var txt: String = "feito" if feito else "falta"
+	var txt: String = Idioma.t("feito") if feito else Idioma.t("falta")
 	var cw: float = ceilf((_largura(txt, 13) + 20.0) / 4.0) * 4.0
 	var cor: Color = Color(0.4, 0.82, 0.45) if feito else C_OURO.lerp(Color(1.0, 0.97, 0.7), 0.5 + 0.5 * sin(t * 4.0))
 	_r(x, y + 26, cw, 24, C_CONTORNO)
@@ -1477,7 +1477,7 @@ func _lugar_ruas(f: int, t: float, est: Estado, d: int) -> void:
 		_rr(r, Color(1, 1, 1, 0.07))
 
 func _placa_ruas(fi: int, feito: bool, aberto: bool, t: float) -> void:
-	var nome: String = Fases.nome_do_lugar(fi + Fases.TOTAL * 2)
+	var nome: String = Idioma.t(Fases.nome_do_lugar(fi + Fases.TOTAL * 2))
 	var w: float = ceilf((_largura(nome, 14) + 16.0) / 4.0) * 4.0
 	var x: float = RUAS[fi].position.x + 4.0
 	var y: float = RUAS[fi].position.y + 4.0
@@ -1485,7 +1485,7 @@ func _placa_ruas(fi: int, feito: bool, aberto: bool, t: float) -> void:
 	_r(x + 4, y + 4, w - 8, 20, Color(0.42, 0.28, 0.17))
 	_r(x + 4, y + 4, w - 8, 4, Color(0.58, 0.4, 0.24))
 	Desenho.texto(cv, nome, Vector2(x + 8, y + 19), 14, Color(1, 0.94, 0.8, 1.0 if aberto else 0.7))
-	var txt: String = "feito" if feito else ("falta" if aberto else "fechado")
+	var txt: String = Idioma.t("feito") if feito else (Idioma.t("falta") if aberto else Idioma.t("fechado"))
 	var cw: float = ceilf((_largura(txt, 13) + 20.0) / 4.0) * 4.0
 	var cor: Color = Color(0.4, 0.82, 0.45) if feito else (C_OURO.lerp(Color(1.0, 0.97, 0.7), 0.5 + 0.5 * sin(t * 4.0)) if aberto else Color(0.55, 0.55, 0.62))
 	_r(x, y + 26, cw, 24, C_CONTORNO)
@@ -1621,7 +1621,7 @@ func _painel_lateral(f: int) -> void:
 	cv.draw_rect(Rect2(PAINEL.position.x + 8.0, RETRATO.end.y, PAINEL.size.x - 16.0, 366.0 - RETRATO.end.y), fundo_p)
 	cv.draw_rect(RETRATO, Color(1, 1, 1, 0.18), false, 1.0)
 	# nome e situação
-	var nome: String = Fases.nome_do_lugar(li)
+	var nome: String = Idioma.t(Fases.nome_do_lugar(li))
 	var tn: int = p._tam_cabe(nome, [28, 26, 24], 200.0)
 	Desenho.texto(cv, nome, Vector2(x0, 156), tn, p._com_alfa(Color(1, 0.95, 0.8), al), -1.0, 5)
 	var chip := Rect2(x0 + larg - 120.0, 132.0, 120.0, 28.0)
@@ -1631,21 +1631,21 @@ func _painel_lateral(f: int) -> void:
 		p._botao_arte(chip, Color(0.45, 0.45, 0.5))
 	else:
 		p._botao_arte(chip, Color(1.0, 0.82 + 0.1 * sin(p.t * 4.0), 0.35) if prox else Color(0.75, 0.85, 1.0))
-	var rotulo: String = String(p.VENCIDO_GENERO[fi]).capitalize() if venc else ("Bloqueado" if bloq else ("Próximo" if prox else "Liberado"))
+	var rotulo: String = Idioma.t(String(p.VENCIDO_GENERO[fi]).capitalize()) if venc else (Idioma.t("Bloqueado") if bloq else (Idioma.t("Próximo") if prox else Idioma.t("Liberado")))
 	var falta_ato: bool = _fora and not venc and not bloq
 	if falta_ato:
 		p._botao_arte(chip, Color(1.0, 0.82 + 0.1 * sin(p.t * 4.0), 0.35))
-		rotulo = "%dº ato: falta" % ato_m
+		rotulo = Idioma.t("%dº ato: falta") % ato_m
 	elif _fora:
-		rotulo = "%dº ato: feito" % ato_m
+		rotulo = Idioma.t("%dº ato: feito") % ato_m
 	Desenho.texto(cv, rotulo, Vector2(chip.position.x, chip.position.y + 20), 16, Color(0.95, 0.95, 1, 0.9) if bloq else p.COR_TINTA_ESC, chip.size.x)
 	# família e a dica dela
-	var fam_txt: String = "Família: " + Fases.FAMILIA_NOME[fi]
-	var fam_dica: String = Fases.FAMILIA_DICA[fi]
+	var fam_txt: String = Idioma.t("Família: %s") % Idioma.t(Fases.FAMILIA_NOME[fi])
+	var fam_dica: String = Idioma.t(Fases.FAMILIA_DICA[fi])
 	if _fora:
 		var dg: int = mini(est.vencidos_no_ato(ato_m), Fases.TOTAL - 1)
-		fam_txt = "%s · %s" % [Balanco.ATO_NOME[ato_m - 1], Fases.grupo_nome(li)]
-		fam_dica = "%s. Lugar deixado para depois chega mais forte (agora: +%d%% de vida)." % [Fases.grupo_dica(li), int(round(Balanco.ATO_VIDA_DEGRAU * dg * 100.0))]
+		fam_txt = Idioma.t("%s · %s") % [Idioma.t(Balanco.ATO_NOME[ato_m - 1]), Idioma.t(Fases.grupo_nome(li))]
+		fam_dica = Idioma.t("%s. Lugar deixado para depois chega mais forte (agora: +%d%% de vida).") % [Idioma.t(Fases.grupo_dica(li)), int(round(Balanco.ATO_VIDA_DEGRAU * dg * 100.0))]
 	Desenho.texto(cv, fam_txt, Vector2(x0, 182), 16, p._com_alfa(tom.lightened(0.4), al))
 	var tam_d: int = 12 if _fora else 13     # lá fora a dica é mais longa (leva o aviso de vida extra)
 	var ld: Array[String] = p._quebrar(fam_dica, tam_d, larg)
@@ -1655,51 +1655,51 @@ func _painel_lateral(f: int) -> void:
 	# retratos: o chefe (atrás, maior) e um bicho da família na frente
 	var xr: float = 1044.0
 	var lr: float = PAINEL.end.x - 24.0 - xr      # 180
-	Desenho.texto(cv, "Chefe", Vector2(xr, 262), 13, Color(1, 1, 1, 0.65 * al))
-	var cn: String = Fases.nome_do_chefe(li)
+	Desenho.texto(cv, Idioma.t("Chefe"), Vector2(xr, 262), 13, Color(1, 1, 1, 0.65 * al))
+	var cn: String = Idioma.t(Fases.nome_do_chefe(li))
 	var tc: int = p._tam_cabe(cn, [22, 20, 18, 16], lr)
 	Desenho.texto(cv, cn, Vector2(xr, 288), tc, p._com_alfa(Desenho.DOURADO, al), -1.0, 4)
 	var oferta: bool = est.campanha_vencida() and not bloq
 	if oferta:
 		if _fora:
 			# lá fora: jogar o lugar; a invasão sem fim só aparece depois de vencê-lo no 2º ato
-			_botao_painel(BT_JOGAR, ("Jogar o %dº ato" % ato_m) if falta_ato else "Jogar de novo", UIComum.B_VERDE)
+			_botao_painel(BT_JOGAR, (Idioma.t("Jogar o %dº ato") % ato_m) if falta_ato else Idioma.t("Jogar de novo"), UIComum.B_VERDE)
 			if invasao_fora_liberada(f):
-				_botao_painel(BT_INVASAO, "Invasão sem fim", UIComum.B_LARANJA)
+				_botao_painel(BT_INVASAO, Idioma.t("Invasão sem fim"), UIComum.B_LARANJA)
 			else:
 				# nas ruas ela abre com o 3º ato inteiro vencido; no lado de fora, ao vencer o lugar no 2º ato
-				var aviso: String = "Vença o 3º ato inteiro para liberar a invasão das ruas" if _ruas else "Vença no 2º ato para liberar a invasão"
+				var aviso: String = Idioma.t("Vença o 3º ato inteiro para liberar a invasão das ruas") if _ruas else Idioma.t("Vença no 2º ato para liberar a invasão")
 				var lv: Array[String] = p._quebrar(aviso, 12, lr)
 				for k in mini(lv.size(), 2):
 					Desenho.texto(cv, lv[k], Vector2(xr, 348.0 + 14.0 * k), 12, Color(1, 1, 1, 0.5))
 		elif _ato > 1:
 			# a casa depois do 1º ato: repetir o cômodo (força do 1º ato) ou a invasão sem fim; o 2º ato fica lá fora
-			_botao_painel(BT_JOGAR, "Jogar de novo", UIComum.B_VERDE)
-			_botao_painel(BT_INVASAO, "Invasão sem fim", UIComum.B_LARANJA)
+			_botao_painel(BT_JOGAR, Idioma.t("Jogar de novo"), UIComum.B_VERDE)
+			_botao_painel(BT_INVASAO, Idioma.t("Invasão sem fim"), UIComum.B_LARANJA)
 		else:
 			# campanha zerada: o jogador escolhe entre o cômodo de sempre e a invasão sem fim
-			_botao_painel(BT_JOGAR, "Jogar de novo", UIComum.B_VERDE)
-			_botao_painel(BT_INVASAO, "Invasão sem fim", UIComum.B_LARANJA)
+			_botao_painel(BT_JOGAR, Idioma.t("Jogar de novo"), UIComum.B_VERDE)
+			_botao_painel(BT_INVASAO, Idioma.t("Invasão sem fim"), UIComum.B_LARANJA)
 	else:
-		var dica: String = "Clique ou Enter para entrar"
+		var dica: String = Idioma.t("Clique ou Enter para entrar")
 		if bloq:
-			dica = _texto_bloqueio_ruas(f) if _ruas else "Vença antes: %s" % Fases.NOME[fi - 1]
+			dica = _texto_bloqueio_ruas(f) if _ruas else Idioma.t("Vença antes: %s") % Idioma.t(Fases.NOME[fi - 1])
 		var lh: Array[String] = p._quebrar(dica, 13, lr)
 		for k in mini(lh.size(), 3):
 			Desenho.texto(cv, lh[k], Vector2(xr, 314.0 + 16.0 * k), 13, Color(1, 0.95, 0.7, 0.9) if not bloq else Color(1, 1, 1, 0.5))
 	_sep(x0, larg, 366.0)
 	# ataque e fraqueza do chefe
-	Desenho.texto(cv, "Ataque do chefe", Vector2(x0, 386), 13, p._com_alfa(Color(1.0, 0.72, 0.55), al))
-	var la: Array[String] = p._quebrar(Fases.ataque_do_chefe(li), 13, larg)
+	Desenho.texto(cv, Idioma.t("Ataque do chefe"), Vector2(x0, 386), 13, p._com_alfa(Color(1.0, 0.72, 0.55), al))
+	var la: Array[String] = p._quebrar(Idioma.t(Fases.ataque_do_chefe(li)), 13, larg)
 	for k in mini(la.size(), 3):
 		Desenho.texto(cv, la[k], Vector2(x0, 402.0 + 15.0 * k), 13, Color(1, 1, 1, 0.9 * al))
-	Desenho.texto(cv, "Fraqueza", Vector2(x0, 449), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
-	var lf: Array[String] = p._quebrar(Fases.fraqueza_do_chefe(li), 13, larg)
+	Desenho.texto(cv, Idioma.t("Fraqueza"), Vector2(x0, 449), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
+	var lf: Array[String] = p._quebrar(Idioma.t(Fases.fraqueza_do_chefe(li)), 13, larg)
 	for k in mini(lf.size(), 2):
 		Desenho.texto(cv, lf[k], Vector2(x0, 465.0 + 15.0 * k), 13, p._com_alfa(Color(0.75, 1.0, 0.8), al))
 	_sep(x0, larg, 492.0)
 	# fantasias que caem (o nome completo sai na dica do mouse)
-	Desenho.texto(cv, "Fantasias que caem", Vector2(x0, 512), 13, Color(1, 1, 1, 0.65 * al))
+	Desenho.texto(cv, Idioma.t("Fantasias que caem"), Vector2(x0, 512), 13, Color(1, 1, 1, 0.65 * al))
 	var conjs: Array = Fases.lista_do_lugar(li)
 	for k in conjs.size():
 		var c: int = conjs[k]
@@ -1716,11 +1716,11 @@ func _painel_lateral(f: int) -> void:
 	if oferta and (not _fora or invasao_fora_liberada(f)):
 		# recorde da invasão neste lugar (cômodo ou, lá fora, o lugar de fora: posições 5..9), ao lado das fantasias
 		var rec: int = est.recordes[Fases.TOTAL * 2 if _ruas else li]   # nas ruas o recorde é um só (as cinco gangues misturadas)
-		var txt_rec: String = "Recorde: onda %d" % rec if rec > 0 else "Sem recorde ainda"
+		var txt_rec: String = Idioma.t("Recorde: onda %d") % rec if rec > 0 else Idioma.t("Sem recorde ainda")
 		var chip_r := Rect2(x0, 563.0, larg, 26.0)
 		cv.draw_rect(chip_r, Color(0.3, 0.22, 0.08, 0.9) if rec > 0 else Color(0.15, 0.1, 0.12, 0.9))
 		cv.draw_rect(chip_r, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.2), false, 2.0)
-		Desenho.texto(cv, ("Invasão das ruas  ·  " if _ruas else "Invasão sem fim  ·  ") + txt_rec, Vector2(x0, 582), 15, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.6), larg, 3)
+		Desenho.texto(cv, (Idioma.t("Invasão das ruas  ·  %s") if _ruas else Idioma.t("Invasão sem fim  ·  %s")) % txt_rec, Vector2(x0, 582), 15, Desenho.DOURADO if rec > 0 else Color(1, 1, 1, 0.6), larg, 3)
 
 ## Painel da caixa do Sótão: o Gato de Schrödinger alternando entre vivo e morto, o que ele faz e o botão que abre a luta.
 func _painel_caixa() -> void:
@@ -1733,42 +1733,43 @@ func _painel_caixa() -> void:
 	cv.draw_rect(RETRATO, Color(0.12, 0.12, 0.18) if morto else Color(0.16, 0.1, 0.17))
 	Desenho.boneco(cv, Vector2(RETRATO.position.x + 100.0, RETRATO.end.y - 8.0), RETRATO_ESCALA, -1.0, 1, VAZIO, 0.0, p.t * 2.0, false, 0.0, 1.0, false, -1, 0.0, 0, false, true, 0, false, Fases.Chefe.SCHRODINGER, false, morto)
 	cv.draw_rect(RETRATO, Color(1, 1, 1, 0.18), false, 1.0)
-	Desenho.texto(cv, "Caixa do Sótão", Vector2(x0, 156), 26, Color(1, 0.95, 0.8), -1.0, 5)
+	Desenho.texto(cv, Idioma.t("Caixa do Sótão"), Vector2(x0, 156), 26, Color(1, 0.95, 0.8), -1.0, 5)
 	var venceu: bool = est.feitos.has("schro")
 	var chip := Rect2(x0 + larg - 120.0, 132.0, 120.0, 28.0)
 	p._botao_arte(chip, Color(0.6, 0.95, 0.6) if venceu else Color(0.85, 0.7, 1.0))
-	Desenho.texto(cv, "Aberta" if venceu else "Segredo", Vector2(chip.position.x, chip.position.y + 20), 16, p.COR_TINTA_ESC, chip.size.x)
-	Desenho.texto(cv, "Luta secreta · uma onda, só o chefe", Vector2(x0, 182), 16, Color(0.85, 0.75, 1.0))
-	var ld: Array[String] = p._quebrar("O bestiário está completo e algo se mexe dentro da caixa. Time descansado e torre cheia.", 13, larg)
+	Desenho.texto(cv, Idioma.t("Aberta") if venceu else Idioma.t("Segredo"), Vector2(chip.position.x, chip.position.y + 20), 16, p.COR_TINTA_ESC, chip.size.x)
+	Desenho.texto(cv, Idioma.t("Luta secreta · uma onda, só o chefe"), Vector2(x0, 182), 16, Color(0.85, 0.75, 1.0))
+	var ld: Array[String] = p._quebrar(Idioma.t("O bestiário está completo e algo se mexe dentro da caixa. Time descansado e torre cheia."), 13, larg)
 	for k in mini(ld.size(), 2):
 		Desenho.texto(cv, ld[k], Vector2(x0, 202.0 + 16.0 * k), 13, Color(1, 1, 1, 0.85))
 	_sep(x0, larg, 232.0)
 	var xr: float = 1044.0
 	var lr: float = PAINEL.end.x - 24.0 - xr
-	Desenho.texto(cv, "Chefe", Vector2(xr, 262), 13, Color(1, 1, 1, 0.65))
-	Desenho.texto(cv, Fases.nome_do_chefe(li), Vector2(xr, 288), p._tam_cabe(Fases.nome_do_chefe(li), [22, 20, 18, 16], lr), Desenho.DOURADO, -1.0, 4)
-	_botao_painel(BT_JOGAR, "Abrir a caixa" if not venceu else "Abrir de novo", UIComum.B_VERDE)
-	Desenho.texto(cv, "Vivo agora" if not morto else "Morto agora", Vector2(xr, 350), 13, Color(1, 0.95, 0.7, 0.8) if not morto else Color(0.7, 0.85, 1.0, 0.8))
+	Desenho.texto(cv, Idioma.t("Chefe"), Vector2(xr, 262), 13, Color(1, 1, 1, 0.65))
+	var cn_s: String = Idioma.t(Fases.nome_do_chefe(li))
+	Desenho.texto(cv, cn_s, Vector2(xr, 288), p._tam_cabe(cn_s, [22, 20, 18, 16], lr), Desenho.DOURADO, -1.0, 4)
+	_botao_painel(BT_JOGAR, Idioma.t("Abrir a caixa") if not venceu else Idioma.t("Abrir de novo"), UIComum.B_VERDE)
+	Desenho.texto(cv, Idioma.t("Vivo agora") if not morto else Idioma.t("Morto agora"), Vector2(xr, 350), 13, Color(1, 0.95, 0.7, 0.8) if not morto else Color(0.7, 0.85, 1.0, 0.8))
 	_sep(x0, larg, 366.0)
-	Desenho.texto(cv, "Ataque do chefe", Vector2(x0, 386), 13, Color(1.0, 0.72, 0.55))
-	var la: Array[String] = p._quebrar(Fases.ataque_do_chefe(li), 13, larg)
+	Desenho.texto(cv, Idioma.t("Ataque do chefe"), Vector2(x0, 386), 13, Color(1.0, 0.72, 0.55))
+	var la: Array[String] = p._quebrar(Idioma.t(Fases.ataque_do_chefe(li)), 13, larg)
 	for k in mini(la.size(), 3):
 		Desenho.texto(cv, la[k], Vector2(x0, 402.0 + 15.0 * k), 13, Color(1, 1, 1, 0.9))
-	Desenho.texto(cv, "Fraqueza", Vector2(x0, 449), 13, Color(0.75, 1.0, 0.8))
-	var lf: Array[String] = p._quebrar(Fases.fraqueza_do_chefe(li), 13, larg)
+	Desenho.texto(cv, Idioma.t("Fraqueza"), Vector2(x0, 449), 13, Color(0.75, 1.0, 0.8))
+	var lf: Array[String] = p._quebrar(Idioma.t(Fases.fraqueza_do_chefe(li)), 13, larg)
 	for k in mini(lf.size(), 2):
 		Desenho.texto(cv, lf[k], Vector2(x0, 465.0 + 15.0 * k), 13, Color(0.75, 1.0, 0.8))
 	_sep(x0, larg, 492.0)
-	Desenho.texto(cv, "Prêmio", Vector2(x0, 512), 13, Color(1, 1, 1, 0.65))
-	var lp: Array[String] = p._quebrar("Uma peça Miaujestosa, a raridade mais alta, e troféus.", 13, larg)
+	Desenho.texto(cv, Idioma.t("Prêmio"), Vector2(x0, 512), 13, Color(1, 1, 1, 0.65))
+	var lp: Array[String] = p._quebrar(Idioma.t("Uma peça Miaujestosa, a raridade mais alta, e troféus."), 13, larg)
 	for k in mini(lp.size(), 2):
 		Desenho.texto(cv, lp[k], Vector2(x0, 530.0 + 15.0 * k), 13, Pecas.RARIDADE_COR[Pecas.Raridade.MIAUJESTOSA])
 
 ## O que falta vencer no 3º ato para abrir o lugar `f` (4 = Arena da Praça, 5 = Telhados e Antenas).
 static func _texto_bloqueio_ruas(f: int) -> String:
 	if f == 4:
-		return "Vença antes: %s, %s e %s" % [Fases.NOME_ATO3[0], Fases.NOME_ATO3[1], Fases.NOME_ATO3[2]]
-	return "Vença antes: %s" % Fases.NOME_ATO3[3]
+		return Idioma.t("Vença antes: %s, %s e %s") % [Idioma.t(Fases.NOME_ATO3[0]), Idioma.t(Fases.NOME_ATO3[1]), Idioma.t(Fases.NOME_ATO3[2])]
+	return Idioma.t("Vença antes: %s") % Idioma.t(Fases.NOME_ATO3[3])
 
 ## Botão do painel lateral: moldura de papel com realce quando o mouse está em cima.
 func _botao_painel(r: Rect2, txt: String, cor: Color) -> void:
@@ -1778,7 +1779,7 @@ func _botao_painel(r: Rect2, txt: String, cor: Color) -> void:
 
 ## Botão discreto "Final", no canto do mapa, depois de zerar a campanha.
 func _botao_final() -> void:
-	_botao_painel(BT_FINAL, "Final", UIComum.B_MARROM)
+	_botao_painel(BT_FINAL, Idioma.t("Final"), UIComum.B_MARROM)
 
 static func _rect_botao(id: int) -> Rect2:
 	match id:
@@ -1792,11 +1793,11 @@ static func _rect_botao(id: int) -> Rect2:
 
 ## Botão pequeno e discreto do canto: alterna entre a casa e o lado de fora (segundo ato).
 func _botao_vista() -> void:
-	var txt: String = "Ver lá fora"
+	var txt: String = Idioma.t("Ver lá fora")
 	if _ato >= 3:
-		txt = "Ver a casa" if _ruas else ("Ver as ruas" if _fora else "Ver lá fora")
+		txt = Idioma.t("Ver a casa") if _ruas else (Idioma.t("Ver as ruas") if _fora else Idioma.t("Ver lá fora"))
 	elif _fora:
-		txt = "Ver a casa"
+		txt = Idioma.t("Ver a casa")
 	_botao_painel(BT_VISTA, txt, UIComum.B_AZUL)
 
 ## Separador em pixel: pontilhado de quadradinhos de 4 px na grade do mapa (um a cada dois).
@@ -1818,10 +1819,10 @@ func _dica_casa(f: int) -> void:
 			var c: int = conjs[k]
 			var cor: Color = Pecas.CONJUNTO_COR[c]
 			var itens: Array = [
-				["t", Pecas.CONJUNTO_NOME[c], 22, cor.lightened(0.3)],
-				["t", "2 a 3 peças: " + Pecas.conjunto_bonus(c, 1), 13, Color(1, 1, 1, 0.9)],
-				["t", "4 peças: " + Pecas.conjunto_bonus(c, 2), 13, Color(1, 1, 1, 0.9)],
-				["t", "Poder: " + Pecas.PODER_NOME[c], 13, Color(1.0, 0.9, 0.5)],
+				["t", Idioma.t(Pecas.CONJUNTO_NOME[c]), 22, cor.lightened(0.3)],
+				["t", Idioma.t("2 a 3 peças: %s") % Pecas.conjunto_bonus(c, 1), 13, Color(1, 1, 1, 0.9)],
+				["t", Idioma.t("4 peças: %s") % Pecas.conjunto_bonus(c, 2), 13, Color(1, 1, 1, 0.9)],
+				["t", Idioma.t("Poder: %s") % Idioma.t(Pecas.PODER_NOME[c]), 13, Color(1.0, 0.9, 0.5)],
 			]
 			p._caixa_dica(itens, 300.0, cor, cor, p.mouse, Vector2(16, -20))
 			return
