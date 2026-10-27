@@ -1354,7 +1354,7 @@ func _pagina_atelie(e: Estado) -> void:
 	# gato vestindo a fantasia criada
 	var pecas: Array = []
 	for s in Pecas.SLOTS:
-		pecas.append(Peca.new(Pecas.Tipo.ATELIE_CABECA + s, 5, Pecas.Raridade.RARA))
+		pecas.append(Peca.new(Pecas.Tipo.ATELIE_CABECA + s))   # comum, como nas outras páginas (sem a cintilação de raridade)
 	Desenho.boneco(self, _pos_gato(), 3.0, 1.0, 0, pecas, 0.0, t, false, 0.0, 1.0, false, -1, 0.0, 0, false, false, 0, false, -1, false, true, 0, false)
 	_txt(Idioma.t("4/4 peças"), Vector2(cb.position.x + 16.0, cb.end.y - 10.0), 14, TINTA)
 	var cp: int = Pecas.conj_do_poder(C.ATELIE)
@@ -1386,7 +1386,8 @@ func _pagina_atelie(e: Estado) -> void:
 		_txt(cortar(Idioma.t(Pecas.NOME[forma]), 19, larg - wtag - 10.0), Vector2(x, r.position.y + 24.0), 19, TINTA)
 		_bloco(_maiuscula(Idioma.t(Pecas.dica(forma))), Vector2(x, r.position.y + 43.0), larg, [13, 12, 11], 2, TINTA2, 2.0)
 		var mz: int = int(ms[s]) if s < ms.size() else 0
-		_txt(Idioma.t("Cor: %s") % Idioma.t(Atelie.MATIZ_NOME[clampi(mz, 0, Atelie.MATIZ_NOME.size() - 1)]), Vector2(x, r.end.y - 8.0), 13, COR_TEM)
+		var txt_cor: String = Idioma.t("Pintada à mão") if Atelie.pintada(tp) else Idioma.t("Cor: %s") % Idioma.t(Atelie.MATIZ_NOME[clampi(mz, 0, Atelie.MATIZ_NOME.size() - 1)])
+		_txt(txt_cor, Vector2(x, r.end.y - 8.0), 13, COR_TEM)
 	var bx := Rect2(COL_D_X, 474.0, COL_W, 156.0)
 	draw_rect(bx, PAPEL_ESC)
 	draw_rect(bx, PAPEL_BORDA, false, 2.0)

@@ -9,6 +9,8 @@ const TIJOLOS_INICIAIS := 30
 const CUSTO_BONECO := 3
 # promover o nível de uma peça com blocos: custo por nível atual da peça (0 -> 1, 1 -> 2, ...); os primeiros níveis custam o de sempre
 const PROMOCAO_CUSTO: Array[int] = [2, 2, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7]
+# blocos que promover nunca gasta: a torre é a vida do cômodo, e zerada a luta acaba em derrota
+const RESERVA_PROMOCAO := 12
 # reforçar a raridade de uma peça com troféus, por raridade atual: [comum -> rara, rara -> épica, épica -> lendária, lendária -> mítica, mítica -> miaujestosa]
 const REFORCO_CUSTO: Array[int] = [3, 5, 8, 12, 18]
 const MAX_BONECOS := 5

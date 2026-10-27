@@ -801,7 +801,7 @@ func _linhas_total() -> int:
 
 func _rolagem_max() -> int:
 	if aba == ABA_FANTASIAS:
-		return maxi(0, int(ceil(Pecas.n_ativas() / float(FANT_COLS))) - FANT_LINHAS)
+		return maxi(0, int(ceil(_n_cartoes_fant() / float(FANT_COLS))) - FANT_LINHAS)
 	var n: int = int(ceil(_lista.size() / float(TILE_COLS)))
 	return maxi(0, n - TILE_LINHAS)
 
@@ -1375,9 +1375,22 @@ func _tile_em(p: Vector2) -> int:
 	return -1
 
 # ---- aba "Fantasias": a fantasia inteira com um clique
+## A fantasia c tem cartão na aba: as do fichário e, depois de criada, a do Ateliê (que fica fora das contas do fichário).
+func _tem_cartao_fant(c: int) -> bool:
+	return not Pecas.retirada(c) or (c == Pecas.Conjunto.ATELIE and Atelie.criada())
+
+## Posição do cartão na grade: as do fichário na ordem delas e a do Ateliê por último; -1 se não tem cartão.
+func _pos_cartao_fant(c: int) -> int:
+	if c == Pecas.Conjunto.ATELIE:
+		return Pecas.n_ativas() if Atelie.criada() else -1
+	return Pecas.posicao_ativa(c)
+
+func _n_cartoes_fant() -> int:
+	return Pecas.n_ativas() + (1 if Atelie.criada() else 0)
+
 ## Retângulo do cartão da fantasia c (grade de 7 colunas por 3 linhas).
 func rect_cartao_fant(c: int) -> Rect2:
-	var pos: int = Pecas.posicao_ativa(c)
+	var pos: int = _pos_cartao_fant(c)
 	if pos < 0:
 		return Rect2()
 	var lin: int = pos / FANT_COLS - rolagem
@@ -1390,7 +1403,7 @@ func _cartao_fant_em(p: Vector2) -> int:
 	if aba != ABA_FANTASIAS:
 		return -1
 	for c in Pecas.CONJUNTO_PECAS.size():
-		if Pecas.retirada(c):
+		if not _tem_cartao_fant(c):
 			continue
 		if rect_cartao_fant(c).has_point(p):
 			return c
@@ -1476,7 +1489,7 @@ func _fantasias_prontas() -> int:
 	var mapa: Dictionary = _mapa_guarda_desenho()
 	var n: int = 0
 	for c in Pecas.CONJUNTO_PECAS.size():
-		if Pecas.retirada(c):
+		if not _tem_cartao_fant(c):
 			continue
 		var st: Dictionary = _situacao_fantasia(c, alvo, mapa)
 		if int(st["gato"]) + int(st["guarda"]) >= Pecas.SLOTS:
@@ -2222,6 +2235,8 @@ func _motivo_nivel(p: Peca) -> String:
 		return Idioma.t("Nível máximo")
 	if estado.tijolos < Balanco.custo_promocao(p.nivel):
 		return Idioma.t("Faltam blocos")
+	if estado.blocos_livres() < Balanco.custo_promocao(p.nivel):
+		return Idioma.t("Reserva da torre")
 	return ""
 
 ## Motivo de a peça não poder subir de raridade agora (vazio se pode).
@@ -2249,6 +2264,8 @@ func promover(peca: Peca) -> bool:
 		return true
 	elif m == Idioma.t("Nível máximo"):
 		_recado(Idioma.t("Nível máximo."))
+	elif m == Idioma.t("Reserva da torre"):
+		_recado(Idioma.t("A torre guarda %d blocos de reserva: promover não gasta esses.") % Balanco.RESERVA_PROMOCAO)
 	else:
 		_recado(Idioma.t("Faltam blocos (custa %d).") % Balanco.custo_promocao(peca.nivel))
 	return false
@@ -2345,6 +2362,8 @@ func _estado_promover_tudo(b: Boneco) -> Dictionary:
 		motivo = Idioma.t("%s está sem roupa.") % b.nome if vestidas == 0 else Idioma.t("Tudo no nível máximo.")
 	elif estado.tijolos < barato:
 		motivo = Idioma.t("Faltam blocos (mínimo %d).") % barato
+	elif estado.blocos_livres() < barato:
+		motivo = Idioma.t("A torre guarda %d blocos de reserva: promover não gasta esses.") % Balanco.RESERVA_PROMOCAO
 	return {"custo": custo, "ok": motivo == "", "motivo": motivo}
 
 func _acao_promover_tudo(i: int) -> void:
@@ -4506,7 +4525,7 @@ func _cartoes_fantasias() -> void:
 	var fonte: Font = UIComum.FONTE
 	var sob_c: int = _cartao_fant_em(mouse) if arrasto.is_empty() else -1
 	for c in Pecas.CONJUNTO_PECAS.size():
-		if Pecas.retirada(c):
+		if not _tem_cartao_fant(c):
 			continue
 		var r: Rect2 = rect_cartao_fant(c)
 		if r.size.x <= 0.0:
@@ -4596,7 +4615,7 @@ func _barra_fantasias() -> void:
 	var trilho := Rect2(PAINEL.end.x - 30, TILE_Y0, 10, h)
 	draw_rect(trilho.grow(2.0), Color(0.07, 0.04, 0.05))
 	draw_rect(trilho, Color(0.2, 0.13, 0.12))
-	var total: int = int(ceil(Pecas.n_ativas() / float(FANT_COLS)))
+	var total: int = int(ceil(_n_cartoes_fant() / float(FANT_COLS)))
 	var alt: float = h * FANT_LINHAS / float(total)
 	var topo: float = (h - alt) * rolagem / float(maxi(1, total - FANT_LINHAS))
 	draw_rect(Rect2(trilho.position.x, trilho.position.y + topo, trilho.size.x, alt), Color(0.85, 0.65, 0.4))
@@ -5446,6 +5465,8 @@ func _dica() -> void:
 		itens.append(["t", Idioma.t("Solte sobre outra igual: funde, de graça"), 13, verde])
 	elif p.nivel >= Balanco.NIVEL_MAX:
 		itens.append(["t", Idioma.t("Nível máximo"), 13, cinza])
+	elif mn == Idioma.t("Reserva da torre"):
+		itens.append(["t", Idioma.t("A torre guarda %d blocos de reserva") % Balanco.RESERVA_PROMOCAO, 13, cinza])
 	else:
 		itens.append(["t", Idioma.t("Faltam blocos para o nível (custa %d)") % Balanco.custo_promocao(p.nivel), 13, cinza])
 	_caixa_dica(itens, 320.0, cor_cj, cor_r if p.raridade > 0 else Desenho.DOURADO, mouse, Vector2(18, -92))

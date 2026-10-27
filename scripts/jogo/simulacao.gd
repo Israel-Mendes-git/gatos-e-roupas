@@ -364,7 +364,7 @@ func calcular(u: Unidade) -> void:
 			u.poder_atelie = c == Pecas.Conjunto.ATELIE
 			var soma: float = 0.0
 			for p in u.pecas:
-				soma += p.poder()
+				soma += Atelie.poder_peca(p, u.poder_conj) if u.poder_atelie else p.poder()
 			u.poder_forca = soma / Pecas.SLOTS
 		if u.sem_conjunto_t > 0.0:
 			continue   # Magnetomiau: o bônus de conjunto fica suspenso (o poder da fantasia completa continua)

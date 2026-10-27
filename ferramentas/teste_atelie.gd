@@ -1,5 +1,5 @@
 extends SceneTree
-## Teste headless do Ateliê (fantasia secreta): orçamento, validação, persistência (sem tocar no save real) e kit na simulação.
+## Teste headless do Ateliê (fantasia secreta): sem orçamento, validação, persistência (sem tocar no save real) e kit na simulação.
 ## Uso: godot --headless --path <projeto> --script res://ferramentas/teste_atelie.gd
 
 var falhas: int = 0
@@ -22,46 +22,29 @@ func _cfg(formas: Array, poder: int, bonus: int) -> Dictionary:
 	return {"nome": "Teste", "formas": formas, "matizes": [0, 3, 0, 5], "estampa": 2, "poder": poder, "bonus": bonus}
 
 func _init() -> void:
-	_orcamento()
+	_sem_orcamento()
 	_nome()
 	_persistencia()
 	_kit_na_simulacao()
+	_poder_contra_origem()
 	_desenho()
+	_pintura()
 	Atelie.aplicar({})
 	print("FALHAS: %d" % falhas)
 	quit(1 if falhas > 0 else 0)
 
-func _orcamento() -> void:
+func _sem_orcamento() -> void:
 	var T = Pecas.Tipo
 	var C = Pecas.Conjunto
-	for t in Pecas.SLOT.size():
-		if t < T.ATELIE_CABECA:
-			var cm: int = Atelie.custo_forma(t)
-			_ok(cm == 1 or cm == 2, "molde do tipo %d custa %d" % [t, cm])
-	var pmin: int = 99
-	var pmax: int = 0
-	for c in Pecas.CONJUNTO_NOME.size():
-		if c == C.ATELIE:
-			continue
-		var cp: int = Atelie.custo_poder(c)
-		_ok(cp >= 3 and cp <= 5, "poder %d custa %d" % [c, cp])
-		pmin = mini(pmin, cp)
-		pmax = maxi(pmax, cp)
-	_ok(pmin == 3 and pmax == 5, "poderes devem custar de 3 a 5 (achei %d a %d)" % [pmin, pmax])
-	for c in Atelie.BONUS_CUSTO:
-		_ok(Atelie.custo_bonus(c) >= 1 and Atelie.custo_bonus(c) <= 3, "bônus %d fora de 1 a 3" % c)
-	# a melhor combinação possível não cabe; a mais barata cabe
+	for c in Atelie.BONUS_KITS:
+		_ok(not Pecas.retirada(c) and c != C.ATELIE, "bônus %d do Ateliê vem de fantasia fora do jogo" % c)
+	# sem orçamento: o melhor de tudo (moldes fortes, poder forte, bônus forte) é aceito, e a combinação simples também
 	var melhor: Dictionary = _cfg([T.CARTOLA, T.CASACO, T.VARINHA, T.AMULETO], C.CIRCO, C.VIKING)
-	_ok(Atelie.custo(melhor) > Atelie.ORCAMENTO, "o melhor de tudo (%d) devia estourar %d" % [Atelie.custo(melhor), Atelie.ORCAMENTO])
 	var barata: Dictionary = _cfg([T.CAPACETE, T.COLETE, T.PORRETE, T.BOTAS], C.MIAULAX, C.CIRCO)
-	_ok(Atelie.custo(barata) <= Atelie.ORCAMENTO and Atelie.custo(barata) == 4 + 3 + 1, "combinação barata custa %d" % Atelie.custo(barata))
 	var e := _estado_completo(5)
 	_ok(Atelie.liberado(e), "com tudo completo o Ateliê devia abrir")
-	_ok(not Atelie.confirmar(e, melhor), "confirmar aceitou orçamento estourado")
-	_ok(e.atelie.is_empty(), "orçamento estourado alterou o estado")
-	var meio: Dictionary = _cfg([T.CARTOLA, T.COLETE, T.VARINHA, T.BOTAS], C.OURICO, C.ARQUEIRO_MIAU)
-	_ok(Atelie.custo(meio) <= Atelie.ORCAMENTO, "combinação do meio custa %d" % Atelie.custo(meio))
-	_ok(Atelie.confirmar(e, meio), "confirmar recusou combinação dentro do orçamento")
+	_ok(Atelie.confirmar(e, melhor), "confirmar recusou o melhor de tudo (não há orçamento)")
+	_ok(e.atelie.get("formas", []) == melhor["formas"] and int(e.atelie.get("bonus", -1)) == C.VIKING, "o melhor de tudo não ficou gravado")
 	var n_pecas: int = 0
 	for p in e.todas_as_pecas():
 		if p.tipo >= T.ATELIE_CABECA:
@@ -135,6 +118,44 @@ func _persistencia() -> void:
 	var pd: Dictionary = Peca.new(T.ATELIE_MAO, 3, 1).para_dados()
 	_ok(Peca.de_dados(pd).tipo == T.ATELIE_MAO, "peça do Ateliê no save")
 
+## O poder do Ateliê é o da fantasia de origem, com a mesma recarga e PODER_FORCA_FATOR de força, com peças novas e no
+## fim de jogo (nível máximo, raridade máxima): um gato veste o Ateliê, outro a fantasia original, com o mesmo nível.
+func _poder_contra_origem() -> void:
+	var T = Pecas.Tipo
+	_ok(is_equal_approx(Atelie.PODER_FORCA_FATOR, 1.2) and is_equal_approx(Atelie.PODER_RECARGA_FATOR, 1.0), "o poder do Ateliê devia ser o da origem com 20% a mais")
+	var e0 := _estado_completo(40)
+	var piores: Array[String] = []
+	for c in Atelie.poderes(e0):
+		for nr in [[0, Pecas.Raridade.RARA], [Balanco.NIVEL_MAX, Pecas.Raridade.MIAUJESTOSA]]:
+			var e := _estado_completo(41)
+			# mesmo bônus de kit quando o Ateliê o oferece (o do Jimiau encurta a recarga); o do Meon é composto e fica de fora
+			var bo: int = c if c in Atelie.BONUS_KITS else Atelie.BONUS_KITS[0]
+			Atelie.aplicar(_cfg([T.CAPACETE, T.COLETE, T.PORRETE, T.BOTAS], c, bo))
+			e.iniciar_fase(1)
+			for s in Pecas.SLOTS:
+				e.bonecos[0].pecas[s] = Peca.new(T.ATELIE_CABECA + s, nr[0], nr[1])
+				e.bonecos[1].pecas[s] = Peca.new(int((Pecas.CONJUNTO_PECAS[c] as Array)[s]), nr[0], nr[1])
+			var sim := Simulacao.new()
+			sim.gerar_eventos = false
+			sim.iniciar(e, 7)
+			var ua: Unidade = null
+			var uo: Unidade = null
+			for a in sim.aliados:
+				if a.boneco == e.bonecos[0]:
+					ua = a
+				elif a.boneco == e.bonecos[1]:
+					uo = a
+			if ua == null or uo == null or not ua.poder_atelie or ua.poder_conj != c or uo.poder_conj != c:
+				_ok(false, "fantasia %d: os dois gatos deviam ter o poder dela" % c)
+				continue
+			var forca_a: float = ua.poder_forca * Atelie.PODER_FORCA_FATOR
+			var razao: float = forca_a / uo.poder_forca
+			var recarga_ok: bool = is_equal_approx(sim._intervalo_poder(ua), sim._intervalo_poder(uo)) or bo != c
+			if absf(razao - 1.2) > 0.001 or not recarga_ok:
+				piores.append("%s nv%d: %.2fx, recarga %.1f contra %.1f" % [Pecas.CONJUNTO_NOME[c], nr[0], razao, sim._intervalo_poder(ua), sim._intervalo_poder(uo)])
+	_ok(piores.is_empty(), "poder do Ateliê fora de 1,2x a origem: " + ", ".join(piores.slice(0, 6)))
+	Atelie.aplicar({})
+
 func _kit_na_simulacao() -> void:
 	var T = Pecas.Tipo
 	var C = Pecas.Conjunto
@@ -167,7 +188,7 @@ func _kit_na_simulacao() -> void:
 		passos += 1
 	_ok(float(Simulacao.tele.get(C.OURICO, {}).get("usos", 0.0)) > 0.0, "o poder do Ateliê nunca foi usado: " + str(Simulacao.tele))
 	# todos os poderes do catálogo chegam ao gato do Ateliê e a luta roda sem quebrar
-	var bonus_l: Array = Atelie.BONUS_CUSTO.keys()
+	var bonus_l: Array = Atelie.BONUS_KITS
 	for pc in Atelie.poderes(e):
 		var bo: int = bonus_l[pc % bonus_l.size()]
 		var c2: Dictionary = _cfg([T.CAPACETE, T.COLETE, T.PORRETE, T.BOTAS], pc, bo)
@@ -206,3 +227,84 @@ func _desenho() -> void:
 				n += 1 if AtelieArte.tom(x, y) != 0 else 0
 		_ok(estampa == 0 or n > 0, "a estampa %d não marca nenhum pixel" % estampa)
 	_ok(not AtelieArte.ativo, "o filtro do Ateliê ficou ligado")
+
+## Pintura: foto da forma, ida e volta pelo formato do save, save adulterado, camada de trás e confirmar com pintura.
+func _pintura() -> void:
+	var T = Pecas.Tipo
+	var C = Pecas.Conjunto
+	var cfg: Dictionary = _cfg([T.COROA, T.CAPA, T.VARINHA, T.BOTAS], C.CAVALEIRO, C.CIRCO)
+	Atelie.aplicar(Atelie.ler(cfg))
+	for s in Pecas.SLOTS:
+		var g: Dictionary = AtelieArte.fotografar(T.ATELIE_CABECA + s)
+		var n: int = 0
+		for c in (g["frente"] as PackedColorArray) + (g["atras"] as PackedColorArray):
+			n += 1 if c.a > 0.02 else 0
+		_ok(n > 3, "a foto da peça %d saiu quase vazia (%d pixels)" % [s, n])
+		_ok(int(g["w"]) >= Atelie.PINTURA_MIN and int(g["w"]) <= Atelie.PINTURA_MAX and int(g["h"]) <= Atelie.PINTURA_MAX, "tamanho da grade %d" % s)
+		# ida e volta: grade -> save -> grade dá os mesmos pixels
+		var p: Dictionary = Atelie.pintura_da_grade(g)
+		_ok(Atelie.ler_pintura(p) == p, "a pintura %d não passa na própria leitura" % s)
+		var g2: Dictionary = Atelie.grade_da_pintura(JSON.parse_string(JSON.stringify(p)))
+		var iguais: bool = true
+		for k in ["frente", "atras"]:
+			var a: PackedColorArray = g[k]
+			var b: PackedColorArray = g2[k]
+			for i in a.size():
+				var dif: Vector4 = Vector4(a[i].r - b[i].r, a[i].g - b[i].g, a[i].b - b[i].b, a[i].a - b[i].a).abs()
+				if (a[i].a > 0.02) != (b[i].a > 0.02) or (a[i].a > 0.02 and maxf(maxf(dif.x, dif.y), maxf(dif.z, dif.w)) > 0.5 / 255.0 + 0.0001):   # o save guarda 8 bits por canal
+					iguais = false
+		_ok(iguais, "ida e volta mudou os pixels da peça %d" % s)
+	# a capa tem camada atrás do corpo; a coroa não
+	var capa: Dictionary = AtelieArte.fotografar(T.ATELIE_CORPO)
+	var atras: int = 0
+	for c in (capa["atras"] as PackedColorArray):
+		atras += 1 if c.a > 0.02 else 0
+	_ok(RoupaGato.tem_atras(T.CAPA) == (atras > 0), "camada de trás da capa (%d pixels)" % atras)
+	var coroa: Dictionary = AtelieArte.fotografar(T.ATELIE_CABECA)
+	var atras_coroa: int = 0
+	for c in (coroa["atras"] as PackedColorArray):
+		atras_coroa += 1 if c.a > 0.02 else 0
+	_ok(atras_coroa == 0, "a coroa não tem camada de trás")
+	# pintar um pixel muda a pintura; toda vazia vale (peça invisível)
+	var gp: Dictionary = AtelieArte.fotografar(T.ATELIE_CABECA)
+	var fr: PackedColorArray = gp["frente"]
+	fr[0] = Color(0.1, 0.9, 0.2)
+	gp["frente"] = fr
+	var pp: Dictionary = Atelie.pintura_da_grade(gp)
+	_ok(str(pp["frente"])[0] != ".", "o pixel pintado não chegou à pintura")
+	var vazia: Dictionary = Atelie.grade_em_volta({}, {})
+	var pv: Dictionary = Atelie.pintura_da_grade(vazia)
+	_ok(not Atelie.ler_pintura(pv).is_empty(), "pintura toda vazia devia valer")
+	# muitas cores: a paleta não passa do máximo
+	var gm: Dictionary = Atelie.grade_em_volta({}, {})
+	var fm: PackedColorArray = gm["frente"]
+	for i in fm.size():
+		fm[i] = Color.from_hsv(float(i) / fm.size(), 0.8, 0.9)
+	gm["frente"] = fm
+	var pm: Dictionary = Atelie.pintura_da_grade(gm)
+	_ok((pm["pal"] as Array).size() <= Atelie.PALETA_MAX and not Atelie.ler_pintura(pm).is_empty(), "paleta grande demais (%d)" % (pm["pal"] as Array).size())
+	# save adulterado: a pintura ruim cai, a fantasia fica
+	var ruins: Array = [
+		{"x": 0, "y": 0, "w": 2, "h": 1, "pal": ["ff0000ff"], "frente": "0", "atras": ".."},
+		{"x": 0, "y": 0, "w": 2, "h": 1, "pal": ["ff0000ff"], "frente": "05", "atras": ".."},
+		{"x": 0, "y": 0, "w": 2, "h": 1, "pal": ["zz0000ff"], "frente": "00", "atras": ".."},
+		{"x": 0, "y": 0, "w": 999, "h": 1, "pal": [], "frente": "", "atras": ""},
+		"lixo",
+	]
+	for r in ruins:
+		var cr: Dictionary = cfg.duplicate(true)
+		cr["pintura"] = [r, pp, {}, {}]
+		var l: Dictionary = Atelie.ler(cr)
+		_ok(not l.is_empty(), "pintura ruim derrubou a fantasia: " + str(r))
+		_ok((l["pintura"][0] as Dictionary).is_empty() and not (l["pintura"][1] as Dictionary).is_empty(), "pintura ruim passou ou a boa caiu: " + str(r))
+	_ok((Atelie.ler(cfg)["pintura"] as Array).size() == Pecas.SLOTS, "save sem pintura (antigo) devia ler 4 espaços vazios")
+	# confirmar com pintura: grava, relê e a peça passa a desenhar a pintura
+	var e := _estado_completo(31)
+	var cp: Dictionary = cfg.duplicate(true)
+	cp["pintura"] = [pp, {}, {}, {}]
+	_ok(Atelie.confirmar(e, cp), "confirmar com pintura")
+	_ok(Atelie.pintada(T.ATELIE_CABECA) and not Atelie.pintada(T.ATELIE_CORPO), "a pintura não ficou ativa só na cabeça")
+	var relida: Dictionary = Atelie.ler(JSON.parse_string(JSON.stringify(e.atelie)))
+	_ok(relida["pintura"][0] == pp, "a pintura não sobreviveu ao save")
+	_ok(Desenho.caixa_peca(T.ATELIE_CABECA).size.x > 0.0, "caixa do ícone da peça pintada")
+	Atelie.aplicar({})

@@ -31,6 +31,7 @@ func _initialize() -> void:
 	p.menus.tela = Menus.Tela.NENHUMA
 	await _mapa(e)
 	await _guarda(e)
+	_reserva(e)
 	await _fichario()
 	await _oficina()
 	await _opcoes()
@@ -82,6 +83,50 @@ func _guarda(_e: Estado) -> void:
 	p._entrar_guarda()
 	await _quadros(4)
 	_ok(p.modo == p.Modo.GUARDA, "guarda-roupa abre")
+	# a fantasia do Ateliê só ganha cartão na aba Fantasias depois de criada, e o clique nele a veste
+	var A: int = Pecas.Conjunto.ATELIE
+	var guarda0: Array[Peca] = _e.guarda.duplicate()
+	var vestes0: Array = _e.bonecos[0].pecas.duplicate()
+	p._trocar_aba(p.ABA_FANTASIAS)
+	_ok(p.rect_cartao_fant(A).size.x <= 0.0, "Ateliê vazio não tem cartão na aba Fantasias")
+	Atelie.aplicar(Atelie.padrao())
+	for s in Pecas.SLOTS:
+		_e.guarda.append(Peca.new(Pecas.Tipo.ATELIE_CABECA + s, 0, Pecas.Raridade.RARA))
+	p.rolagem = p._rolagem_max()
+	await _quadros()
+	var r: Rect2 = p.rect_cartao_fant(A)
+	_ok(r.size.x > 0.0, "a fantasia do Ateliê tem cartão na aba Fantasias (no fim da rolagem)")
+	_ok(p._cartao_fant_em(r.get_center()) == A, "o cartão do Ateliê responde ao mouse")
+	p.sel = 0
+	p._vestir_fantasia(A)
+	_ok(Pecas.contar_conjuntos(_e.bonecos[0].pecas)[A] == Pecas.SLOTS, "clicar no cartão veste a fantasia do Ateliê")
+	Atelie.aplicar({})
+	_e.guarda = guarda0
+	_e.bonecos[0].pecas = vestes0
+	p._trocar_aba(0)
+	await _quadros()
+
+## Promover nunca gasta a reserva da torre: com 0 blocos a luta acaba em derrota.
+func _reserva(e: Estado) -> void:
+	var b: Boneco = e.bonecos[0]
+	var vestes0: Array = b.pecas.duplicate()
+	var tij0: int = e.tijolos
+	for s in Pecas.SLOTS:
+		b.pecas[s] = Peca.new(Pecas.POR_SLOT[s][0], 0)
+	e.tijolos = Balanco.RESERVA_PROMOCAO + Balanco.custo_promocao(0)
+	_ok(e.promover(b.pecas[0]), "com blocos acima da reserva a peça sobe")
+	_ok(e.tijolos == Balanco.RESERVA_PROMOCAO, "a promoção gastou só o que estava acima da reserva (%d)" % e.tijolos)
+	_ok(not e.promover(b.pecas[1]) and e.tijolos == Balanco.RESERVA_PROMOCAO, "na reserva a promoção é recusada")
+	_ok(not p.promover(b.pecas[1]) and e.tijolos == Balanco.RESERVA_PROMOCAO, "arrastar ao carretel na reserva é recusado")
+	_ok(not p._estado_promover_tudo(b)["ok"], "promover tudo na reserva fica bloqueado")
+	_ok(e.promover_fantasia(b) == 0 and e.tijolos == Balanco.RESERVA_PROMOCAO, "promover tudo na reserva não sobe nada")
+	# muitos blocos: promover tudo até onde der para no limite da reserva, nunca abaixo
+	e.tijolos = 200
+	for k in 40:
+		e.promover_fantasia(b)
+	_ok(e.tijolos >= Balanco.RESERVA_PROMOCAO, "promover sem parar desceu a torre a %d blocos" % e.tijolos)
+	e.tijolos = tij0
+	b.pecas = vestes0
 
 func _fichario() -> void:
 	p.abrir_fichario()

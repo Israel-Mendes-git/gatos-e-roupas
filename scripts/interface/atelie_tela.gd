@@ -1,7 +1,7 @@
 class_name AtelieTela
 extends Control
 ## Ateliê: tela por cima do mapa e do guarda-roupa onde o jogador CRIA a própria fantasia (fase 1: catálogo).
-## Escolhe forma e cor de cada peça, a estampa, 1 poder, 1 bônus de kit e o nome, dentro de um orçamento de pontos
+## Escolhe forma e cor de cada peça, a estampa, 1 poder, 1 bônus de kit e o nome, sem orçamento
 ## (ver Atelie). A tela só mostra e pede: quem valida e grava é Atelie.confirmar. Mesmas molduras, fontes e botões da Oficina.
 
 const GUI_TEX: Texture2D = preload("res://assets/terceiros/gui/gui_4x.png")
@@ -22,12 +22,15 @@ const LINHA_Y := 156.0
 const LINHA_H := 62.0
 const LINHA_GAP := 4.0
 const SETA_W := 24.0
+const SELETOR_W := 266.0   # largura das setas + nome da forma nas linhas com seletor de cor (peças e estampa)
+const SELETOR_W_LARGO := 290.0   # poder e bônus: sem seletor de cor, o nome usa o espaço todo
 const BTN_FECHAR := Rect2(668, 636, 200, 40)
 const BTN_OK := Rect2(412, 636, 240, 40)
 const BTN_X := Rect2(1124.0, 38.0, 42.0, 42.0)
 const NOME_R := Rect2(654, 392, 330, 38)
 const SUGERIR_R := Rect2(992, 392, 164, 38)
 const PREVIA_R := Rect2(654, 156, 502, 228)
+const PINTAR_R := Rect2(654, 588, 250, 36)
 
 # ---- estado da tela ----
 var dono: Variant = null
@@ -60,6 +63,8 @@ var pi: int = 0
 var bi: int = 0
 var nome_txt: String = ""
 var pecas_previa: Array = []
+var pint: Array = [{}, {}, {}, {}]   # pintura de cada peça ({} = desenho da forma); quem mexe é o pintor
+var pintor: AteliePintor = null
 
 func _init() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -71,6 +76,8 @@ func _init() -> void:
 func iniciar(d: Variant) -> void:
 	dono = d
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	pintor = AteliePintor.new()
+	add_child(pintor)
 
 # ------------------------------------------------------------------ rascunho
 func _carregar_rascunho() -> void:
@@ -88,9 +95,12 @@ func _carregar_rascunho() -> void:
 	pi = maxi(0, poderes_ok.find(int(base["poder"])))
 	bi = maxi(0, bonus_ok.find(int(base["bonus"])))
 	nome_txt = str(base["nome"]) if not e.atelie.is_empty() else ""
+	var ps: Array = base.get("pintura", [])
+	for s in Pecas.SLOTS:
+		pint[s] = (ps[s] as Dictionary).duplicate(true) if s < ps.size() and typeof(ps[s]) == TYPE_DICTIONARY else {}
 	pecas_previa = []
 	for s in Pecas.SLOTS:
-		pecas_previa.append(Peca.new(Pecas.Tipo.ATELIE_CABECA + s, 5, Pecas.Raridade.RARA))
+		pecas_previa.append(Peca.new(Pecas.Tipo.ATELIE_CABECA + s))   # comum, como no fichário: a Rara põe a cintilação de raridade solta acima da prévia ampliada
 	_aplicar()
 
 func rascunho() -> Dictionary:
@@ -100,20 +110,11 @@ func rascunho() -> Dictionary:
 		fs.append(int((formas_ok[s] as Array)[fi[s]]))
 		ms.append(mi[s])
 	return {"nome": Atelie.limpar_nome(nome_txt), "formas": fs, "matizes": ms, "estampa": est,
-		"poder": poderes_ok[pi], "bonus": bonus_ok[bi]}
+		"poder": poderes_ok[pi], "bonus": bonus_ok[bi], "pintura": pint.duplicate(true)}
 
 ## Mostra o rascunho no gato e nas tabelas (nome e cor); fechar devolve o que está gravado.
 func _aplicar() -> void:
 	Atelie.aplicar(rascunho())
-
-func _custo() -> int:
-	return Atelie.custo(rascunho())
-
-func _custo_moldes() -> int:
-	var total: int = 0
-	for s in Pecas.SLOTS:
-		total += Atelie.custo_forma(int((formas_ok[s] as Array)[fi[s]]))
-	return total
 
 # ------------------------------------------------------------------ geometria
 static func rect_linha(i: int) -> Rect2:
@@ -130,11 +131,12 @@ static func rect_seta(i: int, k: int) -> Rect2:
 	var r: Rect2 = rect_linha(i)
 	var x0: float = r.position.x + 78.0
 	var y: float = r.position.y + 5.0
+	var w: float = SELETOR_W_LARGO if i >= 5 else SELETOR_W
 	match k:
 		0: return Rect2(x0, y, SETA_W, 28.0)
 		1: return Rect2(x0 + SETA_W + 2.0, y, SETA_W, 28.0)
-		2: return Rect2(x0 + 290.0 - 2.0 * SETA_W - 2.0, y, SETA_W, 28.0)
-	return Rect2(x0 + 290.0 - SETA_W, y, SETA_W, 28.0)
+		2: return Rect2(x0 + w - 2.0 * SETA_W - 2.0, y, SETA_W, 28.0)
+	return Rect2(x0 + w - SETA_W, y, SETA_W, 28.0)
 
 static func rect_nome_forma(i: int) -> Rect2:
 	var a: Rect2 = rect_seta(i, 1)
@@ -143,8 +145,8 @@ static func rect_nome_forma(i: int) -> Rect2:
 
 static func rect_cor_seta(i: int, k: int) -> Rect2:
 	var r: Rect2 = rect_linha(i)
-	var x0: float = r.position.x + 78.0 + 290.0 + 6.0
-	var w: float = COL_E_W - 78.0 - 290.0 - 6.0
+	var x0: float = r.position.x + 78.0 + SELETOR_W + 6.0
+	var w: float = COL_E_W - 78.0 - SELETOR_W - 6.0
 	var y: float = r.position.y + 5.0
 	return Rect2(x0, y, SETA_W, 28.0) if k == 0 else Rect2(x0 + w - SETA_W, y, SETA_W, 28.0)
 
@@ -179,6 +181,8 @@ func abrir() -> void:
 func fechar() -> void:
 	if not aberta:
 		return
+	if pintor.aberto:
+		pintor.fechar()
 	aberta = false
 	visible = false
 	digitando = false
@@ -203,16 +207,18 @@ func _montar() -> void:
 	var azul: Color = UIComum.B_AZUL
 	for s in Pecas.SLOTS:
 		_quatro_setas("f%d" % s, s)
-		_seta_item("c%d" % s, "a", rect_cor_seta(s, 0), "<")
-		_seta_item("c%d" % s, "b", rect_cor_seta(s, 1), ">")
+		if (pint[s] as Dictionary).is_empty():   # peça pintada: a cor é a da pintura
+			_seta_item("c%d" % s, "a", rect_cor_seta(s, 0), "<")
+			_seta_item("c%d" % s, "b", rect_cor_seta(s, 1), ">")
 	_seta_item("e", "a", rect_cor_seta(4, 0), "<")
 	_seta_item("e", "b", rect_cor_seta(4, 1), ">")
 	_quatro_setas("p", 5)
 	_quatro_setas("b", 6)
 	itens.append({"id": "nome", "r": NOME_R, "on": true, "txt": "", "cor": azul, "tam": 16, "vazio": true})
 	itens.append({"id": "sug", "r": SUGERIR_R, "on": true, "txt": Idioma.t("Sugerir nome"), "cor": UIComum.B_LARANJA, "tam": 16})
+	itens.append({"id": "pintar", "r": PINTAR_R, "on": true, "txt": Idioma.t("Pintar as peças"), "cor": UIComum.B_VERDE, "tam": 16})
 	var igual: bool = (dono.estado.atelie == Atelie.ler(rascunho()))
-	itens.append({"id": "ok", "r": BTN_OK, "on": _custo() <= Atelie.ORCAMENTO, "txt": Idioma.t("Salvar a fantasia") if not dono.estado.atelie.is_empty() else Idioma.t("Criar a fantasia"),
+	itens.append({"id": "ok", "r": BTN_OK, "on": true, "txt": Idioma.t("Salvar a fantasia") if not dono.estado.atelie.is_empty() else Idioma.t("Criar a fantasia"),
 		"cor": UIComum.B_VERDE if not igual else UIComum.B_CINZA, "tam": 18})
 	itens.append({"id": "fechar", "r": BTN_FECHAR, "on": true, "txt": Idioma.t("Fechar"), "cor": UIComum.B_MARROM, "tam": 20})
 	foco = itens.size() - 1
@@ -253,6 +259,11 @@ func acionar(id: String) -> void:
 		digitando = not digitando
 		Som.tocar("clique")
 		return
+	if id == "pintar":
+		digitando = false
+		Som.tocar("clique")
+		pintor.abrir(self, 0)
+		return
 	if id == "sug":
 		nome_txt = Atelie.sugerir_nome(rng)
 		_aplicar()
@@ -268,7 +279,6 @@ func acionar(id: String) -> void:
 				dono.atelie_salvo()
 		else:
 			_recusar(id)
-			_avisar(Idioma.t("Passou do orçamento: tire %d ponto(s).") % maxi(1, Atelie.custo(r) - Atelie.ORCAMENTO))
 		_aplicar()
 		_montar()
 		return
@@ -282,6 +292,8 @@ func acionar(id: String) -> void:
 		"f0", "f1", "f2", "f3":
 			var s: int = int(base.substr(1))
 			fi[s] = _passo(fi[s], d, (formas_ok[s] as Array).size())
+			if not (pint[s] as Dictionary).is_empty():
+				_avisar(Idioma.t("A peça segue pintada: a forma nova muda só o efeito."))
 		"c0", "c1", "c2", "c3":
 			var s2: int = int(base.substr(1))
 			mi[s2] = _passo(mi[s2], d, Atelie.MATIZES)
@@ -295,6 +307,14 @@ func acionar(id: String) -> void:
 	_aplicar()
 	_montar()
 
+## O pintor mudou a pintura do rascunho: a prévia e as linhas mostram na hora.
+func pintura_mudou() -> void:
+	_aplicar()
+
+func pintor_fechou() -> void:
+	_aplicar()
+	_montar()
+
 func _recusar(id: String) -> void:
 	treme[id] = 0.34
 	UIComum.som_negado()
@@ -305,7 +325,7 @@ func _avisar(txt: String) -> void:
 
 # ------------------------------------------------------------------ entrada
 func _gui_input(ev: InputEvent) -> void:
-	if not aberta:
+	if not aberta or pintor.aberto:
 		return
 	if ev is InputEventMouseMotion:
 		x_sobre = BTN_X.has_point((ev as InputEventMouseMotion).position)
@@ -341,7 +361,7 @@ func _gui_input(ev: InputEvent) -> void:
 				digitando = false
 
 func _input(ev: InputEvent) -> void:
-	if not aberta or not (ev is InputEventKey):
+	if not aberta or pintor.aberto or not (ev is InputEventKey):
 		return
 	var k: InputEventKey = ev as InputEventKey
 	if not k.pressed:
@@ -464,7 +484,7 @@ func _draw() -> void:
 	draw_rect(PAINEL.grow(-30.0), Color(0, 0, 0, 0.18), false, 2.0)
 	dono.nove(self, GUI_TEX, R_MADEIRA, M_MADEIRA, PAINEL, 0.75, Color.WHITE, false)
 	UIComum.titulo(self, Idioma.t("Ateliê"), 640.0, 76.0, 34, COR_OURO, Color(0.16, 0.07, 0.05, 0.95), t, false)
-	_texto(Idioma.t("Crie a sua fantasia: escolha formas, cores, um poder e um bônus, sem passar dos pontos."), Vector2(PAINEL.position.x, 112), 16, Color(1, 1, 1, 0.8), PAINEL.size.x, 3)
+	_texto(Idioma.t("Crie a sua fantasia: escolha formas, cores, um poder e um bônus."), Vector2(PAINEL.position.x, 112), 16, Color(1, 1, 1, 0.8), PAINEL.size.x, 3)
 	_texto(Idioma.t("Peças"), Vector2(COL_E_X, 146), 18, COR_TINTA, -1.0, 4)
 	_texto(Idioma.t("Sua fantasia"), Vector2(COL_D_X, 146), 18, COR_TINTA, -1.0, 4)
 	for i in 7:
@@ -494,27 +514,36 @@ func _linha(i: int) -> void:
 		var tipo: int = int((formas_ok[s] as Array)[fi[s]])
 		_texto(Idioma.t(Pecas.SLOT_NOME[s]), Vector2(r.position.x + 8.0, r.position.y + 24.0), 17, COR_TINTA, 70.0, 4)
 		var rn: Rect2 = rect_nome_forma(i)
-		var nm: String = Idioma.t("%s (%d pt)") % [Idioma.t(Pecas.NOME[tipo]), Atelie.custo_forma(tipo)]
+		var nm: String = Idioma.t(Pecas.NOME[tipo])
 		var tm: int = Oficina.tam_cabe(nm, [15, 14, 13, 12, 11, 10], rn.size.x)
 		_texto(nm, Vector2(rn.position.x, rn.position.y + 19.0), tm, COR_TINTA, rn.size.x, 3)
 		var info: String = Idioma.t(Pecas.dica(tipo))
 		_texto(info, Vector2(r.position.x + 82.0, r.position.y + 51.0), Oficina.tam_cabe(info, [13, 12, 11, 10], 300.0), Color(1, 1, 1, 0.65), 300.0, 3)
-		# miniatura da peça com a cor escolhida
-		_cor_linha(rect_nome_cor(i), mi[s], r)
+		# miniatura da peça com a cor escolhida (pintada: a cor é a da pintura)
+		if (pint[s] as Dictionary).is_empty():
+			_cor_linha(rect_nome_cor(i), mi[s], r)
+		else:
+			var rp: Rect2 = rect_cor_seta(s, 0).merge(rect_cor_seta(s, 1))
+			var tp: String = Idioma.t("Pintada")
+			_texto(tp, Vector2(rp.position.x, rp.position.y + 19.0), Oficina.tam_cabe(tp, [14, 13, 12], rp.size.x), Color(0.7, 1.0, 0.75), rp.size.x, 3)
 		# peça pronta (com cor e estampa) ao lado do rótulo
 		Desenho.icone(self, Pecas.Tipo.ATELIE_CABECA + s, Vector2(r.end.x - 70.0, r.position.y + 48.0), 22.0)
 	elif i == 4:
 		_texto(Idioma.t("Estampa"), Vector2(r.position.x + 8.0, r.position.y + 26.0), 17, COR_TINTA, 70.0, 4)
-		_texto(Idioma.t("Vale para as 4 peças. Não custa pontos."), Vector2(r.position.x + 82.0, r.position.y + 26.0), 12, Color(1, 1, 1, 0.6), 290.0, 3)
+		var ajuda: String = Idioma.t("Vale para as 4 peças.")
+		if Oficina.largura(ajuda, 12) <= SELETOR_W - 8.0:
+			_texto(ajuda, Vector2(r.position.x + 82.0, r.position.y + 26.0), 12, Color(1, 1, 1, 0.6), SELETOR_W - 8.0, 3)
+		else:   # não cabe numa linha: duas, sem cortar
+			_bloco(ajuda, Vector2(r.position.x + 82.0, r.position.y + 18.0), SELETOR_W - 8.0, [12, 11], 2, Color(1, 1, 1, 0.6))
 		var rn2: Rect2 = rect_nome_cor(i)
-		_texto(Idioma.t(Atelie.ESTAMPA_NOME[est]), Vector2(rn2.position.x, rn2.position.y + 19.0), 14, COR_TINTA, rn2.size.x, 3)
+		var nome_e: String = Idioma.t(Atelie.ESTAMPA_NOME[est])
+		_texto(nome_e, Vector2(rn2.position.x, rn2.position.y + 19.0), Oficina.tam_cabe(nome_e, [14, 13, 12, 11, 10], rn2.size.x), COR_TINTA, rn2.size.x, 3)
 	elif i == 5:
 		var c: int = poderes_ok[pi]
 		_texto(Idioma.t("Poder"), Vector2(r.position.x + 8.0, r.position.y + 24.0), 17, COR_TINTA, 70.0, 4)
 		var rn3: Rect2 = rect_nome_forma(i)
 		var nome_p: String = "%s (%s)" % [Idioma.t(Pecas.PODER_NOME[c]), Idioma.t(Pecas.CONJUNTO_NOME[c])]
 		_texto(nome_p, Vector2(rn3.position.x, rn3.position.y + 19.0), Oficina.tam_cabe(nome_p, [15, 14, 13, 12, 11, 10], rn3.size.x), COR_OURO.lightened(0.2), rn3.size.x, 3)
-		_pontos(r, Atelie.custo_poder(c))
 		_bloco(Idioma.t(Pecas.PODER_DICA[c]), Vector2(r.position.x + 82.0, r.position.y + 45.0), 400.0, [13, 12, 11, 10], 2, Color(1, 1, 1, 0.65))
 	else:
 		var cb: int = bonus_ok[bi]
@@ -522,7 +551,6 @@ func _linha(i: int) -> void:
 		var rn4: Rect2 = rect_nome_forma(i)
 		var nome_b: String = Idioma.t(Pecas.CONJUNTO_NOME[cb])
 		_texto(nome_b, Vector2(rn4.position.x, rn4.position.y + 19.0), Oficina.tam_cabe(nome_b, [15, 14, 13, 12, 11, 10], rn4.size.x), COR_BOM, rn4.size.x, 3)
-		_pontos(r, Atelie.custo_bonus(cb))
 		_bloco(Idioma.t("2 peças: %s; 4 peças: %s") % [Pecas.conjunto_bonus(cb, 1), Pecas.conjunto_bonus(cb, 2)], Vector2(r.position.x + 82.0, r.position.y + 45.0), 410.0, [13, 12, 11, 10], 2, Color(1, 1, 1, 0.65))
 
 ## Quadradinho de cor com o nome do matiz escolhido.
@@ -531,13 +559,9 @@ func _cor_linha(rn: Rect2, m: int, _linha: Rect2) -> void:
 	var q := Rect2(rn.position.x, rn.position.y + 5.0, 18.0, 18.0)
 	draw_rect(q, Color(0.07, 0.04, 0.06))
 	draw_rect(q.grow(-2.0), amostra)
-	_texto(Idioma.t(Atelie.MATIZ_NOME[m]), Vector2(q.end.x + 5.0, rn.position.y + 19.0), 13, COR_TINTA, rn.size.x - 24.0, 3)
-
-## "N pt" à direita da linha.
-func _pontos(r: Rect2, n: int) -> void:
-	var txt: String = Idioma.t("%d ponto") % n if n == 1 else Idioma.t("%d pontos") % n
-	var w: float = Oficina.largura(txt, 14)
-	_texto(txt, Vector2(r.end.x - w - 10.0, r.position.y + 24.0), 14, COR_OURO, -1.0, 3)
+	var nome_m: String = Idioma.t(Atelie.MATIZ_NOME[m])
+	var larg: float = rn.size.x - 24.0
+	_texto(nome_m, Vector2(q.end.x + 5.0, rn.position.y + 19.0), Oficina.tam_cabe(nome_m, [13, 12, 11, 10], larg), COR_TINTA, larg, 3)
 
 func _lado_direito(e: Estado) -> void:
 	# prévia: o gato vestindo a fantasia
@@ -558,34 +582,11 @@ func _lado_direito(e: Estado) -> void:
 		draw_rect(Rect2(cx - 28.0, cy - 28.0, 56.0, 56.0), Color(1, 1, 1, 0.14), false, 2.0)
 		Desenho.icone(self, Pecas.Tipo.ATELIE_CABECA + s, Vector2(cx, cy), 46.0)
 	# nome
-	# orçamento
-	var custo: int = _custo()
-	var resto: int = Atelie.ORCAMENTO - custo
-	var y0: float = 452.0
-	_texto(Idioma.t("Pontos: %d de %d") % [custo, Atelie.ORCAMENTO], Vector2(COL_D_X, y0 + 12.0), 20, COR_OURO if resto >= 0 else COR_RUIM, -1.0, 4)
-	var msg: String = Idioma.t("Sobram %d") % resto if resto > 0 else (Idioma.t("No limite") if resto == 0 else Idioma.t("Faltam %d pontos (tire %d)") % [-resto, -resto])
-	var wm: float = Oficina.largura(msg, 16)
-	_texto(msg, Vector2(COL_D_X + COL_D_W - wm, y0 + 12.0), 16, COR_BOM if resto >= 0 else COR_RUIM, -1.0, 3)
-	var barra := Rect2(COL_D_X, y0 + 20.0, COL_D_W, 18.0)
-	draw_rect(barra, Color(0.07, 0.04, 0.06))
-	var passo: float = (barra.size.x - 4.0) / float(Atelie.ORCAMENTO + 2)
-	for k in Atelie.ORCAMENTO + 2:
-		var q := Rect2(barra.position.x + 2.0 + k * passo + 1.0, barra.position.y + 3.0, passo - 2.0, 12.0)
-		var cheio: bool = k < custo
-		var c2: Color = Color(0.25, 0.18, 0.16)
-		if cheio:
-			c2 = Color(1.0, 0.82, 0.25) if k < Atelie.ORCAMENTO else COR_RUIM
-		elif k >= Atelie.ORCAMENTO:
-			c2 = Color(0.3, 0.12, 0.12)
-		draw_rect(q, c2)
-	draw_rect(Rect2(barra.position.x + 2.0 + Atelie.ORCAMENTO * passo, barra.position.y, 2.0, barra.size.y), Color(1, 1, 1, 0.8))
-	var detalhe: String = Idioma.t("Moldes %d + poder %d + bônus %d") % [_custo_moldes(), Atelie.custo_poder(poderes_ok[pi]), Atelie.custo_bonus(bonus_ok[bi])]
-	_texto(detalhe, Vector2(COL_D_X, barra.end.y + 17.0), 14, Color(1, 1, 1, 0.65), -1.0, 3)
 	var recarga: int = int(round(Balanco.PODER_INTERVALO * float(Balanco.PODER_KIT_INTERVALO.get(poderes_ok[pi], 1.0)) * Atelie.PODER_RECARGA_FATOR))
 	_bloco(Idioma.t("Poder do kit completo: solta a cada %d s, com %d%% da força da fantasia de origem (o bônus vale com 2 peças e com as 4).") % [recarga, int(round(Atelie.PODER_FORCA_FATOR * 100.0))],
-		Vector2(COL_D_X, barra.end.y + 36.0), COL_D_W, [13, 12, 11], 3, Color(0.6, 0.85, 1.0, 0.85))
+		Vector2(COL_D_X, 470.0), COL_D_W, [13, 12, 11], 3, Color(0.6, 0.85, 1.0, 0.85))
 	if not e.atelie.is_empty():
-		_texto(Idioma.t("Mudar é de graça; as peças mantêm nível, raridade e marcas."), Vector2(COL_D_X, barra.end.y + 82.0), 13, Color(1, 1, 1, 0.5), COL_D_W, 3)
+		_texto(Idioma.t("Mudar é de graça; as peças mantêm nível, raridade e marcas."), Vector2(COL_D_X, 532.0), 13, Color(1, 1, 1, 0.5), COL_D_W, 3)
 
 func _botao(i: int) -> void:
 	var b: Dictionary = itens[i]

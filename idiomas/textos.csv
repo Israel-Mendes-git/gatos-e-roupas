@@ -908,24 +908,13 @@ Salvar a fantasia,Save costume,interface/atelie_tela.gd
 Criar a fantasia,Create costume,interface/atelie_tela.gd
 Fechar,Close,interface/atelie_tela.gd
 Pronto! As peças estão no guarda-roupa.,Done! The pieces are in the Wardrobe.,interface/atelie_tela.gd
-Passou do orçamento: tire %d ponto(s).,Over budget: remove %d point(s).,interface/atelie_tela.gd
-"Crie a sua fantasia: escolha formas, cores, um poder e um bônus, sem passar dos pontos.","Create your costume: pick shapes, colors, a power and a bonus, without going over the points.",interface/atelie_tela.gd
 Peças,Pieces,interface/atelie_tela.gd
 Sua fantasia,Your costume,interface/atelie_tela.gd
 Setas e Enter  |  Esc fecha,Arrows and Enter  |  Esc closes,interface/atelie_tela.gd
-%s (%d pt),%s (%d pt),interface/atelie_tela.gd
 Estampa,Pattern,interface/atelie_tela.gd
-Vale para as 4 peças. Não custa pontos.,Applies to all 4 pieces. Costs no points.,interface/atelie_tela.gd
 Poder,Power,interface/atelie_tela.gd
 Bônus,Bonus,interface/atelie_tela.gd
 2 peças: %s; 4 peças: %s,2 pieces: %s; 4 pieces: %s,interface/atelie_tela.gd
-%d ponto,%d point,interface/atelie_tela.gd
-%d pontos,%d points,interface/atelie_tela.gd
-Pontos: %d de %d,Points: %d of %d,interface/atelie_tela.gd
-Sobram %d,%d left,interface/atelie_tela.gd
-No limite,At the limit,interface/atelie_tela.gd
-Faltam %d pontos (tire %d),%d points over (remove %d),interface/atelie_tela.gd
-Moldes %d + poder %d + bônus %d,Molds %d + power %d + bonus %d,interface/atelie_tela.gd
 "Poder do kit completo: solta a cada %d s, com %d%% da força da fantasia de origem (o bônus vale com 2 peças e com as 4).","Full kit power: fires every %d s, at %d%% of the source costume's strength (the bonus works with 2 pieces and with 4).",interface/atelie_tela.gd
 "Mudar é de graça; as peças mantêm nível, raridade e marcas.","Changing is free; pieces keep their level, rarity and marks.",interface/atelie_tela.gd
 Clique para dar um nome (até %d letras),Click to give it a name (up to %d letters),interface/atelie_tela.gd
@@ -1788,3 +1777,27 @@ Cura o bicho ferido mais próximo.,Heals the nearest hurt critter.,dados:Campo.T
 Leva pouco dano e atrai os golpes dos gatos.,Takes little damage and draws the cats' hits.,dados:Campo.TIPO_DICA
 "Corre, encosta num gato ou na torre e explode.",Runs up to a cat or the tower and explodes.,dados:Campo.TIPO_DICA
 Fantasia sem nome,Unnamed costume,dados:Atelie.NOME_VAZIO
+Lápis,Pencil,interface/atelie_pintor.gd
+Borracha,Eraser,interface/atelie_pintor.gd
+Balde,Bucket,interface/atelie_pintor.gd
+Conta-gotas,Eyedropper,interface/atelie_pintor.gd
+Desfazer (Z),Undo (Z),interface/atelie_pintor.gd
+Camada: frente (C),Layer: front (C),interface/atelie_pintor.gd
+Camada: atrás do corpo (C),Layer: behind body (C),interface/atelie_pintor.gd
+Limpar tudo,Clear all,interface/atelie_pintor.gd
+Voltar ao desenho da forma,Back to the shape's drawing,interface/atelie_pintor.gd
+Voltar ao Ateliê,Back to the Atelier,interface/atelie_pintor.gd
+Pintar as peças,Paint the pieces,interface/atelie_pintor.gd
+Esquerdo pinta · direito apaga · Z desfaz · Esc volta,Left paints · right erases · Z undoes · Esc goes back,interface/atelie_pintor.gd
+"A pintura só fica na fantasia depois de ""Salvar a fantasia"" no Ateliê.","The paint only sticks after ""Save costume"" in the Atelier.",interface/atelie_pintor.gd
+Cores,Colors,interface/atelie_pintor.gd
+Cores da forma,Shape colors,interface/atelie_pintor.gd
+Cor,Color,interface/atelie_pintor.gd
+A peça segue pintada: a forma nova muda só o efeito.,The piece stays painted: the new shape only changes the effect.,interface/atelie_tela.gd
+Pintada,Painted,interface/atelie_tela.gd
+Pintada à mão,Hand-painted,interface/fichario.gd
+"Crie a sua fantasia: escolha formas, cores, um poder e um bônus.","Create your costume: pick shapes, colors, a power and a bonus.",interface/atelie_tela.gd
+Vale para as 4 peças.,Applies to all 4 pieces.,interface/atelie_tela.gd
+Reserva da torre,Tower reserve,interface/principal.gd
+A torre guarda %d blocos de reserva: promover não gasta esses.,The tower keeps %d blocks in reserve: upgrades don't spend those.,interface/principal.gd
+A torre guarda %d blocos de reserva,The tower keeps %d blocks in reserve,interface/principal.gd

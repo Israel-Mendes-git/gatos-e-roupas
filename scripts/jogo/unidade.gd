@@ -97,7 +97,7 @@ var frio_t: float = 0.0         # molhado pelo regador
 # poder especial da fantasia completa
 var poder: int = -1             # Pecas.Poder; -1 sem fantasia completa
 var poder_conj: int = -1        # Pecas.Conjunto que dá o poder
-var poder_atelie: bool = false  # o poder vem da fantasia do Ateliê (força menor e recarga maior: Atelie.PODER_FORCA_FATOR)
+var poder_atelie: bool = false  # o poder vem da fantasia do Ateliê (força ajustada: Atelie.PODER_FORCA_FATOR)
 var poder_forca: float = 1.0    # força média das peças da fantasia
 var poder_cd: float = Balanco.PODER_PRIMEIRO
 var poder_pronto: bool = false  # carregado, esperando o jogador disparar (modo manual)

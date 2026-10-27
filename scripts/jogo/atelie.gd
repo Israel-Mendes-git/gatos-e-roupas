@@ -2,45 +2,45 @@ class_name Atelie
 extends RefCounted
 ## Ateliê: a fantasia secreta. Ao completar o fichário o jogador CRIA a própria fantasia (fase 1: catálogo).
 ## Escolhe a forma de cada peça entre as que já teve (o desenho é o da peça escolhida, com cor e estampa por cima),
-## 1 poder e 1 bônus de kit entre os das fantasias do fichário, e dá um nome. Tudo isso custa pontos de um ORÇAMENTO;
-## o efeito de cada peça é o molde da forma (força fixa 1,0), o poder é o da fantasia escolhida (com a mesma força e
-## recarga medidas dela) e o bônus é o do kit da fantasia escolhida.
-##
-## Tabela de custo (orçamento de 14; mínimo possível 8, máximo possível 16: o melhor de tudo não cabe):
-##   molde de peça   1 ponto (efeito simples) ou 2 pontos (efeito forte), por peça: 4 a 8
-##   poder           3, 4 ou 5 pontos pelo índice FORCA / INTERVALO que Balanco mediu para a fantasia de origem
-##                   (PODER_KIT_FORCA / PODER_KIT_INTERVALO): até 1,0 = 3; até 2,6 = 4; acima = 5
-##   bônus de kit    1 a 3 pontos (BONUS_CUSTO)
-## Cor (13 matizes, o 0 é a cor original) e estampa (8, a 0 é nenhuma) não custam nada.
+## 1 poder e 1 bônus de kit entre os das fantasias do fichário, e dá um nome. Não há orçamento: é a recompensa de
+## completar o fichário, então vale escolher o melhor de tudo. O efeito de cada peça é o molde da forma (força fixa 1,0),
+## o poder é o da fantasia escolhida (com a força e a recarga medidas dela, ajustadas por PODER_FORCA_FATOR e
+## PODER_RECARGA_FATOR) e o bônus é o do kit da fantasia escolhida. Cor (13 matizes, o 0 é a cor original) e estampa
+## (8, a 0 é nenhuma) completam o visual.
 ## O save guarda as escolhas num campo opcional "atelie" (Estado.atelie); sem ele o Ateliê está vazio.
+##
+## Pintura (opcional, de graça): o jogador pode repintar cada peça pixel a pixel. Ela parte da "foto" da forma escolhida
+## (AtelieArte.fotografar) e, pintada, substitui o desenho da forma; a forma continua dando o efeito e o lugar no gato.
+## Formato em cfg["pintura"][espaço] ({} = sem pintura): {"x", "y": canto da grade na unidade da peça; "w", "h": tamanho;
+## "pal": cores "rrggbbaa"; "frente", "atras": w*h letras de ALFABETO (índice na paleta) ou "." (vazio)}. "atras" é a camada
+## que fica atrás do corpo (capa); peça sem essa camada a deixa toda vazia.
 
-const ORCAMENTO := 14
-## Ajuste do poder da fantasia criada (calibrado com o simulador: as combinações de 14 pontos ficam na faixa das outras fantasias).
-const PODER_FORCA_FATOR := 0.5
-const PODER_RECARGA_FATOR := 1.4
+## Ajuste do poder da fantasia criada: a mesma recarga da fantasia de origem e 20% mais força (recompensa do fichário completo).
+const PODER_FORCA_FATOR := 1.2
+const PODER_RECARGA_FATOR := 1.0
 const NOME_MAX := 16
 const NOME_VAZIO := "Fantasia sem nome"
 const MATIZES := 13
 const ESTAMPA_NOME: Array[String] = ["Sem estampa", "Listras", "Bolinhas", "Xadrez", "Coração", "Estrela", "Camuflagem", "Remendos"]
 const MATIZ_NOME: Array[String] = ["Original", "Vermelho", "Laranja", "Amarelo", "Lima", "Verde", "Menta", "Ciano", "Azul", "Anil", "Violeta", "Magenta", "Rosa"]
 
-## Moldes de efeito forte (2 pontos); os outros custam 1.
-const MOLDES_FORTES: Array[int] = [
-	Pecas.Tipo.COROA, Pecas.Tipo.CHIFRES, Pecas.Tipo.CARTOLA, Pecas.Tipo.CAUBOI, Pecas.Tipo.PELE, Pecas.Tipo.CASACO,
-	Pecas.Tipo.MANTO, Pecas.Tipo.VARINHA, Pecas.Tipo.CETRO, Pecas.Tipo.COLAR, Pecas.Tipo.GANCHO, Pecas.Tipo.AMULETO,
-]
 ## Fantasias que dão cada bônus de kit disponível no Ateliê (um por tipo de bônus; o Disfarce do Mimiau e a Apara do Meon
-## ficam de fora por serem kits compostos) e o custo em pontos.
-const BONUS_CUSTO: Dictionary = {
-	Pecas.Conjunto.CAVALEIRO: 2, Pecas.Conjunto.GUARDIAO: 3, Pecas.Conjunto.REI: 2, Pecas.Conjunto.CIRCO: 1,
-	Pecas.Conjunto.VIKING: 3, Pecas.Conjunto.JARDINEIRO: 2, Pecas.Conjunto.CAUBOI: 2, Pecas.Conjunto.PIRATA: 2,
-	Pecas.Conjunto.MAGO: 1, Pecas.Conjunto.SUPER_MIAU: 2, Pecas.Conjunto.ARQUEIRO_MIAU: 3, Pecas.Conjunto.JIMIAU: 1,
-	Pecas.Conjunto.DISPARAMIAU: 2, Pecas.Conjunto.GIRAMIAU: 2, Pecas.Conjunto.STARDEW_MIAULLEY: 2,
-	Pecas.Conjunto.DONATEMIAU: 2, Pecas.Conjunto.RAFAMIAU: 2, Pecas.Conjunto.ROCKET_MIAUGUE: 1,
-	Pecas.Conjunto.MIAU_NOIR: 2, Pecas.Conjunto.HOLLOWMIAU: 1, Pecas.Conjunto.SILKMIAU: 2, Pecas.Conjunto.SUPER_MIAUJIN: 2,
-	Pecas.Conjunto.ARQUEOLOGO: 2, Pecas.Conjunto.TREINADOR: 2, Pecas.Conjunto.MIAUZILLA: 1,
-	Pecas.Conjunto.SUBMIAUTICA: 2, Pecas.Conjunto.CATCHULLU: 1,
-}
+## ficam de fora por serem kits compostos).
+const BONUS_KITS: Array[int] = [
+	Pecas.Conjunto.CAVALEIRO, Pecas.Conjunto.GUARDIAO, Pecas.Conjunto.REI, Pecas.Conjunto.CIRCO, Pecas.Conjunto.VIKING,
+	Pecas.Conjunto.JARDINEIRO, Pecas.Conjunto.CAUBOI, Pecas.Conjunto.PIRATA, Pecas.Conjunto.MAGO,
+	Pecas.Conjunto.SUPER_MIAU, Pecas.Conjunto.ARQUEIRO_MIAU, Pecas.Conjunto.JIMIAU, Pecas.Conjunto.DISPARAMIAU,
+	Pecas.Conjunto.GIRAMIAU, Pecas.Conjunto.STARDEW_MIAULLEY, Pecas.Conjunto.DONATEMIAU, Pecas.Conjunto.RAFAMIAU,
+	Pecas.Conjunto.ROCKET_MIAUGUE, Pecas.Conjunto.MIAU_NOIR, Pecas.Conjunto.HOLLOWMIAU, Pecas.Conjunto.SILKMIAU,
+	Pecas.Conjunto.SUPER_MIAUJIN, Pecas.Conjunto.ARQUEOLOGO, Pecas.Conjunto.TREINADOR, Pecas.Conjunto.MIAUZILLA,
+	Pecas.Conjunto.SUBMIAUTICA, Pecas.Conjunto.CATCHULLU,
+]
+## Pintura: maior grade, maior paleta e as letras que indexam a paleta.
+const PINTURA_MAX := 40
+const PINTURA_MIN := 12
+const PINTURA_MARGEM := 2
+const ALFABETO := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const PALETA_MAX := 62
 const FORMA_PADRAO: Array[int] = [Pecas.Tipo.CAPACETE, Pecas.Tipo.COLETE, Pecas.Tipo.PORRETE, Pecas.Tipo.BOTAS]
 const _PREFIXOS: Array[String] = ["Super", "Mega", "Capitão", "Doutor", "Mestre", "Sombra", "Estrela", "Relâmpago", "Turbo", "Ninja"]
 
@@ -81,35 +81,21 @@ static func bonus_conj() -> int:
 static func nome() -> String:
 	return str(cfg.get("nome", NOME_VAZIO))
 
-# ---------- Custos ----------
-static func custo_molde(m: int) -> int:
-	return 2 if m in MOLDES_FORTES else 1
+## Pintura da peça do Ateliê `tipo` ({} = desenho da forma).
+static func pintura(tipo: int) -> Dictionary:
+	var ps: Array = cfg.get("pintura", [])
+	var s: int = _slot_de(tipo)
+	return ps[s] if s >= 0 and s < ps.size() and typeof(ps[s]) == TYPE_DICTIONARY else {}
 
-## Índice de potência do poder da fantasia `c` (força / recarga medidas em Balanco).
-static func indice_poder(c: int) -> float:
-	return float(Balanco.PODER_KIT_FORCA.get(c, 1.0)) / float(Balanco.PODER_KIT_INTERVALO.get(c, 1.0))
+static func pintada(tipo: int) -> bool:
+	return not pintura(tipo).is_empty()
 
-static func custo_poder(c: int) -> int:
-	var ix: float = indice_poder(c)
-	if ix <= 1.0:
-		return 3
-	return 4 if ix <= 2.6 else 5
-
-static func custo_bonus(c: int) -> int:
-	return int(BONUS_CUSTO.get(c, 3))
-
-static func custo_forma(tipo: int) -> int:
-	return custo_molde(Pecas.MOLDE[tipo])
-
-## Custo total de um conjunto de escolhas.
-static func custo(c: Dictionary) -> int:
-	var total: int = custo_poder(int(c.get("poder", 0))) + custo_bonus(int(c.get("bonus", 0)))
-	for t in c.get("formas", []):
-		total += custo_forma(int(t))
-	return total
-
-static func dentro_do_orcamento(c: Dictionary) -> bool:
-	return custo(c) <= ORCAMENTO
+## Quanto a peça do Ateliê `p` soma à força do poder: o mesmo que a peça da fantasia de origem `conj` no mesmo espaço,
+## com o nível e a raridade de `p`. Assim o poder é o da origem (vezes PODER_FORCA_FATOR) em qualquer ponto do jogo,
+## e não depende da força própria das peças do Ateliê (Pecas.MOLDE_PODER), que vale só para o efeito delas.
+static func poder_peca(p: Peca, conj: int) -> float:
+	var orig: int = int((Pecas.CONJUNTO_PECAS[conj] as Array)[p.slot()])
+	return p.poder() / Pecas.MOLDE_PODER[p.tipo] * Pecas.MOLDE_PODER[orig]
 
 # ---------- O que o jogador pode escolher ----------
 ## O Ateliê abre quando todas as fantasias do fichário estão completas.
@@ -135,7 +121,7 @@ static func poderes(e: Estado) -> Array[int]:
 ## Fantasias cujo bônus de kit o jogador pode escolher (as completas que têm bônus no catálogo).
 static func bonus(e: Estado) -> Array[int]:
 	var l: Array[int] = []
-	for c in BONUS_CUSTO:
+	for c in BONUS_KITS:
 		if not Pecas.retirada(c) and e.pecas_da_fantasia(c) >= Pecas.SLOTS:
 			l.append(c)
 	l.sort()
@@ -144,7 +130,7 @@ static func bonus(e: Estado) -> Array[int]:
 # ---------- Montar e validar ----------
 static func padrao() -> Dictionary:
 	return {"nome": NOME_VAZIO, "formas": FORMA_PADRAO.duplicate(), "matizes": [0, 0, 0, 0], "estampa": 0,
-		"poder": Pecas.Conjunto.CAVALEIRO, "bonus": Pecas.Conjunto.CIRCO}
+		"poder": Pecas.Conjunto.CAVALEIRO, "bonus": Pecas.Conjunto.CIRCO, "pintura": [{}, {}, {}, {}]}
 
 ## Nome limpo: sem espaços nas pontas, só letras (com acento), números, espaço e . - ' ! (sem controle nem emoji), até NOME_MAX.
 static func limpar_nome(s: String) -> String:
@@ -184,11 +170,148 @@ static func ler(d: Variant) -> Dictionary:
 		c["matizes"].append(clampi(int(ms[s]) if s < ms.size() else 0, 0, MATIZES - 1))
 	var po: int = int(o.get("poder", -1))
 	var bo: int = int(o.get("bonus", -1))
-	if po < 0 or po >= Pecas.Conjunto.ATELIE or Pecas.retirada(po) or not BONUS_CUSTO.has(bo):
+	if po < 0 or po >= Pecas.Conjunto.ATELIE or Pecas.retirada(po) or not BONUS_KITS.has(bo):
 		return {}
 	c["poder"] = po
 	c["bonus"] = bo
+	# pintura: a que não serve é descartada sozinha (a fantasia continua valendo)
+	var ps: Array = o.get("pintura", []) if typeof(o.get("pintura", [])) == TYPE_ARRAY else []
+	c["pintura"] = []
+	for s in Pecas.SLOTS:
+		c["pintura"].append(ler_pintura(ps[s]) if s < ps.size() else {})
 	return c
+
+# ---------- Pintura ----------
+## Pintura conferida (tamanho, paleta, letras); {} se não serve.
+static func ler_pintura(d: Variant) -> Dictionary:
+	if typeof(d) != TYPE_DICTIONARY or (d as Dictionary).is_empty():
+		return {}
+	var o: Dictionary = d
+	var w: int = int(o.get("w", 0))
+	var h: int = int(o.get("h", 0))
+	var x: int = int(o.get("x", 0))
+	var y: int = int(o.get("y", 0))
+	if w < 1 or h < 1 or w > PINTURA_MAX or h > PINTURA_MAX or absi(x) > PINTURA_MAX * 2 or absi(y) > PINTURA_MAX * 2:
+		return {}
+	var pal_in: Variant = o.get("pal", [])
+	if typeof(pal_in) != TYPE_ARRAY or (pal_in as Array).size() > PALETA_MAX:
+		return {}
+	var pal: Array = []
+	for c in pal_in:
+		var hx: String = str(c)
+		if hx.length() != 8 or not hx.is_valid_hex_number():
+			return {}
+		pal.append(hx.to_lower())
+	var camadas: Dictionary = {}
+	for k in ["frente", "atras"]:
+		var txt: String = str(o.get(k, ""))
+		if txt.length() != w * h:
+			return {}
+		for i in txt.length():
+			var ch: String = txt[i]
+			if ch == ".":
+				continue
+			var ix: int = ALFABETO.find(ch)
+			if ix < 0 or ix >= pal.size():
+				return {}
+		camadas[k] = txt
+	return {"x": x, "y": y, "w": w, "h": h, "pal": pal, "frente": camadas["frente"], "atras": camadas["atras"]}
+
+## Grade de trabalho do pintor: {"x", "y", "w", "h", "frente", "atras": PackedColorArray (alfa 0 = vazio)}.
+static func grade_da_pintura(p: Dictionary) -> Dictionary:
+	var w: int = int(p["w"])
+	var h: int = int(p["h"])
+	var g: Dictionary = {"x": int(p["x"]), "y": int(p["y"]), "w": w, "h": h}
+	var pal: Array[Color] = []
+	for hx in p["pal"]:
+		pal.append(Color.html(str(hx)))
+	for k in ["frente", "atras"]:
+		var cs := PackedColorArray()
+		cs.resize(w * h)
+		var txt: String = p[k]
+		for i in w * h:
+			cs[i] = Color(0, 0, 0, 0) if txt[i] == "." else pal[ALFABETO.find(txt[i])]
+		g[k] = cs
+	return g
+
+## Pintura (formato do save) a partir da grade do pintor (toda vazia vale: a peça fica invisível). Com mais de PALETA_MAX cores,
+## as que sobram viram a mais parecida da paleta.
+static func pintura_da_grade(g: Dictionary) -> Dictionary:
+	var w: int = int(g["w"])
+	var h: int = int(g["h"])
+	var pal: Array[Color] = []
+	var idx: Dictionary = {}   # "rrggbbaa" -> índice
+	var r: Dictionary = {"x": int(g["x"]), "y": int(g["y"]), "w": w, "h": h, "pal": [], "frente": "", "atras": ""}
+	for k in ["frente", "atras"]:
+		var cs: PackedColorArray = g[k]
+		var txt: String = ""
+		for i in w * h:
+			var c: Color = cs[i]
+			if c.a < 0.02:
+				txt += "."
+				continue
+			var hx: String = c.to_html(true)
+			if not idx.has(hx):
+				if pal.size() < PALETA_MAX:
+					idx[hx] = pal.size()
+					pal.append(c)
+				else:
+					idx[hx] = _mais_parecida(pal, c)
+			txt += ALFABETO[int(idx[hx])]
+		r[k] = txt
+	for c in pal:
+		r["pal"].append(c.to_html(true))
+	return r
+
+static func _mais_parecida(pal: Array[Color], c: Color) -> int:
+	var m: int = 0
+	var md: float = INF
+	for i in pal.size():
+		var d: float = Vector4(pal[i].r - c.r, pal[i].g - c.g, pal[i].b - c.b, pal[i].a - c.a).length_squared()
+		if d < md:
+			md = d
+			m = i
+	return m
+
+## Grade nova em torno dos pixels {Vector2i: Color} das duas camadas, com folga e tamanho mínimo, sem passar do máximo.
+static func grade_em_volta(frente: Dictionary, atras: Dictionary) -> Dictionary:
+	var lo := Vector2i(0, -4)
+	var hi := Vector2i(0, -4)
+	var primeiro: bool = true
+	for camada in [frente, atras]:
+		for p in camada:
+			if primeiro:
+				lo = p
+				hi = p
+				primeiro = false
+			lo = Vector2i(mini(lo.x, p.x), mini(lo.y, p.y))
+			hi = Vector2i(maxi(hi.x, p.x), maxi(hi.y, p.y))
+	lo -= Vector2i(PINTURA_MARGEM, PINTURA_MARGEM)
+	hi += Vector2i(PINTURA_MARGEM, PINTURA_MARGEM)
+	for eixo in 2:
+		var tam: int = hi[eixo] - lo[eixo] + 1
+		if tam < PINTURA_MIN:
+			var falta: int = PINTURA_MIN - tam
+			lo[eixo] -= falta / 2
+			hi[eixo] += falta - falta / 2
+		elif tam > PINTURA_MAX:
+			var sobra: int = tam - PINTURA_MAX
+			lo[eixo] += sobra / 2
+			hi[eixo] -= sobra - sobra / 2
+	var w: int = hi.x - lo.x + 1
+	var h: int = hi.y - lo.y + 1
+	var g: Dictionary = {"x": lo.x, "y": lo.y, "w": w, "h": h}
+	for k in ["frente", "atras"]:
+		var cs := PackedColorArray()
+		cs.resize(w * h)
+		cs.fill(Color(0, 0, 0, 0))
+		var camada: Dictionary = frente if k == "frente" else atras
+		for p in camada:
+			var q: Vector2i = p - lo
+			if q.x >= 0 and q.y >= 0 and q.x < w and q.y < h:
+				cs[q.y * w + q.x] = camada[p]
+		g[k] = cs
+	return g
 
 ## Ativa as escolhas: nome, cor e nomes das peças passam a valer nas tabelas de Pecas. {} desativa.
 static func aplicar(c: Dictionary) -> void:
@@ -207,11 +330,11 @@ static func aplicar(c: Dictionary) -> void:
 		Pecas.NOME[t] = Pecas.NOME[forma(t)] if criada() else Pecas.SLOT_NOME[s] + " do Ateliê" # i18n-ok: identidade de NOME, traduzida ao desenhar
 
 ## Confirma a criação (ou a refação): guarda as escolhas no estado e garante as 4 peças (Raras, na primeira vez)
-## no guarda-roupa. Quem já tem as peças as mantém, com nível, raridade e marcas. Devolve false se estourar o orçamento
-## ou o Ateliê ainda estiver fechado.
+## no guarda-roupa. Quem já tem as peças as mantém, com nível, raridade e marcas. Devolve false se as escolhas não
+## servem ou o Ateliê ainda estiver fechado.
 static func confirmar(e: Estado, c: Dictionary) -> bool:
 	var v: Dictionary = ler(c)
-	if v.is_empty() or not dentro_do_orcamento(v) or not liberado(e):
+	if v.is_empty() or not liberado(e):
 		return false
 	e.atelie = v
 	aplicar(v)

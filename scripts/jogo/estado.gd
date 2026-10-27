@@ -544,14 +544,18 @@ func treinar(b: Boneco, a: int) -> bool:
 	salvar()
 	return true
 
+## Blocos que dá para gastar promovendo: os da torre menos a reserva que a protege.
+func blocos_livres() -> int:
+	return maxi(0, tijolos - Balanco.RESERVA_PROMOCAO)
+
 func promover(p: Peca) -> bool:
-	if p.nivel >= Balanco.NIVEL_MAX or tijolos < Balanco.custo_promocao(p.nivel):
+	if p.nivel >= Balanco.NIVEL_MAX or blocos_livres() < Balanco.custo_promocao(p.nivel):
 		return false
 	tijolos -= Balanco.custo_promocao(p.nivel)
 	p.nivel += 1
 	return true
 
-## Promove de uma vez as peças que o gato veste (as que ainda podem subir), enquanto houver blocos.
+## Promove de uma vez as peças que o gato veste (as que ainda podem subir), enquanto houver blocos livres.
 ## Devolve quantas subiram.
 func promover_fantasia(b: Boneco) -> int:
 	var n: int = 0

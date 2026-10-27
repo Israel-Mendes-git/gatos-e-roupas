@@ -1710,6 +1710,8 @@ const ICONE_PIXEL := true
 # ------------------------------------------------------------------ ícone (guarda-roupa / voando)
 ## Caixa da peça em pixels do sprite, em torno da origem dela (a mesma conta do ícone).
 static func caixa_peca(tipo: int) -> Rect2:
+	if tipo >= Pecas.Tipo.ATELIE_CABECA and Atelie.pintada(tipo):
+		return AtelieArte.caixa_pintura(Atelie.pintura(tipo))
 	var tv: int = Atelie.forma(tipo)
 	return IconeDados.CAIXA[tv] if tv < IconeDados.CAIXA.size() else (RoupaGatoJ.caixa(tv) if tv >= RoupaGatoJ.PRIMEIRO else RoupaGatoI.caixa(tv) if tv >= RoupaGatoI.PRIMEIRO else RoupaGatoH.caixa(tv) if tv >= RoupaGatoH.PRIMEIRO else RoupaGatoG.caixa(tv) if tv >= RoupaGatoG.PRIMEIRO else (RoupaGatoF.caixa(tv) if tv >= RoupaGatoF.PRIMEIRO else RoupaGatoE.caixa(tv)))
 
@@ -1734,8 +1736,7 @@ static func icone_brilho(c: CanvasItem, tipo: int, centro: Vector2, tam: float, 
 static func icone(c: CanvasItem, tipo: int, centro: Vector2, tam: float, nivel: int = 0, f: float = 0.0, anim: float = 0.0, marcas: Array = [], raridade: int = 0) -> void:
 	if ICONE_PIXEL:
 		# o ícone é a própria roupa em pixel art que o gato veste (RoupaGato), ampliada para caber
-		var tv: int = Atelie.forma(tipo)   # o ícone do Ateliê tem a caixa da forma escolhida
-		var cx: Rect2 = IconeDados.CAIXA[tv] if tv < IconeDados.CAIXA.size() else (RoupaGatoJ.caixa(tv) if tv >= RoupaGatoJ.PRIMEIRO else RoupaGatoI.caixa(tv) if tv >= RoupaGatoI.PRIMEIRO else RoupaGatoH.caixa(tv) if tv >= RoupaGatoH.PRIMEIRO else RoupaGatoG.caixa(tv) if tv >= RoupaGatoG.PRIMEIRO else (RoupaGatoF.caixa(tv) if tv >= RoupaGatoF.PRIMEIRO else RoupaGatoE.caixa(tv)))
+		var cx: Rect2 = caixa_peca(tipo)   # o ícone do Ateliê tem a caixa da forma escolhida (ou da pintura)
 		var px: float = tam * 0.92 / maxf(9.0, maxf(cx.size.x, cx.size.y))
 		var meio: Vector2 = cx.position + cx.size * 0.5
 		c.draw_set_transform(centro - meio * px, 0.0, Vector2(px, px))
