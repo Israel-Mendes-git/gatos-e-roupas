@@ -1344,7 +1344,7 @@ func _pagina_atelie(e: Estado) -> void:
 		var msg: String = Idioma.t("Fichário completo! Abra o Ateliê (botão no mapa ou no guarda-roupa) e crie a sua fantasia.") if Atelie.liberado(e) else Idioma.t("Complete o fichário para abrir o Ateliê")
 		_txt(Idioma.t("Fantasia do Ateliê"), Vector2(pb.position.x + 12.0, pb.position.y + 24.0), 16, TINTA)
 		_bloco(msg, Vector2(pb.position.x + 12.0, pb.position.y + 54.0), pb.size.x - 24.0, [20, 18, 16], 3, Color(0.62, 0.34, 0.02), 4.0)
-		_bloco(Idioma.t("Lá você escolhe as formas, as cores, a estampa, um poder, um bônus e o nome, dentro de um orçamento de pontos."), Vector2(pb.position.x + 12.0, pb.position.y + 140.0), pb.size.x - 24.0, [14, 13, 12], 3, TINTA2, 3.0)
+		_bloco(Idioma.t("Lá você escolhe as formas, as cores, a estampa, um poder, um bônus e o nome, e pode pintar cada peça pixel a pixel."), Vector2(pb.position.x + 12.0, pb.position.y + 140.0), pb.size.x - 24.0, [14, 13, 12], 3, TINTA2, 3.0)
 		_txt(Idioma.t("Completas: %d de %d") % [e.fantasias_completas(), Pecas.n_ativas()], Vector2(pb.position.x + 12.0, pb.end.y - 12.0), 14, TINTA2)
 		draw_rect(pr, PAPEL_ESC)
 		draw_rect(pr, PAPEL_BORDA, false, 2.0)

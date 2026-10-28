@@ -1070,7 +1070,7 @@ Ficha secreta,Secret card,interface/fichario.gd
 Fichário completo! Abra o Ateliê (botão no mapa ou no guarda-roupa) e crie a sua fantasia.,Binder complete! Open the Atelier (button on the map or in the Wardrobe) and create your own costume.,interface/fichario.gd
 Complete o fichário para abrir o Ateliê,Complete the Binder to open the Atelier,interface/fichario.gd
 Fantasia do Ateliê,Atelier Costume,interface/fichario.gd
-"Lá você escolhe as formas, as cores, a estampa, um poder, um bônus e o nome, dentro de um orçamento de pontos.","There you pick the shapes, colors, pattern, a power, a bonus and the name, within a point budget.",interface/fichario.gd
+"Lá você escolhe as formas, as cores, a estampa, um poder, um bônus e o nome, e pode pintar cada peça pixel a pixel.","There you pick the shapes, colors, pattern, a power, a bonus and the name, and you can paint each piece pixel by pixel.",interface/fichario.gd
 Ainda não existem,Don't exist yet,interface/fichario.gd
 4/4 peças,4/4 pieces,interface/fichario.gd
 "Solta a cada %d s, com %d%% da força da fantasia de origem (%s).","Fires every %d s, at %d%% of the source costume's strength (%s).",interface/fichario.gd
