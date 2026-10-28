@@ -2,7 +2,7 @@ extends SceneTree
 ## Capturas de TODAS as telas do jogo no idioma escolhido (padrão: inglês), para conferir o que estoura caixa,
 ## o que ficou em português e o que não faz sentido. Uma execução por grupo (cada captura tem timeout de 180 s):
 ##   CAPTURA_USERDIR=gr_telas_en python -I notas/captura.py --script res://ferramentas/captura_telas_en.gd -- <pasta> <grupo> [idioma]
-## Grupos: menus mapa guarda luta fim ficha tutorial
+## Grupos: menus mapa guarda luta fim ficha atelie tutorial
 ## Em build de depuração, as chaves sem tradução vão para user://textos_sem_traducao.log (pasta gr_telas_en).
 const C := Pecas.Conjunto
 
@@ -714,6 +714,34 @@ func g_ficha() -> void:
 			await _salvar("a02_hover_%02d_%s" % [contador2, str(it["id"])], 6)
 			contador2 += 1
 	await _tirar_mouse()
+	at.fechar()
+	await _fechar_cena()
+
+## Só o Ateliê: página do fichário, a tela e o pintor de cada peça (mais rápido que o grupo ficha).
+func g_atelie() -> void:
+	await _novo_jogo_cena(false)
+	var e: Estado = p.estado
+	_preparar(e, 3)
+	for t in Pecas.SLOT.size():
+		e.registrar(t)
+	e.fantasias_completas()
+	p._entrar_mapa()
+	await _quadros(10)
+	var f: Fichario = p.fichario
+	p.abrir_fichario()
+	f.ir_para_pagina(f.total_paginas() - 1)
+	await _salvar("t01_pagina_atelie", 40)
+	f.fechar()
+	p.abrir_atelie()
+	await _salvar("t02_atelie", 40)
+	var at = p.atelie_tela
+	for s in 4:
+		at.pintor.abrir(at, s)
+		await _salvar("t1%d_pintor_peca%d" % [s, s], 12)
+		if at.pintor.tem_atras():
+			at.pintor.acionar("cam")
+			await _salvar("t1%d_pintor_peca%d_atras" % [s, s], 8)
+		at.pintor.fechar()
 	at.fechar()
 	await _fechar_cena()
 
