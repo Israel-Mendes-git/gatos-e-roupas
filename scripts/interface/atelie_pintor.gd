@@ -429,7 +429,9 @@ func _draw() -> void:
 	UIComum.fechar(self, BTN_X, {"on": true, "foco": x_sobre, "h": UIComum.anim_h(anim, "x"), "p": UIComum.anim_p(anim, "x")}, t)
 	var ajuda: String = Idioma.t("Esquerdo pinta · direito apaga · Z desfaz · Esc volta")
 	_texto(ajuda, Vector2(124, 630), Oficina.tam_cabe(ajuda, [13, 12, 11], 380.0), Color(1, 1, 1, 0.5), 380.0)
-	var lembrete: String = Idioma.t("A pintura só fica na fantasia depois de \"Salvar a fantasia\" no Ateliê.")
+	var lembrete: String = Idioma.t("A pintura só fica na fantasia depois de \"Criar a fantasia\" no Ateliê.")   # o mesmo nome do botão
+	if not tela.dono.estado.atelie.is_empty():
+		lembrete = Idioma.t("A pintura só fica na fantasia depois de \"Salvar a fantasia\" no Ateliê.")
 	_texto(lembrete, Vector2(124, 652), Oficina.tam_cabe(lembrete, [13, 12, 11], 380.0), Color(1, 0.85, 0.5, 0.7), 380.0)
 	UIComum.fim_pop(self)
 

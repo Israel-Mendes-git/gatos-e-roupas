@@ -1790,6 +1790,7 @@ Voltar ao Ateliê,Back to the Atelier,interface/atelie_pintor.gd
 Pintar as peças,Paint the pieces,interface/atelie_pintor.gd
 Esquerdo pinta · direito apaga · Z desfaz · Esc volta,Left paints · right erases · Z undoes · Esc goes back,interface/atelie_pintor.gd
 "A pintura só fica na fantasia depois de ""Salvar a fantasia"" no Ateliê.","The paint only sticks after ""Save costume"" in the Atelier.",interface/atelie_pintor.gd
+"A pintura só fica na fantasia depois de ""Criar a fantasia"" no Ateliê.","The paint only sticks after ""Create costume"" in the Atelier.",interface/atelie_pintor.gd
 Cores,Colors,interface/atelie_pintor.gd
 Cores da forma,Shape colors,interface/atelie_pintor.gd
 Cor,Color,interface/atelie_pintor.gd
